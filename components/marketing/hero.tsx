@@ -2,17 +2,22 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
 import { HeroCourseCarousel } from "@/components/marketing/hero-course-carousel";
-import { courses } from "@/lib/data/courses";
+import type { Course } from "@/types/wordpress";
 
-const carouselCourses = courses.filter((course) => course.featured);
+interface HeroProps {
+  courses: Course[];
+}
 
-export function Hero() {
+export function Hero({ courses }: HeroProps) {
   return (
     <section
       className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-12 sm:py-16 md:py-24 lg:py-32"
       aria-labelledby="hero-heading"
     >
-      <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+      <div
+        className="pointer-events-none absolute inset-0 overflow-hidden"
+        aria-hidden="true"
+      >
         <div className="absolute -right-16 -top-16 h-80 w-80 rounded-full bg-accent-500/20 blur-3xl md:-right-8 md:h-96 md:w-96" />
       </div>
 
@@ -36,7 +41,7 @@ export function Hero() {
               Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş
               premium eğitim deneyimi
             </p>
-            <div className="mt-2 flex flex-col gap-3 sm:mt-4 sm:flex-row sm:flex-wrap sm:gap-4">
+            <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Button
                 size="lg"
                 className="w-full rounded-xl bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600 sm:w-auto"
@@ -56,7 +61,7 @@ export function Hero() {
           </div>
 
           <div className="order-1 lg:order-2">
-            <HeroCourseCarousel courses={carouselCourses} />
+            {courses.length > 0 && <HeroCourseCarousel courses={courses} />}
           </div>
         </div>
       </Container>

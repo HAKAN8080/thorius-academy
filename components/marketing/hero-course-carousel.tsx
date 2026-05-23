@@ -2,65 +2,81 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, Clock } from "lucide-react";
+import { ChevronLeft, ChevronRight, User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
-import { categoryLabels, formatPrice } from "@/lib/data/courses";
-import type { Course, CourseCategory } from "@/types/database";
+import type { Course } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
 
 const AUTO_PLAY_MS = 5000;
 
-const categoryGradients: Record<CourseCategory, string> = {
-  "planlama-otb": "from-primary-700 via-primary-800 to-primary-950",
-  "ai-veri": "from-primary-600 via-primary-800 to-primary-950",
-  liderlik: "from-primary-800 via-primary-900 to-primary-950",
-  operasyon: "from-primary-700 via-primary-900 to-primary-950",
-  pazarlama: "from-primary-600 via-primary-700 to-primary-900",
-  "e-ticaret": "from-primary-800 via-primary-700 to-primary-950",
-};
+const slideGradients = [
+  "from-primary-700 via-primary-800 to-primary-950",
+  "from-primary-600 via-primary-800 to-primary-950",
+  "from-primary-800 via-primary-900 to-primary-950",
+  "from-primary-700 via-primary-900 to-primary-950",
+  "from-primary-600 via-primary-700 to-primary-900",
+  "from-primary-800 via-primary-700 to-primary-950",
+];
 
 interface HeroCourseCarouselProps {
   courses: Course[];
 }
 
-function HeroCourseSlide({ course }: { course: Course }) {
+function HeroCourseSlide({
+  course,
+  gradient,
+}: {
+  course: Course;
+  gradient: string;
+}) {
   return (
     <Link
-      href={`/kurslar?kurs=${course.slug}`}
+      href={`/kurslar/${course.slug}`}
       className="block h-full"
       tabIndex={-1}
     >
       <Card className="group h-full overflow-hidden border-primary-100/20 bg-white shadow-xl transition-shadow hover:shadow-2xl">
         <div
           className={cn(
-            "relative flex aspect-[16/10] flex-col justify-end p-5 bg-gradient-to-br",
-            categoryGradients[course.category]
+            "relative flex aspect-[16/10] flex-col justify-end overflow-hidden bg-gradient-to-br p-5",
+            gradient
           )}
         >
-          <Badge className="mb-auto w-fit bg-accent-500/90 text-primary-950 hover:bg-accent-500">
-            {categoryLabels[course.category]}
-          </Badge>
-          <p className="text-xs font-medium uppercase tracking-wider text-accent-400">
+          {course.featuredImage && (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img
+              src={course.featuredImage}
+              alt=""
+              className="absolute inset-0 h-full w-full object-cover opacity-30"
+            />
+          )}
+          {course.categories.length > 0 && (
+            <Badge className="relative z-10 mb-auto w-fit bg-accent-500/90 text-primary-950 hover:bg-accent-500">
+              {course.categories[0].name}
+            </Badge>
+          )}
+          <p className="relative z-10 text-xs font-medium uppercase tracking-wider text-accent-400">
             Öne çıkan kurs
           </p>
-          <h3 className="mt-1 line-clamp-2 text-lg font-bold text-white md:text-xl">
+          <h3 className="relative z-10 mt-1 line-clamp-2 text-lg font-bold text-white md:text-xl">
             {course.title}
           </h3>
         </div>
         <CardContent className="p-5">
-          <p className="text-sm text-muted-foreground">{course.instructor}</p>
-          <div className="mt-2 flex items-center gap-1 text-sm text-primary-600">
-            <Clock className="h-4 w-4 shrink-0" aria-hidden="true" />
-            <span>{course.duration}</span>
-          </div>
+          {course.instructor && (
+            <div className="flex items-center gap-2 text-sm text-muted-foreground">
+              <User className="h-4 w-4 shrink-0" aria-hidden="true" />
+              <span>{course.instructor.name}</span>
+            </div>
+          )}
+          <p className="mt-2 line-clamp-2 text-sm text-primary-600">
+            {course.excerpt}
+          </p>
         </CardContent>
         <CardFooter className="border-t border-primary-50 px-5 py-4">
-          <span className="text-lg font-bold text-primary-900">
-            {formatPrice(course.price)}
-          </span>
-          <span className="ml-auto text-sm font-medium text-accent-700 group-hover:underline">
+          <span className="text-sm font-medium text-accent-700 group-hover:underline">
             İncele →
           </span>
         </CardFooter>
@@ -131,7 +147,13 @@ export function HeroCourseCarousel({ courses }: HeroCourseCarouselProps) {
                 aria-label={`${slideIndex + 1} / ${count}: ${course.title}`}
                 aria-hidden={slideIndex !== index}
               >
-                <HeroCourseSlide course={course} />
+                <HeroCourseSlide
+                  course={course}
+                  gradient={
+                    slideGradients[slideIndex % slideGradients.length] ??
+                    slideGradients[0]
+                  }
+                />
               </div>
             ))}
           </div>

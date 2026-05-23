@@ -36,22 +36,3 @@ export interface Database {
   };
 }
 
-export type CourseCategory =
-  | "planlama-otb"
-  | "ai-veri"
-  | "liderlik"
-  | "operasyon"
-  | "pazarlama"
-  | "e-ticaret";
-
-export interface Course {
-  id: string;
-  slug: string;
-  title: string;
-  instructor: string;
-  duration: string;
-  price: number;
-  category: CourseCategory;
-  imageUrl: string;
-  featured?: boolean;
-}

@@ -4,7 +4,13 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: "https",
-        hostname: "placehold.co",
+        hostname: "thorius.com.tr",
+        pathname: "/wp-content/uploads/**",
+      },
+      {
+        protocol: "https",
+        hostname: "secure.gravatar.com",
+        pathname: "/avatar/**",
       },
     ],
   },

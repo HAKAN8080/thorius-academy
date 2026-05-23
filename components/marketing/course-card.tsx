@@ -1,10 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
-import { Clock } from "lucide-react";
-import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
-import { categoryLabels, formatPrice } from "@/lib/data/courses";
-import type { Course } from "@/types/database";
+import type { Course } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
 
 interface CourseCardProps {
@@ -14,36 +12,55 @@ interface CourseCardProps {
 
 export function CourseCard({ course, className }: CourseCardProps) {
   return (
-    <Link href={`/kurslar?kurs=${course.slug}`} className={cn("block", className)}>
-      <Card className="group h-full overflow-hidden border-primary-100 transition-all duration-300 hover:scale-[1.02] hover:shadow-xl">
-        <div className="relative aspect-[16/10] overflow-hidden bg-primary-100">
+    <Link
+      href={`/kurslar/${course.slug}`}
+      className={cn(
+        "group flex flex-col overflow-hidden rounded-2xl border border-primary-100 bg-white transition-all duration-300 hover:scale-[1.02] hover:shadow-xl",
+        className
+      )}
+    >
+      <div className="relative aspect-video overflow-hidden bg-primary-50">
+        {course.featuredImage ? (
           <Image
-            src={course.imageUrl}
-            alt={course.title}
+            src={course.featuredImage}
+            alt={course.imageAlt}
             fill
-            className="object-cover transition-transform duration-300 group-hover:scale-105"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            className="object-cover transition-transform duration-500 group-hover:scale-105"
           />
-          <Badge className="absolute left-3 top-3 bg-primary-900/90 text-white hover:bg-primary-900">
-            {categoryLabels[course.category]}
-          </Badge>
-        </div>
-        <CardContent className="p-5">
-          <h3 className="line-clamp-2 font-semibold text-primary-900 group-hover:text-primary-700">
-            {course.title}
-          </h3>
-          <p className="mt-2 text-sm text-muted-foreground">{course.instructor}</p>
-          <div className="mt-3 flex items-center gap-1 text-sm text-primary-600">
-            <Clock className="h-4 w-4" aria-hidden="true" />
-            <span>{course.duration}</span>
+        ) : (
+          <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-primary-100 to-primary-200">
+            <span className="text-4xl font-bold text-primary-300">T</span>
           </div>
-        </CardContent>
-        <CardFooter className="border-t border-primary-50 px-5 py-4">
-          <span className="text-lg font-bold text-primary-900">
-            {formatPrice(course.price)}
-          </span>
-        </CardFooter>
-      </Card>
+        )}
+
+        {course.categories.length > 0 && (
+          <div className="absolute left-3 top-3">
+            <Badge className="border-0 bg-primary-950/90 text-white backdrop-blur-sm">
+              {course.categories[0].name}
+            </Badge>
+          </div>
+        )}
+      </div>
+
+      <div className="flex flex-grow flex-col gap-3 p-5">
+        <h3 className="line-clamp-2 text-lg font-bold text-primary-950 transition-colors group-hover:text-accent-600">
+          {course.title}
+        </h3>
+
+        <p className="line-clamp-3 flex-grow text-sm text-muted-foreground">
+          {course.excerpt}
+        </p>
+
+        {course.instructor && (
+          <div className="flex items-center gap-2 border-t border-primary-50 pt-3">
+            <User className="h-4 w-4 text-primary-700" aria-hidden="true" />
+            <span className="text-sm font-medium text-primary-900">
+              {course.instructor.name}
+            </span>
+          </div>
+        )}
+      </div>
     </Link>
   );
 }

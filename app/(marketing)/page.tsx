@@ -1,50 +1,64 @@
 import Link from "next/link";
-import { Building2, ArrowRight } from "lucide-react";
+import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseCard } from "@/components/marketing/course-card";
 import { Button } from "@/components/ui/button";
-import { courses } from "@/lib/data/courses";
+import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
 
-const featuredCourses = courses.filter((c) => c.featured);
+export const revalidate = 3600;
 
-export default function HomePage() {
+export default async function HomePage() {
+  const [allCourses, categories] = await Promise.all([
+    fetchAllCourses(),
+    fetchAllCategories(),
+  ]);
+  const featuredCourses = allCourses.slice(0, 6);
+  const carouselCourses = allCourses.slice(0, 6);
+
   return (
     <>
-      <Hero />
+      <Hero courses={carouselCourses} />
       <EcosystemCards />
-      <CategoryGrid />
+      <CategoryGrid categories={categories} />
 
-      <section className="bg-primary-50/50 py-16" aria-labelledby="featured-heading">
-        <Container>
-          <div className="flex flex-col items-start justify-between gap-4 sm:flex-row sm:items-end">
-            <div>
+      {featuredCourses.length > 0 && (
+        <section
+          className="bg-gradient-to-b from-white to-primary-50 py-16 md:py-20"
+          aria-labelledby="featured-heading"
+        >
+          <Container>
+            <div className="mb-12 text-center">
               <h2
                 id="featured-heading"
-                className="text-3xl font-bold text-primary-900"
+                className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl"
               >
                 Öne Çıkan Kurslar
               </h2>
-              <p className="mt-2 text-primary-700">
-                Sektör liderlerinden seçilmiş programlar
+              <p className="text-lg text-muted-foreground">
+                Profesyoneller için seçilmiş premium eğitimler
               </p>
             </div>
-            <Button variant="outline" className="rounded-xl" asChild>
-              <Link href="/kurslar">
-                Tümünü Gör
-                <ArrowRight className="h-4 w-4" />
+
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {featuredCourses.map((course) => (
+                <CourseCard key={course.id} course={course} />
+              ))}
+            </div>
+
+            <div className="mt-12 text-center">
+              <Link
+                href="/kurslar"
+                className="inline-flex items-center gap-2 font-semibold text-primary-950 transition-colors hover:text-accent-600"
+              >
+                Tüm Kursları Görüntüle →
               </Link>
-            </Button>
-          </div>
-          <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {featuredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
-            ))}
-          </div>
-        </Container>
-      </section>
+            </div>
+          </Container>
+        </section>
+      )}
 
       <section
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"
