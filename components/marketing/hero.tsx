@@ -25,21 +25,22 @@ export function Hero({ courses }: HeroProps) {
         <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
           <div className="order-2 flex max-w-3xl flex-col gap-4 sm:gap-6 lg:order-1">
             <p className="inline-block w-fit rounded-full border border-accent-500/30 bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 sm:px-4 sm:py-2 sm:text-sm">
-              Premium B2B Perakende Akademisi
+              Premium İş Akademisi
             </p>
             <h1
               id="hero-heading"
               className="max-w-3xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
             >
-              Perakendenin{" "}
+              Profesyonellerin{" "}
               <span className="bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
                 Yeni Nesil
               </span>{" "}
               Akademisi
             </h1>
             <p className="max-w-2xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl lg:text-2xl">
-              Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş
-              premium eğitim deneyimi
+              Perakende, İK, AI, liderlik ve daha fazlası — sektörün en
+              deneyimli isimlerinden, AI ile zenginleştirilmiş premium eğitim
+              deneyimi
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Button
