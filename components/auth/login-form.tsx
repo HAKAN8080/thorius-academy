@@ -26,8 +26,14 @@ function SubmitButton() {
   );
 }
 
-export function LoginForm() {
+interface LoginFormProps {
+  callbackError?: string;
+}
+
+export function LoginForm({ callbackError }: LoginFormProps) {
   const [state, formAction] = useFormState(signIn, initialState);
+
+  const displayError = state.error ?? callbackError;
 
   return (
     <Card className="border-primary-100 shadow-lg">
@@ -39,9 +45,12 @@ export function LoginForm() {
       </CardHeader>
       <form action={formAction}>
         <CardContent className="space-y-4">
-          {state.error && (
-            <p className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive" role="alert">
-              {state.error}
+          {displayError && (
+            <p
+              className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
+              role="alert"
+            >
+              {displayError}
             </p>
           )}
           <div className="space-y-2">
@@ -69,7 +78,10 @@ export function LoginForm() {
         </CardContent>
         <CardFooter className="justify-center text-sm text-muted-foreground">
           Hesabınız yok mu?{" "}
-          <Link href="/kayit" className="ml-1 font-medium text-primary-700 hover:underline">
+          <Link
+            href="/kayit"
+            className="ml-1 font-medium text-primary-700 hover:underline"
+          >
             Üye olun
           </Link>
         </CardFooter>

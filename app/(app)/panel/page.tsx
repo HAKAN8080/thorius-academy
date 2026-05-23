@@ -1,3 +1,4 @@
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BookOpen, Award, Clock } from "lucide-react";
@@ -8,8 +9,12 @@ export default async function PanelPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const meta = user?.user_metadata as { full_name?: string } | undefined;
-  const displayName = meta?.full_name ?? user?.email?.split("@")[0] ?? "Üye";
+  if (!user) {
+    redirect("/giris");
+  }
+
+  const meta = user.user_metadata as { full_name?: string } | undefined;
+  const displayName = meta?.full_name ?? user.email?.split("@")[0] ?? "Üye";
 
   return (
     <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">

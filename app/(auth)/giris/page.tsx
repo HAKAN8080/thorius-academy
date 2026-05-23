@@ -5,6 +5,10 @@ export const metadata: Metadata = {
   title: "Giriş Yap | Thorius Academy",
 };
 
-export default function GirisPage() {
-  return <LoginForm />;
+interface GirisPageProps {
+  searchParams: { error?: string };
+}
+
+export default function GirisPage({ searchParams }: GirisPageProps) {
+  return <LoginForm callbackError={searchParams.error} />;
 }
