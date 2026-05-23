@@ -37,6 +37,15 @@ const footerColumns = [
     ],
   },
   {
+    title: "Yasal",
+    links: [
+      { href: "/gizlilik", label: "Gizlilik Politikası" },
+      { href: "/kvkk", label: "KVKK Aydınlatma Metni" },
+      { href: "/kullanim-kosullari", label: "Kullanım Koşulları" },
+      { href: "/iletisim", label: "İletişim" },
+    ],
+  },
+  {
     title: "İletişim",
     links: [
       { href: "mailto:info@thorius.com", label: "info@thorius.com" },
@@ -50,7 +59,7 @@ export function Footer() {
   return (
     <footer className="bg-primary-900 text-white">
       <Container className="py-12">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
+        <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
           {footerColumns.map((column) => (
             <div key={column.title}>
               <h3 className="mb-4 text-sm font-semibold uppercase tracking-wider text-accent-500">
