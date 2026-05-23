@@ -1,7 +1,13 @@
+import type { Metadata } from "next";
+import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { BookOpen, Award, Clock } from "lucide-react";
+import { getUserEnrollments } from "@/lib/actions/enrollment";
+import { BookOpen, GraduationCap, ArrowRight, User } from "lucide-react";
+
+export const metadata: Metadata = {
+  title: "Panel",
+};
 
 export default async function PanelPage() {
   const supabase = await createClient();
@@ -9,62 +15,90 @@ export default async function PanelPage() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user) {
-    redirect("/giris");
-  }
+  if (!user) redirect("/giris");
 
-  const meta = user.user_metadata as { full_name?: string } | undefined;
-  const displayName = meta?.full_name ?? user.email?.split("@")[0] ?? "Üye";
+  const enrollments = await getUserEnrollments();
+  const activeEnrollments = enrollments.filter((e) => e.status === "active");
+  const completedEnrollments = enrollments.filter(
+    (e) => e.status === "completed"
+  );
 
   return (
-    <div className="mx-auto max-w-7xl px-4 py-10 sm:px-6 lg:px-8">
-      <h1 className="text-2xl font-bold text-primary-900">
-        Merhaba, {displayName}
-      </h1>
-      <p className="mt-2 text-primary-700">
-        Öğrenme paneliniz yakında aktif olacak. Şimdilik özet görünümü
-        inceleyebilirsiniz.
-      </p>
+    <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
+      <header className="mb-10">
+        <h1 className="mb-2 text-3xl font-bold text-primary-950 md:text-4xl">
+          Hoş geldiniz! 👋
+        </h1>
+        <p className="text-lg text-muted-foreground">{user.email}</p>
+      </header>
 
-      <div className="mt-10 grid gap-6 sm:grid-cols-3">
-        <Card className="border-primary-100">
-          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <BookOpen className="h-5 w-5 text-accent-600" aria-hidden="true" />
-            <CardTitle className="text-base">Devam Eden</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-primary-900">0</p>
-            <p className="text-sm text-muted-foreground">kurs</p>
-          </CardContent>
-        </Card>
-        <Card className="border-primary-100">
-          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <Award className="h-5 w-5 text-accent-600" aria-hidden="true" />
-            <CardTitle className="text-base">Tamamlanan</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-primary-900">0</p>
-            <p className="text-sm text-muted-foreground">sertifika</p>
-          </CardContent>
-        </Card>
-        <Card className="border-primary-100">
-          <CardHeader className="flex flex-row items-center gap-3 pb-2">
-            <Clock className="h-5 w-5 text-accent-600" aria-hidden="true" />
-            <CardTitle className="text-base">Toplam Süre</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <p className="text-3xl font-bold text-primary-900">0</p>
-            <p className="text-sm text-muted-foreground">saat</p>
-          </CardContent>
-        </Card>
+      <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
+        <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-lg bg-primary-950 p-2">
+              <BookOpen className="h-5 w-5 text-accent-400" />
+            </div>
+            <h3 className="font-semibold text-primary-950">Aktif Kurslar</h3>
+          </div>
+          <p className="text-3xl font-bold text-primary-950">
+            {activeEnrollments.length}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-lg bg-primary-950 p-2">
+              <GraduationCap className="h-5 w-5 text-accent-400" />
+            </div>
+            <h3 className="font-semibold text-primary-950">Tamamlanan</h3>
+          </div>
+          <p className="text-3xl font-bold text-primary-950">
+            {completedEnrollments.length}
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-accent-500/20 bg-gradient-to-br from-primary-900 to-primary-950 p-6 text-white">
+          <div className="mb-2 flex items-center gap-3">
+            <div className="rounded-lg bg-accent-500/20 p-2">
+              <User className="h-5 w-5 text-accent-400" />
+            </div>
+            <h3 className="font-semibold">Hesabım</h3>
+          </div>
+          <p className="truncate text-sm text-primary-100">{user.email}</p>
+        </div>
       </div>
 
-      <Card className="mt-10 border-dashed border-primary-200 bg-white">
-        <CardContent className="py-12 text-center text-primary-600">
-          Video oynatıcı, ilerleme takibi ve sertifikalar bir sonraki sprintte
-          eklenecek.
-        </CardContent>
-      </Card>
+      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        <Link
+          href="/panel/kurslarim"
+          className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <div className="rounded-lg bg-accent-500/10 p-3">
+              <BookOpen className="h-6 w-6 text-accent-600" />
+            </div>
+            <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-primary-950">Kurslarım</h3>
+          <p className="text-muted-foreground">
+            Kayıtlı olduğunuz tüm kursları görüntüleyin
+          </p>
+        </Link>
+
+        <Link
+          href="/kurslar"
+          className="group rounded-2xl border border-accent-500/30 bg-gradient-to-br from-primary-900 to-primary-950 p-6 text-white transition-all hover:shadow-xl"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <div className="rounded-lg bg-accent-500/20 p-3">
+              <GraduationCap className="h-6 w-6 text-accent-400" />
+            </div>
+            <ArrowRight className="h-5 w-5 text-primary-100 transition-all group-hover:translate-x-1 group-hover:text-accent-400" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold">Yeni Kurs Keşfet</h3>
+          <p className="text-primary-100">65+ premium kursumuzu inceleyin</p>
+        </Link>
+      </div>
     </div>
   );
 }

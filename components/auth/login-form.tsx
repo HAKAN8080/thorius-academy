@@ -2,6 +2,7 @@
 
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { signIn, type AuthActionState } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,6 +32,8 @@ interface LoginFormProps {
 }
 
 export function LoginForm({ callbackError }: LoginFormProps) {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/panel";
   const [state, formAction] = useFormState(signIn, initialState);
 
   const displayError = state.error ?? callbackError;
@@ -44,6 +47,7 @@ export function LoginForm({ callbackError }: LoginFormProps) {
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
+        <input type="hidden" name="redirect" value={redirectTo} />
         <CardContent className="space-y-4">
           {displayError && (
             <p

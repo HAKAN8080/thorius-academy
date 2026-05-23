@@ -20,6 +20,10 @@ function stripHtml(html: string): string {
     .trim();
 }
 
+function parseExcerpt(html: string): string {
+  return stripHtml(html).replace(/\s*(\[\.\.\.\]|…|\.{3,})\s*$/, "").trim();
+}
+
 function transformCourse(wpCourse: WPCourse): Course {
   const embedded = wpCourse._embedded;
 
@@ -56,9 +60,8 @@ function transformCourse(wpCourse: WPCourse): Course {
     id: wpCourse.id,
     slug: wpCourse.slug,
     title: stripHtml(wpCourse.title.rendered),
-    excerpt: stripHtml(wpCourse.excerpt.rendered),
-    content: stripHtml(wpCourse.content.rendered),
-    contentHtml: wpCourse.content.rendered,
+    excerpt: parseExcerpt(wpCourse.excerpt.rendered),
+    content: wpCourse.content.rendered,
     featuredImage,
     imageAlt: featuredMedia?.alt_text || stripHtml(wpCourse.title.rendered),
     instructor,

@@ -66,7 +66,6 @@ export interface Course {
   title: string;
   excerpt: string;
   content: string;
-  contentHtml: string;
   featuredImage: string | null;
   imageAlt: string;
   instructor: {

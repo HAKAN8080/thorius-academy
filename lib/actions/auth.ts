@@ -12,6 +12,17 @@ export interface AuthActionState {
   registeredEmail?: string;
 }
 
+function getSafeRedirect(value: unknown): string {
+  if (
+    typeof value !== "string" ||
+    !value.startsWith("/") ||
+    value.startsWith("//")
+  ) {
+    return "/panel";
+  }
+  return value;
+}
+
 export async function signIn(
   _prevState: AuthActionState,
   formData: FormData
@@ -19,6 +30,7 @@ export async function signIn(
   try {
     const email = formData.get("email");
     const password = formData.get("password");
+    const redirectTo = getSafeRedirect(formData.get("redirect"));
 
     if (typeof email !== "string" || typeof password !== "string") {
       return { error: "Geçerli e-posta ve parola girin." };
@@ -35,7 +47,7 @@ export async function signIn(
     }
 
     revalidatePath("/", "layout");
-    redirect("/panel");
+    redirect(redirectTo);
   } catch (error) {
     if (error instanceof Error && error.message === "NEXT_REDIRECT") {
       throw error;

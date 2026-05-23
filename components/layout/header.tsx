@@ -12,6 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Container } from "@/components/layout/container";
+import { AuthButtons } from "@/components/layout/auth-buttons";
 import { cn } from "@/lib/utils";
 
 type NavLink = {
@@ -77,14 +78,7 @@ export function Header() {
           ))}
         </nav>
 
-        <div className="hidden items-center gap-3 md:flex">
-          <Button variant="ghost" asChild>
-            <Link href="/giris">Giriş Yap</Link>
-          </Button>
-          <Button variant="gold" asChild>
-            <Link href="/kayit">Üye Ol</Link>
-          </Button>
-        </div>
+        <AuthButtons className="hidden items-center gap-3 md:flex" />
 
         <Sheet open={open} onOpenChange={setOpen}>
           <SheetTrigger asChild className="md:hidden">
@@ -117,16 +111,10 @@ export function Header() {
                 </Link>
               ))}
               <hr className="my-2 border-primary-100" />
-              <Button variant="ghost" asChild className="justify-start">
-                <Link href="/giris" onClick={() => setOpen(false)}>
-                  Giriş Yap
-                </Link>
-              </Button>
-              <Button variant="gold" asChild>
-                <Link href="/kayit" onClick={() => setOpen(false)}>
-                  Üye Ol
-                </Link>
-              </Button>
+              <AuthButtons
+                className="flex flex-col gap-2"
+                onNavigate={() => setOpen(false)}
+              />
             </nav>
           </SheetContent>
         </Sheet>

@@ -2,10 +2,12 @@ import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { ArrowLeft, Calendar, ExternalLink, User } from "lucide-react";
+import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { EnrollButton } from "@/components/enrollment/enroll-button";
+import { checkEnrollment } from "@/lib/actions/enrollment";
+import { createClient } from "@/lib/supabase/server";
 import { fetchAllCourses, fetchCourseBySlug } from "@/lib/wordpress/api";
 
 interface CourseDetailPageProps {
@@ -42,6 +44,12 @@ export default async function CourseDetailPage({
 }: CourseDetailPageProps) {
   const course = await fetchCourseBySlug(params.slug);
   if (!course) notFound();
+
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  const enrollment = user ? await checkEnrollment(course.id) : null;
 
   return (
     <article>
@@ -97,31 +105,27 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <Button
-                  size="lg"
-                  asChild
-                  className="bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
-                >
-                  <a
-                    href={course.wpLink}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    Kursa Katıl
-                    <ExternalLink className="ml-2 h-4 w-4" />
-                  </a>
-                </Button>
+                <EnrollButton
+                  courseId={course.id}
+                  courseSlug={course.slug}
+                  courseTitle={course.title}
+                  courseImage={course.featuredImage}
+                  courseCategory={course.categories[0]?.name}
+                  instructorName={course.instructor?.name}
+                  isLoggedIn={!!user}
+                  isAlreadyEnrolled={!!enrollment}
+                />
               </div>
             </div>
 
             {course.featuredImage && (
-              <div className="relative aspect-video overflow-hidden rounded-2xl border border-accent-500/20 shadow-2xl lg:aspect-square">
+              <div className="relative aspect-video overflow-hidden rounded-2xl border border-accent-500/20 bg-primary-900/50 shadow-2xl">
                 <Image
                   src={course.featuredImage}
                   alt={course.imageAlt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 400px"
-                  className="object-cover"
+                  className="object-contain object-center"
                   priority
                 />
               </div>
@@ -133,8 +137,8 @@ export default async function CourseDetailPage({
       <section className="py-12 md:py-16">
         <Container size="narrow">
           <div
-            className="course-content max-w-none text-primary-800 [&_a]:text-accent-600 [&_a]:underline [&_h2]:mb-4 [&_h2]:mt-8 [&_h2]:text-2xl [&_h2]:font-bold [&_h2]:text-primary-950 [&_h3]:mb-3 [&_h3]:mt-6 [&_h3]:text-xl [&_h3]:font-semibold [&_h3]:text-primary-950 [&_li]:mb-2 [&_ol]:my-4 [&_ol]:list-decimal [&_ol]:pl-6 [&_p]:mb-4 [&_p]:leading-relaxed [&_strong]:font-semibold [&_strong]:text-primary-900 [&_ul]:my-4 [&_ul]:list-disc [&_ul]:pl-6"
-            dangerouslySetInnerHTML={{ __html: course.contentHtml }}
+            className="prose prose-lg max-w-none prose-headings:text-primary-950 prose-a:text-accent-600"
+            dangerouslySetInnerHTML={{ __html: course.content }}
           />
 
           <div className="mt-12 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-8 text-center">
@@ -144,20 +148,16 @@ export default async function CourseDetailPage({
             <p className="mb-6 text-muted-foreground">
               Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
             </p>
-            <Button
-              size="lg"
-              asChild
-              className="bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
-            >
-              <a
-                href={course.wpLink}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Kursa Katıl
-                <ExternalLink className="ml-2 h-4 w-4" />
-              </a>
-            </Button>
+            <EnrollButton
+              courseId={course.id}
+              courseSlug={course.slug}
+              courseTitle={course.title}
+              courseImage={course.featuredImage}
+              courseCategory={course.categories[0]?.name}
+              instructorName={course.instructor?.name}
+              isLoggedIn={!!user}
+              isAlreadyEnrolled={!!enrollment}
+            />
           </div>
         </Container>
       </section>
