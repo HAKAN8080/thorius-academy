@@ -5,8 +5,9 @@ import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
-import { EnrollButton } from "@/components/enrollment/enroll-button";
+import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
 import { checkEnrollment } from "@/lib/actions/enrollment";
+import { getCourseProduct } from "@/lib/actions/course-products";
 import { createClient } from "@/lib/supabase/server";
 import { fetchAllCourses, fetchCourseBySlug } from "@/lib/wordpress/api";
 
@@ -50,6 +51,19 @@ export default async function CourseDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   const enrollment = user ? await checkEnrollment(course.id) : null;
+  const courseProduct = await getCourseProduct(params.slug);
+
+  const ctaProps = {
+    courseId: course.id,
+    courseSlug: course.slug,
+    courseTitle: course.title,
+    courseImage: course.featuredImage,
+    courseCategory: course.categories[0]?.name,
+    instructorName: course.instructor?.name,
+    isLoggedIn: !!user,
+    isAlreadyEnrolled: !!enrollment,
+    courseProduct,
+  };
 
   return (
     <article>
@@ -105,16 +119,7 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <EnrollButton
-                  courseId={course.id}
-                  courseSlug={course.slug}
-                  courseTitle={course.title}
-                  courseImage={course.featuredImage}
-                  courseCategory={course.categories[0]?.name}
-                  instructorName={course.instructor?.name}
-                  isLoggedIn={!!user}
-                  isAlreadyEnrolled={!!enrollment}
-                />
+                <CoursePurchaseCta {...ctaProps} />
               </div>
             </div>
 
@@ -148,16 +153,7 @@ export default async function CourseDetailPage({
             <p className="mb-6 text-muted-foreground">
               Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
             </p>
-            <EnrollButton
-              courseId={course.id}
-              courseSlug={course.slug}
-              courseTitle={course.title}
-              courseImage={course.featuredImage}
-              courseCategory={course.categories[0]?.name}
-              instructorName={course.instructor?.name}
-              isLoggedIn={!!user}
-              isAlreadyEnrolled={!!enrollment}
-            />
+            <CoursePurchaseCta {...ctaProps} />
           </div>
         </Container>
       </section>
