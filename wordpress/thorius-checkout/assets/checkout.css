@@ -1,0 +1,157 @@
+/* ═══════════════════════════════════════════════════════
+   Thorius Checkout — UI düzeltmeleri v1.1
+   Kupon ikonu · PayTR okunabilirlik · Kompakt layout
+   ═══════════════════════════════════════════════════════ */
+
+/* ── Kompakt tek sayfa layout ── */
+form.checkout {
+  gap: 36px !important;
+  align-items: start !important;
+}
+
+.woocommerce-checkout h1 {
+  font-size: 34px !important;
+  margin-bottom: 20px !important;
+}
+
+.woocommerce-checkout h3 {
+  font-size: 20px !important;
+  margin-bottom: 18px !important;
+}
+
+.woocommerce-billing-fields {
+  padding: 24px 28px !important;
+}
+
+.woocommerce-checkout-review-order {
+  padding: 24px !important;
+}
+
+.woocommerce-checkout-review-order::before {
+  margin-bottom: 16px !important;
+  font-size: 13px !important;
+  line-height: 1.55 !important;
+}
+
+#order_review {
+  top: 24px !important;
+}
+
+.woocommerce form .form-row {
+  margin-bottom: 12px !important;
+}
+
+.woocommerce form .form-row input.input-text,
+.woocommerce form .form-row select,
+.select2-container--default .select2-selection--single {
+  height: 48px !important;
+  font-size: 14px !important;
+}
+
+.woocommerce form .form-row textarea {
+  height: 72px !important;
+  min-height: 72px !important;
+}
+
+/* İşletme adı + vergi no yan yana — Customizer'daki gizlemeyi geçersiz kıl */
+body.woocommerce-checkout #billing_company_field,
+body.woocommerce-checkout #billing_vkn_field {
+  display: block !important;
+  width: 48% !important;
+}
+
+#billing_company_field {
+  float: left !important;
+  clear: none !important;
+}
+
+#billing_vkn_field {
+  float: right !important;
+  clear: none !important;
+}
+
+#billing_country_field {
+  clear: both !important;
+}
+
+/* Telefon + e-posta yan yana */
+#billing_phone_field,
+#billing_email_field {
+  width: 48% !important;
+}
+
+#billing_phone_field {
+  float: left !important;
+  clear: both !important;
+}
+
+#billing_email_field {
+  float: right !important;
+  clear: none !important;
+}
+
+/* Gereksiz alanları gizle */
+#billing_address_2_field,
+#billing_postcode_field,
+#billing_state_field,
+.woocommerce-additional-fields {
+  display: none !important;
+}
+
+/* ── Kupon kutusu: ikon + metin çakışması ── */
+.woocommerce-checkout .woocommerce-form-coupon-toggle .woocommerce-info {
+  position: relative !important;
+  padding: 14px 18px 14px 44px !important;
+  margin-bottom: 16px !important;
+  line-height: 1.5 !important;
+}
+
+.woocommerce-checkout .woocommerce-form-coupon-toggle .woocommerce-info::before {
+  position: absolute !important;
+  left: 16px !important;
+  top: 50% !important;
+  transform: translateY(-50%) !important;
+  margin: 0 !important;
+  width: auto !important;
+  height: auto !important;
+  line-height: 1 !important;
+}
+
+/* ── PayTR: koyu sidebar üzerinde okunabilir metin ── */
+.woocommerce-checkout-review-order #payment .payment_box,
+.woocommerce-checkout-review-order #payment .payment_box p,
+.woocommerce-checkout-review-order #payment .payment_method_paytr_payment_gateway .payment_box,
+.woocommerce-checkout-review-order #payment .payment_method_paytr_payment_gateway .payment_box p {
+  color: rgba(255, 255, 255, 0.88) !important;
+}
+
+.woocommerce-checkout-review-order #payment ul.payment_methods li label {
+  color: #ffffff !important;
+}
+
+.woocommerce-checkout-review-order #payment .payment_box {
+  background: rgba(255, 255, 255, 0.08) !important;
+  border: 1px solid rgba(255, 255, 255, 0.12) !important;
+}
+
+/* Sağ panel dışındaki ödeme kutusu (fallback) */
+body.woocommerce-checkout #payment .payment_box,
+body.woocommerce-checkout #payment .payment_box p {
+  color: #334155 !important;
+}
+
+/* ── Mobil ── */
+@media (max-width: 992px) {
+  #billing_company_field,
+  #billing_vkn_field,
+  #billing_phone_field,
+  #billing_email_field {
+    width: 100% !important;
+    float: none !important;
+    clear: both !important;
+  }
+
+  .woocommerce-billing-fields {
+    padding: 20px !important;
+  }
+}

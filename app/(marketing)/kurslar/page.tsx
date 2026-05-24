@@ -4,7 +4,9 @@ import { Container } from "@/components/layout/container";
 import { CategoryFilter } from "@/components/marketing/category-filter";
 import { CourseCard } from "@/components/marketing/course-card";
 import { CourseGridSkeleton } from "@/components/marketing/course-card-skeleton";
+import { getAllCourseProducts } from "@/lib/actions/course-products";
 import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
+import type { CourseProduct } from "@/types/course-product";
 
 export const metadata: Metadata = {
   title: "Tüm Kurslar",
@@ -23,10 +25,15 @@ async function KurslarContent({
 }: {
   selectedCategory?: string;
 }) {
-  const [courses, categories] = await Promise.all([
+  const [courses, categories, products] = await Promise.all([
     fetchAllCourses(),
     fetchAllCategories(),
+    getAllCourseProducts(),
   ]);
+
+  const productBySlug = new Map<string, CourseProduct>(
+    products.map((p) => [p.course_slug, p]),
+  );
 
   const filteredCourses = selectedCategory
     ? courses.filter((c) =>
@@ -60,9 +67,13 @@ async function KurslarContent({
             </p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 xl:grid-cols-3">
+          <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
             {filteredCourses.map((course) => (
-              <CourseCard key={course.id} course={course} />
+              <CourseCard
+                key={course.id}
+                course={course}
+                product={productBySlug.get(course.slug) ?? null}
+              />
             ))}
           </div>
         )}

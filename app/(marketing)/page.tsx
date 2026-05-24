@@ -6,15 +6,21 @@ import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseCard } from "@/components/marketing/course-card";
 import { Button } from "@/components/ui/button";
+import { getAllCourseProducts } from "@/lib/actions/course-products";
 import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
+import type { CourseProduct } from "@/types/course-product";
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const [allCourses, categories] = await Promise.all([
+  const [allCourses, categories, products] = await Promise.all([
     fetchAllCourses(),
     fetchAllCategories(),
+    getAllCourseProducts(),
   ]);
+  const productBySlug = new Map<string, CourseProduct>(
+    products.map((p) => [p.course_slug, p]),
+  );
   const featuredCourses = allCourses.slice(0, 6);
   const carouselCourses = allCourses.slice(0, 6);
 
@@ -42,9 +48,13 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
               {featuredCourses.map((course) => (
-                <CourseCard key={course.id} course={course} />
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  product={productBySlug.get(course.slug) ?? null}
+                />
               ))}
             </div>
 

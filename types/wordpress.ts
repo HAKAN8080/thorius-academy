@@ -86,4 +86,10 @@ export interface Course {
   }>;
   wpLink: string;
   publishedDate: string;
+  level?: string;
+  lessonCount?: number;
+  duration?: string;
+  durationSeconds?: number;
+  rating?: number;
+  ratingCount?: number;
 }

@@ -90,3 +90,102 @@ body {
     @apply bg-background text-foreground;
   }
 }
+
+/* Hero carousel — premium altın çizgi süpürme geçişi */
+@keyframes goldLineSweep {
+  0%,
+  12.5% {
+    top: -4px;
+    opacity: 0;
+  }
+  15% {
+    opacity: 1;
+  }
+  87.5% {
+    top: 100%;
+    opacity: 1;
+  }
+  100% {
+    top: 100%;
+    opacity: 0;
+  }
+}
+
+@keyframes goldContentReveal {
+  0%,
+  12.5% {
+    clip-path: inset(0 0 100% 0);
+    opacity: 0.94;
+  }
+  100% {
+    clip-path: inset(0 0 0 0);
+    opacity: 1;
+  }
+}
+
+.gold-line-transition {
+  position: absolute;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    #d4af37 20%,
+    #ffd966 50%,
+    #d4af37 80%,
+    transparent 100%
+  );
+  box-shadow:
+    0 0 12px 2px rgba(212, 175, 55, 0.6),
+    0 0 30px 4px rgba(212, 175, 55, 0.3);
+  z-index: 30;
+  animation: goldLineSweep 400ms ease-in-out forwards;
+  pointer-events: none;
+  will-change: top, opacity;
+}
+
+.gold-line-transition::before {
+  content: "";
+  position: absolute;
+  top: -20px;
+  left: 0;
+  right: 0;
+  height: 40px;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(212, 175, 55, 0.15) 0%,
+    transparent 70%
+  );
+}
+
+.screen-flicker-content--reveal {
+  animation: goldContentReveal 400ms ease-in-out forwards;
+  will-change: clip-path, opacity;
+}
+
+@media (max-width: 640px) {
+  .gold-line-transition {
+    box-shadow:
+      0 0 8px 1px rgba(212, 175, 55, 0.45),
+      0 0 18px 2px rgba(212, 175, 55, 0.2);
+  }
+
+  .gold-line-transition::before {
+    background: radial-gradient(
+      ellipse at center,
+      rgba(212, 175, 55, 0.1) 0%,
+      transparent 70%
+    );
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .gold-line-transition {
+    display: none !important;
+  }
+
+  .screen-flicker-content--reveal {
+    animation: none !important;
+  }
+}

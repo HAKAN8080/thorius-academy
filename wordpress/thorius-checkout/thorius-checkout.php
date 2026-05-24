@@ -1,0 +1,116 @@
+<?php
+/**
+ * Plugin Name: Thorius Checkout
+ * Description: Ödeme sayfası alanları, kurumsal fatura alanları ve checkout UI düzeltmeleri.
+ * Version: 1.1.0
+ * Author: Thorius
+ * Text Domain: thorius-checkout
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+define('THORIUS_CHECKOUT_VERSION', '1.1.0');
+define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
+define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
+
+/**
+ * Özel fatura alanları: İşletme Adı + Vergi Numarası (opsiyonel).
+ */
+function thorius_checkout_billing_fields(array $fields): array
+{
+    if (!isset($fields['billing'])) {
+        return $fields;
+    }
+
+    $fields['billing']['billing_first_name']['priority'] = 10;
+    $fields['billing']['billing_last_name']['priority'] = 20;
+
+    $fields['billing']['billing_company'] = array_merge(
+        $fields['billing']['billing_company'] ?? array(
+            'type' => 'text',
+            'class' => array('form-row-first'),
+        ),
+        array(
+            'label' => __('İşletme Adı', 'thorius-checkout'),
+            'placeholder' => __('Opsiyonel', 'thorius-checkout'),
+            'required' => false,
+            'priority' => 30,
+            'class' => array('form-row-first'),
+        )
+    );
+
+    $fields['billing']['billing_vkn'] = array(
+        'type' => 'text',
+        'label' => __('Vergi Numarası', 'thorius-checkout'),
+        'placeholder' => __('Opsiyonel', 'thorius-checkout'),
+        'required' => false,
+        'class' => array('form-row-last'),
+        'priority' => 31,
+        'maxlength' => 11,
+        'custom_attributes' => array(
+            'inputmode' => 'numeric',
+            'autocomplete' => 'off',
+        ),
+    );
+
+    $fields['billing']['billing_country']['priority'] = 40;
+    $fields['billing']['billing_address_1']['priority'] = 50;
+    $fields['billing']['billing_city']['priority'] = 60;
+    $fields['billing']['billing_phone']['priority'] = 70;
+    $fields['billing']['billing_email']['priority'] = 80;
+
+    return $fields;
+}
+add_filter('woocommerce_checkout_fields', 'thorius_checkout_billing_fields', 20);
+
+/**
+ * Vergi numarasını sipariş meta olarak kaydet.
+ */
+function thorius_checkout_save_vkn(int $order_id): void
+{
+    if (empty($_POST['billing_vkn'])) {
+        return;
+    }
+
+    $vkn = sanitize_text_field(wp_unslash($_POST['billing_vkn']));
+    update_post_meta($order_id, '_billing_vkn', $vkn);
+}
+add_action('woocommerce_checkout_update_order_meta', 'thorius_checkout_save_vkn');
+
+/**
+ * Admin sipariş ekranında vergi numarasını göster.
+ */
+function thorius_checkout_admin_order_meta($order): void
+{
+    if (!is_a($order, 'WC_Order')) {
+        return;
+    }
+
+    $vkn = $order->get_meta('_billing_vkn');
+    if (!$vkn) {
+        return;
+    }
+
+    echo '<p><strong>' . esc_html__('Vergi Numarası', 'thorius-checkout') . ':</strong> ' . esc_html($vkn) . '</p>';
+}
+add_action('woocommerce_admin_order_data_after_billing_address', 'thorius_checkout_admin_order_meta');
+
+/**
+ * Checkout CSS — kupon ikonu, PayTR metni, kompakt layout.
+ */
+function thorius_checkout_enqueue_assets(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return;
+    }
+
+    wp_enqueue_style(
+        'thorius-checkout',
+        THORIUS_CHECKOUT_URL . 'assets/checkout.css',
+        array('woocommerce-layout', 'woocommerce-smallscreen', 'woocommerce-general'),
+        THORIUS_CHECKOUT_VERSION
+    );
+}
+add_action('wp_enqueue_scripts', 'thorius_checkout_enqueue_assets', 99);
