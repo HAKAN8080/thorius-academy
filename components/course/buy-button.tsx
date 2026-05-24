@@ -22,7 +22,7 @@ export function BuyButton({
     priceSale < priceNormal;
 
   function handleBuy() {
-    const cartUrl = `https://thorius.com.tr/?add-to-cart=${wcProductId}`;
+    const cartUrl = `https://thorius.com.tr/odeme/?add-to-cart=${wcProductId}`;
     window.open(cartUrl, "_blank", "noopener,noreferrer");
   }
 
