@@ -12,6 +12,11 @@ const nextConfig = {
         hostname: "secure.gravatar.com",
         pathname: "/avatar/**",
       },
+      {
+        protocol: "https",
+        hostname: "avrupa-thorius.b-cdn.net",
+        pathname: "/**",
+      },
     ],
   },
 };

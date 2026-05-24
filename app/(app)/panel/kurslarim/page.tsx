@@ -157,7 +157,7 @@ export default async function MyCoursesPage() {
                     size="sm"
                     className="w-full bg-primary-950 text-white hover:bg-primary-900"
                   >
-                    <Link href={`/kurslar/${enrollment.course_slug}`}>
+                    <Link href={`/panel/kurslarim/${enrollment.course_slug}`}>
                       Kursa Devam Et
                       <ArrowRight className="ml-2 h-4 w-4" />
                     </Link>
