@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.1.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.2.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -582,3 +582,81 @@ function thorius_academy_sync_on_delete(int $post_id): void
     thorius_academy_sync_send_webhook($post_id, 'course.deleted', $post->post_name);
 }
 add_action('before_delete_post', 'thorius_academy_sync_on_delete');
+
+function thorius_academy_sync_get_course_id_from_lesson(int $lesson_id): int
+{
+    if (function_exists('tutor_utils')) {
+        $course_id = tutor_utils()->get_course_id_by('lesson', $lesson_id);
+        if ($course_id) {
+            return (int) $course_id;
+        }
+    }
+
+    $topic_id = (int) wp_get_post_parent_id($lesson_id);
+    if ($topic_id <= 0) {
+        return 0;
+    }
+
+    return (int) wp_get_post_parent_id($topic_id);
+}
+
+function thorius_academy_sync_get_course_id_from_topic(int $topic_id): int
+{
+    return (int) wp_get_post_parent_id($topic_id);
+}
+
+function thorius_academy_sync_on_curriculum_change(int $post_id): void
+{
+    $post = get_post($post_id);
+    if (!$post) {
+        return;
+    }
+
+    $course_id = 0;
+
+    if ($post->post_type === 'lesson' || $post->post_type === 'tutor_lesson') {
+        $course_id = thorius_academy_sync_get_course_id_from_lesson($post_id);
+    } elseif ($post->post_type === 'topics' || $post->post_type === 'tutor_topic') {
+        $course_id = thorius_academy_sync_get_course_id_from_topic($post_id);
+    }
+
+    if ($course_id <= 0) {
+        return;
+    }
+
+    thorius_academy_sync_queue_webhook($course_id, 'course.updated');
+}
+
+function thorius_academy_sync_on_lesson_created(int $lesson_id): void
+{
+    thorius_academy_sync_on_curriculum_change($lesson_id);
+}
+add_action('tutor/lesson/created', 'thorius_academy_sync_on_lesson_created', 20, 1);
+
+function thorius_academy_sync_on_lesson_updated(int $lesson_id): void
+{
+    thorius_academy_sync_on_curriculum_change($lesson_id);
+}
+add_action('tutor/lesson_update/after', 'thorius_academy_sync_on_lesson_updated', 20, 1);
+
+function thorius_academy_sync_on_lesson_save(int $post_id, WP_Post $post): void
+{
+    if (!in_array($post->post_type, array('lesson', 'tutor_lesson'), true)) {
+        return;
+    }
+
+    thorius_academy_sync_on_curriculum_change($post_id);
+}
+add_action('save_post_lesson', 'thorius_academy_sync_on_lesson_save', 999, 2);
+add_action('save_post_tutor_lesson', 'thorius_academy_sync_on_lesson_save', 999, 2);
+
+function thorius_academy_sync_on_topic_save(int $post_id, WP_Post $post): void
+{
+    if (!in_array($post->post_type, array('topics', 'tutor_topic'), true)) {
+        return;
+    }
+
+    thorius_academy_sync_on_curriculum_change($post_id);
+}
+add_action('save_post_topics', 'thorius_academy_sync_on_topic_save', 999, 2);
+add_action('save_post_tutor_topic', 'thorius_academy_sync_on_topic_save', 999, 2);

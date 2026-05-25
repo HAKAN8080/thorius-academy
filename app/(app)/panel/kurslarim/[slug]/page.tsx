@@ -40,10 +40,8 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
 
   let lessons = await getLessonsForCourse(slug);
 
-  if (lessons.length === 0) {
-    await syncCourseFromTutor(course.id, slug);
-    lessons = await getLessonsForCourse(slug);
-  }
+  await syncCourseFromTutor(course.id, slug);
+  lessons = await getLessonsForCourse(slug);
 
   if (lessons.length === 0) {
     return (

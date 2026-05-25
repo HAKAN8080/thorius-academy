@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
+import { revalidatePath } from "next/cache";
 import { revalidateCourseCache } from "@/lib/webhooks/revalidate-course-cache";
+import { syncCourseLessonsFromWebhook } from "@/lib/webhooks/sync-course-lessons";
 import { syncCourseProduct } from "@/lib/webhooks/sync-course-product";
 import { syncCourseProductSlug } from "@/lib/webhooks/sync-course-product-slug";
 import { verifyWebhookSignature } from "@/lib/webhooks/verify-signature";
@@ -73,6 +75,16 @@ export async function POST(req: NextRequest) {
 
     const courseProductSync = await syncCourseProduct(payload.course);
 
+    let lessonSync: Awaited<ReturnType<typeof syncCourseLessonsFromWebhook>> | null =
+      null;
+    if (payload.course.id && payload.course.status === "publish") {
+      lessonSync = await syncCourseLessonsFromWebhook(
+        payload.course.id,
+        payload.course.slug,
+      );
+      revalidatePath(`/panel/kurslarim/${payload.course.slug}`);
+    }
+
     const revalidation = revalidateCourseCache({
       slug: payload.course.slug,
       previousSlug,
@@ -85,6 +97,7 @@ export async function POST(req: NextRequest) {
       previous_slug: previousSlug ?? null,
       course_product_slug_synced: courseProductSlugSynced,
       course_product_sync: courseProductSync,
+      lesson_sync: lessonSync,
       ...revalidation,
     });
   } catch (error) {

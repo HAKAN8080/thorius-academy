@@ -11,10 +11,15 @@ function getAuthHeader(): string {
   return "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
 }
 
-async function tutorFetch<T>(endpoint: string): Promise<T> {
+async function tutorFetch<T>(
+  endpoint: string,
+  options: { fresh?: boolean } = {},
+): Promise<T> {
   const res = await fetch(`${TUTOR_API_BASE}${endpoint}`, {
     headers: { Authorization: getAuthHeader() },
-    next: { revalidate: 3600 },
+    ...(options.fresh
+      ? { cache: "no-store" as const }
+      : { next: { revalidate: 3600 } }),
   });
   if (!res.ok) {
     throw new Error(`Tutor API error ${res.status}: ${endpoint}`);
@@ -38,18 +43,46 @@ export async function fetchTutorLessons(topicId: number): Promise<TutorLesson[]>
 
 export async function fetchCourseFullStructure(courseId: number) {
   const topics = await fetchTutorTopics(courseId);
+  return buildCourseStructure(topics);
+}
+
+export async function fetchCourseFullStructureFresh(courseId: number) {
+  const data = await tutorFetch<TutorApiResponse<TutorTopic[]>>(
+    `/topics?course_id=${courseId}`,
+    { fresh: true },
+  );
+  const topics = data.data || [];
+  return buildCourseStructureFresh(topics);
+}
+
+async function buildCourseStructure(topics: TutorTopic[]) {
+  return buildCourseStructureWithFetch(topics, false);
+}
+
+async function buildCourseStructureFresh(topics: TutorTopic[]) {
+  return buildCourseStructureWithFetch(topics, true);
+}
+
+async function buildCourseStructureWithFetch(
+  topics: TutorTopic[],
+  fresh: boolean,
+) {
   const topicsWithLessons = await Promise.all(
     topics.map(async (topic, idx) => {
       const topicId =
         typeof topic.ID === "string" ? parseInt(topic.ID, 10) : topic.ID;
-      const lessons = await fetchTutorLessons(topicId);
+      const data = await tutorFetch<TutorApiResponse<TutorLesson[]>>(
+        `/lessons?topic_id=${topicId}`,
+        { fresh },
+      );
+      const lessons = data.data || [];
       return {
         topic_id: topicId,
         topic_title: topic.post_title,
         topic_order: idx + 1,
         lessons: lessons.reverse(),
       };
-    })
+    }),
   );
   return topicsWithLessons;
 }
