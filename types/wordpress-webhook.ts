@@ -4,14 +4,19 @@ export type WordPressCourseWebhookEvent =
   | "course.unpublished"
   | "course.deleted";
 
+export interface WordPressCourseWebhookCourse {
+  id: number;
+  slug: string;
+  previous_slug?: string;
+  status: string;
+  title: string;
+  wc_product_id?: number;
+  price_normal?: number | null;
+  price_sale?: number | null;
+}
+
 export interface WordPressCourseWebhookPayload {
   event: WordPressCourseWebhookEvent;
-  course: {
-    id: number;
-    slug: string;
-    previous_slug?: string;
-    status: string;
-    title: string;
-  };
+  course: WordPressCourseWebhookCourse;
   timestamp: string;
 }

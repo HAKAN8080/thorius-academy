@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { revalidateCourseCache } from "@/lib/webhooks/revalidate-course-cache";
+import { syncCourseProduct } from "@/lib/webhooks/sync-course-product";
 import { syncCourseProductSlug } from "@/lib/webhooks/sync-course-product-slug";
 import { verifyWebhookSignature } from "@/lib/webhooks/verify-signature";
 import type { WordPressCourseWebhookPayload } from "@/types/wordpress-webhook";
@@ -51,6 +52,7 @@ export async function POST(req: NextRequest) {
       slug: payload.course?.slug,
       previous_slug: payload.course?.previous_slug,
       status: payload.course?.status,
+      wc_product_id: payload.course?.wc_product_id,
     });
 
     if (!payload.course?.slug) {
@@ -69,6 +71,8 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    const courseProductSync = await syncCourseProduct(payload.course);
+
     const revalidation = revalidateCourseCache({
       slug: payload.course.slug,
       previousSlug,
@@ -80,6 +84,7 @@ export async function POST(req: NextRequest) {
       course_slug: payload.course.slug,
       previous_slug: previousSlug ?? null,
       course_product_slug_synced: courseProductSlugSynced,
+      course_product_sync: courseProductSync,
       ...revalidation,
     });
   } catch (error) {

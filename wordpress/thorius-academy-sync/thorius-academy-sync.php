@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.0.3
+ * Version: 1.1.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.0.3');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.1.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -215,37 +215,94 @@ function thorius_academy_sync_run_test(array $settings): array
         );
     }
 
-    $response = wp_remote_get($settings['webhook_url'], array('timeout' => 8));
+    $get_response = wp_remote_get($settings['webhook_url'], array('timeout' => 8));
 
-    if (is_wp_error($response)) {
+    if (is_wp_error($get_response)) {
         return array(
             'success' => false,
             'message' => sprintf(
-                /* translators: %s: error message */
                 __('Bağlantı hatası: %s', 'thorius-academy-sync'),
-                $response->get_error_message()
+                $get_response->get_error_message()
             ),
         );
     }
 
-    $status_code = (int) wp_remote_retrieve_response_code($response);
-    $body = wp_remote_retrieve_body($response);
-
-    if ($status_code === 404) {
+    $get_status = (int) wp_remote_retrieve_response_code($get_response);
+    if ($get_status === 404) {
         return array(
             'success' => false,
-            'message' => __('404 — Academy henüz deploy edilmemiş. Vercel\'de main branch deploy edilmeli.', 'thorius-academy-sync'),
+            'message' => __('404 — Academy endpoint bulunamadı.', 'thorius-academy-sync'),
         );
     }
 
-    if ($status_code < 200 || $status_code >= 300) {
+    if ($get_status < 200 || $get_status >= 300) {
         return array(
             'success' => false,
             'message' => sprintf(
-                /* translators: 1: HTTP status code, 2: response body */
-                __('HTTP %1$d — %2$s', 'thorius-academy-sync'),
-                $status_code,
-                wp_strip_all_tags($body)
+                __('GET HTTP %1$d — %2$s', 'thorius-academy-sync'),
+                $get_status,
+                wp_strip_all_tags(wp_remote_retrieve_body($get_response))
+            ),
+        );
+    }
+
+    $payload = wp_json_encode(array(
+        'event' => 'course.updated',
+        'course' => array(
+            'id' => 0,
+            'slug' => 'webhook-test',
+            'status' => 'publish',
+            'title' => 'Webhook Test',
+        ),
+        'timestamp' => gmdate('c'),
+    ));
+
+    if (!is_string($payload)) {
+        return array(
+            'success' => false,
+            'message' => __('Test payload oluşturulamadı.', 'thorius-academy-sync'),
+        );
+    }
+
+    $signature = base64_encode(hash_hmac('sha256', $payload, $settings['webhook_secret'], true));
+
+    $post_response = wp_remote_post($settings['webhook_url'], array(
+        'timeout' => 8,
+        'blocking' => true,
+        'headers' => array(
+            'Content-Type' => 'application/json',
+            'X-WP-Webhook-Signature' => $signature,
+        ),
+        'body' => $payload,
+    ));
+
+    if (is_wp_error($post_response)) {
+        return array(
+            'success' => false,
+            'message' => sprintf(
+                __('POST hatası: %s', 'thorius-academy-sync'),
+                $post_response->get_error_message()
+            ),
+        );
+    }
+
+    $post_status = (int) wp_remote_retrieve_response_code($post_response);
+    $post_body = wp_remote_retrieve_body($post_response);
+
+    if ($post_status === 401) {
+        return array(
+            'success' => false,
+            'message' => __('401 — Secret uyuşmuyor. Vercel WP_WEBHOOK_SECRET ile WordPress secret aynı olmalı.', 'thorius-academy-sync'),
+        );
+    }
+
+    if ($post_status < 200 || $post_status >= 300) {
+        return array(
+            'success' => false,
+            'message' => sprintf(
+                __('POST HTTP %1$d — %2$s', 'thorius-academy-sync'),
+                $post_status,
+                wp_strip_all_tags($post_body)
             ),
         );
     }
@@ -253,9 +310,8 @@ function thorius_academy_sync_run_test(array $settings): array
     return array(
         'success' => true,
         'message' => sprintf(
-            /* translators: %s: response body */
-            __('Bağlantı başarılı (HTTP 200): %s', 'thorius-academy-sync'),
-            wp_strip_all_tags($body)
+            __('Bağlantı ve secret doğrulandı (POST 200): %s', 'thorius-academy-sync'),
+            wp_strip_all_tags($post_body)
         ),
     );
 }
@@ -285,19 +341,22 @@ function thorius_academy_sync_resolve_event(string $post_status, bool $is_update
     return 'course.unpublished';
 }
 
-function thorius_academy_sync_send_webhook(int $post_id, string $event, ?string $previous_slug = null): void
+function thorius_academy_sync_get_wc_product_id(int $post_id): int
 {
-    $settings = thorius_academy_sync_get_settings();
+    $product_id = get_post_meta($post_id, '_tutor_course_product_id', true);
 
-    if (empty($settings['enabled']) || empty($settings['webhook_url']) || empty($settings['webhook_secret'])) {
-        return;
+    if (is_array($product_id)) {
+        $product_id = $product_id[0] ?? 0;
     }
 
-    $post = get_post($post_id);
-    if (!$post || !thorius_academy_sync_is_course_post($post)) {
-        return;
-    }
+    return (int) $product_id;
+}
 
+/**
+ * @return array<string, mixed>
+ */
+function thorius_academy_sync_build_course_payload(WP_Post $post, ?string $previous_slug = null): array
+{
     $course = array(
         'id' => (int) $post->ID,
         'slug' => (string) $post->post_name,
@@ -312,6 +371,40 @@ function thorius_academy_sync_send_webhook(int $post_id, string $event, ?string 
     ) {
         $course['previous_slug'] = $previous_slug;
     }
+
+    $product_id = thorius_academy_sync_get_wc_product_id($post->ID);
+
+    if ($product_id > 0 && function_exists('wc_get_product')) {
+        $product = wc_get_product($product_id);
+
+        if ($product) {
+            $course['wc_product_id'] = $product_id;
+            $course['price_normal'] = $product->get_regular_price() !== ''
+                ? (float) $product->get_regular_price()
+                : (float) $product->get_price();
+            $course['price_sale'] = $product->get_sale_price() !== ''
+                ? (float) $product->get_sale_price()
+                : null;
+        }
+    }
+
+    return $course;
+}
+
+function thorius_academy_sync_send_webhook(int $post_id, string $event, ?string $previous_slug = null): void
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_url']) || empty($settings['webhook_secret'])) {
+        return;
+    }
+
+    $post = get_post($post_id);
+    if (!$post || !thorius_academy_sync_is_course_post($post)) {
+        return;
+    }
+
+    $course = thorius_academy_sync_build_course_payload($post, $previous_slug);
 
     $payload = wp_json_encode(array(
         'event' => $event,
@@ -346,17 +439,37 @@ function thorius_academy_sync_send_webhook(int $post_id, string $event, ?string 
     }
 }
 
-function thorius_academy_sync_should_skip(int $post_id): bool
+function thorius_academy_sync_queue_webhook(int $post_id, string $event, ?string $previous_slug = null): void
 {
-    $lock_key = 'thorius_academy_sync_lock_' . $post_id;
-
-    if (get_transient($lock_key)) {
-        return true;
+    if (!isset($GLOBALS['thorius_academy_sync_queue'])) {
+        $GLOBALS['thorius_academy_sync_queue'] = array();
     }
 
-    set_transient($lock_key, 1, 3);
+    $GLOBALS['thorius_academy_sync_queue'][$post_id] = array(
+        'event' => $event,
+        'previous_slug' => $previous_slug,
+    );
 
-    return false;
+    if (!has_action('shutdown', 'thorius_academy_sync_flush_queue')) {
+        add_action('shutdown', 'thorius_academy_sync_flush_queue', 999);
+    }
+}
+
+function thorius_academy_sync_flush_queue(): void
+{
+    if (empty($GLOBALS['thorius_academy_sync_queue']) || !is_array($GLOBALS['thorius_academy_sync_queue'])) {
+        return;
+    }
+
+    foreach ($GLOBALS['thorius_academy_sync_queue'] as $post_id => $data) {
+        thorius_academy_sync_send_webhook(
+            (int) $post_id,
+            (string) $data['event'],
+            $data['previous_slug'] ?? null
+        );
+    }
+
+    $GLOBALS['thorius_academy_sync_queue'] = array();
 }
 
 function thorius_academy_sync_store_previous_slug(int $post_id, array $data): void
@@ -395,10 +508,6 @@ function thorius_academy_sync_handle_course_save(
     bool $update = true,
     ?string $previous_slug = null
 ): void {
-    if (thorius_academy_sync_should_skip($post_id)) {
-        return;
-    }
-
     if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) {
         return;
     }
@@ -421,7 +530,7 @@ function thorius_academy_sync_handle_course_save(
     }
 
     $event = thorius_academy_sync_resolve_event($post->post_status, $update, 'save');
-    thorius_academy_sync_send_webhook($post_id, $event, $previous_slug);
+    thorius_academy_sync_queue_webhook($post_id, $event, $previous_slug);
 }
 
 function thorius_academy_sync_after_insert(int $post_id, WP_Post $post, bool $update, ?WP_Post $post_before): void
@@ -444,6 +553,7 @@ function thorius_academy_sync_on_tutor_save(int $post_id, WP_Post $post): void
     thorius_academy_sync_handle_course_save($post_id, true);
 }
 add_action('tutor_save_course_after', 'thorius_academy_sync_on_tutor_save', 99, 2);
+add_action('tutor_save_course', 'thorius_academy_sync_on_tutor_save', 99, 2);
 
 function thorius_academy_sync_on_save_post(int $post_id, WP_Post $post, bool $update): void
 {
