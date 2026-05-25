@@ -9,18 +9,14 @@ import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
 import { checkEnrollment } from "@/lib/actions/enrollment";
 import { getCourseProduct } from "@/lib/actions/course-products";
 import { createClient } from "@/lib/supabase/server";
-import { fetchAllCourseSlugs, fetchCourseBySlug } from "@/lib/wordpress/api";
+import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
 interface CourseDetailPageProps {
   params: { slug: string };
 }
 
 export const revalidate = 3600;
-
-export async function generateStaticParams() {
-  const slugs = await fetchAllCourseSlugs();
-  return slugs.map((slug) => ({ slug }));
-}
+export const dynamicParams = true;
 
 export async function generateMetadata({
   params,
