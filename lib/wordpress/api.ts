@@ -12,9 +12,6 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
-const LISTING_COURSE_FIELDS =
-  "id,slug,date,title,excerpt,link,course-category,course-tag";
-
 /** Kategori kartında hangi sıradaki kursun görseli kullanılsın (0 = ilk kurs). */
 const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
   planlama: 1,
@@ -120,7 +117,7 @@ async function fetchWPCourses(url: string): Promise<WPCourse[]> {
 export async function fetchCoursesForListing(): Promise<Course[]> {
   try {
     const wpCourses = await fetchWPCourses(
-      `${WP_API_BASE}/courses?_embed=true&per_page=100&status=publish&_fields=${LISTING_COURSE_FIELDS}`,
+      `${WP_API_BASE}/courses?_embed=true&per_page=100&status=publish`,
     );
     return wpCourses.map((course) =>
       transformCourse(course, { includeContent: false }),
@@ -246,7 +243,7 @@ export async function fetchCoursesByCategory(
 
     const catId = cats[0].id;
     const wpCourses = await fetchWPCourses(
-      `${WP_API_BASE}/courses?_embed=true&per_page=100&course-category=${catId}&_fields=${LISTING_COURSE_FIELDS}`,
+      `${WP_API_BASE}/courses?_embed=true&per_page=100&course-category=${catId}`,
     );
 
     return wpCourses.map((course) =>
