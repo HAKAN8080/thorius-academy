@@ -1,4 +1,3 @@
-import Image from "next/image";
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
@@ -8,7 +7,7 @@ const footerColumns = [
     title: "Hakkımızda",
     links: [
       { href: "/#hakkimizda", label: "Misyonumuz" },
-      { href: "/#bilge-baykus", label: "Bilge Baykuş" },
+      { href: "/#ecosystem", label: "Thorius Ekosistemi" },
       { href: "/#blog", label: "Blog" },
     ],
   },
@@ -60,24 +59,9 @@ const footerColumns = [
 export function Footer() {
   return (
     <footer className="bg-primary-900 text-white">
-      <Container className="py-12">
-        <div className="mb-10 flex flex-col items-center gap-4 border-b border-primary-700 pb-10 sm:flex-row sm:items-start sm:justify-between">
+      <Container size="wide" className="py-12">
+        <div className="mb-10 border-b border-primary-700 pb-10">
           <Logo variant="full" inverted />
-          <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 overflow-hidden rounded-full ring-2 ring-accent-500/30">
-              <Image
-                src="/images/bilge-baykus.png"
-                alt="Bilge Baykuş"
-                fill
-                className="object-cover object-top"
-                sizes="64px"
-              />
-            </div>
-            <p className="max-w-xs text-sm text-primary-100">
-              Bilge Baykuş, öğrenme yolculuğunuzda size eşlik eden AI
-              rehberinizdir.
-            </p>
-          </div>
         </div>
 
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">

@@ -68,7 +68,7 @@ export function Logo({
                 inverted ? "text-primary-200" : "text-primary-500",
               )}
             >
-              Bilge Baykuş ile Öğren
+              Premium İş Akademisi
             </span>
           )}
         </span>

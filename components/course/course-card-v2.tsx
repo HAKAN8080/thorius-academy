@@ -27,6 +27,7 @@ export function CourseCardV2({
   priceSale,
   isEnrolled,
   className,
+  size = "default",
 }: CourseCardV2Props) {
   const finalPrice = priceSale || priceNormal;
   const hasDiscount =
@@ -39,6 +40,7 @@ export function CourseCardV2({
 
   const hasMetaRow =
     rating > 0 || (lessonCount !== undefined && lessonCount > 0) || !!duration;
+  const isCompact = size === "compact";
 
   return (
     <Link
@@ -46,10 +48,16 @@ export function CourseCardV2({
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-primary-100/50 bg-white",
         "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent-300 hover:shadow-xl",
+        isCompact && "rounded-xl",
         className,
       )}
     >
-      <div className="relative aspect-video w-full overflow-hidden bg-primary-50">
+      <div
+        className={cn(
+          "relative w-full overflow-hidden bg-primary-50",
+          isCompact ? "aspect-[4/3]" : "aspect-video",
+        )}
+      >
         {thumbnail ? (
           <Image
             src={thumbnail}
@@ -66,7 +74,12 @@ export function CourseCardV2({
 
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           {hasDiscount && (
-            <Badge className="border-0 bg-gradient-to-br from-red-500 to-red-600 font-bold text-white shadow-md">
+            <Badge
+              className={cn(
+                "border-0 bg-gradient-to-br from-red-500 to-red-600 font-bold text-white shadow-md",
+                isCompact && "px-1.5 py-0 text-[10px]",
+              )}
+            >
               %{discountPercent} İndirim
             </Badge>
           )}
@@ -83,7 +96,10 @@ export function CourseCardV2({
             e.preventDefault();
             e.stopPropagation();
           }}
-          className="absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-md transition-all hover:scale-110 hover:bg-accent-50"
+          className={cn(
+            "absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-md transition-all hover:scale-110 hover:bg-accent-50",
+            isCompact && "hidden sm:flex",
+          )}
           aria-label="Kursu kaydet"
         >
           <Bookmark className="h-4 w-4 text-primary-700" />
@@ -92,9 +108,14 @@ export function CourseCardV2({
         <div className="absolute inset-0 bg-gradient-to-t from-primary-950/40 via-transparent to-transparent opacity-0 transition-opacity duration-300 group-hover:opacity-100" />
       </div>
 
-      <div className="flex flex-1 flex-col p-5">
+      <div className={cn("flex flex-1 flex-col", isCompact ? "p-3" : "p-5")}>
         {(category || level) && (
-          <div className="mb-3 flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-primary-600">
+          <div
+            className={cn(
+              "mb-2 flex items-center gap-2 font-semibold uppercase tracking-wider text-primary-600",
+              isCompact ? "text-[10px]" : "mb-3 text-xs",
+            )}
+          >
             {category && <span>{category}</span>}
             {category && level && (
               <span className="text-primary-300" aria-hidden="true">
@@ -105,20 +126,30 @@ export function CourseCardV2({
           </div>
         )}
 
-        <h3 className="mb-2 line-clamp-2 text-lg font-bold leading-tight text-primary-950 transition-colors group-hover:text-accent-700">
+        <h3
+          className={cn(
+            "mb-2 line-clamp-2 font-bold leading-tight text-primary-950 transition-colors group-hover:text-accent-700",
+            isCompact ? "text-sm" : "text-lg",
+          )}
+        >
           {title}
         </h3>
 
-        {excerpt && (
+        {excerpt && !isCompact && (
           <p className="mb-4 line-clamp-2 text-sm text-muted-foreground">
             {excerpt}
           </p>
         )}
 
         {instructor && (
-          <div className="mb-4 flex items-center gap-2">
+          <div className={cn("mb-3 flex items-center gap-2", isCompact && "mb-2")}>
             {instructor.avatar ? (
-              <div className="relative h-7 w-7 overflow-hidden rounded-full border border-primary-100">
+              <div
+                className={cn(
+                  "relative overflow-hidden rounded-full border border-primary-100",
+                  isCompact ? "h-5 w-5" : "h-7 w-7",
+                )}
+              >
                 <Image
                   src={instructor.avatar}
                   alt=""
@@ -135,14 +166,24 @@ export function CourseCardV2({
                 {instructor.name.charAt(0)}
               </div>
             )}
-            <span className="text-sm font-medium text-primary-700">
+            <span
+              className={cn(
+                "font-medium text-primary-700",
+                isCompact ? "truncate text-xs" : "text-sm",
+              )}
+            >
               {instructor.name}
             </span>
           </div>
         )}
 
         {hasMetaRow && (
-          <div className="mb-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-sm text-primary-600">
+          <div
+            className={cn(
+              "mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 text-primary-600",
+              isCompact ? "text-[11px]" : "mb-4 text-sm",
+            )}
+          >
             {rating > 0 && (
               <div className="flex items-center gap-1">
                 <Star className="h-4 w-4 fill-accent-500 text-accent-500" />
@@ -183,26 +224,54 @@ export function CourseCardV2({
 
         <div className="flex-1" />
 
-        <div className="flex items-end justify-between border-t border-primary-100 pt-4">
-          <div className="flex flex-col gap-1">
+        <div
+          className={cn(
+            "flex items-end justify-between border-t border-primary-100 pt-3",
+            !isCompact && "pt-4",
+          )}
+        >
+          <div className="flex flex-col gap-0.5">
             {hasDiscount && (
-              <span className="text-sm text-primary-400 line-through">
+              <span
+                className={cn(
+                  "text-primary-400 line-through",
+                  isCompact ? "text-[10px]" : "text-sm",
+                )}
+              >
                 {priceNormal!.toLocaleString("tr-TR")}₺
               </span>
             )}
             {finalPrice ? (
-              <span className="text-2xl font-bold text-primary-950">
+              <span
+                className={cn(
+                  "font-bold text-primary-950",
+                  isCompact ? "text-base" : "text-2xl",
+                )}
+              >
                 {finalPrice.toLocaleString("tr-TR")}₺
               </span>
             ) : (
-              <span className="text-sm font-semibold text-emerald-600">
+              <span
+                className={cn(
+                  "font-semibold text-emerald-600",
+                  isCompact ? "text-xs" : "text-sm",
+                )}
+              >
                 Ücretsiz
               </span>
             )}
           </div>
 
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-accent-500 text-primary-950 transition-all group-hover:scale-110 group-hover:bg-accent-600 group-hover:shadow-lg">
-            <ArrowRight className="h-5 w-5" aria-hidden="true" />
+          <div
+            className={cn(
+              "flex items-center justify-center rounded-full bg-accent-500 text-primary-950 transition-all group-hover:scale-110 group-hover:bg-accent-600 group-hover:shadow-lg",
+              isCompact ? "h-8 w-8" : "h-10 w-10",
+            )}
+          >
+            <ArrowRight
+              className={cn(isCompact ? "h-4 w-4" : "h-5 w-5")}
+              aria-hidden="true"
+            />
           </div>
         </div>
       </div>

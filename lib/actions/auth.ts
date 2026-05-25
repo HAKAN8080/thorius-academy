@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getEmailRedirectUrl } from "@/lib/auth/app-url";
+import { sendWelcomeCouponEmail } from "@/lib/email/send-welcome-coupon";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -90,11 +91,17 @@ export async function signUp(
       return { error: "Kayıt oluşturulamadı. Lütfen tekrar deneyin." };
     }
 
+    try {
+      await sendWelcomeCouponEmail(email, fullName.trim());
+    } catch (emailError) {
+      console.error("Welcome coupon email failed:", emailError);
+    }
+
     return {
       success: true,
       registeredEmail: email,
       successMessage:
-        "Hesabınız oluşturuldu. E-posta doğrulama linkine tıkladığınızda otomatik giriş yapılacaktır.",
+        "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz e-postanıza gönderildi.",
     };
   } catch {
     return { error: "Kayıt sırasında beklenmeyen bir hata oluştu." };

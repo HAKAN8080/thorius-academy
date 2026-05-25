@@ -76,6 +76,7 @@ function RegisterSuccess({
             </p>
             <p>
               Linke tıkladığınızda hesabınıza otomatik giriş yapılacak.
+              %20 indirim kuponunuz da e-posta kutunuzda.
             </p>
             <p className="text-muted-foreground">
               E-posta gelmiyor mu? Spam klasörünüzü kontrol edin.
@@ -144,7 +145,7 @@ export function RegisterForm() {
       <CardHeader>
         <CardTitle className="text-primary-900">Üye Olun</CardTitle>
         <CardDescription>
-          Premium perakende eğitim dünyasına adım atın
+          Premium perakende eğitim dünyasına adım atın — ilk üyeliğe %20 indirim
         </CardDescription>
       </CardHeader>
       <form action={formAction}>

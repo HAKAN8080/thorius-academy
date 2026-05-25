@@ -3,6 +3,7 @@ import Image from "next/image";
 import { Button } from "@/components/ui/button";
 import { Container } from "@/components/layout/container";
 import { HeroCourseCarousel } from "@/components/marketing/hero-course-carousel";
+import { SignupDiscountBadge } from "@/components/marketing/signup-discount-badge";
 import type { Course } from "@/types/wordpress";
 
 interface HeroProps {
@@ -12,7 +13,7 @@ interface HeroProps {
 export function Hero({ courses }: HeroProps) {
   return (
     <section
-      className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-12 sm:py-16 md:py-24 lg:py-32"
+      className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-12 sm:py-16 md:py-20 lg:py-24"
       aria-labelledby="hero-heading"
     >
       <div
@@ -24,9 +25,9 @@ export function Hero({ courses }: HeroProps) {
         <div className="owl-pattern absolute inset-0 opacity-[0.04]" />
       </div>
 
-      <Container className="relative">
-        <div className="grid grid-cols-1 items-center gap-8 lg:grid-cols-2 lg:gap-12">
-          <div className="order-2 flex max-w-3xl flex-col gap-4 sm:gap-6 lg:order-1">
+      <Container size="wide" className="relative">
+        <div className="grid grid-cols-1 items-center gap-8 xl:grid-cols-[1.05fr_1fr] xl:gap-10">
+          <div className="order-2 flex flex-col gap-4 sm:gap-6 xl:order-1">
             <div className="flex items-center gap-3">
               <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-accent-500/40 owl-glow">
                 <Image
@@ -39,12 +40,12 @@ export function Hero({ courses }: HeroProps) {
                 />
               </div>
               <p className="inline-flex items-center gap-2 rounded-full border border-accent-500/30 bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 sm:px-4 sm:py-2 sm:text-sm">
-                Bilge Baykuş ile Premium İş Akademisi
+                Premium İş Akademisi
               </p>
             </div>
             <h1
               id="hero-heading"
-              className="max-w-3xl text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
+              className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
             >
               Profesyonellerin{" "}
               <span className="bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
@@ -52,10 +53,10 @@ export function Hero({ courses }: HeroProps) {
               </span>{" "}
               Akademisi
             </h1>
-            <p className="max-w-2xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl lg:text-2xl">
+            <p className="max-w-3xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl lg:text-2xl">
               Perakende, İK, AI, liderlik ve daha fazlası — sektörün en
-              deneyimli isimlerinden, Bilge Baykuş rehberliğinde AI ile
-              zenginleştirilmiş premium eğitim deneyimi
+              deneyimli isimlerinden, AI ile zenginleştirilmiş premium eğitim
+              deneyimi
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:gap-4">
               <Button
@@ -71,13 +72,20 @@ export function Hero({ courses }: HeroProps) {
                 className="w-full rounded-xl border-2 border-white bg-transparent text-white hover:bg-white hover:text-primary-950 sm:w-auto"
                 asChild
               >
-                <Link href="/#bilge-baykus">Bilge Baykuş&apos;u Tanı</Link>
+                <Link href="/kayit">Üye Ol — %20 İndirim</Link>
               </Button>
             </div>
           </div>
 
-          <div className="order-1 lg:order-2">
-            {courses.length > 0 && <HeroCourseCarousel courses={courses} />}
+          <div className="order-1 xl:order-2">
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_11rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
+              <div className="min-w-0">
+                {courses.length > 0 && <HeroCourseCarousel courses={courses} />}
+              </div>
+              <div className="mx-auto w-full max-w-xs lg:mx-0 lg:max-w-none lg:pt-8">
+                <SignupDiscountBadge />
+              </div>
+            </div>
           </div>
         </div>
       </Container>

@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Hero } from "@/components/marketing/hero";
-import { BilgeBaykusSection } from "@/components/marketing/bilge-baykus-section";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseCard } from "@/components/marketing/course-card";
@@ -23,24 +22,23 @@ export default async function HomePage() {
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
   );
-  const featuredCourses = allCourses.slice(0, 6);
-  const carouselCourses = allCourses.slice(0, 6);
+  const featuredCourses = allCourses.slice(0, 5);
+  const carouselCourses = allCourses.slice(0, 5);
   const statsBySlug = await getCourseStatsMap(allCourses);
 
   return (
     <>
-      <Hero courses={carouselCourses} />
-      <BilgeBaykusSection />
-      <EcosystemCards />
       <CategoryGrid categories={categories} />
+      <Hero courses={carouselCourses} />
+      <EcosystemCards />
 
       {featuredCourses.length > 0 && (
         <section
-          className="bg-gradient-to-b from-white to-primary-50 py-16 md:py-20"
+          className="bg-gradient-to-b from-white to-primary-50 py-14 md:py-20"
           aria-labelledby="featured-heading"
         >
-          <Container>
-            <div className="mb-12 text-center">
+          <Container size="wide">
+            <div className="mb-10 text-center">
               <h2
                 id="featured-heading"
                 className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl"
@@ -52,7 +50,7 @@ export default async function HomePage() {
               </p>
             </div>
 
-            <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
+            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-4 xl:gap-5">
               {featuredCourses.map((course) => {
                 const stats = statsBySlug.get(course.slug);
                 return (
@@ -62,12 +60,13 @@ export default async function HomePage() {
                     product={productBySlug.get(course.slug) ?? null}
                     lessonCount={stats?.lessonCount}
                     duration={stats?.durationLabel}
+                    size="compact"
                   />
                 );
               })}
             </div>
 
-            <div className="mt-12 text-center">
+            <div className="mt-10 text-center">
               <Link
                 href="/kurslar"
                 className="inline-flex items-center gap-2 font-semibold text-primary-950 transition-colors hover:text-accent-600"
@@ -83,8 +82,11 @@ export default async function HomePage() {
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"
         aria-labelledby="b2b-heading"
       >
-        <Container className="flex flex-col items-center gap-8 text-center lg:flex-row lg:justify-between lg:text-left">
-          <div className="flex max-w-xl flex-col items-center gap-4 lg:items-start">
+        <Container
+          size="wide"
+          className="flex flex-col items-center gap-8 text-center lg:flex-row lg:justify-between lg:text-left"
+        >
+          <div className="flex max-w-2xl flex-col items-center gap-4 lg:items-start">
             <Building2 className="h-12 w-12 text-accent-500" aria-hidden="true" />
             <h2 id="b2b-heading" className="text-2xl font-bold sm:text-3xl">
               Şirketinize özel eğitim çözümleri
@@ -108,9 +110,8 @@ export default async function HomePage() {
           <h2 className="text-2xl font-bold text-primary-900">Hakkımızda</h2>
           <p className="mt-4 text-primary-700">
             Thorius AI Academy, Türkiye perakende sektörünün lider markalarına
-            MasterClass kalitesinde, McKinsey derinliğinde eğitim sunar. Bilge
-            Baykuş rehberliğinde AI destekli içerikler ve sektör deneyimini bir
-            araya getiriyoruz.
+            üst düzey, uygulanabilir ve sektöre özel eğitim sunar. AI destekli
+            içerikler ve saha deneyimini bir araya getiriyoruz.
           </p>
         </Container>
       </section>

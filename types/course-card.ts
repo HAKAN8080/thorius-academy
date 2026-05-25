@@ -18,4 +18,5 @@ export interface CourseCardV2Props {
   priceSale?: number | null;
   isEnrolled?: boolean;
   className?: string;
+  size?: "default" | "compact";
 }

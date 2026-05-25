@@ -152,11 +152,48 @@ export async function fetchAllCategories(): Promise<WPCategory[]> {
 
     if (!res.ok) return [];
 
-    return await res.json();
+    const categories: WPCategory[] = await res.json();
+    return enrichCategoriesWithImages(categories);
   } catch (error) {
     console.error("fetchAllCategories error:", error);
     return [];
   }
+}
+
+async function fetchCategoryImage(categoryId: number): Promise<string | null> {
+  try {
+    const res = await fetch(
+      `${WP_API_BASE}/courses?_embed=true&per_page=1&course-category=${categoryId}`,
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CATEGORY_CACHE_TAG],
+        },
+      },
+    );
+
+    if (!res.ok) return null;
+
+    const courses: WPCourse[] = await res.json();
+    if (!courses.length) return null;
+
+    return transformCourse(courses[0]).featuredImage;
+  } catch {
+    return null;
+  }
+}
+
+async function enrichCategoriesWithImages(
+  categories: WPCategory[],
+): Promise<WPCategory[]> {
+  const images = await Promise.all(
+    categories.map((category) => fetchCategoryImage(category.id)),
+  );
+
+  return categories.map((category, index) => ({
+    ...category,
+    image: images[index],
+  }));
 }
 
 export async function fetchCoursesByCategory(

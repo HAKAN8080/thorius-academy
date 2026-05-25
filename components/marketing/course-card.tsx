@@ -14,6 +14,7 @@ interface CourseCardProps {
   duration?: string;
   rating?: number;
   ratingCount?: number;
+  size?: "default" | "compact";
 }
 
 export function CourseCard({
@@ -26,6 +27,7 @@ export function CourseCard({
   duration,
   rating,
   ratingCount,
+  size = "default",
 }: CourseCardProps) {
   return (
     <CourseCardV2
@@ -38,6 +40,7 @@ export function CourseCard({
         rating,
         ratingCount,
       })}
+      size={size}
       className={cn(className)}
     />
   );

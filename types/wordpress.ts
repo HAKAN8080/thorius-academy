@@ -50,6 +50,7 @@ export interface WPCategory {
   description: string;
   count: number;
   taxonomy: string;
+  image?: string | null;
 }
 
 export interface WPAuthor {

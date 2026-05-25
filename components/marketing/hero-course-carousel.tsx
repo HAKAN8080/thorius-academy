@@ -157,7 +157,7 @@ export function HeroCourseCarousel({ courses }: HeroCourseCarouselProps) {
 
   return (
     <div
-      className="relative w-full max-w-xl lg:max-w-none"
+      className="relative w-full"
       aria-roledescription="carousel"
       aria-label="Öne çıkan kurslar"
     >
@@ -165,7 +165,7 @@ export function HeroCourseCarousel({ courses }: HeroCourseCarouselProps) {
         Öne Çıkan Kurslar
       </p>
 
-      <div className="mx-auto w-full max-w-xl lg:max-w-none">
+      <div className="w-full">
         <MacScreenMockup>
           <ScreenFlicker trigger={index}>
             <div className="overflow-hidden">
