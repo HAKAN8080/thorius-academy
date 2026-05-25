@@ -26,21 +26,42 @@ function parseExcerpt(html: string): string {
   return stripHtml(html).replace(/\s*(\[\.\.\.\]|…|\.{3,})\s*$/, "").trim();
 }
 
+function resolveFeaturedImage(wpCourse: WPCourse): string | null {
+  const embedded = wpCourse._embedded;
+  const featuredMedia = embedded?.["wp:featuredmedia"]?.[0];
+  const imageSizes = featuredMedia?.media_details?.sizes;
+  const embeddedImage =
+    imageSizes?.large?.source_url ||
+    imageSizes?.medium?.source_url ||
+    imageSizes?.full?.source_url ||
+    featuredMedia?.source_url ||
+    null;
+
+  if (embeddedImage) {
+    return embeddedImage;
+  }
+
+  const youtubeThumb = wpCourse.thorius_youtube?.thumbnail_url?.trim();
+  if (youtubeThumb) {
+    return youtubeThumb;
+  }
+
+  const videoId = wpCourse.thorius_youtube?.video_id?.trim();
+  if (videoId) {
+    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  return null;
+}
+
 function transformCourse(
   wpCourse: WPCourse,
   options: { includeContent?: boolean } = {},
 ): Course {
   const { includeContent = true } = options;
   const embedded = wpCourse._embedded;
-
+  const featuredImage = resolveFeaturedImage(wpCourse);
   const featuredMedia = embedded?.["wp:featuredmedia"]?.[0];
-  const imageSizes = featuredMedia?.media_details?.sizes;
-  const featuredImage =
-    imageSizes?.large?.source_url ||
-    imageSizes?.medium?.source_url ||
-    imageSizes?.full?.source_url ||
-    featuredMedia?.source_url ||
-    null;
 
   const author = embedded?.author?.[0];
   const instructor = author

@@ -12,6 +12,10 @@ export interface WPCourse {
   featured_media: number;
   "course-category": number[];
   "course-tag": number[];
+  thorius_youtube?: {
+    video_id?: string;
+    thumbnail_url?: string;
+  };
   _embedded?: {
     "wp:featuredmedia"?: Array<{
       id: number;
