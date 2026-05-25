@@ -22,8 +22,8 @@ export function BuyButton({
     priceSale < priceNormal;
 
   function handleBuy() {
-    const cartUrl = `https://thorius.com.tr/odeme/?add-to-cart=${wcProductId}`;
-    window.open(cartUrl, "_blank", "noopener,noreferrer");
+    const checkoutUrl = `https://thorius.com.tr/odeme/?add-to-cart=${wcProductId}&quantity=1`;
+    window.open(checkoutUrl, "_blank", "noopener,noreferrer");
   }
 
   if (!finalPrice) {

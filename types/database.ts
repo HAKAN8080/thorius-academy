@@ -117,6 +117,42 @@ export interface Database {
           last_watched_at?: string;
         };
       };
+      course_products: {
+        Row: {
+          id: string;
+          course_slug: string;
+          wp_course_id: number;
+          wc_product_id: number;
+          price_normal: number | null;
+          price_sale: number | null;
+          currency: string;
+          is_active: boolean;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          course_slug: string;
+          wp_course_id: number;
+          wc_product_id: number;
+          price_normal?: number | null;
+          price_sale?: number | null;
+          currency?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          course_slug?: string;
+          wp_course_id?: number;
+          wc_product_id?: number;
+          price_normal?: number | null;
+          price_sale?: number | null;
+          currency?: string;
+          is_active?: boolean;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       enrollments: {
         Row: {
           id: string;
@@ -132,6 +168,8 @@ export interface Database {
           completed_at: string | null;
           last_lesson_id: number | null;
           status: "active" | "completed" | "cancelled";
+          source: string | null;
+          wc_order_id: number | null;
         };
         Insert: {
           id?: string;
@@ -147,6 +185,8 @@ export interface Database {
           completed_at?: string | null;
           last_lesson_id?: number | null;
           status?: "active" | "completed" | "cancelled";
+          source?: string | null;
+          wc_order_id?: number | null;
         };
         Update: {
           id?: string;
@@ -162,7 +202,10 @@ export interface Database {
           completed_at?: string | null;
           last_lesson_id?: number | null;
           status?: "active" | "completed" | "cancelled";
+          source?: string | null;
+          wc_order_id?: number | null;
         };
+        Relationships: [];
       };
     };
     Views: Record<string, never>;

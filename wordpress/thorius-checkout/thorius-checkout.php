@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Ödeme sayfası alanları, kurumsal fatura alanları ve checkout UI düzeltmeleri.
- * Version: 1.1.0
+ * Version: 1.2.0
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.1.0');
+define('THORIUS_CHECKOUT_VERSION', '1.2.0');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -96,6 +96,60 @@ function thorius_checkout_admin_order_meta($order): void
     echo '<p><strong>' . esc_html__('Vergi Numarası', 'thorius-checkout') . ':</strong> ' . esc_html($vkn) . '</p>';
 }
 add_action('woocommerce_admin_order_data_after_billing_address', 'thorius_checkout_admin_order_meta');
+
+/**
+ * Sepeti atla — ürün eklendikten sonra doğrudan ödeme sayfasına yönlendir.
+ */
+function thorius_checkout_add_to_cart_redirect(string $url): string
+{
+    if (!function_exists('wc_get_checkout_url')) {
+        return $url;
+    }
+
+    return wc_get_checkout_url();
+}
+add_filter('woocommerce_add_to_cart_redirect', 'thorius_checkout_add_to_cart_redirect');
+
+/**
+ * Sepet sayfasını atla — dolu sepet varsa ödeme sayfasına yönlendir.
+ */
+function thorius_checkout_skip_cart_page(): void
+{
+    if (!function_exists('is_cart') || !is_cart()) {
+        return;
+    }
+
+    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+
+    wp_safe_redirect(wc_get_checkout_url());
+    exit;
+}
+add_action('template_redirect', 'thorius_checkout_skip_cart_page', 20);
+
+/**
+ * Sol panel: PayTR logosu + güvenli ödeme (yaşam boyu erişim alanının üstü).
+ */
+function thorius_checkout_paytr_trust_badge(): void
+{
+    $logo_url = THORIUS_CHECKOUT_URL . 'assets/paytr-logo.svg';
+    ?>
+    <div class="thorius-checkout-trust">
+        <img
+            src="<?php echo esc_url($logo_url); ?>"
+            alt="<?php esc_attr_e('PayTR', 'thorius-checkout'); ?>"
+            class="thorius-paytr-logo"
+            width="160"
+            height="40"
+            loading="lazy"
+            decoding="async"
+        />
+        <p class="thorius-secure-payment"><?php esc_html_e('Güvenli Ödeme', 'thorius-checkout'); ?></p>
+    </div>
+    <?php
+}
+add_action('woocommerce_checkout_after_customer_details', 'thorius_checkout_paytr_trust_badge', 4);
 
 /**
  * Checkout CSS — kupon ikonu, PayTR metni, kompakt layout.

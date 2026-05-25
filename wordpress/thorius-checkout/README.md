@@ -25,10 +25,12 @@ WooCommerce ödeme sayfası (`/odeme/`) için kurumsal fatura alanları ve UI d�
 - **Vergi Numarası** — opsiyonel (`billing_vkn`, sipariş meta olarak kaydedilir)
 - Telefon + e-posta yan yana, kompakt padding
 
-### UI düzeltmeleri
+### UI düzeltmeleri (v1.2)
+- Sepet atlanır — `add-to-cart` sonrası doğrudan `/odeme/`
+- Ad, soyad, telefon, e-posta alanları ~%60 genişletildi
+- Sol panelde PayTR logosu + **Güvenli Ödeme** (yaşam boyu erişim alanının üstü)
 - Kupon kutusunda ikon/metin çakışması giderildi
 - PayTR açıklama metni koyu sidebar üzerinde beyaz/açık renk
-- Form yüksekliği azaltıldı — tek ekrana daha iyi sığar
 
 ## Test
 
