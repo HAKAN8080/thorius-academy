@@ -5,6 +5,7 @@ import { CategoryFilter } from "@/components/marketing/category-filter";
 import { CourseCard } from "@/components/marketing/course-card";
 import { CourseGridSkeleton } from "@/components/marketing/course-card-skeleton";
 import { getAllCourseProducts } from "@/lib/actions/course-products";
+import { getCourseStatsMap } from "@/lib/actions/course-stats";
 import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -34,6 +35,7 @@ async function KurslarContent({
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
   );
+  const statsBySlug = await getCourseStatsMap(courses);
 
   const filteredCourses = selectedCategory
     ? courses.filter((c) =>
@@ -68,13 +70,18 @@ async function KurslarContent({
           </div>
         ) : (
           <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-            {filteredCourses.map((course) => (
-              <CourseCard
-                key={course.id}
-                course={course}
-                product={productBySlug.get(course.slug) ?? null}
-              />
-            ))}
+            {filteredCourses.map((course) => {
+              const stats = statsBySlug.get(course.slug);
+              return (
+                <CourseCard
+                  key={course.id}
+                  course={course}
+                  product={productBySlug.get(course.slug) ?? null}
+                  lessonCount={stats?.lessonCount}
+                  duration={stats?.durationLabel}
+                />
+              );
+            })}
           </div>
         )}
       </div>

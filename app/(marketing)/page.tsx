@@ -8,6 +8,7 @@ import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseCard } from "@/components/marketing/course-card";
 import { Button } from "@/components/ui/button";
 import { getAllCourseProducts } from "@/lib/actions/course-products";
+import { getCourseStatsMap } from "@/lib/actions/course-stats";
 import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -24,6 +25,7 @@ export default async function HomePage() {
   );
   const featuredCourses = allCourses.slice(0, 6);
   const carouselCourses = allCourses.slice(0, 6);
+  const statsBySlug = await getCourseStatsMap(allCourses);
 
   return (
     <>
@@ -51,13 +53,18 @@ export default async function HomePage() {
             </div>
 
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-3">
-              {featuredCourses.map((course) => (
-                <CourseCard
-                  key={course.id}
-                  course={course}
-                  product={productBySlug.get(course.slug) ?? null}
-                />
-              ))}
+              {featuredCourses.map((course) => {
+                const stats = statsBySlug.get(course.slug);
+                return (
+                  <CourseCard
+                    key={course.id}
+                    course={course}
+                    product={productBySlug.get(course.slug) ?? null}
+                    lessonCount={stats?.lessonCount}
+                    duration={stats?.durationLabel}
+                  />
+                );
+              })}
             </div>
 
             <div className="mt-12 text-center">

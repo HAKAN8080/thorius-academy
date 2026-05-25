@@ -37,7 +37,8 @@ export function CourseCardV2({
     ? Math.round(((priceNormal! - priceSale!) / priceNormal!) * 100)
     : 0;
 
-  const hasMetaRow = rating > 0 || lessonCount || duration;
+  const hasMetaRow =
+    rating > 0 || (lessonCount !== undefined && lessonCount > 0) || !!duration;
 
   return (
     <Link

@@ -5,8 +5,12 @@ export function formatDuration(seconds: number): string {
   const minutes = Math.floor((seconds % 3600) / 60);
 
   if (hours > 0) {
-    return minutes > 0 ? `${hours}s ${minutes}dk` : `${hours}s`;
+    return minutes > 0 ? `${hours} sa ${minutes} dk` : `${hours} sa`;
   }
 
-  return `${minutes}dk`;
+  if (minutes > 0) {
+    return `${minutes} dk`;
+  }
+
+  return "1 dk";
 }
