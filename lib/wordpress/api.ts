@@ -1,4 +1,9 @@
 import type { Course, WPCategory, WPCourse } from "@/types/wordpress";
+import {
+  COURSE_CACHE_TAG,
+  COURSE_CATEGORY_CACHE_TAG,
+  courseSlugCacheTag,
+} from "@/lib/wordpress/cache-tags";
 
 const WP_API_BASE =
   process.env.NEXT_PUBLIC_WP_API_URL ||
@@ -80,7 +85,7 @@ async function fetchWPCourses(url: string): Promise<WPCourse[]> {
   while (page <= totalPages) {
     const separator = url.includes("?") ? "&" : "?";
     const res = await fetch(`${url}${separator}page=${page}`, {
-      next: { revalidate: REVALIDATE_SECONDS },
+      next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
     });
 
     if (!res.ok) {
@@ -113,7 +118,12 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
   try {
     const res = await fetch(
       `${WP_API_BASE}/courses?slug=${encodeURIComponent(slug)}&_embed=true`,
-      { next: { revalidate: REVALIDATE_SECONDS } }
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CACHE_TAG, courseSlugCacheTag(slug)],
+        },
+      },
     );
 
     if (!res.ok) return null;
@@ -132,7 +142,12 @@ export async function fetchAllCategories(): Promise<WPCategory[]> {
   try {
     const res = await fetch(
       `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
-      { next: { revalidate: REVALIDATE_SECONDS } }
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CATEGORY_CACHE_TAG],
+        },
+      },
     );
 
     if (!res.ok) return [];
@@ -150,7 +165,12 @@ export async function fetchCoursesByCategory(
   try {
     const catRes = await fetch(
       `${WP_API_BASE}/course-category?slug=${encodeURIComponent(categorySlug)}`,
-      { next: { revalidate: REVALIDATE_SECONDS } }
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CATEGORY_CACHE_TAG],
+        },
+      },
     );
     if (!catRes.ok) return [];
 
