@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.0.2
+ * Version: 1.0.3
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.0.2');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.0.3');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -139,10 +139,25 @@ function thorius_academy_sync_render_settings_page(): void
     }
 
     $settings = thorius_academy_sync_get_settings();
+    $test_result = null;
+
+    if (
+        isset($_POST['thorius_academy_sync_test']) &&
+        check_admin_referer('thorius_academy_sync_test')
+    ) {
+        $test_result = thorius_academy_sync_run_test($settings);
+    }
     ?>
     <div class="wrap">
         <h1><?php esc_html_e('Thorius Academy Sync', 'thorius-academy-sync'); ?></h1>
         <p><?php esc_html_e('Kurs yayınlandığında academy.thorius.com.tr sitesinin önbelleğini anında yeniler.', 'thorius-academy-sync'); ?></p>
+
+        <?php if (is_array($test_result)) : ?>
+            <div class="notice <?php echo $test_result['success'] ? 'notice-success' : 'notice-error'; ?>">
+                <p><?php echo esc_html($test_result['message']); ?></p>
+            </div>
+        <?php endif; ?>
+
         <form method="post" action="options.php">
             <?php settings_fields('thorius_academy_sync'); ?>
             <table class="form-table" role="presentation">
@@ -174,8 +189,75 @@ function thorius_academy_sync_render_settings_page(): void
             </table>
             <?php submit_button(); ?>
         </form>
+
+        <hr />
+
+        <h2><?php esc_html_e('Bağlantı Testi', 'thorius-academy-sync'); ?></h2>
+        <p><?php esc_html_e('Academy webhook endpoint\'ine test isteği gönderir. Önce ayarları kaydedin.', 'thorius-academy-sync'); ?></p>
+        <form method="post">
+            <?php wp_nonce_field('thorius_academy_sync_test'); ?>
+            <?php submit_button(__('Webhook Bağlantısını Test Et', 'thorius-academy-sync'), 'secondary', 'thorius_academy_sync_test', false); ?>
+        </form>
     </div>
     <?php
+}
+
+/**
+ * @param array{webhook_url: string, webhook_secret: string, enabled: bool} $settings
+ * @return array{success: bool, message: string}
+ */
+function thorius_academy_sync_run_test(array $settings): array
+{
+    if (empty($settings['webhook_url']) || empty($settings['webhook_secret'])) {
+        return array(
+            'success' => false,
+            'message' => __('Webhook URL ve Secret kaydedilmeli.', 'thorius-academy-sync'),
+        );
+    }
+
+    $response = wp_remote_get($settings['webhook_url'], array('timeout' => 8));
+
+    if (is_wp_error($response)) {
+        return array(
+            'success' => false,
+            'message' => sprintf(
+                /* translators: %s: error message */
+                __('Bağlantı hatası: %s', 'thorius-academy-sync'),
+                $response->get_error_message()
+            ),
+        );
+    }
+
+    $status_code = (int) wp_remote_retrieve_response_code($response);
+    $body = wp_remote_retrieve_body($response);
+
+    if ($status_code === 404) {
+        return array(
+            'success' => false,
+            'message' => __('404 — Academy henüz deploy edilmemiş. Vercel\'de main branch deploy edilmeli.', 'thorius-academy-sync'),
+        );
+    }
+
+    if ($status_code < 200 || $status_code >= 300) {
+        return array(
+            'success' => false,
+            'message' => sprintf(
+                /* translators: 1: HTTP status code, 2: response body */
+                __('HTTP %1$d — %2$s', 'thorius-academy-sync'),
+                $status_code,
+                wp_strip_all_tags($body)
+            ),
+        );
+    }
+
+    return array(
+        'success' => true,
+        'message' => sprintf(
+            /* translators: %s: response body */
+            __('Bağlantı başarılı (HTTP 200): %s', 'thorius-academy-sync'),
+            wp_strip_all_tags($body)
+        ),
+    );
 }
 
 function thorius_academy_sync_is_course_post($post): bool
