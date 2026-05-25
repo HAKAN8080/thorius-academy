@@ -11,6 +11,11 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
+/** Kategori kartında hangi sıradaki kursun görseli kullanılsın (0 = ilk kurs). */
+const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
+  planlama: 1,
+};
+
 function stripHtml(html: string): string {
   return html
     .replace(/<[^>]*>/g, "")
@@ -160,10 +165,15 @@ export async function fetchAllCategories(): Promise<WPCategory[]> {
   }
 }
 
-async function fetchCategoryImage(categoryId: number): Promise<string | null> {
+async function fetchCategoryImage(
+  categoryId: number,
+  categorySlug: string,
+): Promise<string | null> {
   try {
+    const courseIndex = CATEGORY_IMAGE_COURSE_INDEX[categorySlug] ?? 0;
+    const perPage = Math.max(1, courseIndex + 1);
     const res = await fetch(
-      `${WP_API_BASE}/courses?_embed=true&per_page=1&course-category=${categoryId}`,
+      `${WP_API_BASE}/courses?_embed=true&per_page=${perPage}&course-category=${categoryId}`,
       {
         next: {
           revalidate: REVALIDATE_SECONDS,
@@ -177,7 +187,8 @@ async function fetchCategoryImage(categoryId: number): Promise<string | null> {
     const courses: WPCourse[] = await res.json();
     if (!courses.length) return null;
 
-    return transformCourse(courses[0]).featuredImage;
+    const course = courses[courseIndex] ?? courses[0];
+    return transformCourse(course).featuredImage;
   } catch {
     return null;
   }
@@ -187,7 +198,9 @@ async function enrichCategoriesWithImages(
   categories: WPCategory[],
 ): Promise<WPCategory[]> {
   const images = await Promise.all(
-    categories.map((category) => fetchCategoryImage(category.id)),
+    categories.map((category) =>
+      fetchCategoryImage(category.id, category.slug),
+    ),
   );
 
   return categories.map((category, index) => ({
