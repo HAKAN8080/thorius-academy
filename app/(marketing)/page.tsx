@@ -18,10 +18,11 @@ import type { CourseProduct } from "@/types/course-product";
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const [allCourses, categories, products] = await Promise.all([
-    fetchAllCourses(),
-    fetchAllCategories(),
+  const allCourses = await fetchAllCourses();
+  const [categories, products, statsBySlug] = await Promise.all([
+    fetchAllCategories(allCourses),
     getAllCourseProducts(),
+    getCourseStatsMap(allCourses),
   ]);
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
@@ -42,7 +43,6 @@ export default async function HomePage() {
     5,
   );
   const carouselCourses = allCourses.slice(0, 5);
-  const statsBySlug = await getCourseStatsMap(allCourses);
 
   return (
     <>

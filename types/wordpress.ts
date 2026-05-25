@@ -6,7 +6,7 @@ export interface WPCourse {
   type: string;
   link: string;
   title: { rendered: string };
-  content: { rendered: string };
+  content?: { rendered: string };
   excerpt: { rendered: string };
   author: number;
   featured_media: number;

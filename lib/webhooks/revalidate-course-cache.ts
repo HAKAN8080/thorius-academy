@@ -2,6 +2,8 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import {
   COURSE_CACHE_TAG,
   COURSE_CATEGORY_CACHE_TAG,
+  COURSE_PRODUCTS_CACHE_TAG,
+  COURSE_STATS_CACHE_TAG,
   courseSlugCacheTag,
 } from "@/lib/wordpress/cache-tags";
 
@@ -31,11 +33,17 @@ export function revalidateCourseCache(
   options: RevalidateCourseCacheOptions = {},
 ): RevalidateCourseCacheResult {
   const { slug, previousSlug } = options;
-  const tags = [COURSE_CACHE_TAG, COURSE_CATEGORY_CACHE_TAG];
+  const tags = [
+    COURSE_CACHE_TAG,
+    COURSE_CATEGORY_CACHE_TAG,
+    COURSE_STATS_CACHE_TAG,
+    COURSE_PRODUCTS_CACHE_TAG,
+  ];
   const paths = ["/", "/kurslar"];
 
-  revalidateTag(COURSE_CACHE_TAG);
-  revalidateTag(COURSE_CATEGORY_CACHE_TAG);
+  for (const tag of tags) {
+    revalidateTag(tag);
+  }
 
   if (
     previousSlug &&

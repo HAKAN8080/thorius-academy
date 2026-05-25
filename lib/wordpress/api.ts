@@ -12,6 +12,9 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
+const LISTING_COURSE_FIELDS =
+  "id,slug,date,title,excerpt,link,course-category,course-tag";
+
 /** Kategori kartında hangi sıradaki kursun görseli kullanılsın (0 = ilk kurs). */
 const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
   planlama: 1,
@@ -26,7 +29,11 @@ function parseExcerpt(html: string): string {
   return stripHtml(html).replace(/\s*(\[\.\.\.\]|…|\.{3,})\s*$/, "").trim();
 }
 
-function transformCourse(wpCourse: WPCourse): Course {
+function transformCourse(
+  wpCourse: WPCourse,
+  options: { includeContent?: boolean } = {},
+): Course {
+  const { includeContent = true } = options;
   const embedded = wpCourse._embedded;
 
   const featuredMedia = embedded?.["wp:featuredmedia"]?.[0];
@@ -63,7 +70,7 @@ function transformCourse(wpCourse: WPCourse): Course {
     slug: wpCourse.slug,
     title: stripHtml(wpCourse.title.rendered),
     excerpt: parseExcerpt(wpCourse.excerpt.rendered),
-    content: wpCourse.content.rendered,
+    content: includeContent ? (wpCourse.content?.rendered ?? "") : "",
     featuredImage,
     imageAlt: featuredMedia?.alt_text || stripHtml(wpCourse.title.rendered),
     instructor,
@@ -75,40 +82,70 @@ function transformCourse(wpCourse: WPCourse): Course {
 }
 
 async function fetchWPCourses(url: string): Promise<WPCourse[]> {
-  const allCourses: WPCourse[] = [];
-  let page = 1;
-  let totalPages = 1;
+  const separator = url.includes("?") ? "&" : "?";
+  const firstRes = await fetch(`${url}${separator}page=1`, {
+    next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
+  });
 
-  while (page <= totalPages) {
-    const separator = url.includes("?") ? "&" : "?";
-    const res = await fetch(`${url}${separator}page=${page}`, {
-      next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
-    });
-
-    if (!res.ok) {
-      console.error("WP API error:", res.status, res.statusText, url);
-      break;
-    }
-
-    totalPages = parseInt(res.headers.get("X-WP-TotalPages") || "1", 10);
-    const batch: WPCourse[] = await res.json();
-    allCourses.push(...batch);
-    page += 1;
+  if (!firstRes.ok) {
+    console.error("WP API error:", firstRes.status, firstRes.statusText, url);
+    return [];
   }
 
-  return allCourses;
+  const totalPages = parseInt(firstRes.headers.get("X-WP-TotalPages") || "1", 10);
+  const firstBatch: WPCourse[] = await firstRes.json();
+
+  if (totalPages <= 1) {
+    return firstBatch;
+  }
+
+  const remainingBatches = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) => {
+      const page = index + 2;
+      return fetch(`${url}${separator}page=${page}`, {
+        next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
+      }).then(async (res) => {
+        if (!res.ok) {
+          console.error("WP API error:", res.status, res.statusText, url);
+          return [] as WPCourse[];
+        }
+        return res.json() as Promise<WPCourse[]>;
+      });
+    }),
+  );
+
+  return [...firstBatch, ...remainingBatches.flat()];
+}
+
+export async function fetchCoursesForListing(): Promise<Course[]> {
+  try {
+    const wpCourses = await fetchWPCourses(
+      `${WP_API_BASE}/courses?_embed=true&per_page=100&status=publish&_fields=${LISTING_COURSE_FIELDS}`,
+    );
+    return wpCourses.map((course) =>
+      transformCourse(course, { includeContent: false }),
+    );
+  } catch (error) {
+    console.error("fetchCoursesForListing error:", error);
+    return [];
+  }
+}
+
+/** Build/deploy için yalnızca slug listesi — tam kurs gövdesi çekilmez. */
+export async function fetchAllCourseSlugs(): Promise<string[]> {
+  try {
+    const wpCourses = await fetchWPCourses(
+      `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=slug`,
+    );
+    return wpCourses.map((course) => course.slug);
+  } catch (error) {
+    console.error("fetchAllCourseSlugs error:", error);
+    return [];
+  }
 }
 
 export async function fetchAllCourses(): Promise<Course[]> {
-  try {
-    const wpCourses = await fetchWPCourses(
-      `${WP_API_BASE}/courses?_embed=true&per_page=100&status=publish`
-    );
-    return wpCourses.map(transformCourse);
-  } catch (error) {
-    console.error("fetchAllCourses error:", error);
-    return [];
-  }
+  return fetchCoursesForListing();
 }
 
 export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
@@ -135,74 +172,62 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
   }
 }
 
-export async function fetchAllCategories(): Promise<WPCategory[]> {
-  try {
-    const res = await fetch(
-      `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
-      {
-        next: {
-          revalidate: REVALIDATE_SECONDS,
-          tags: [COURSE_CATEGORY_CACHE_TAG],
-        },
+async function fetchCategoryList(): Promise<WPCategory[]> {
+  const res = await fetch(
+    `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
+    {
+      next: {
+        revalidate: REVALIDATE_SECONDS,
+        tags: [COURSE_CATEGORY_CACHE_TAG],
       },
+    },
+  );
+
+  if (!res.ok) {
+    return [];
+  }
+
+  return res.json();
+}
+
+export function enrichCategoriesFromCourses(
+  categories: WPCategory[],
+  courses: Course[],
+): WPCategory[] {
+  const imageByCategoryId = new Map<number, string | null>();
+
+  for (const category of categories) {
+    const courseIndex = CATEGORY_IMAGE_COURSE_INDEX[category.slug] ?? 0;
+    const categoryCourses = courses.filter((course) =>
+      course.categories.some((item) => item.id === category.id),
     );
+    const pickedCourse = categoryCourses[courseIndex] ?? categoryCourses[0];
+    imageByCategoryId.set(category.id, pickedCourse?.featuredImage ?? null);
+  }
 
-    if (!res.ok) return [];
+  return categories.map((category) => ({
+    ...category,
+    image: imageByCategoryId.get(category.id) ?? null,
+  }));
+}
 
-    const categories: WPCategory[] = await res.json();
-    return enrichCategoriesWithImages(categories);
+export async function fetchAllCategories(
+  courses?: Course[],
+): Promise<WPCategory[]> {
+  try {
+    const categories = await fetchCategoryList();
+    if (courses?.length) {
+      return enrichCategoriesFromCourses(categories, courses);
+    }
+    return categories;
   } catch (error) {
     console.error("fetchAllCategories error:", error);
     return [];
   }
 }
 
-async function fetchCategoryImage(
-  categoryId: number,
-  categorySlug: string,
-): Promise<string | null> {
-  try {
-    const courseIndex = CATEGORY_IMAGE_COURSE_INDEX[categorySlug] ?? 0;
-    const perPage = Math.max(1, courseIndex + 1);
-    const res = await fetch(
-      `${WP_API_BASE}/courses?_embed=true&per_page=${perPage}&course-category=${categoryId}`,
-      {
-        next: {
-          revalidate: REVALIDATE_SECONDS,
-          tags: [COURSE_CATEGORY_CACHE_TAG],
-        },
-      },
-    );
-
-    if (!res.ok) return null;
-
-    const courses: WPCourse[] = await res.json();
-    if (!courses.length) return null;
-
-    const course = courses[courseIndex] ?? courses[0];
-    return transformCourse(course).featuredImage;
-  } catch {
-    return null;
-  }
-}
-
-async function enrichCategoriesWithImages(
-  categories: WPCategory[],
-): Promise<WPCategory[]> {
-  const images = await Promise.all(
-    categories.map((category) =>
-      fetchCategoryImage(category.id, category.slug),
-    ),
-  );
-
-  return categories.map((category, index) => ({
-    ...category,
-    image: images[index],
-  }));
-}
-
 export async function fetchCoursesByCategory(
-  categorySlug: string
+  categorySlug: string,
 ): Promise<Course[]> {
   try {
     const catRes = await fetch(
@@ -221,10 +246,12 @@ export async function fetchCoursesByCategory(
 
     const catId = cats[0].id;
     const wpCourses = await fetchWPCourses(
-      `${WP_API_BASE}/courses?_embed=true&per_page=100&course-category=${catId}`
+      `${WP_API_BASE}/courses?_embed=true&per_page=100&course-category=${catId}&_fields=${LISTING_COURSE_FIELDS}`,
     );
 
-    return wpCourses.map(transformCourse);
+    return wpCourses.map((course) =>
+      transformCourse(course, { includeContent: false }),
+    );
   } catch (error) {
     console.error("fetchCoursesByCategory error:", error);
     return [];

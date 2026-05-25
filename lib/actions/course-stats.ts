@@ -1,10 +1,8 @@
 "use server";
 
+import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import {
-  extractVideoUrl,
-  fetchCourseFullStructure,
-} from "@/lib/tutor/api";
+import { COURSE_STATS_CACHE_TAG } from "@/lib/wordpress/cache-tags";
 import { formatDuration } from "@/lib/utils/duration";
 
 export interface CourseStats {
@@ -13,84 +11,69 @@ export interface CourseStats {
   durationLabel: string;
 }
 
+const EMPTY_STATS: CourseStats = {
+  lessonCount: 0,
+  durationSeconds: 0,
+  durationLabel: "",
+};
+
+const REVALIDATE_SECONDS = 3600;
+
+async function fetchAllCourseStatsUncached(): Promise<
+  Record<string, CourseStats>
+> {
+  const map: Record<string, CourseStats> = {};
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("lessons")
+    .select("course_slug, duration_seconds");
+
+  if (error) {
+    console.error("[CourseStats] Supabase query failed:", error.message);
+    return map;
+  }
+
+  for (const row of data ?? []) {
+    const existing = map[row.course_slug] ?? {
+      lessonCount: 0,
+      durationSeconds: 0,
+      durationLabel: "",
+    };
+
+    existing.lessonCount += 1;
+    existing.durationSeconds += row.duration_seconds ?? 0;
+    map[row.course_slug] = existing;
+  }
+
+  for (const slug of Object.keys(map)) {
+    const stat = map[slug];
+    if (stat.lessonCount > 0) {
+      stat.durationLabel = formatDuration(stat.durationSeconds);
+    }
+  }
+
+  return map;
+}
+
+const getCachedAllCourseStats = unstable_cache(
+  fetchAllCourseStatsUncached,
+  ["all-course-stats"],
+  { revalidate: REVALIDATE_SECONDS, tags: [COURSE_STATS_CACHE_TAG] },
+);
+
 export async function getCourseStatsMap(
   courses: Array<{ id: number; slug: string }>,
 ): Promise<Map<string, CourseStats>> {
   const map = new Map<string, CourseStats>();
 
-  for (const course of courses) {
-    map.set(course.slug, {
-      lessonCount: 0,
-      durationSeconds: 0,
-      durationLabel: "",
-    });
-  }
-
   if (courses.length === 0) {
     return map;
   }
 
-  const slugs = courses.map((course) => course.slug);
-  const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
-    .from("lessons")
-    .select("course_slug, duration_seconds")
-    .in("course_slug", slugs);
+  const allStats = await getCachedAllCourseStats();
 
-  if (error) {
-    console.error("[CourseStats] Supabase query failed:", error.message);
-  } else {
-    for (const row of data ?? []) {
-      const stat = map.get(row.course_slug);
-      if (!stat) continue;
-      stat.lessonCount += 1;
-      stat.durationSeconds += row.duration_seconds ?? 0;
-    }
-  }
-
-  await Promise.all(
-    courses.map(async (course) => {
-      const stat = map.get(course.slug);
-      if (!stat) return;
-
-      if (stat.lessonCount > 0) {
-        stat.durationLabel = formatDuration(stat.durationSeconds);
-        return;
-      }
-
-      try {
-        const structure = await fetchCourseFullStructure(course.id);
-        let lessonCount = 0;
-        let durationSeconds = 0;
-
-        for (const topic of structure) {
-          for (const lesson of topic.lessons) {
-            lessonCount += 1;
-            durationSeconds += extractVideoUrl(lesson.video).duration;
-          }
-        }
-
-        if (lessonCount > 0) {
-          map.set(course.slug, {
-            lessonCount,
-            durationSeconds,
-            durationLabel: formatDuration(durationSeconds),
-          });
-        }
-      } catch (err) {
-        console.error(
-          `[CourseStats] Tutor fallback failed for ${course.slug}:`,
-          err,
-        );
-      }
-    }),
-  );
-
-  for (const slug of slugs) {
-    const stat = map.get(slug);
-    if (stat && stat.lessonCount > 0 && !stat.durationLabel) {
-      stat.durationLabel = formatDuration(stat.durationSeconds);
-    }
+  for (const course of courses) {
+    map.set(course.slug, allStats[course.slug] ?? { ...EMPTY_STATS });
   }
 
   return map;

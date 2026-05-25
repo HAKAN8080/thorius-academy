@@ -26,16 +26,16 @@ async function KurslarContent({
 }: {
   selectedCategory?: string;
 }) {
-  const [courses, categories, products] = await Promise.all([
-    fetchAllCourses(),
-    fetchAllCategories(),
+  const courses = await fetchAllCourses();
+  const [categories, products, statsBySlug] = await Promise.all([
+    fetchAllCategories(courses),
     getAllCourseProducts(),
+    getCourseStatsMap(courses),
   ]);
 
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
   );
-  const statsBySlug = await getCourseStatsMap(courses);
 
   const filteredCourses = selectedCategory
     ? courses.filter((c) =>
