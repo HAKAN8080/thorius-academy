@@ -1,13 +1,7 @@
+import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, ExternalLink, GraduationCap, Users } from "lucide-react";
+import { ArrowRight, Check, ExternalLink } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { cn } from "@/lib/utils";
-
-const academyFeatures = [
-  "65+ Premium Kurs",
-  "Sektör Uzmanı Eğitmenler",
-  "KVKK Uyumlu Sertifika",
-] as const;
 
 const coachingFeatures = [
   "7/24 Anlık Erişim",
@@ -15,135 +9,95 @@ const coachingFeatures = [
   "Liderlik ve Kariyer Gelişimi Değerlendirmeleri",
 ] as const;
 
-const cardHover =
-  "transition duration-300 hover:-translate-y-1 hover:shadow-xl";
-
 export function EcosystemCards() {
   return (
     <section
       id="ecosystem"
       className="py-16 md:py-20"
-      aria-labelledby="ecosystem-heading"
+      aria-labelledby="coaching-promo-heading"
     >
       <Container size="wide">
-        <div className="mb-10 flex flex-col gap-4 md:mb-12 md:flex-row md:items-end md:justify-between">
-          <div>
-            <h2
-              id="ecosystem-heading"
-              className="text-3xl font-bold text-primary-900"
-            >
-              Thorius Ekosistemi
-            </h2>
-            <p className="mt-3 max-w-2xl text-muted-foreground">
-              Eğitimden koçluğa — profesyonel gelişiminiz için iki platform,
-              tek çatı altında. Hemen keşfedin ve size uygun olanı seçin.
-            </p>
+        <a
+          href="https://coaching.thorius.com.tr"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="group relative block overflow-hidden rounded-3xl border border-primary-200 shadow-xl transition duration-300 hover:-translate-y-0.5 hover:shadow-2xl"
+          aria-label="Thorius Coaching'e git (yeni sekme)"
+        >
+          <div className="grid min-h-[22rem] grid-cols-1 lg:grid-cols-[1.1fr_0.9fr]">
+            <div className="relative z-10 flex flex-col justify-center bg-gradient-to-br from-primary-950 via-primary-900 to-primary-950 p-8 sm:p-10 lg:p-12">
+              <p className="text-sm font-semibold uppercase tracking-[0.2em] text-accent-400">
+                Thorius Ekosistemi
+              </p>
+              <h2
+                id="coaching-promo-heading"
+                className="mt-3 text-3xl font-bold text-white sm:text-4xl"
+              >
+                Eğitimden Koçluğa Geçin
+              </h2>
+              <p className="mt-4 max-w-xl text-base leading-relaxed text-primary-100 sm:text-lg">
+                Kurslarla bilgiyi edinin, Thorius Coaching ile kariyerinize
+                yön verin. AI destekli koçluk ve mentorluk platformumuzda
+                bir sonraki adımınızı planlayın.
+              </p>
+
+              <ul
+                className="mt-6 space-y-3"
+                aria-label="Thorius Coaching özellikleri"
+              >
+                {coachingFeatures.map((feature) => (
+                  <li
+                    key={feature}
+                    className="flex items-start gap-2 text-primary-50"
+                  >
+                    <Check
+                      className="mt-0.5 h-5 w-5 shrink-0 text-accent-500"
+                      aria-hidden="true"
+                    />
+                    <span>{feature}</span>
+                  </li>
+                ))}
+              </ul>
+
+              <div className="mt-8">
+                <span className="inline-flex items-center gap-2 rounded-xl bg-accent-500 px-6 py-3 text-base font-semibold text-primary-950 shadow-md transition-colors group-hover:bg-accent-600">
+                  Thorius Coaching&apos;e Git
+                  <ExternalLink className="h-4 w-4" aria-hidden="true" />
+                </span>
+                <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-accent-400 group-hover:underline">
+                  coaching.thorius.com.tr
+                  <ArrowRight
+                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
+                    aria-hidden="true"
+                  />
+                </p>
+              </div>
+            </div>
+
+            <div className="relative min-h-[16rem] lg:min-h-full">
+              <Image
+                src="/images/coaching-promo.png"
+                alt=""
+                fill
+                className="object-cover object-[center_20%]"
+                sizes="(max-width: 1024px) 100vw, 45vw"
+                priority={false}
+              />
+              <div
+                className="absolute inset-0 bg-gradient-to-r from-primary-950/80 via-primary-950/20 to-transparent lg:from-primary-950/70 lg:via-transparent"
+                aria-hidden="true"
+              />
+            </div>
           </div>
-          <p className="text-sm font-medium text-primary-600">
-            Aşağıdaki kartlardan platforma geçiş yapabilirsiniz →
-          </p>
-        </div>
+        </a>
 
-        <div className="grid grid-cols-1 gap-6 lg:grid-cols-2 lg:gap-8">
-          <Link
-            href="/kurslar"
-            className={cn(
-              "group block rounded-2xl border-2 border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-8",
-              cardHover,
-            )}
-            aria-label="Thorius AI Academy kurslarına git"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <GraduationCap
-                className="h-12 w-12 text-accent-500"
-                aria-hidden="true"
-              />
-              <ArrowRight
-                className="h-6 w-6 shrink-0 text-accent-600 transition-transform group-hover:translate-x-1"
-                aria-hidden="true"
-              />
-            </div>
-            <h3 className="mt-6 text-2xl font-bold text-primary-900">
-              Thorius AI Academy
-            </h3>
-            <p className="mt-1 text-sm font-medium text-primary-700">
-              Premium B2B Perakende Akademisi
-            </p>
-            <p className="mt-4 text-primary-700">
-              Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş
-              eğitim deneyimi. Planlama, AI, liderlik ve daha fazlası.
-            </p>
-            <ul
-              className="mt-6 space-y-3"
-              aria-label="Thorius Academy özellikleri"
-            >
-              {academyFeatures.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-primary-800"
-                >
-                  <Check
-                    className="mt-0.5 h-5 w-5 shrink-0 text-accent-500"
-                    aria-hidden="true"
-                  />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <span className="mt-8 inline-flex items-center gap-2 font-semibold text-accent-700 group-hover:underline">
-              Kurslara Göz At
-              <ArrowRight className="h-4 w-4" aria-hidden="true" />
-            </span>
+        <p className="mt-4 text-center text-sm text-muted-foreground">
+          Zaten bu sitedesiniz —{" "}
+          <Link href="/kurslar" className="font-medium text-primary-700 hover:underline">
+            kurslara göz atmaya devam edin
           </Link>
-
-          <a
-            href="https://coaching.thorius.com.tr"
-            target="_blank"
-            rel="noopener noreferrer"
-            className={cn(
-              "group block rounded-2xl border-2 border-primary-800 bg-gradient-to-br from-primary-900 to-primary-950 p-8 text-white",
-              cardHover,
-            )}
-            aria-label="Thorius Coaching'e git (yeni sekme)"
-          >
-            <div className="flex items-start justify-between gap-4">
-              <Users className="h-12 w-12 text-accent-400" aria-hidden="true" />
-              <ExternalLink
-                className="h-6 w-6 shrink-0 text-accent-400 transition-transform group-hover:translate-x-0.5 group-hover:-translate-y-0.5"
-                aria-hidden="true"
-              />
-            </div>
-            <h3 className="mt-6 text-2xl font-bold">Thorius Coaching</h3>
-            <p className="mt-1 text-sm font-medium text-primary-100">
-              AI Destekli Koçluk ve Mentorluk
-            </p>
-            <p className="mt-4 text-primary-50">
-              Uluslararası standartlarda kişisel koçluk ve mentorluk. Kariyer,
-              liderlik ve kişisel gelişiminiz için yanınızda.
-            </p>
-            <ul
-              className="mt-6 space-y-3"
-              aria-label="Thorius Coaching özellikleri"
-            >
-              {coachingFeatures.map((feature) => (
-                <li
-                  key={feature}
-                  className="flex items-start gap-2 text-primary-50"
-                >
-                  <Check
-                    className="mt-0.5 h-5 w-5 shrink-0 text-accent-500"
-                    aria-hidden="true"
-                  />
-                  <span>{feature}</span>
-                </li>
-              ))}
-            </ul>
-            <span className="mt-8 inline-flex items-center gap-2 font-semibold text-accent-400 group-hover:underline">
-              Koçluğa Başla
-              <ExternalLink className="h-4 w-4" aria-hidden="true" />
-            </span>
-          </a>
-        </div>
+          {" "}veya koçluk platformuna geçin.
+        </p>
       </Container>
     </section>
   );

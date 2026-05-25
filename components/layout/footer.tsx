@@ -7,7 +7,7 @@ const footerColumns = [
     title: "Hakkımızda",
     links: [
       { href: "/#hakkimizda", label: "Misyonumuz" },
-      { href: "/#ecosystem", label: "Thorius Ekosistemi" },
+      { href: "/#ecosystem", label: "Koçluk" },
       { href: "/#blog", label: "Blog" },
     ],
   },
