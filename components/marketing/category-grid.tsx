@@ -16,23 +16,18 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
   return (
     <section
-      className="border-b border-primary-100 bg-white py-10 md:py-12"
+      className="border-b border-primary-100 bg-white py-4 md:py-5"
       aria-labelledby="categories-heading"
     >
       <Container size="wide">
-        <div className="mb-8 text-center md:mb-10">
-          <h2
-            id="categories-heading"
-            className="text-2xl font-bold text-primary-900 md:text-3xl"
-          >
-            Uzmanlık Alanları
-          </h2>
-          <p className="mx-auto mt-3 max-w-3xl text-primary-700">
-            Perakende yöneticileri için kariyerinizi hızlandıracak programlar
-          </p>
-        </div>
+        <h2
+          id="categories-heading"
+          className="mb-3 text-xl font-bold text-primary-900 md:mb-4 md:text-2xl"
+        >
+          Uzmanlık Alanları
+        </h2>
 
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
+        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
           {categories.map((category) => (
             <Link
               key={category.id}
