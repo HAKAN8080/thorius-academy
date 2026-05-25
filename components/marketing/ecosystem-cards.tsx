@@ -1,6 +1,6 @@
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, Check, ExternalLink } from "lucide-react";
+import { Check, ExternalLink } from "lucide-react";
 import { Container } from "@/components/layout/container";
 
 const coachingFeatures = [
@@ -64,13 +64,6 @@ export function EcosystemCards() {
                   Thorius Coaching&apos;e Git
                   <ExternalLink className="h-4 w-4" aria-hidden="true" />
                 </span>
-                <p className="mt-3 inline-flex items-center gap-2 text-sm font-medium text-accent-400 group-hover:underline">
-                  coaching.thorius.com.tr
-                  <ArrowRight
-                    className="h-4 w-4 transition-transform group-hover:translate-x-1"
-                    aria-hidden="true"
-                  />
-                </p>
               </div>
             </div>
 
