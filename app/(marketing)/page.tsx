@@ -4,10 +4,14 @@ import { Container } from "@/components/layout/container";
 import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
-import { CourseCard } from "@/components/marketing/course-card";
+import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
 import { Button } from "@/components/ui/button";
 import { getAllCourseProducts } from "@/lib/actions/course-products";
 import { getCourseStatsMap } from "@/lib/actions/course-stats";
+import {
+  pickCoursesByCategorySlugs,
+  pickFeaturedCoursesByCategory,
+} from "@/lib/course/pick-featured-courses";
 import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -22,7 +26,21 @@ export default async function HomePage() {
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
   );
-  const featuredCourses = allCourses.slice(0, 5);
+  const featuredCourses = pickFeaturedCoursesByCategory(
+    allCourses,
+    categories,
+    5,
+  );
+  const planningCourses = pickCoursesByCategorySlugs(
+    allCourses,
+    ["planlama", "ai"],
+    5,
+  );
+  const hrCourses = pickCoursesByCategorySlugs(
+    allCourses,
+    ["insan-kaynaklari", "yoga"],
+    5,
+  );
   const carouselCourses = allCourses.slice(0, 5);
   const statsBySlug = await getCourseStatsMap(allCourses);
 
@@ -32,51 +50,38 @@ export default async function HomePage() {
       <Hero courses={carouselCourses} />
       <EcosystemCards />
 
-      {featuredCourses.length > 0 && (
-        <section
-          className="bg-gradient-to-b from-white to-primary-50 py-14 md:py-20"
-          aria-labelledby="featured-heading"
-        >
-          <Container size="wide">
-            <div className="mb-10 text-center">
-              <h2
-                id="featured-heading"
-                className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl"
-              >
-                Öne Çıkan Kurslar
-              </h2>
-              <p className="text-lg text-muted-foreground">
-                Profesyoneller için seçilmiş premium eğitimler
-              </p>
-            </div>
+      <CourseShowcaseSection
+        id="featured-heading"
+        title="Öne Çıkan Kurslar"
+        description="Profesyoneller için seçilmiş premium eğitimler"
+        courses={featuredCourses}
+        productBySlug={productBySlug}
+        statsBySlug={statsBySlug}
+        viewAllHref="/kurslar"
+        viewAllLabel="Tüm Kursları Görüntüle →"
+        className="bg-gradient-to-b from-white to-primary-50"
+      />
 
-            <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-4 xl:gap-5">
-              {featuredCourses.map((course) => {
-                const stats = statsBySlug.get(course.slug);
-                return (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    product={productBySlug.get(course.slug) ?? null}
-                    lessonCount={stats?.lessonCount}
-                    duration={stats?.durationLabel}
-                    size="compact"
-                  />
-                );
-              })}
-            </div>
+      <CourseShowcaseSection
+        id="planning-heading"
+        title="Planlama Kursları"
+        description="Perakende planlama, bütçe ve talep yönetimi eğitimleri"
+        courses={planningCourses}
+        productBySlug={productBySlug}
+        statsBySlug={statsBySlug}
+        viewAllHref="/kurslar?kategori=planlama"
+      />
 
-            <div className="mt-10 text-center">
-              <Link
-                href="/kurslar"
-                className="inline-flex items-center gap-2 font-semibold text-primary-950 transition-colors hover:text-accent-600"
-              >
-                Tüm Kursları Görüntüle →
-              </Link>
-            </div>
-          </Container>
-        </section>
-      )}
+      <CourseShowcaseSection
+        id="hr-heading"
+        title="İK Kursları"
+        description="İnsan kaynakları, yetenek yönetimi ve organizasyonel gelişim"
+        courses={hrCourses}
+        productBySlug={productBySlug}
+        statsBySlug={statsBySlug}
+        viewAllHref="/kurslar?kategori=insan-kaynaklari"
+        className="bg-primary-50"
+      />
 
       <section
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"

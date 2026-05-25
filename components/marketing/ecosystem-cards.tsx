@@ -85,9 +85,8 @@ export function EcosystemCards() {
         </a>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          Zaten bu sitedesiniz —{" "}
           <Link href="/kurslar" className="font-medium text-primary-700 hover:underline">
-            kurslara göz atmaya devam edin
+            Kurs kataloğunu inceleyin
           </Link>
           {" "}veya koçluk platformuna geçin.
         </p>
