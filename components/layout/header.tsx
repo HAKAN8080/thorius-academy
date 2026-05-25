@@ -23,11 +23,7 @@ type NavLink = {
 
 const navLinks: NavLink[] = [
   { href: "/kurslar", label: "Kurslar" },
-  {
-    href: "https://coaching.thorius.com.tr",
-    label: "Koçluk",
-    external: true,
-  },
+  { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
   { href: "/#hakkimizda", label: "Hakkımızda" },
   { href: "/#blog", label: "Blog" },

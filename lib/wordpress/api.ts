@@ -14,6 +14,7 @@ const REVALIDATE_SECONDS = 3600;
 /** Kategori kartında hangi sıradaki kursun görseli kullanılsın (0 = ilk kurs). */
 const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
   planlama: 1,
+  bt: 1,
 };
 
 function stripHtml(html: string): string {
