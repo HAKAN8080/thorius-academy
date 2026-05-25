@@ -1,35 +1,7 @@
 /* ═══════════════════════════════════════════════════════
-   Thorius Checkout — UI düzeltmeleri v1.2
-   Kupon ikonu · PayTR · Geniş form alanları · Sepet atlama
+   Thorius Checkout — UI düzeltmeleri v1.2.1
+   Kupon ikonu · PayTR okunabilirlik · Geniş form · Sticky sidebar
    ═══════════════════════════════════════════════════════ */
-
-/* ── Sol panel: PayTR güven rozeti ── */
-.thorius-checkout-trust {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 10px;
-  margin: 28px 0 8px;
-  padding: 18px 20px;
-  border-radius: 14px;
-  background: linear-gradient(135deg, #0b1e3f 0%, #132a52 100%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-}
-
-.thorius-paytr-logo {
-  display: block;
-  width: 160px;
-  max-width: 100%;
-  height: auto;
-}
-
-.thorius-secure-payment {
-  margin: 0 !important;
-  color: #ffffff !important;
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  letter-spacing: 0.02em;
-}
 
 /* ── Kompakt tek sayfa layout ── */
 form.checkout {
@@ -51,6 +23,14 @@ form.checkout {
   padding: 24px 28px !important;
 }
 
+/* Sağ panel (fiyat + ödeme) form başlığıyla hizalı, yukarıda sabit */
+#order_review,
+.woocommerce-checkout-review-order {
+  position: sticky !important;
+  top: 24px !important;
+  align-self: start !important;
+}
+
 .woocommerce-checkout-review-order {
   padding: 24px !important;
 }
@@ -59,10 +39,6 @@ form.checkout {
   margin-bottom: 16px !important;
   font-size: 13px !important;
   line-height: 1.55 !important;
-}
-
-#order_review {
-  top: 24px !important;
 }
 
 .woocommerce form .form-row {
@@ -74,25 +50,7 @@ form.checkout {
 .select2-container--default .select2-selection--single {
   height: 52px !important;
   font-size: 15px !important;
-}
-
-/* Ad, soyad, telefon, e-posta — %60 daha geniş (48% → 77%) */
-#billing_first_name_field,
-#billing_last_name_field,
-#billing_phone_field,
-#billing_email_field {
-  width: 77% !important;
-  max-width: 77% !important;
-  float: none !important;
-  clear: both !important;
-}
-
-#billing_first_name_field .input-text,
-#billing_last_name_field .input-text,
-#billing_phone_field .input-text,
-#billing_email_field .input-text {
   width: 100% !important;
-  max-width: 100% !important;
 }
 
 .woocommerce form .form-row textarea {
@@ -100,7 +58,23 @@ form.checkout {
   min-height: 72px !important;
 }
 
-/* İşletme adı + vergi no yan yana — Customizer'daki gizlemeyi geçersiz kıl */
+/* Ad + soyad yan yana */
+#billing_first_name_field,
+#billing_last_name_field {
+  width: 48% !important;
+}
+
+#billing_first_name_field {
+  float: left !important;
+  clear: none !important;
+}
+
+#billing_last_name_field {
+  float: right !important;
+  clear: none !important;
+}
+
+/* İşletme adı + vergi no yan yana */
 body.woocommerce-checkout #billing_company_field,
 body.woocommerce-checkout #billing_vkn_field {
   display: block !important;
@@ -109,7 +83,7 @@ body.woocommerce-checkout #billing_vkn_field {
 
 #billing_company_field {
   float: left !important;
-  clear: none !important;
+  clear: both !important;
 }
 
 #billing_vkn_field {
@@ -119,6 +93,22 @@ body.woocommerce-checkout #billing_vkn_field {
 
 #billing_country_field {
   clear: both !important;
+}
+
+/* Telefon + e-posta yan yana — input yüksekliği artırıldı */
+#billing_phone_field,
+#billing_email_field {
+  width: 48% !important;
+}
+
+#billing_phone_field {
+  float: left !important;
+  clear: both !important;
+}
+
+#billing_email_field {
+  float: right !important;
+  clear: none !important;
 }
 
 /* Gereksiz alanları gizle */
@@ -173,14 +163,18 @@ body.woocommerce-checkout #payment .payment_box p {
 
 /* ── Mobil ── */
 @media (max-width: 992px) {
-  #billing_company_field,
-  #billing_vkn_field,
+  #order_review,
+  .woocommerce-checkout-review-order {
+    position: static !important;
+  }
+
   #billing_first_name_field,
   #billing_last_name_field,
+  #billing_company_field,
+  #billing_vkn_field,
   #billing_phone_field,
   #billing_email_field {
     width: 100% !important;
-    max-width: 100% !important;
     float: none !important;
     clear: both !important;
   }

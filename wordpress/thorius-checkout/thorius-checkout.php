@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Ödeme sayfası alanları, kurumsal fatura alanları ve checkout UI düzeltmeleri.
- * Version: 1.2.0
+ * Version: 1.2.1
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.2.0');
+define('THORIUS_CHECKOUT_VERSION', '1.2.1');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -127,29 +127,6 @@ function thorius_checkout_skip_cart_page(): void
     exit;
 }
 add_action('template_redirect', 'thorius_checkout_skip_cart_page', 20);
-
-/**
- * Sol panel: PayTR logosu + güvenli ödeme (yaşam boyu erişim alanının üstü).
- */
-function thorius_checkout_paytr_trust_badge(): void
-{
-    $logo_url = THORIUS_CHECKOUT_URL . 'assets/paytr-logo.svg';
-    ?>
-    <div class="thorius-checkout-trust">
-        <img
-            src="<?php echo esc_url($logo_url); ?>"
-            alt="<?php esc_attr_e('PayTR', 'thorius-checkout'); ?>"
-            class="thorius-paytr-logo"
-            width="160"
-            height="40"
-            loading="lazy"
-            decoding="async"
-        />
-        <p class="thorius-secure-payment"><?php esc_html_e('Güvenli Ödeme', 'thorius-checkout'); ?></p>
-    </div>
-    <?php
-}
-add_action('woocommerce_checkout_after_customer_details', 'thorius_checkout_paytr_trust_badge', 4);
 
 /**
  * Checkout CSS — kupon ikonu, PayTR metni, kompakt layout.
