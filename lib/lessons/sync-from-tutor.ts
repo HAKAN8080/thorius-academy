@@ -2,6 +2,7 @@ import {
   extractVideoUrl,
   fetchCourseFullStructureFresh,
 } from "@/lib/tutor/api";
+import { decodeHtmlEntities } from "@/lib/utils/decode-html-entities";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface SyncLessonsResult {
@@ -28,13 +29,13 @@ export async function syncLessonsFromTutor(
           course_slug: courseSlug,
           wp_lesson_id: lesson.ID,
           lesson_order: lessonOrder++,
-          title: lesson.post_title,
+          title: decodeHtmlEntities(lesson.post_title),
           description: lesson.post_content || null,
           duration_seconds: videoInfo.duration || null,
           video_type: videoInfo.type,
           video_url: videoInfo.url,
           video_embed_url: videoInfo.embedUrl,
-          topic_title: topic.topic_title,
+          topic_title: decodeHtmlEntities(topic.topic_title),
           topic_order: topic.topic_order,
           is_free: false,
         });

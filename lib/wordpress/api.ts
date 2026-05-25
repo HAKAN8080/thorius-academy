@@ -4,6 +4,7 @@ import {
   COURSE_CATEGORY_CACHE_TAG,
   courseSlugCacheTag,
 } from "@/lib/wordpress/cache-tags";
+import { decodeHtmlEntities } from "@/lib/utils/decode-html-entities";
 
 const WP_API_BASE =
   process.env.NEXT_PUBLIC_WP_API_URL ||
@@ -18,17 +19,7 @@ const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
 };
 
 function stripHtml(html: string): string {
-  return html
-    .replace(/<[^>]*>/g, "")
-    .replace(/&hellip;/g, "...")
-    .replace(/&nbsp;/g, " ")
-    .replace(/&amp;/g, "&")
-    .replace(/&quot;/g, '"')
-    .replace(/&#8217;/g, "'")
-    .replace(/&#8220;/g, '"')
-    .replace(/&#8221;/g, '"')
-    .replace(/\s+/g, " ")
-    .trim();
+  return decodeHtmlEntities(html);
 }
 
 function parseExcerpt(html: string): string {
