@@ -3,6 +3,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
+import { Logo } from "@/components/layout/logo";
 
 export default async function AppLayout({
   children,
@@ -23,9 +24,10 @@ export default async function AppLayout({
       <header className="border-b border-primary-100 bg-white">
         <div className="mx-auto flex h-14 max-w-7xl items-center justify-between px-4 sm:px-6">
           <div className="flex items-center gap-6">
-            <Link href="/panel" className="font-bold text-primary-900">
-              THORIUS<span className="text-accent-500">•</span> Panel
-            </Link>
+            <Logo variant="compact" />
+            <span className="hidden text-sm font-medium text-primary-500 sm:inline">
+              Panel
+            </span>
             <nav className="hidden items-center gap-4 sm:flex">
               <Link
                 href="/panel/kurslarim"
