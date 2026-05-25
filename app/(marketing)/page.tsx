@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Hero } from "@/components/marketing/hero";
+import { BilgeBaykusSection } from "@/components/marketing/bilge-baykus-section";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseCard } from "@/components/marketing/course-card";
@@ -27,6 +28,7 @@ export default async function HomePage() {
   return (
     <>
       <Hero courses={carouselCourses} />
+      <BilgeBaykusSection />
       <EcosystemCards />
       <CategoryGrid categories={categories} />
 
@@ -93,11 +95,15 @@ export default async function HomePage() {
 
       <section id="hakkimizda" className="py-16">
         <Container size="narrow" className="text-center">
+          <p className="mb-3 text-2xl" aria-hidden="true">
+            🦉
+          </p>
           <h2 className="text-2xl font-bold text-primary-900">Hakkımızda</h2>
           <p className="mt-4 text-primary-700">
-            Thorius Academy, Türkiye perakende sektörünün lider markalarına
-            MasterClass kalitesinde, McKinsey derinliğinde eğitim sunar. AI
-            destekli içerikler ve sektör deneyimini bir araya getiriyoruz.
+            Thorius AI Academy, Türkiye perakende sektörünün lider markalarına
+            MasterClass kalitesinde, McKinsey derinliğinde eğitim sunar. Bilge
+            Baykuş rehberliğinde AI destekli içerikler ve sektör deneyimini bir
+            araya getiriyoruz.
           </p>
         </Container>
       </section>

@@ -43,10 +43,10 @@ export function EcosystemCards() {
               aria-hidden="true"
             />
             <h3 className="mt-6 text-2xl font-bold text-primary-900">
-              Thorius Academy
+              Thorius AI Academy
             </h3>
             <p className="mt-1 text-sm font-medium text-primary-700">
-              Premium B2B Perakende Akademisi
+              Bilge Baykuş ile Premium B2B Perakende Akademisi
             </p>
             <p className="mt-4 text-primary-700">
               Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş eğitim

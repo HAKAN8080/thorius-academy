@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sheet";
 import { Container } from "@/components/layout/container";
 import { AuthButtons } from "@/components/layout/auth-buttons";
-import { cn } from "@/lib/utils";
+import { Logo } from "@/components/layout/logo";
 
 type NavLink = {
   href: string;
@@ -33,28 +33,13 @@ const navLinks: NavLink[] = [
   { href: "/#blog", label: "Blog" },
 ];
 
-function Logo({ className }: { className?: string }) {
-  return (
-    <Link
-      href="/"
-      className={cn("flex items-center gap-0.5 font-bold tracking-tight", className)}
-      aria-label="Thorius Academy ana sayfa"
-    >
-      <span className="text-primary-900">THORIUS</span>
-      <span className="text-accent-500" aria-hidden="true">
-        •
-      </span>
-    </Link>
-  );
-}
-
 export function Header() {
   const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary-100/60 bg-white/80 backdrop-blur-md">
       <Container className="flex h-16 items-center justify-between">
-        <Logo className="text-lg sm:text-xl" />
+        <Logo variant="compact" showTagline />
 
         <nav
           className="hidden items-center gap-8 md:flex"
