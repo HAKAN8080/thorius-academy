@@ -12,6 +12,7 @@ import {
   isInstructorPortalPath,
   isStudentPortalPath,
 } from "@/lib/config/portal-urls";
+import { useInstructorAccess } from "@/lib/instructor/use-instructor-access";
 import { cn } from "@/lib/utils";
 
 interface ViewModeSwitchProps {
@@ -23,25 +24,51 @@ export function ViewModeSwitch({ className, onNavigate }: ViewModeSwitchProps) {
   const pathname = usePathname();
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loadingUser, setLoadingUser] = useState(true);
+  const [hasStudentCourses, setHasStudentCourses] = useState(false);
+  const { isInstructor, loading: loadingInstructor } = useInstructorAccess(user);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       setUser(data.user);
-      setLoading(false);
+      setLoadingUser(false);
     });
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
-      setLoading(false);
+      setLoadingUser(false);
     });
 
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  if (loading || !user) {
+  useEffect(() => {
+    if (!user || !isInstructor) {
+      setHasStudentCourses(false);
+      return;
+    }
+
+    let cancelled = false;
+
+    supabase
+      .from("enrollments")
+      .select("id", { count: "exact", head: true })
+      .eq("user_id", user.id)
+      .neq("status", "cancelled")
+      .then(({ count }) => {
+        if (!cancelled) {
+          setHasStudentCourses((count ?? 0) > 0);
+        }
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [supabase, user, isInstructor]);
+
+  if (loadingUser || loadingInstructor || !user || !isInstructor) {
     return null;
   }
 
@@ -60,22 +87,6 @@ export function ViewModeSwitch({ className, onNavigate }: ViewModeSwitchProps) {
       aria-label="Görünüm değiştir"
     >
       <Link
-        href={studentUrl}
-        onClick={onNavigate}
-        className={cn(
-          "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm",
-          studentActive
-            ? "bg-primary-950 text-white shadow-sm"
-            : "text-primary-700 hover:bg-primary-50 hover:text-primary-900",
-        )}
-        aria-current={studentActive ? "page" : undefined}
-      >
-        <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="hidden sm:inline">Öğrenci görünümü</span>
-        <span className="sm:hidden">Öğrenci</span>
-      </Link>
-
-      <Link
         href={instructorUrl}
         onClick={onNavigate}
         className={cn(
@@ -87,9 +98,27 @@ export function ViewModeSwitch({ className, onNavigate }: ViewModeSwitchProps) {
         aria-current={instructorActive ? "page" : undefined}
       >
         <Presentation className="h-3.5 w-3.5" aria-hidden="true" />
-        <span className="hidden sm:inline">Eğitmen görünümü</span>
+        <span className="hidden sm:inline">Eğitmen</span>
         <span className="sm:hidden">Eğitmen</span>
       </Link>
+
+      {hasStudentCourses ? (
+        <Link
+          href={studentUrl}
+          onClick={onNavigate}
+          className={cn(
+            "inline-flex items-center gap-1.5 rounded-md px-2.5 py-1.5 text-xs font-semibold transition-colors sm:px-3 sm:text-sm",
+            studentActive
+              ? "bg-primary-950 text-white shadow-sm"
+              : "text-primary-700 hover:bg-primary-50 hover:text-primary-900",
+          )}
+          aria-current={studentActive ? "page" : undefined}
+        >
+          <GraduationCap className="h-3.5 w-3.5" aria-hidden="true" />
+          <span className="hidden sm:inline">Öğrenci</span>
+          <span className="sm:hidden">Öğrenci</span>
+        </Link>
+      ) : null}
     </div>
   );
 }

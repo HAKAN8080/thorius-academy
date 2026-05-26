@@ -11,6 +11,8 @@ import {
 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
+import { getInstructorAccess } from "@/lib/instructor/access";
+import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -29,7 +31,17 @@ export default async function MyCoursesPage() {
     redirect("/giris?redirect=/panel/kurslarim");
   }
 
+  const access = await getInstructorAccess();
   const enrollments = await getUserEnrollments();
+
+  if (access.isInstructor && enrollments.length === 0) {
+    redirect(getInstructorPortalUrl());
+  }
+
+  const pageTitle = access.isInstructor ? "Kayıtlı Kurslarım" : "Kurslarım";
+  const pageDescription = access.isInstructor
+    ? "Öğrenci olarak kayıt olduğunuz kurslar"
+    : "Kayıtlı olduğunuz tüm kurslar tek yerde.";
 
   return (
     <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
@@ -39,13 +51,13 @@ export default async function MyCoursesPage() {
             <GraduationCap className="h-6 w-6 text-accent-600" />
           </div>
           <h1 className="text-3xl font-bold text-primary-950 md:text-4xl">
-            Kurslarım
+            {pageTitle}
           </h1>
         </div>
         <p className="text-lg text-muted-foreground">
           {enrollments.length > 0
             ? `${enrollments.length} kursa kayıtlısınız`
-            : "Henüz kayıtlı olduğunuz bir kurs yok"}
+            : pageDescription}
         </p>
       </header>
 

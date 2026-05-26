@@ -3,7 +3,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
-import { BookOpen, GraduationCap, ArrowRight, User } from "lucide-react";
+import { getInstructorAccess } from "@/lib/instructor/access";
+import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
+import { BookOpen, GraduationCap, ArrowRight, User, Presentation } from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Panel",
@@ -17,7 +19,12 @@ export default async function PanelPage() {
 
   if (!user) redirect("/giris");
 
+  const access = await getInstructorAccess();
   const enrollments = await getUserEnrollments();
+
+  if (access.isInstructor && enrollments.length === 0) {
+    redirect(getInstructorPortalUrl());
+  }
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
   const completedEnrollments = enrollments.filter(
     (e) => e.status === "completed"
@@ -69,6 +76,26 @@ export default async function PanelPage() {
       </div>
 
       <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
+        {access.isInstructor ? (
+          <Link
+            href={getInstructorPortalUrl()}
+            className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div className="rounded-lg bg-accent-500/10 p-3">
+                <Presentation className="h-6 w-6 text-accent-600" />
+              </div>
+              <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-primary-950">
+              Eğitmen Paneli
+            </h3>
+            <p className="text-muted-foreground">
+              Verdiğiniz kursları, öğrenci sayılarını ve yorumları görün
+            </p>
+          </Link>
+        ) : null}
+
         <Link
           href="/panel/kurslarim"
           className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
@@ -79,9 +106,13 @@ export default async function PanelPage() {
             </div>
             <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
           </div>
-          <h3 className="mb-2 text-xl font-bold text-primary-950">Kurslarım</h3>
+          <h3 className="mb-2 text-xl font-bold text-primary-950">
+            {access.isInstructor ? "Kayıtlı Kurslarım" : "Kurslarım"}
+          </h3>
           <p className="text-muted-foreground">
-            Kayıtlı olduğunuz tüm kursları görüntüleyin
+            {access.isInstructor
+              ? "Öğrenci olarak kayıt olduğunuz kursları görüntüleyin"
+              : "Kayıtlı olduğunuz tüm kursları görüntüleyin"}
           </p>
         </Link>
 

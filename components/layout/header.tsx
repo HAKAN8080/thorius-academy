@@ -1,8 +1,10 @@
 "use client";
 
 import Link from "next/link";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Menu } from "lucide-react";
+import type { User } from "@supabase/supabase-js";
+import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -16,6 +18,7 @@ import { AuthButtons } from "@/components/layout/auth-buttons";
 import { Logo } from "@/components/layout/logo";
 import { ViewModeSwitch } from "@/components/layout/view-mode-switch";
 import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
+import { useInstructorAccess } from "@/lib/instructor/use-instructor-access";
 
 type NavLink = {
   href: string;
@@ -23,16 +26,12 @@ type NavLink = {
   external?: boolean;
 };
 
-const navLinks: NavLink[] = [
+const baseNavLinks: NavLink[] = [
   { href: "/kurslar", label: "Kurslar" },
   { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
   { href: "/#hakkimizda", label: "Hakkımızda" },
   { href: "/#blog", label: "Blog" },
-  {
-    href: getInstructorPortalUrl(),
-    label: "Eğitmen Paneli",
-  },
 ];
 
 function NavItem({
@@ -61,6 +60,33 @@ function NavItem({
 
 export function Header() {
   const [open, setOpen] = useState(false);
+  const supabase = useMemo(() => createClient(), []);
+  const [user, setUser] = useState<User | null>(null);
+  const { isInstructor } = useInstructorAccess(user);
+
+  useEffect(() => {
+    supabase.auth.getUser().then(({ data }) => {
+      setUser(data.user);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
+
+  const navLinks = isInstructor
+    ? [
+        ...baseNavLinks,
+        {
+          href: getInstructorPortalUrl(),
+          label: "Eğitmen Paneli",
+        },
+      ]
+    : baseNavLinks;
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary-100/60 bg-white/80 backdrop-blur-md">

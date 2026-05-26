@@ -5,7 +5,7 @@ import { signOut } from "@/lib/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { ViewModeSwitch } from "@/components/layout/view-mode-switch";
-import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
+import { PanelNavLinks } from "@/components/layout/panel-nav-links";
 
 export default async function AppLayout({
   children,
@@ -31,24 +31,7 @@ export default async function AppLayout({
               Panel
             </span>
             <nav className="hidden items-center gap-4 sm:flex">
-              <Link
-                href="/panel/kurslarim"
-                className="text-sm font-medium text-primary-700 hover:text-primary-900"
-              >
-                Kurslarım
-              </Link>
-              <Link
-                href={getInstructorPortalUrl()}
-                className="text-sm font-medium text-primary-700 hover:text-primary-900"
-              >
-                Eğitmen görünümü
-              </Link>
-              <Link
-                href="/"
-                className="text-sm text-primary-600 hover:text-primary-900"
-              >
-                Siteye Dön
-              </Link>
+              <PanelNavLinks />
             </nav>
           </div>
           <div className="flex items-center gap-3">

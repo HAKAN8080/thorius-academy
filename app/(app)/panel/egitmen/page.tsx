@@ -49,8 +49,8 @@ export default async function InstructorDashboardPage() {
         </div>
         <p className="text-lg text-muted-foreground">
           {access.instructorName
-            ? `Hoş geldiniz, ${access.instructorName}`
-            : "Kurslarınızı ve öğrenci geri bildirimlerinizi görüntüleyin"}
+            ? `Hoş geldiniz, ${access.instructorName} — verdiğiniz kurslar`
+            : "Verdiğiniz kurslar, öğrenci sayıları ve geri bildirimler"}
         </p>
         {courses.length > 0 && (
           <div className="mt-4 flex flex-wrap gap-4 text-sm text-primary-700">
