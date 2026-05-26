@@ -2,7 +2,7 @@
   "crons": [
     {
       "path": "/api/instructor/sync-stats",
-      "schedule": "0 * * * *"
+      "schedule": "0 3 * * *"
     }
   ]
 }
