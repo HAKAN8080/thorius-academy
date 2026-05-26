@@ -88,6 +88,50 @@ function parseNumber(value: unknown): number {
   return 0;
 }
 
+function normalizeCourseItem(raw: unknown): TutorCourseListItem {
+  const item = (raw ?? {}) as Record<string, unknown>;
+  return {
+    ID: parseNumber(item.ID ?? item.id),
+    post_author: (item.post_author ?? item.author ?? item.instructor_id ?? 0) as
+      | number
+      | string,
+    post_title: String(item.post_title ?? item.title ?? ""),
+    post_name: String(item.post_name ?? item.slug ?? ""),
+    post_status: String(item.post_status ?? item.status ?? "publish"),
+    post_date: String(item.post_date ?? item.date ?? item.last_updated ?? ""),
+    post_date_gmt:
+      typeof item.post_date_gmt === "string" ? item.post_date_gmt : undefined,
+    thumbnail: typeof item.thumbnail === "string" ? item.thumbnail : undefined,
+    thumbnail_url:
+      typeof (item.thumbnail_url ?? item.image) === "string"
+        ? String(item.thumbnail_url ?? item.image)
+        : undefined,
+    image: typeof item.image === "string" ? item.image : undefined,
+    total_enrolled: parseNumber(item.total_enrolled) || undefined,
+    enrollment_count: parseNumber(item.enrollment_count) || undefined,
+  };
+}
+
+function extractCourseList(data: unknown): TutorCourseListItem[] {
+  if (!data) return [];
+  if (Array.isArray(data)) return data.map(normalizeCourseItem);
+
+  if (typeof data === "object") {
+    const obj = data as Record<string, unknown>;
+    if (Array.isArray(obj.results)) {
+      return obj.results.map(normalizeCourseItem);
+    }
+    if (Array.isArray(obj.courses)) {
+      return obj.courses.map(normalizeCourseItem);
+    }
+    if (Array.isArray(obj.data)) {
+      return obj.data.map(normalizeCourseItem);
+    }
+  }
+
+  return [];
+}
+
 function parseCourseId(course: TutorCourseListItem): number {
   return typeof course.ID === "string" ? parseInt(course.ID, 10) : course.ID;
 }
@@ -101,11 +145,11 @@ export async function fetchTutorCoursesPage(
   page: number,
   perPage = 50,
 ): Promise<TutorCourseListItem[]> {
-  const data = await tutorFetch<TutorApiResponse<TutorCourseListItem[]>>(
+  const data = await tutorFetch<TutorApiResponse<unknown>>(
     `/courses?order=desc&orderby=ID&paged=${page}&per_page=${perPage}`,
     { fresh: true },
   );
-  return data.data || [];
+  return extractCourseList(data.data);
 }
 
 export async function fetchAllTutorCourses(): Promise<TutorCourseListItem[]> {
