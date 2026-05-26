@@ -15,9 +15,13 @@ export async function getInstructorAccessSummary(): Promise<InstructorAccessSumm
     return { isInstructor: false, hasStudentCourses: false };
   }
 
-  const enrollments = await getUserEnrollments();
-  return {
-    isInstructor: true,
-    hasStudentCourses: enrollments.length > 0,
-  };
+  try {
+    const enrollments = await getUserEnrollments();
+    return {
+      isInstructor: true,
+      hasStudentCourses: enrollments.length > 0,
+    };
+  } catch {
+    return { isInstructor: true, hasStudentCourses: false };
+  }
 }

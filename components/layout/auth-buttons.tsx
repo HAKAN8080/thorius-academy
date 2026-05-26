@@ -47,25 +47,35 @@ export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
   }
 
   if (user) {
-    const primaryHref = isInstructor
-      ? getInstructorPortalUrl()
-      : getStudentPortalUrl();
-    const primaryLabel = isInstructor ? "Eğitmen Paneli" : "Kurslarım";
+    if (isInstructor) {
+      return (
+        <div className={className}>
+          <Button variant="ghost" asChild>
+            <Link href={getInstructorPortalUrl()} onClick={onNavigate}>
+              Eğitmen Paneli
+            </Link>
+          </Button>
+          <Button variant="gold" asChild>
+            <Link href={getStudentPortalUrl()} onClick={onNavigate}>
+              Öğrenci Kurslarım
+            </Link>
+          </Button>
+        </div>
+      );
+    }
 
     return (
       <div className={className}>
         <Button variant="ghost" asChild>
-          <Link href={primaryHref} onClick={onNavigate}>
-            {primaryLabel}
+          <Link href={getStudentPortalUrl()} onClick={onNavigate}>
+            Kurslarım
           </Link>
         </Button>
-        {!isInstructor ? (
-          <Button variant="gold" asChild>
-            <Link href="/panel" onClick={onNavigate}>
-              Panel
-            </Link>
-          </Button>
-        ) : null}
+        <Button variant="gold" asChild>
+          <Link href="/panel" onClick={onNavigate}>
+            Panel
+          </Link>
+        </Button>
       </div>
     );
   }
