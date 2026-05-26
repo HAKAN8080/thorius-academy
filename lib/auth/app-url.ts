@@ -14,8 +14,8 @@ export function getAuthCallbackUrl(nextPath: string): string {
   return `${getAppOrigin()}/auth/callback?next=${encodeURIComponent(safeNextPath(nextPath))}`;
 }
 
-export function getEmailRedirectUrl(): string {
-  return `${getAppOrigin()}/auth/callback?next=/panel`;
+export function getEmailRedirectUrl(nextPath = "/panel"): string {
+  return getAuthCallbackUrl(safeNextPath(nextPath));
 }
 
 export function safeNextPath(next: string | null): string {

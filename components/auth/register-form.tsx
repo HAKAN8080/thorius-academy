@@ -3,6 +3,7 @@
 import type { ReactNode } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
+import { useSearchParams } from "next/navigation";
 import { CheckCircle2 } from "lucide-react";
 import {
   resendVerificationEmail,
@@ -49,10 +50,12 @@ function ResendButton() {
 
 function RegisterSuccess({
   email,
+  redirectTo,
   resendState,
   resendForm,
 }: {
   email: string;
+  redirectTo: string;
   resendState: AuthActionState;
   resendForm: ReactNode;
 }) {
@@ -104,7 +107,10 @@ function RegisterSuccess({
         {resendForm}
 
         <p className="text-center text-sm text-muted-foreground">
-          <Link href="/giris" className="font-medium text-primary-700 hover:underline">
+          <Link
+            href={`/giris?redirect=${encodeURIComponent(redirectTo)}`}
+            className="font-medium text-primary-700 hover:underline"
+          >
             Giriş sayfasına dön
           </Link>
         </p>
@@ -114,6 +120,8 @@ function RegisterSuccess({
 }
 
 export function RegisterForm() {
+  const searchParams = useSearchParams();
+  const redirectTo = searchParams.get("redirect") ?? "/panel";
   const [state, formAction] = useFormState(signUp, initialState);
   const [resendState, resendAction] = useFormState(
     resendVerificationEmail,
@@ -126,6 +134,7 @@ export function RegisterForm() {
     return (
       <RegisterSuccess
         email={registeredEmail}
+        redirectTo={redirectTo}
         resendState={resendState}
         resendForm={
           <form
@@ -133,6 +142,7 @@ export function RegisterForm() {
             className="flex flex-col items-center gap-3"
           >
             <input type="hidden" name="email" value={registeredEmail} />
+            <input type="hidden" name="redirect" value={redirectTo} />
             <ResendButton />
           </form>
         }
@@ -149,6 +159,7 @@ export function RegisterForm() {
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
+        <input type="hidden" name="redirect" value={redirectTo} />
         <CardContent className="space-y-4">
           {state.error && (
             <p
@@ -214,7 +225,7 @@ export function RegisterForm() {
         <CardFooter className="justify-center text-sm text-muted-foreground">
           Zaten üye misiniz?{" "}
           <Link
-            href="/giris"
+            href={`/giris?redirect=${encodeURIComponent(redirectTo)}`}
             className="ml-1 font-medium text-primary-700 hover:underline"
           >
             Giriş yapın

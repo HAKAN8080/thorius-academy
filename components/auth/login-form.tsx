@@ -15,6 +15,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
 const initialState: AuthActionState = {};
 
@@ -80,14 +81,17 @@ export function LoginForm({ callbackError }: LoginFormProps) {
           </div>
           <SubmitButton />
         </CardContent>
-        <CardFooter className="justify-center text-sm text-muted-foreground">
-          Hesabınız yok mu?{" "}
-          <Link
-            href="/kayit"
-            className="ml-1 font-medium text-primary-700 hover:underline"
-          >
-            Üye olun
-          </Link>
+        <CardFooter className="flex-col gap-0">
+          <p className="text-sm text-muted-foreground">
+            Hesabınız yok mu?{" "}
+            <Link
+              href={`/kayit?redirect=${encodeURIComponent(redirectTo)}`}
+              className="font-medium text-primary-700 hover:underline"
+            >
+              Üye olun
+            </Link>
+          </p>
+          <ForgotPasswordForm />
         </CardFooter>
       </form>
     </Card>

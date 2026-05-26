@@ -2,6 +2,8 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { getCourseProduct } from "@/lib/actions/course-products";
+import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
 import type { EnrollResult, Enrollment } from "@/types/enrollment";
 
 interface EnrollParams {
@@ -25,6 +27,22 @@ export async function enrollInCourse(params: EnrollParams): Promise<EnrollResult
         success: false,
         error: "Kursa kayıt olmak için giriş yapmalısınız",
         needsLogin: true,
+      };
+    }
+
+    const courseProduct = await getCourseProduct(params.courseSlug);
+    if (!courseProduct) {
+      return {
+        success: false,
+        error:
+          "Bu kurs için kayıt şu an açık değil. Lütfen satın alma veya destek ekibiyle iletişime geçin.",
+      };
+    }
+
+    if (!isFreeCourseProduct(courseProduct)) {
+      return {
+        success: false,
+        error: "Bu kursa kayıt olmak için önce satın almanız gerekiyor.",
       };
     }
 

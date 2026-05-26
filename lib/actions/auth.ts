@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getEmailRedirectUrl } from "@/lib/auth/app-url";
+import { getEmailRedirectUrl, safeNextPath } from "@/lib/auth/app-url";
 import { sendWelcomeCouponEmail } from "@/lib/email/send-welcome-coupon";
 import { createClient } from "@/lib/supabase/server";
 
@@ -14,14 +14,10 @@ export interface AuthActionState {
 }
 
 function getSafeRedirect(value: unknown): string {
-  if (
-    typeof value !== "string" ||
-    !value.startsWith("/") ||
-    value.startsWith("//")
-  ) {
+  if (typeof value !== "string") {
     return "/panel";
   }
-  return value;
+  return safeNextPath(value);
 }
 
 export async function signIn(
@@ -66,6 +62,7 @@ export async function signUp(
     const email = formData.get("email");
     const password = formData.get("password");
     const kvkk = formData.get("kvkk");
+    const redirectTo = getSafeRedirect(formData.get("redirect"));
 
     if (typeof fullName !== "string" || !fullName.trim()) {
       return { error: "Ad soyad zorunludur." };
@@ -82,7 +79,7 @@ export async function signUp(
       email,
       password,
       options: {
-        emailRedirectTo: getEmailRedirectUrl(),
+        emailRedirectTo: getEmailRedirectUrl(redirectTo),
         data: { full_name: fullName.trim() },
       },
     });
@@ -114,6 +111,7 @@ export async function resendVerificationEmail(
 ): Promise<AuthActionState> {
   try {
     const email = formData.get("email");
+    const redirectTo = getSafeRedirect(formData.get("redirect"));
 
     if (typeof email !== "string" || !email.trim()) {
       return { error: "E-posta adresi gerekli." };
@@ -124,7 +122,7 @@ export async function resendVerificationEmail(
       type: "signup",
       email: email.trim(),
       options: {
-        emailRedirectTo: getEmailRedirectUrl(),
+        emailRedirectTo: getEmailRedirectUrl(redirectTo),
       },
     });
 
@@ -149,4 +147,37 @@ export async function signOut(): Promise<void> {
   await supabase.auth.signOut();
   revalidatePath("/", "layout");
   redirect("/giris");
+}
+
+export async function requestPasswordReset(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  try {
+    const email = formData.get("email");
+
+    if (typeof email !== "string" || !email.trim()) {
+      return { error: "E-posta adresi gerekli." };
+    }
+
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resetPasswordForEmail(email.trim(), {
+      redirectTo: getEmailRedirectUrl(),
+    });
+
+    if (error) {
+      return {
+        error: "Parola sıfırlama e-postası gönderilemedi. Lütfen tekrar deneyin.",
+      };
+    }
+
+    return {
+      success: true,
+      registeredEmail: email.trim(),
+      successMessage:
+        "Parola sıfırlama bağlantısı e-posta adresinize gönderildi. Satın alma sonrası hesabınıza bu yolla giriş yapabilirsiniz.",
+    };
+  } catch {
+    return { error: "Parola sıfırlama sırasında beklenmeyen bir hata oluştu." };
+  }
 }

@@ -1,3 +1,4 @@
+import { safeNextPath } from "@/lib/auth/app-url";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -50,7 +51,7 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  const { pathname } = request.nextUrl;
+  const { pathname, search } = request.nextUrl;
 
   if (isPublicPath(pathname)) {
     return supabaseResponse;
@@ -59,15 +60,19 @@ export async function updateSession(request: NextRequest) {
   if (isProtectedPath(pathname) && !user) {
     const loginUrl = request.nextUrl.clone();
     loginUrl.pathname = "/giris";
+    loginUrl.searchParams.set("redirect", `${pathname}${search}`);
     loginUrl.searchParams.delete("error");
     return NextResponse.redirect(loginUrl);
   }
 
   if (user && AUTH_ROUTES.includes(pathname as (typeof AUTH_ROUTES)[number])) {
-    const panelUrl = request.nextUrl.clone();
-    panelUrl.pathname = "/panel";
-    panelUrl.search = "";
-    return NextResponse.redirect(panelUrl);
+    const redirectTo = safeNextPath(
+      request.nextUrl.searchParams.get("redirect"),
+    );
+    const destination = request.nextUrl.clone();
+    destination.pathname = redirectTo;
+    destination.search = "";
+    return NextResponse.redirect(destination);
   }
 
   return supabaseResponse;

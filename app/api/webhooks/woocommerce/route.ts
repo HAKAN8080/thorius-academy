@@ -6,6 +6,8 @@ import type { WooCommerceOrderWebhook } from "@/types/woocommerce-webhook";
 export const dynamic = "force-dynamic";
 export const runtime = "nodejs";
 
+const PROCESSABLE_ORDER_STATUSES = new Set(["completed", "processing"]);
+
 function webhookResponse(
   body: Record<string, unknown>,
   status = 200,
@@ -54,9 +56,9 @@ export async function POST(req: NextRequest) {
       email: order.billing?.email,
     });
 
-    if (order.status !== "completed") {
+    if (!PROCESSABLE_ORDER_STATUSES.has(order.status)) {
       return webhookResponse({
-        message: "Order not completed, skipping",
+        message: "Order not ready for enrollment, skipping",
         status: order.status,
         order_id: order.id,
       });

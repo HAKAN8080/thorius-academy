@@ -1,5 +1,10 @@
+"use client";
+
+import Link from "next/link";
 import { EnrollButton } from "@/components/enrollment/enroll-button";
 import { BuyButton } from "@/components/course/buy-button";
+import { Button } from "@/components/ui/button";
+import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
 import type { CourseProduct } from "@/types/course-product";
 
 interface CoursePurchaseCtaProps {
@@ -40,7 +45,7 @@ export function CoursePurchaseCta({
     );
   }
 
-  if (courseProduct) {
+  if (courseProduct && !isFreeCourseProduct(courseProduct)) {
     return (
       <BuyButton
         wcProductId={courseProduct.wc_product_id}
@@ -51,16 +56,33 @@ export function CoursePurchaseCta({
     );
   }
 
+  if (courseProduct && isFreeCourseProduct(courseProduct)) {
+    return (
+      <EnrollButton
+        courseId={courseId}
+        courseSlug={courseSlug}
+        courseTitle={courseTitle}
+        courseImage={courseImage}
+        courseCategory={courseCategory}
+        instructorName={instructorName}
+        isLoggedIn={isLoggedIn}
+        isAlreadyEnrolled={false}
+      />
+    );
+  }
+
   return (
-    <EnrollButton
-      courseId={courseId}
-      courseSlug={courseSlug}
-      courseTitle={courseTitle}
-      courseImage={courseImage}
-      courseCategory={courseCategory}
-      instructorName={instructorName}
-      isLoggedIn={isLoggedIn}
-      isAlreadyEnrolled={false}
-    />
+    <div className="rounded-xl border border-primary-100 bg-primary-50/80 p-4 text-center">
+      <p className="text-sm font-medium text-primary-900">
+        Bu kurs şu an satın alınamıyor
+      </p>
+      <p className="mt-1 text-xs text-primary-600">
+        Fiyat bilgisi güncelleniyor olabilir. Destek ekibimiz size yardımcı
+        olur.
+      </p>
+      <Button asChild variant="outline" size="sm" className="mt-3">
+        <Link href="/iletisim">İletişime geçin</Link>
+      </Button>
+    </div>
   );
 }

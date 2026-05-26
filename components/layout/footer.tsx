@@ -8,7 +8,7 @@ const footerColumns = [
     links: [
       { href: "/#hakkimizda", label: "Misyonumuz" },
       { href: "/#ecosystem", label: "Koçluk" },
-      { href: "/#blog", label: "Blog" },
+      { href: "https://thorius.com.tr/blog", label: "Blog" },
     ],
   },
   {
@@ -34,7 +34,7 @@ const footerColumns = [
         href: "/egitmen-destek-kilavuzu",
         label: "Eğitmen Destek Kılavuzu",
       },
-      { href: "/#blog", label: "Blog Yazıları" },
+      { href: "https://thorius.com.tr/blog", label: "Blog Yazıları" },
     ],
   },
   {
@@ -49,8 +49,11 @@ const footerColumns = [
   {
     title: "İletişim",
     links: [
-      { href: "mailto:info@thorius.com", label: "info@thorius.com" },
-      { href: "tel:+902121234567", label: "+90 (212) 123 45 67" },
+      { href: "mailto:info@thorius.com.tr", label: "info@thorius.com.tr" },
+      {
+        href: "https://wa.me/905431323503",
+        label: "+90 543 132 35 03 (WhatsApp)",
+      },
       { href: "/kurumsal#iletisim", label: "İstanbul, Türkiye" },
     ],
   },

@@ -10,8 +10,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
+import { CorporateContactForm } from "@/components/marketing/corporate-contact-form";
 
 const benefits = [
   {
@@ -147,27 +146,7 @@ export default function KurumsalPage() {
           <p className="mt-2 text-center text-primary-700">
             Ekibimiz 1 iş günü içinde size dönüş yapacaktır.
           </p>
-          <form className="mt-8 space-y-4" action="#" method="post">
-            <div className="space-y-2">
-              <Label htmlFor="company">Şirket Adı</Label>
-              <Input id="company" name="company" required placeholder="Marka / Şirket" />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-name">Ad Soyad</Label>
-              <Input id="contact-name" name="contactName" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="contact-email">Kurumsal E-posta</Label>
-              <Input id="contact-email" name="contactEmail" type="email" required />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="employees">Çalışan Sayısı</Label>
-              <Input id="employees" name="employees" type="number" min={1} placeholder="ör. 150" />
-            </div>
-            <Button type="submit" variant="gold" className="w-full">
-              Gönder
-            </Button>
-          </form>
+          <CorporateContactForm />
         </Container>
       </section>
     </>
