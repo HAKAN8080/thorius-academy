@@ -203,24 +203,52 @@ async function fetchExistingCourseProducts(): Promise<ExistingCourseProduct[]> {
   return data as ExistingCourseProduct[];
 }
 
-async function upsertCourseProductRows(
+async function persistCourseProductRows(
   rows: CourseProductRow[],
+  existingByWpId: Map<number, ExistingCourseProduct>,
 ): Promise<{ upserted: number; error?: string }> {
   if (rows.length === 0) {
     return { upserted: 0 };
   }
 
   const supabase = getSupabaseAdmin();
+  const toInsert = rows.filter((row) => !existingByWpId.has(row.wp_course_id));
+  const toUpdate = rows.filter((row) => existingByWpId.has(row.wp_course_id));
   let upserted = 0;
 
-  for (let index = 0; index < rows.length; index += UPSERT_BATCH_SIZE) {
-    const chunk = rows.slice(index, index + UPSERT_BATCH_SIZE);
-    const { error } = await supabase
-      .from("course_products")
-      .upsert(chunk, { onConflict: "wp_course_id" });
+  for (let index = 0; index < toInsert.length; index += UPSERT_BATCH_SIZE) {
+    const chunk = toInsert.slice(index, index + UPSERT_BATCH_SIZE);
+    const { error } = await supabase.from("course_products").insert(chunk);
 
     if (error) {
       return { upserted, error: error.message };
+    }
+
+    upserted += chunk.length;
+  }
+
+  const UPDATE_CONCURRENCY = 20;
+  for (let index = 0; index < toUpdate.length; index += UPDATE_CONCURRENCY) {
+    const chunk = toUpdate.slice(index, index + UPDATE_CONCURRENCY);
+    const results = await Promise.all(
+      chunk.map((row) =>
+        supabase
+          .from("course_products")
+          .update({
+            course_slug: row.course_slug,
+            wc_product_id: row.wc_product_id,
+            price_normal: row.price_normal,
+            price_sale: row.price_sale,
+            currency: row.currency,
+            is_active: row.is_active,
+          })
+          .eq("wp_course_id", row.wp_course_id),
+      ),
+    );
+
+    const failed = results.find((result) => result.error);
+    if (failed?.error) {
+      return { upserted, error: failed.error.message };
     }
 
     upserted += chunk.length;
@@ -373,8 +401,9 @@ export async function backfillCourseProductsFromWordPress(
       rowMap.set(row.wp_course_id, row);
     }
 
-    const upsertResult = await upsertCourseProductRows(
+    const upsertResult = await persistCourseProductRows(
       Array.from(rowMap.values()),
+      existingByWpId,
     );
     upserted = upsertResult.upserted;
 
