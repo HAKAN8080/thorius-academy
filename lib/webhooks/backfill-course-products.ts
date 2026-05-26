@@ -1,10 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import {
-  syncCourseProduct,
-  type SyncCourseProductResult,
-} from "@/lib/webhooks/sync-course-product";
+import { FREE_COURSE_WC_PRODUCT_ID } from "@/lib/course/course-product-utils";
 import { revalidateCourseCache } from "@/lib/webhooks/revalidate-course-cache";
-import type { WordPressCourseWebhookCourse } from "@/types/wordpress-webhook";
 
 const WP_API_BASE =
   process.env.NEXT_PUBLIC_WP_API_URL ||
@@ -14,6 +10,8 @@ const WC_STORE_BASE = `${
   process.env.NEXT_PUBLIC_WP_SITE_URL || "https://thorius.com.tr"
 }/wp-json/wc/store/v1`;
 
+const UPSERT_BATCH_SIZE = 100;
+
 interface WPCourseRow {
   id: number;
   slug: string;
@@ -21,23 +19,6 @@ interface WPCourseRow {
   thorius_youtube?: {
     video_id?: string;
   } | null;
-}
-
-function isFreeYouTubeCourse(course: WPCourseRow): boolean {
-  return Boolean(course.thorius_youtube?.video_id?.trim());
-}
-
-function buildFreeCoursePayload(course: WPCourseRow): WordPressCourseWebhookCourse {
-  return {
-    id: course.id,
-    slug: course.slug,
-    status: course.status,
-    title: course.slug,
-    wc_product_id: 0,
-    price_normal: 0,
-    price_sale: null,
-    is_free: true,
-  };
 }
 
 interface WooStoreProduct {
@@ -51,6 +32,29 @@ interface WooStoreProduct {
   };
 }
 
+interface CourseProductRow {
+  course_slug: string;
+  wp_course_id: number;
+  wc_product_id: number;
+  price_normal: number | null;
+  price_sale: number | null;
+  currency: string;
+  is_active: boolean;
+}
+
+interface ExistingCourseProduct {
+  course_slug: string;
+  wp_course_id: number;
+  wc_product_id: number;
+}
+
+export interface BackfillCourseProductsOptions {
+  /** 1-based WP courses API page. Omit to process all courses. */
+  wpPage?: number;
+  /** Only register missing YouTube free courses (fast path). */
+  freeOnly?: boolean;
+}
+
 export interface BackfillCourseProductsResult {
   success: boolean;
   totalCourses: number;
@@ -59,7 +63,16 @@ export interface BackfillCourseProductsResult {
   freeSynced: number;
   refreshed: number;
   skipped: number;
+  upserted: number;
+  wpPage?: number;
+  wpTotalPages?: number;
+  hasMore?: boolean;
+  nextWpPage?: number;
   failures: Array<{ slug: string; reason: string }>;
+}
+
+function isFreeYouTubeCourse(course: WPCourseRow): boolean {
+  return Boolean(course.thorius_youtube?.video_id?.trim());
 }
 
 function parseStorePrice(
@@ -75,14 +88,13 @@ function parseStorePrice(
     return null;
   }
 
-  const divisor = Math.pow(10, minorUnit);
-  return parsed / divisor;
+  return parsed / Math.pow(10, minorUnit);
 }
 
-function mapWooProductToCoursePayload(
+function buildPaidRow(
   course: WPCourseRow,
   product: WooStoreProduct,
-): WordPressCourseWebhookCourse {
+): CourseProductRow {
   const minorUnit = product.prices.currency_minor_unit ?? 2;
   const priceNormal =
     parseStorePrice(product.prices.regular_price, minorUnit) ??
@@ -94,46 +106,56 @@ function mapWooProductToCoursePayload(
       : null;
 
   return {
-    id: course.id,
-    slug: course.slug,
-    status: course.status,
-    title: course.slug,
+    course_slug: course.slug,
+    wp_course_id: course.id,
     wc_product_id: product.id,
     price_normal: priceNormal,
     price_sale: priceSale,
+    currency: "TRY",
+    is_active: course.status === "publish",
   };
 }
 
-async function fetchAllPublishedCourses(): Promise<WPCourseRow[]> {
-  const firstRes = await fetch(
-    `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status,thorius_youtube`,
+function buildFreeRow(course: WPCourseRow): CourseProductRow {
+  return {
+    course_slug: course.slug,
+    wp_course_id: course.id,
+    wc_product_id: FREE_COURSE_WC_PRODUCT_ID,
+    price_normal: 0,
+    price_sale: null,
+    currency: "TRY",
+    is_active: course.status === "publish",
+  };
+}
+
+async function fetchPublishedCoursesPage(
+  page: number,
+): Promise<{ courses: WPCourseRow[]; totalPages: number }> {
+  const res = await fetch(
+    `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status,thorius_youtube&page=${page}`,
     { cache: "no-store" },
   );
 
-  if (!firstRes.ok) {
-    throw new Error(`WP courses fetch failed: ${firstRes.status}`);
+  if (!res.ok) {
+    throw new Error(`WP courses fetch failed: ${res.status}`);
   }
 
-  const totalPages = parseInt(firstRes.headers.get("X-WP-TotalPages") || "1", 10);
-  const firstBatch: WPCourseRow[] = await firstRes.json();
+  const totalPages = parseInt(res.headers.get("X-WP-TotalPages") || "1", 10);
+  const courses: WPCourseRow[] = await res.json();
+  return { courses, totalPages };
+}
+
+async function fetchAllPublishedCourses(): Promise<WPCourseRow[]> {
+  const { courses: firstBatch, totalPages } = await fetchPublishedCoursesPage(1);
 
   if (totalPages <= 1) {
     return firstBatch;
   }
 
   const remaining = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) => {
-      const page = index + 2;
-      return fetch(
-        `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status,thorius_youtube&page=${page}`,
-        { cache: "no-store" },
-      ).then(async (res) => {
-        if (!res.ok) {
-          return [] as WPCourseRow[];
-        }
-        return res.json() as Promise<WPCourseRow[]>;
-      });
-    }),
+    Array.from({ length: totalPages - 1 }, (_, index) =>
+      fetchPublishedCoursesPage(index + 2).then((result) => result.courses),
+    ),
   );
 
   return [...firstBatch, ...remaining.flat()];
@@ -168,126 +190,215 @@ async function fetchAllWooStoreProducts(): Promise<WooStoreProduct[]> {
   return all;
 }
 
-async function refreshExistingProducts(
-  productsById: Map<number, WooStoreProduct>,
-): Promise<{ refreshed: number; failures: Array<{ slug: string; reason: string }> }> {
+async function fetchExistingCourseProducts(): Promise<ExistingCourseProduct[]> {
   const supabase = getSupabaseAdmin();
-  const { data: existing, error } = await supabase
+  const { data, error } = await supabase
     .from("course_products")
-    .select("id, course_slug, wp_course_id, wc_product_id");
+    .select("course_slug, wp_course_id, wc_product_id");
 
-  if (error || !existing) {
-    return {
-      refreshed: 0,
-      failures: [{ slug: "*", reason: error?.message ?? "lookup_failed" }],
-    };
+  if (error || !data) {
+    throw new Error(error?.message ?? "course_products lookup failed");
   }
 
-  let refreshed = 0;
-  const failures: Array<{ slug: string; reason: string }> = [];
-
-  for (const row of existing) {
-    const product = productsById.get(row.wc_product_id);
-    if (!product) {
-      continue;
-    }
-
-    const payload: WordPressCourseWebhookCourse = mapWooProductToCoursePayload(
-      {
-        id: row.wp_course_id,
-        slug: row.course_slug,
-        status: "publish",
-      },
-      product,
-    );
-
-    const result = await syncCourseProduct(payload);
-    if (result.synced) {
-      refreshed += 1;
-    } else if (result.reason) {
-      failures.push({ slug: row.course_slug, reason: result.reason });
-    }
-  }
-
-  return { refreshed, failures };
+  return data as ExistingCourseProduct[];
 }
 
-export async function backfillCourseProductsFromWordPress(): Promise<BackfillCourseProductsResult> {
-  const failures: Array<{ slug: string; reason: string }> = [];
+async function upsertCourseProductRows(
+  rows: CourseProductRow[],
+): Promise<{ upserted: number; error?: string }> {
+  if (rows.length === 0) {
+    return { upserted: 0 };
+  }
+
+  const supabase = getSupabaseAdmin();
+  let upserted = 0;
+
+  for (let index = 0; index < rows.length; index += UPSERT_BATCH_SIZE) {
+    const chunk = rows.slice(index, index + UPSERT_BATCH_SIZE);
+    const { error } = await supabase
+      .from("course_products")
+      .upsert(chunk, { onConflict: "wp_course_id" });
+
+    if (error) {
+      return { upserted, error: error.message };
+    }
+
+    upserted += chunk.length;
+  }
+
+  return { upserted };
+}
+
+function buildRowsForCourses(params: {
+  courses: WPCourseRow[];
+  productsBySlug: Map<string, WooStoreProduct>;
+  existingByWpId: Map<number, ExistingCourseProduct>;
+  freeOnly: boolean;
+}): {
+  rows: CourseProductRow[];
+  synced: number;
+  freeSynced: number;
+  skipped: number;
+} {
+  const rows: CourseProductRow[] = [];
   let synced = 0;
   let freeSynced = 0;
   let skipped = 0;
 
-  try {
-    const [courses, wooProducts] = await Promise.all([
-      fetchAllPublishedCourses(),
-      fetchAllWooStoreProducts(),
-    ]);
-
-    const productsBySlug = new Map(wooProducts.map((product) => [product.slug, product]));
-    const productsById = new Map(wooProducts.map((product) => [product.id, product]));
-
-    const { refreshed, failures: refreshFailures } =
-      await refreshExistingProducts(productsById);
-    failures.push(...refreshFailures);
-
-    const existingSlugs = new Set<string>();
-    const supabase = getSupabaseAdmin();
-    const { data: existingRows } = await supabase
-      .from("course_products")
-      .select("course_slug");
-    for (const row of existingRows ?? []) {
-      existingSlugs.add(row.course_slug);
-    }
-
-    for (const course of courses) {
-      if (existingSlugs.has(course.slug)) {
-        continue;
-      }
-
-      const product = productsBySlug.get(course.slug);
-      if (!product) {
-        if (isFreeYouTubeCourse(course)) {
-          const freeResult = await syncCourseProduct(buildFreeCoursePayload(course));
-          if (freeResult.synced) {
-            freeSynced += 1;
-            existingSlugs.add(course.slug);
-          } else {
-            skipped += 1;
-            if (freeResult.reason) {
-              failures.push({ slug: course.slug, reason: freeResult.reason });
-            }
-          }
-        } else {
-          skipped += 1;
-        }
-        continue;
-      }
-
-      const payload = mapWooProductToCoursePayload(course, product);
-      const result: SyncCourseProductResult = await syncCourseProduct(payload);
-
-      if (result.synced) {
-        synced += 1;
-        existingSlugs.add(course.slug);
-      } else {
+  for (const course of params.courses) {
+    if (params.existingByWpId.has(course.id)) {
+      if (params.freeOnly) {
         skipped += 1;
-        if (result.reason) {
-          failures.push({ slug: course.slug, reason: result.reason });
-        }
       }
+      continue;
     }
 
-    revalidateCourseCache();
+    const product = params.productsBySlug.get(course.slug);
+    if (product && !params.freeOnly) {
+      rows.push(buildPaidRow(course, product));
+      synced += 1;
+      continue;
+    }
+
+    if (isFreeYouTubeCourse(course)) {
+      rows.push(buildFreeRow(course));
+      freeSynced += 1;
+      continue;
+    }
+
+    if (!params.freeOnly) {
+      skipped += 1;
+    }
+  }
+
+  return { rows, synced, freeSynced, skipped };
+}
+
+function buildRefreshRows(params: {
+  existing: ExistingCourseProduct[];
+  productsById: Map<number, WooStoreProduct>;
+}): { rows: CourseProductRow[]; refreshed: number } {
+  const rows: CourseProductRow[] = [];
+  let refreshed = 0;
+
+  for (const existing of params.existing) {
+    if (existing.wc_product_id <= 0) {
+      continue;
+    }
+
+    const product = params.productsById.get(existing.wc_product_id);
+    if (!product) {
+      continue;
+    }
+
+    rows.push(
+      buildPaidRow(
+        {
+          id: existing.wp_course_id,
+          slug: existing.course_slug,
+          status: "publish",
+        },
+        product,
+      ),
+    );
+    refreshed += 1;
+  }
+
+  return { rows, refreshed };
+}
+
+export async function backfillCourseProductsFromWordPress(
+  options: BackfillCourseProductsOptions = {},
+): Promise<BackfillCourseProductsResult> {
+  const failures: Array<{ slug: string; reason: string }> = [];
+  let synced = 0;
+  let freeSynced = 0;
+  let refreshed = 0;
+  let skipped = 0;
+  let upserted = 0;
+
+  try {
+    let courses: WPCourseRow[];
+    let wpTotalPages: number | undefined;
+    const wpPage = options.wpPage;
+    let hasMore = false;
+    let nextWpPage: number | undefined;
+
+    if (wpPage && wpPage > 0) {
+      const pageResult = await fetchPublishedCoursesPage(wpPage);
+      courses = pageResult.courses;
+      wpTotalPages = pageResult.totalPages;
+      hasMore = wpPage < pageResult.totalPages;
+      if (hasMore) {
+        nextWpPage = wpPage + 1;
+      }
+    } else {
+      courses = await fetchAllPublishedCourses();
+    }
+
+    const freeOnly = options.freeOnly === true;
+    const wooProducts = freeOnly
+      ? []
+      : await fetchAllWooStoreProducts();
+    const productsBySlug = new Map(
+      wooProducts.map((product) => [product.slug, product]),
+    );
+    const productsById = new Map(
+      wooProducts.map((product) => [product.id, product]),
+    );
+
+    const existing = await fetchExistingCourseProducts();
+    const existingByWpId = new Map(
+      existing.map((row) => [row.wp_course_id, row]),
+    );
+
+    const courseRows = buildRowsForCourses({
+      courses,
+      productsBySlug,
+      existingByWpId,
+      freeOnly,
+    });
+
+    synced = courseRows.synced;
+    freeSynced = courseRows.freeSynced;
+    skipped = courseRows.skipped;
+
+    const refreshRows = freeOnly
+      ? { rows: [], refreshed: 0 }
+      : buildRefreshRows({ existing, productsById });
+    refreshed = refreshRows.refreshed;
+
+    const rowMap = new Map<number, CourseProductRow>();
+    for (const row of [...courseRows.rows, ...refreshRows.rows]) {
+      rowMap.set(row.wp_course_id, row);
+    }
+
+    const upsertResult = await upsertCourseProductRows(
+      Array.from(rowMap.values()),
+    );
+    upserted = upsertResult.upserted;
+
+    if (upsertResult.error) {
+      failures.push({ slug: "*", reason: upsertResult.error });
+    }
+
+    if (!wpPage || !hasMore) {
+      revalidateCourseCache();
+    }
 
     return {
-      success: true,
+      success: !upsertResult.error,
       totalCourses: courses.length,
       totalProducts: wooProducts.length,
       synced,
       freeSynced,
       refreshed,
       skipped,
+      upserted,
+      wpPage,
+      wpTotalPages,
+      hasMore,
+      nextWpPage,
       failures,
     };
   } catch (error) {
@@ -299,6 +410,7 @@ export async function backfillCourseProductsFromWordPress(): Promise<BackfillCou
       freeSynced,
       refreshed: 0,
       skipped,
+      upserted,
       failures: [
         {
           slug: "*",

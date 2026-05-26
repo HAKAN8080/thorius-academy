@@ -20,7 +20,15 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const result = await backfillCourseProductsFromWordPress();
+  const url = new URL(request.url);
+  const wpPageParam = url.searchParams.get("wpPage");
+  const wpPage = wpPageParam ? parseInt(wpPageParam, 10) : undefined;
+  const freeOnly = url.searchParams.get("freeOnly") === "1";
+
+  const result = await backfillCourseProductsFromWordPress({
+    wpPage: Number.isFinite(wpPage) && wpPage! > 0 ? wpPage : undefined,
+    freeOnly,
+  });
 
   if (!result.success) {
     return NextResponse.json(result, { status: 500 });
