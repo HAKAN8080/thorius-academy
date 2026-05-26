@@ -14,6 +14,7 @@ import {
   resolveRatingStats,
 } from "@/lib/tutor/instructor-api";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { provisionInstructorAcademyAccount } from "@/lib/instructor/provision-academy-account";
 import type { SyncInstructorStatsResult } from "@/types/instructor";
 
 export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStatsResult> {
@@ -38,17 +39,22 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
     }
 
     let instructorsSynced = 0;
+    let accountsLinked = 0;
+    let accountsCreated = 0;
+    let inviteEmailsSent = 0;
+
     for (const instructorId of Array.from(instructorIds)) {
       const author = await fetchTutorAuthorInfo(instructorId);
       const fullName =
         author?.display_name?.trim() ||
         [author?.first_name, author?.last_name].filter(Boolean).join(" ").trim() ||
         null;
+      const email = author?.user_email ?? author?.email ?? null;
 
       const { error } = await supabase.from("instructors").upsert(
         {
           wp_user_id: instructorId,
-          email: author?.user_email ?? author?.email ?? null,
+          email,
           full_name: fullName,
           avatar_url: author?.avatar_url ?? author?.avatar ?? null,
           synced_at: syncedAt,
@@ -63,6 +69,21 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
         );
       } else {
         instructorsSynced += 1;
+      }
+
+      const provision =
+        process.env.INSTRUCTOR_AUTO_PROVISION !== "false"
+          ? await provisionInstructorAcademyAccount({
+              email,
+              fullName,
+              wpUserId: instructorId,
+            })
+          : null;
+
+      if (provision) {
+        accountsLinked += 1;
+        if (provision.created) accountsCreated += 1;
+        if (provision.inviteSent) inviteEmailsSent += 1;
       }
     }
 
@@ -139,6 +160,9 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
       coursesSynced: courses.length,
       reviewsSynced,
       instructorsSynced,
+      accountsLinked,
+      accountsCreated,
+      inviteEmailsSent,
     };
   } catch (err) {
     console.error("[Instructor Sync] Exception:", err);

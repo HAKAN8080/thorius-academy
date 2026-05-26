@@ -36,5 +36,8 @@ export interface SyncInstructorStatsResult {
   coursesSynced?: number;
   reviewsSynced?: number;
   instructorsSynced?: number;
+  accountsLinked?: number;
+  accountsCreated?: number;
+  inviteEmailsSent?: number;
   error?: string;
 }
