@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { syncInstructorStatsFromTutor } from "@/lib/instructor/sync-from-tutor";
 
 export const dynamic = "force-dynamic";
-export const maxDuration = 300;
+export const maxDuration = 60;
 
 function isAuthorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
