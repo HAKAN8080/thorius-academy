@@ -1,6 +1,6 @@
 import type { TutorApiResponse, TutorLesson, TutorTopic } from "@/types/tutor";
 
-const TUTOR_API_BASE = "https://thorius.com.tr/wp-json/tutor/v1";
+export const TUTOR_API_BASE = "https://thorius.com.tr/wp-json/tutor/v1";
 
 function getAuthHeader(): string {
   const key = process.env.TUTOR_CONSUMER_KEY;
@@ -11,7 +11,7 @@ function getAuthHeader(): string {
   return "Basic " + Buffer.from(`${key}:${secret}`).toString("base64");
 }
 
-async function tutorFetch<T>(
+export async function tutorFetch<T>(
   endpoint: string,
   options: { fresh?: boolean } = {},
 ): Promise<T> {

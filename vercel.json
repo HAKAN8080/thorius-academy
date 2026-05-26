@@ -1,0 +1,8 @@
+{
+  "crons": [
+    {
+      "path": "/api/cron/sync-instructor-stats",
+      "schedule": "0 * * * *"
+    }
+  ]
+}

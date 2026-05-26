@@ -1,0 +1,34 @@
+const DEFAULT_WP_SITE_URL = "https://thorius.com.tr";
+
+function normalizeBaseUrl(url: string): string {
+  return url.replace(/\/$/, "");
+}
+
+export function getWpSiteUrl(): string {
+  return normalizeBaseUrl(
+    process.env.NEXT_PUBLIC_WP_SITE_URL ?? DEFAULT_WP_SITE_URL,
+  );
+}
+
+/** Academy eğitmen paneli. */
+export function getInstructorPortalUrl(): string {
+  return "/panel/egitmen";
+}
+
+/** Academy öğrenci paneli. */
+export function getStudentPortalUrl(): string {
+  return "/panel/kurslarim";
+}
+
+export function isStudentPortalPath(pathname: string): boolean {
+  if (pathname.startsWith("/panel/egitmen")) return false;
+  return (
+    pathname.startsWith("/panel/kurslarim") ||
+    pathname === "/panel" ||
+    (pathname.startsWith("/panel/") && !pathname.startsWith("/panel/egitmen"))
+  );
+}
+
+export function isInstructorPortalPath(pathname: string): boolean {
+  return pathname.startsWith("/panel/egitmen");
+}
