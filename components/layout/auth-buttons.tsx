@@ -9,18 +9,21 @@ import {
   getInstructorPortalUrl,
   getStudentPortalUrl,
 } from "@/lib/config/portal-urls";
-import { useInstructorAccess } from "@/lib/instructor/use-instructor-access";
 
 interface AuthButtonsProps {
+  isInstructor?: boolean;
   onNavigate?: () => void;
   className?: string;
 }
 
-export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
+export function AuthButtons({
+  isInstructor = false,
+  onNavigate,
+  className,
+}: AuthButtonsProps) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
-  const { isInstructor, loading: loadingInstructor } = useInstructorAccess(user);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -38,7 +41,7 @@ export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
     return () => subscription.unsubscribe();
   }, [supabase]);
 
-  if (loading || loadingInstructor) {
+  if (loading) {
     return (
       <div className={className}>
         <div className="h-9 w-24 animate-pulse rounded-md bg-primary-100" />

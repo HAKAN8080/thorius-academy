@@ -2,48 +2,29 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useEffect, useMemo, useState } from "react";
 import { GraduationCap, Presentation } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
 import {
   getInstructorPortalUrl,
   getStudentPortalUrl,
   isInstructorPortalPath,
   isStudentPortalPath,
 } from "@/lib/config/portal-urls";
-import { useInstructorAccess } from "@/lib/instructor/use-instructor-access";
 import { cn } from "@/lib/utils";
 
 interface ViewModeSwitchProps {
+  isInstructor: boolean;
   className?: string;
   onNavigate?: () => void;
 }
 
-export function ViewModeSwitch({ className, onNavigate }: ViewModeSwitchProps) {
+export function ViewModeSwitch({
+  isInstructor,
+  className,
+  onNavigate,
+}: ViewModeSwitchProps) {
   const pathname = usePathname();
-  const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState<User | null>(null);
-  const [loadingUser, setLoadingUser] = useState(true);
-  const { isInstructor, loading: loadingInstructor } = useInstructorAccess(user);
 
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoadingUser(false);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      setLoadingUser(false);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
-
-  if (loadingUser || loadingInstructor || !user || !isInstructor) {
+  if (!isInstructor) {
     return null;
   }
 

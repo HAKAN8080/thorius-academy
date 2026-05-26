@@ -1,10 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import { useEffect, useMemo, useState } from "react";
+import { useState } from "react";
 import { Menu } from "lucide-react";
-import type { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -18,7 +16,6 @@ import { AuthButtons } from "@/components/layout/auth-buttons";
 import { Logo } from "@/components/layout/logo";
 import { ViewModeSwitch } from "@/components/layout/view-mode-switch";
 import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
-import { useInstructorAccess } from "@/lib/instructor/use-instructor-access";
 
 type NavLink = {
   href: string;
@@ -58,25 +55,12 @@ function NavItem({
   );
 }
 
-export function Header() {
+interface HeaderProps {
+  isInstructor?: boolean;
+}
+
+export function Header({ isInstructor = false }: HeaderProps) {
   const [open, setOpen] = useState(false);
-  const supabase = useMemo(() => createClient(), []);
-  const [user, setUser] = useState<User | null>(null);
-  const { isInstructor } = useInstructorAccess(user);
-
-  useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-    });
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, [supabase]);
 
   const navLinks = isInstructor
     ? [
@@ -107,12 +91,15 @@ export function Header() {
         </nav>
 
         <div className="hidden items-center gap-3 md:flex">
-          <ViewModeSwitch />
-          <AuthButtons className="flex items-center gap-3" />
+          <ViewModeSwitch isInstructor={isInstructor} />
+          <AuthButtons
+            isInstructor={isInstructor}
+            className="flex items-center gap-3"
+          />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
-          <ViewModeSwitch />
+          <ViewModeSwitch isInstructor={isInstructor} />
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button variant="ghost" size="icon" aria-label="Menüyü aç">
@@ -136,10 +123,12 @@ export function Header() {
                 ))}
                 <hr className="my-2 border-primary-100" />
                 <ViewModeSwitch
+                  isInstructor={isInstructor}
                   className="w-full"
                   onNavigate={() => setOpen(false)}
                 />
                 <AuthButtons
+                  isInstructor={isInstructor}
                   className="flex flex-col gap-2"
                   onNavigate={() => setOpen(false)}
                 />

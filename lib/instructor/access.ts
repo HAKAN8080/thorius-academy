@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/supabase/server";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export interface InstructorAccess {
   isInstructor: boolean;
@@ -16,14 +17,16 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
     return { isInstructor: false, wpInstructorId: null, instructorName: null };
   }
 
-  const { data: profile } = await supabase
+  const admin = getSupabaseAdmin();
+
+  const { data: profile } = await admin
     .from("profiles")
     .select("wp_instructor_id, full_name")
     .eq("id", user.id)
     .maybeSingle();
 
   if (profile?.wp_instructor_id) {
-    const { data: instructor } = await supabase
+    const { data: instructor } = await admin
       .from("instructors")
       .select("full_name")
       .eq("wp_user_id", profile.wp_instructor_id)
@@ -38,10 +41,10 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
   }
 
   if (user.email) {
-    const { data: instructor } = await supabase
+    const { data: instructor } = await admin
       .from("instructors")
       .select("wp_user_id, full_name")
-      .eq("email", user.email)
+      .ilike("email", user.email)
       .maybeSingle();
 
     if (instructor?.wp_user_id) {

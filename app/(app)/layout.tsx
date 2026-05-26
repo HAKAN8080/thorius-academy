@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { signOut } from "@/lib/actions/auth";
+import { getInstructorAccess } from "@/lib/instructor/access";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/layout/logo";
 import { ViewModeSwitch } from "@/components/layout/view-mode-switch";
@@ -20,6 +21,8 @@ export default async function AppLayout({
     redirect("/giris");
   }
 
+  const access = await getInstructorAccess();
+
   return (
     <div className="min-h-screen bg-primary-50/30">
       <header className="border-b border-primary-100 bg-white">
@@ -34,7 +37,10 @@ export default async function AppLayout({
             </nav>
           </div>
           <div className="flex items-center gap-3">
-            <ViewModeSwitch className="hidden sm:inline-flex" />
+            <ViewModeSwitch
+              isInstructor={access.isInstructor}
+              className="hidden sm:inline-flex"
+            />
             <form action={signOut}>
             <Button type="submit" variant="ghost" size="sm">
               Çıkış Yap
