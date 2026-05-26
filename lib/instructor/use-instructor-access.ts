@@ -22,13 +22,14 @@ export function useInstructorAccess(user: User | null): InstructorAccessState {
       return;
     }
 
+    const currentUser = user;
     let cancelled = false;
 
     async function load() {
       const { data: profile } = await supabase
         .from("profiles")
         .select("wp_instructor_id")
-        .eq("id", user.id)
+        .eq("id", currentUser.id)
         .maybeSingle();
 
       if (profile?.wp_instructor_id) {
@@ -38,11 +39,11 @@ export function useInstructorAccess(user: User | null): InstructorAccessState {
         return;
       }
 
-      if (user.email) {
+      if (currentUser.email) {
         const { data: instructor } = await supabase
           .from("instructors")
           .select("wp_user_id")
-          .eq("email", user.email)
+          .eq("email", currentUser.email)
           .maybeSingle();
 
         if (!cancelled) {
