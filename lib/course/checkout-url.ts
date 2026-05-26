@@ -1,0 +1,48 @@
+const CHECKOUT_BASE_URL = "https://thorius.com.tr/odeme/";
+
+export interface CheckoutCustomer {
+  email: string;
+  firstName?: string | null;
+  lastName?: string | null;
+}
+
+export function splitFullName(fullName: string): {
+  firstName: string;
+  lastName: string;
+} {
+  const trimmed = fullName.trim();
+  if (!trimmed) {
+    return { firstName: "", lastName: "" };
+  }
+
+  const parts = trimmed.split(/\s+/);
+  if (parts.length === 1) {
+    return { firstName: parts[0], lastName: "" };
+  }
+
+  return {
+    firstName: parts[0],
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
+export function buildWooCommerceCheckoutUrl(
+  wcProductId: number,
+  customer?: CheckoutCustomer | null,
+): string {
+  const url = new URL(CHECKOUT_BASE_URL);
+  url.searchParams.set("add-to-cart", String(wcProductId));
+  url.searchParams.set("quantity", "1");
+
+  if (customer?.email) {
+    url.searchParams.set("billing_email", customer.email);
+  }
+  if (customer?.firstName) {
+    url.searchParams.set("billing_first_name", customer.firstName);
+  }
+  if (customer?.lastName) {
+    url.searchParams.set("billing_last_name", customer.lastName);
+  }
+
+  return url.toString();
+}

@@ -39,7 +39,7 @@ export function EnrollButton({
         asChild
         className="w-full bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600 sm:w-auto"
       >
-        <Link href="/panel/kurslarim">
+        <Link href={`/panel/kurslarim/${courseSlug}`}>
           <CheckCircle className="mr-2 h-4 w-4" />
           Kursa Devam Et
         </Link>

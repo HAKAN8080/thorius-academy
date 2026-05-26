@@ -5,6 +5,7 @@ import { EnrollButton } from "@/components/enrollment/enroll-button";
 import { BuyButton } from "@/components/course/buy-button";
 import { Button } from "@/components/ui/button";
 import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
+import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import type { CourseProduct } from "@/types/course-product";
 
 interface CoursePurchaseCtaProps {
@@ -17,6 +18,7 @@ interface CoursePurchaseCtaProps {
   isLoggedIn: boolean;
   isAlreadyEnrolled: boolean;
   courseProduct: CourseProduct | null;
+  customer: CheckoutCustomer | null;
 }
 
 export function CoursePurchaseCta({
@@ -29,6 +31,7 @@ export function CoursePurchaseCta({
   isLoggedIn,
   isAlreadyEnrolled,
   courseProduct,
+  customer,
 }: CoursePurchaseCtaProps) {
   if (isAlreadyEnrolled) {
     return (
@@ -51,7 +54,9 @@ export function CoursePurchaseCta({
         wcProductId={courseProduct.wc_product_id}
         priceNormal={courseProduct.price_normal}
         priceSale={courseProduct.price_sale}
-        courseTitle={courseTitle}
+        courseSlug={courseSlug}
+        isLoggedIn={isLoggedIn}
+        customer={customer}
       />
     );
   }

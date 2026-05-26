@@ -6,8 +6,11 @@ import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
+import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { checkEnrollment } from "@/lib/actions/enrollment";
 import { getCourseProduct } from "@/lib/actions/course-products";
+import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
+import { splitFullName } from "@/lib/course/checkout-url";
 import { createClient } from "@/lib/supabase/server";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
@@ -48,6 +51,30 @@ export default async function CourseDetailPage({
   } = await supabase.auth.getUser();
   const enrollment = user ? await checkEnrollment(course.id) : null;
   const courseProduct = await getCourseProduct(params.slug);
+  const curriculum = await getCourseCurriculumPreview(course.id, params.slug);
+
+  let customer = null;
+  if (user?.email) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("full_name")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    const metadataName =
+      typeof user.user_metadata?.full_name === "string"
+        ? user.user_metadata.full_name
+        : "";
+    const { firstName, lastName } = splitFullName(
+      profile?.full_name ?? metadataName,
+    );
+
+    customer = {
+      email: user.email,
+      firstName,
+      lastName,
+    };
+  }
 
   const ctaProps = {
     courseId: course.id,
@@ -59,6 +86,7 @@ export default async function CourseDetailPage({
     isLoggedIn: !!user,
     isAlreadyEnrolled: !!enrollment,
     courseProduct,
+    customer,
   };
 
   return (
@@ -141,6 +169,10 @@ export default async function CourseDetailPage({
             className="prose prose-lg max-w-none prose-headings:text-primary-950 prose-a:text-accent-600"
             dangerouslySetInnerHTML={{ __html: course.content }}
           />
+
+          {curriculum && curriculum.totalLessons > 0 ? (
+            <CourseCurriculumPreview curriculum={curriculum} />
+          ) : null}
 
           <div className="mt-12 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-8 text-center">
             <h3 className="mb-3 text-xl font-bold text-primary-950 md:text-2xl">

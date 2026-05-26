@@ -1,12 +1,101 @@
 /* ═══════════════════════════════════════════════════════
-   Thorius Checkout — UI düzeltmeleri v1.2.1
+   Thorius Checkout — UI düzeltmeleri v1.2.4
    Kupon ikonu · PayTR okunabilirlik · Geniş form · Sticky sidebar
    ═══════════════════════════════════════════════════════ */
 
-/* ── Kompakt tek sayfa layout ── */
+/* ── Checkout grid: hata kutusu tam genişlik, form yapısı korunur ── */
+body.woocommerce-checkout .woocommerce > .woocommerce-notices-wrapper {
+  width: 100% !important;
+  max-width: 100% !important;
+  margin-bottom: 24px !important;
+}
+
 form.checkout {
-  gap: 36px !important;
+  display: grid !important;
+  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 370px) !important;
+  gap: 40px !important;
   align-items: start !important;
+}
+
+form.checkout > .woocommerce-NoticeGroup,
+form.checkout > .woocommerce-NoticeGroup-checkout,
+form.checkout > .woocommerce-notices-wrapper {
+  grid-column: 1 / -1 !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  float: none !important;
+  clear: both !important;
+  margin: 0 0 8px 0 !important;
+}
+
+#customer_details {
+  grid-column: 1 !important;
+  min-width: 0 !important;
+  width: 100% !important;
+}
+
+#order_review,
+.woocommerce-checkout-review-order {
+  grid-column: 2 !important;
+}
+
+/* Üstte tek hata özeti */
+body.woocommerce-checkout .woocommerce-notices-wrapper ul.woocommerce-error,
+body.woocommerce-checkout .woocommerce-NoticeGroup-checkout ul.woocommerce-error,
+form.checkout .woocommerce-NoticeGroup ul.woocommerce-error {
+  background: #fef2f2 !important;
+  border: 1px solid #fecaca !important;
+  border-radius: 12px !important;
+  padding: 16px 20px 16px 36px !important;
+  margin: 0 0 20px 0 !important;
+  list-style: disc !important;
+}
+
+body.woocommerce-checkout .woocommerce-error li {
+  color: #991b1b !important;
+  font-size: 14px !important;
+  line-height: 1.5 !important;
+  margin-bottom: 6px !important;
+}
+
+body.woocommerce-checkout .woocommerce-error li:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Alan içi hata metinlerini gizle — form düzeni bozulmasın */
+.woocommerce-checkout #customer_details .form-row .woocommerce-error,
+.woocommerce-checkout #customer_details .checkout-inline-error-message,
+.woocommerce-checkout #customer_details .form-row .form-row-error,
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-error {
+  display: none !important;
+}
+
+/* Hatalı alan: sadece kırmızı çerçeve */
+.woocommerce-checkout #customer_details .form-row.woocommerce-invalid input.input-text,
+.woocommerce-checkout #customer_details .form-row.woocommerce-invalid select,
+.woocommerce-checkout #customer_details .form-row.woocommerce-invalid-required-field input.input-text,
+.woocommerce-checkout #customer_details .form-row.woocommerce-invalid-required-field select {
+  border-color: #f87171 !important;
+  box-shadow: 0 0 0 1px #fecaca !important;
+}
+
+/* Zorunlu alan yıldızı */
+.woocommerce-checkout .form-row label abbr.required {
+  text-decoration: none !important;
+  color: #dc2626 !important;
+  border: none !important;
+  font-weight: 700 !important;
+}
+
+.thorius-checkout-required-note {
+  margin: 0 0 16px 0 !important;
+  padding: 10px 14px !important;
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 10px !important;
+  color: #475569 !important;
+  font-size: 13px !important;
+  line-height: 1.5 !important;
 }
 
 .woocommerce-checkout h1 {
@@ -21,6 +110,62 @@ form.checkout {
 
 .woocommerce-billing-fields {
   padding: 24px 28px !important;
+}
+
+/* Ad/soyad ve telefon/e-posta: grid ile eşit geniş iki sütun */
+.woocommerce-billing-fields__field-wrapper {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px 24px !important;
+}
+
+/* Eski WC sürümleri: alanlar doğrudan billing-fields içinde */
+body.woocommerce-checkout .woocommerce-billing-fields:not(:has(.woocommerce-billing-fields__field-wrapper)) {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  gap: 14px 24px !important;
+}
+
+body.woocommerce-checkout
+  .woocommerce-billing-fields:not(:has(.woocommerce-billing-fields__field-wrapper))
+  > h3,
+body.woocommerce-checkout
+  .woocommerce-billing-fields:not(:has(.woocommerce-billing-fields__field-wrapper))
+  > .thorius-checkout-required-note {
+  grid-column: 1 / -1 !important;
+}
+
+.woocommerce-billing-fields__field-wrapper::before,
+.woocommerce-billing-fields__field-wrapper::after {
+  content: none !important;
+  display: none !important;
+}
+
+/* Tam genişlik satırlar */
+#billing_country_field,
+#billing_address_1_field,
+#billing_city_field {
+  grid-column: 1 / -1 !important;
+}
+
+#billing_first_name_field,
+#billing_last_name_field,
+#billing_company_field,
+#billing_vkn_field,
+#billing_phone_field,
+#billing_email_field {
+  width: 100% !important;
+  max-width: none !important;
+  float: none !important;
+  clear: none !important;
+  margin-bottom: 0 !important;
+}
+
+#billing_first_name_field .input-text,
+#billing_last_name_field .input-text,
+#billing_phone_field .input-text,
+#billing_email_field .input-text {
+  min-width: 0 !important;
 }
 
 /* Sağ panel (fiyat + ödeme) form başlığıyla hizalı, yukarıda sabit */
@@ -56,59 +201,6 @@ form.checkout {
 .woocommerce form .form-row textarea {
   height: 72px !important;
   min-height: 72px !important;
-}
-
-/* Ad + soyad yan yana */
-#billing_first_name_field,
-#billing_last_name_field {
-  width: 48% !important;
-}
-
-#billing_first_name_field {
-  float: left !important;
-  clear: none !important;
-}
-
-#billing_last_name_field {
-  float: right !important;
-  clear: none !important;
-}
-
-/* İşletme adı + vergi no yan yana */
-body.woocommerce-checkout #billing_company_field,
-body.woocommerce-checkout #billing_vkn_field {
-  display: block !important;
-  width: 48% !important;
-}
-
-#billing_company_field {
-  float: left !important;
-  clear: both !important;
-}
-
-#billing_vkn_field {
-  float: right !important;
-  clear: none !important;
-}
-
-#billing_country_field {
-  clear: both !important;
-}
-
-/* Telefon + e-posta yan yana — input yüksekliği artırıldı */
-#billing_phone_field,
-#billing_email_field {
-  width: 48% !important;
-}
-
-#billing_phone_field {
-  float: left !important;
-  clear: both !important;
-}
-
-#billing_email_field {
-  float: right !important;
-  clear: none !important;
 }
 
 /* Gereksiz alanları gizle */
@@ -163,20 +255,30 @@ body.woocommerce-checkout #payment .payment_box p {
 
 /* ── Mobil ── */
 @media (max-width: 992px) {
+  form.checkout {
+    grid-template-columns: 1fr !important;
+  }
+
+  #customer_details,
+  #order_review,
+  .woocommerce-checkout-review-order {
+    grid-column: 1 !important;
+  }
+
   #order_review,
   .woocommerce-checkout-review-order {
     position: static !important;
   }
 
-  #billing_first_name_field,
-  #billing_last_name_field,
-  #billing_company_field,
-  #billing_vkn_field,
-  #billing_phone_field,
-  #billing_email_field {
-    width: 100% !important;
-    float: none !important;
-    clear: both !important;
+  .woocommerce-billing-fields__field-wrapper {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  #billing_country_field,
+  #billing_address_1_field,
+  #billing_city_field {
+    grid-column: auto !important;
   }
 
   .woocommerce-billing-fields {

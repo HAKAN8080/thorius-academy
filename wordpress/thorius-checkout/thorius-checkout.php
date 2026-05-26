@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Ödeme sayfası alanları, kurumsal fatura alanları ve checkout UI düzeltmeleri.
- * Version: 1.2.1
+ * Version: 1.2.4
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.2.1');
+define('THORIUS_CHECKOUT_VERSION', '1.2.4');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -64,6 +64,45 @@ function thorius_checkout_billing_fields(array $fields): array
     return $fields;
 }
 add_filter('woocommerce_checkout_fields', 'thorius_checkout_billing_fields', 20);
+
+/**
+ * Academy'den gelen billing alanlarını query string ile önceden doldur.
+ */
+function thorius_checkout_prefill_from_query($value, string $input)
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return $value;
+    }
+
+    if (!isset($_GET[$input]) || $_GET[$input] === '') {
+        return $value;
+    }
+
+    $allowed = array(
+        'billing_email',
+        'billing_first_name',
+        'billing_last_name',
+        'billing_phone',
+    );
+
+    if (!in_array($input, $allowed, true)) {
+        return $value;
+    }
+
+    return sanitize_text_field(wp_unslash($_GET[$input]));
+}
+add_filter('woocommerce_checkout_get_value', 'thorius_checkout_prefill_from_query', 20, 2);
+
+/**
+ * Fatura formu üstünde zorunlu alan notu.
+ */
+function thorius_checkout_billing_required_note(): void
+{
+    echo '<p class="thorius-checkout-required-note">' .
+        esc_html__('Zorunlu alanlar * ile işaretlenmiştir.', 'thorius-checkout') .
+        '</p>';
+}
+add_action('woocommerce_before_checkout_billing_form', 'thorius_checkout_billing_required_note', 5);
 
 /**
  * Vergi numarasını sipariş meta olarak kaydet.
@@ -142,6 +181,14 @@ function thorius_checkout_enqueue_assets(): void
         THORIUS_CHECKOUT_URL . 'assets/checkout.css',
         array('woocommerce-layout', 'woocommerce-smallscreen', 'woocommerce-general'),
         THORIUS_CHECKOUT_VERSION
+    );
+
+    wp_enqueue_script(
+        'thorius-checkout',
+        THORIUS_CHECKOUT_URL . 'assets/checkout.js',
+        array(),
+        THORIUS_CHECKOUT_VERSION,
+        true
     );
 }
 add_action('wp_enqueue_scripts', 'thorius_checkout_enqueue_assets', 99);

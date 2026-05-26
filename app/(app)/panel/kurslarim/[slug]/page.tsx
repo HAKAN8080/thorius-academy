@@ -9,14 +9,27 @@ import {
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
 import { checkEnrollment } from "@/lib/actions/enrollment";
 import { VideoPlayer } from "@/components/player/video-player";
+import { MarkLessonCompleteButton } from "@/components/player/mark-lesson-complete-button";
 import { LessonSidebar } from "@/components/player/lesson-sidebar";
 import { Button } from "@/components/ui/button";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
-import type { Lesson, LessonProgress } from "@/types/lesson";
+import { groupLessonsByTopic } from "@/lib/lessons/group-by-topic";
+import { pickActiveLesson } from "@/lib/lessons/pick-active-lesson";
+import type { LessonProgress } from "@/types/lesson";
 
 interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ lesson?: string }>;
+}
+
+function usesManualProgressTracking(
+  videoType: string | null | undefined,
+): boolean {
+  return (
+    videoType === "youtube" ||
+    videoType === "vimeo" ||
+    videoType === "external_url"
+  );
 }
 
 export default async function CoursePlayerPage({ params, searchParams }: Props) {
@@ -59,26 +72,7 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
     );
   }
 
-  const topicsMap = new Map<
-    string,
-    { topic_title: string; topic_order: number; lessons: Lesson[] }
-  >();
-
-  lessons.forEach((l) => {
-    const key = l.topic_title || "Genel";
-    if (!topicsMap.has(key)) {
-      topicsMap.set(key, {
-        topic_title: l.topic_title || "Genel",
-        topic_order: l.topic_order || 999,
-        lessons: [],
-      });
-    }
-    topicsMap.get(key)!.lessons.push(l);
-  });
-
-  const topics = Array.from(topicsMap.values()).sort(
-    (a, b) => a.topic_order - b.topic_order
-  );
+  const topics = groupLessonsByTopic(lessons);
 
   const progress = await getUserLessonProgress(course.id);
   const progressMap: Record<string, LessonProgress> = {};
@@ -86,10 +80,14 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
     progressMap[p.lesson_id] = p;
   });
 
-  const activeLesson = lessonParam
-    ? lessons.find((l) => l.id === lessonParam) || lessons[0]
-    : lessons[0];
+  const activeLesson = pickActiveLesson(
+    lessons,
+    progress,
+    enrollment,
+    lessonParam,
+  );
   const activeProgress = progressMap[activeLesson.id];
+  const completedCount = progress.filter((p) => p.completed).length;
 
   return (
     <div className="min-h-screen bg-primary-50/30">
@@ -107,8 +105,8 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
               {course.title}
             </h1>
             <div className="hidden text-sm text-muted-foreground sm:block">
-              {progress.filter((p) => p.completed).length}/{lessons.length}{" "}
-              tamamlandı
+              {completedCount}/{lessons.length} tamamlandı
+              {enrollment.progress > 0 ? ` · %${enrollment.progress}` : ""}
             </div>
           </div>
         </div>
@@ -125,8 +123,19 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
               lessonId={activeLesson.id}
               courseId={course.id}
               courseSlug={slug}
+              wpLessonId={activeLesson.wp_lesson_id}
               initialWatchedSeconds={activeProgress?.watched_seconds || 0}
             />
+
+            {usesManualProgressTracking(activeLesson.video_type) ? (
+              <MarkLessonCompleteButton
+                lessonId={activeLesson.id}
+                courseId={course.id}
+                courseSlug={slug}
+                wpLessonId={activeLesson.wp_lesson_id}
+                isCompleted={!!activeProgress?.completed}
+              />
+            ) : null}
 
             <div className="rounded-2xl border border-primary-100 bg-white p-6">
               <div className="mb-3 flex items-start justify-between gap-4">

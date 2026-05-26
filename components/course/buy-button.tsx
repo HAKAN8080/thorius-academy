@@ -1,20 +1,32 @@
 "use client";
 
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { ShoppingCart, ExternalLink } from "lucide-react";
+import {
+  buildWooCommerceCheckoutUrl,
+  type CheckoutCustomer,
+} from "@/lib/course/checkout-url";
 
 interface Props {
   wcProductId: number;
   priceNormal: number | null;
   priceSale: number | null;
-  courseTitle: string;
+  courseSlug: string;
+  isLoggedIn: boolean;
+  customer: CheckoutCustomer | null;
 }
 
 export function BuyButton({
   wcProductId,
   priceNormal,
   priceSale,
+  courseSlug,
+  isLoggedIn,
+  customer,
 }: Props) {
+  const router = useRouter();
   const finalPrice = priceSale || priceNormal;
   const hasDiscount =
     priceSale !== null &&
@@ -22,7 +34,13 @@ export function BuyButton({
     priceSale < priceNormal;
 
   function handleBuy() {
-    const checkoutUrl = `https://thorius.com.tr/odeme/?add-to-cart=${wcProductId}&quantity=1`;
+    if (!isLoggedIn || !customer?.email) {
+      toast.info("Satın almak için lütfen giriş yapın");
+      router.push(`/giris?redirect=/kurslar/${courseSlug}`);
+      return;
+    }
+
+    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer);
     window.open(checkoutUrl, "_blank", "noopener,noreferrer");
   }
 

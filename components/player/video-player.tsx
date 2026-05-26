@@ -10,6 +10,7 @@ interface Props {
   lessonId: string;
   courseId: number;
   courseSlug: string;
+  wpLessonId: number;
   initialWatchedSeconds?: number;
   onComplete?: () => void;
 }
@@ -21,6 +22,7 @@ export function VideoPlayer({
   lessonId,
   courseId,
   courseSlug,
+  wpLessonId,
   initialWatchedSeconds = 0,
   onComplete,
 }: Props) {
@@ -45,6 +47,7 @@ export function VideoPlayer({
           lessonId,
           courseId,
           courseSlug,
+          wpLessonId,
           watchedSeconds: current,
         });
         lastSavedRef.current = current;
@@ -52,7 +55,7 @@ export function VideoPlayer({
     }, 15000);
 
     return () => clearInterval(interval);
-  }, [lessonId, courseId, courseSlug, videoType]);
+  }, [lessonId, courseId, courseSlug, wpLessonId, videoType]);
 
   function handleEnded() {
     if (!hasMarkedComplete) {
@@ -61,6 +64,7 @@ export function VideoPlayer({
         lessonId,
         courseId,
         courseSlug,
+        wpLessonId,
         watchedSeconds: videoRef.current?.duration || 0,
         completed: true,
       });
