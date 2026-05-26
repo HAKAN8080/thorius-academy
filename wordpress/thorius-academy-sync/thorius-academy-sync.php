@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.2.0
+ * Version: 1.3.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.2.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.3.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -351,6 +351,60 @@ function thorius_academy_sync_get_wc_product_id(int $post_id): int
 
     return (int) $product_id;
 }
+
+/**
+ * @return int[]
+ */
+function thorius_academy_sync_find_course_ids_by_product_id(int $product_id): array
+{
+    if ($product_id <= 0) {
+        return array();
+    }
+
+    $course_types = post_type_exists('courses') ? array('courses') : array('tutor_course');
+    $course_ids = get_posts(array(
+        'post_type' => $course_types,
+        'post_status' => 'any',
+        'fields' => 'ids',
+        'posts_per_page' => -1,
+        'meta_key' => '_tutor_course_product_id',
+        'meta_value' => (string) $product_id,
+    ));
+
+    if ($course_ids !== array()) {
+        return array_map('intval', $course_ids);
+    }
+
+    return array_map(
+        'intval',
+        get_posts(array(
+            'post_type' => $course_types,
+            'post_status' => 'any',
+            'fields' => 'ids',
+            'posts_per_page' => -1,
+            'meta_key' => '_tutor_course_product_id',
+            'meta_value' => $product_id,
+        ))
+    );
+}
+
+function thorius_academy_sync_on_wc_product_saved(int $product_id): void
+{
+    if (!function_exists('wc_get_product') || wp_is_post_revision($product_id)) {
+        return;
+    }
+
+    $product = wc_get_product($product_id);
+    if (!$product) {
+        return;
+    }
+
+    foreach (thorius_academy_sync_find_course_ids_by_product_id($product_id) as $course_id) {
+        thorius_academy_sync_queue_webhook($course_id, 'course.updated');
+    }
+}
+add_action('woocommerce_update_product', 'thorius_academy_sync_on_wc_product_saved', 20, 1);
+add_action('woocommerce_new_product', 'thorius_academy_sync_on_wc_product_saved', 20, 1);
 
 /**
  * @return array<string, mixed>

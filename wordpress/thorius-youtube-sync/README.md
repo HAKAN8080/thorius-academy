@@ -1,27 +1,26 @@
 # Thorius YouTube Sync
 
-**Her YouTube videosu = ayrı bir ücretsiz Tutor kursu.**
+Manuel form — hiçbir ayar kaydedilmez. Her seferinde doldurup **Kursları Ekle** deyin.
 
-101 videoluk playlist → **101 ayrı kurs** (her birinin içinde 1 ders + YouTube videosu).
+Her YouTube videosu = ayrı ücretsiz Tutor kursu.
 
-## Kaynaklar
+## Alanlar
 
-| Alan | Ne için |
-|------|---------|
-| Playlist URL/ID | Toplu içe aktarma (101 video vb.) |
-| Ek video linkleri | Playlist dışı tek tek videolar |
+- Etiket
+- Playlist ID / URL
+- Ek video linkleri
+- Kurs adı öneki
+- Kategori ID
+- Kaynak adı
+- Kaynak URL
+- Açıklama altı metin
 
-## Örnek
+YouTube API key: formda (her seferinde) veya `wp-config.php` içinde:
 
-Playlist: `PL3z_f7v-p-6Zikb9b98ViAmKujNSA76mq`
+```php
+define('THORIUS_YOUTUBE_API_KEY', 'AIza...');
+```
 
-- Video `hXQyoj-tflQ` → Kurs: *"TFF Satranç — [video başlığı]"* (önek opsiyonel)
-- Kategori: satranç (67)
-- Ücretsiz
-- YouTube kapak görseli otomatik
+## Not
 
-## Kurulum
-
-WordPress → Eklentiler → Thorius YouTube Sync → Ayarlar → **Şimdi Senkronize Et**
-
-Thorius Academy Sync aktif olmalı (Academy otomatik güncellenir).
+Aynı YouTube video ID'si WordPress'te zaten kurs olarak varsa atlanır — playlist değişse bile tekrar eklenmez.

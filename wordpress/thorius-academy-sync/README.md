@@ -32,6 +32,15 @@ curl https://academy.thorius.com.tr/api/webhooks/wordpress
 - Kurs **taslağa alındığında / yayından kaldırıldığında** (`course.unpublished`)
 - Kurs **silindiğinde** (`course.deleted`)
 
-## Not
+## Fiyat senkronu (Academy vitrin)
 
-Bu eklenti yalnızca academy vitrin önbelleğini yeniler. Satış için Supabase `course_products` eşleştirmesi hâlâ manuel yapılmalıdır.
+Academy kartlarındaki fiyat **Supabase `course_products`** tablosundan okunur; WooCommerce fiyatı otomatik canlı çekilmez.
+
+Webhook şu durumlarda fiyatı Academy'ye yazar:
+
+- Tutor **kursu** kaydedildiğinde / güncellendiğinde (kursa WC ürünü bağlı olmalı: `_tutor_course_product_id`)
+- WooCommerce **ürünü** kaydedildiğinde / güncellendiğinde (v1.3.0+) — bağlı kurs varsa fiyat yenilenir
+
+Kurs WooCommerce ürününe bağlı değilse veya hiç webhook gitmemişse Academy'de **Ücretsiz** görünür.
+
+## Not

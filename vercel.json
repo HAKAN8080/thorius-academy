@@ -1,7 +1,7 @@
 {
   "crons": [
     {
-      "path": "/api/cron/sync-instructor-stats",
+      "path": "/api/instructor/sync-stats",
       "schedule": "0 * * * *"
     }
   ]
