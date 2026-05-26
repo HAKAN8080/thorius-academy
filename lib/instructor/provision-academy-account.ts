@@ -157,7 +157,7 @@ export async function provisionInstructorAcademyAccount(params: {
 
   const shouldInvite =
     params.sendInvite ??
-    process.env.INSTRUCTOR_SEND_INVITE_EMAIL !== "false";
+    process.env.INSTRUCTOR_SEND_INVITE_EMAIL === "true";
 
   let inviteSent = false;
   if (created && shouldInvite) {
