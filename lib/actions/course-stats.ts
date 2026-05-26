@@ -78,3 +78,7 @@ export async function getCourseStatsMap(
 
   return map;
 }
+
+export async function getAllCourseStats(): Promise<Record<string, CourseStats>> {
+  return getCachedAllCourseStats();
+}

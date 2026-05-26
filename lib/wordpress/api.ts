@@ -12,6 +12,9 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
+const LISTING_COURSE_FIELDS =
+  "id,slug,date,title,link,featured_media,course-category,course-tag,thorius_youtube";
+
 /** Kategori kartında hangi sıradaki kursun görseli kullanılsın (0 = ilk kurs). */
 const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
   planlama: 1,
@@ -24,6 +27,119 @@ function stripHtml(html: string): string {
 
 function parseExcerpt(html: string): string {
   return stripHtml(html).replace(/\s*(\[\.\.\.\]|…|\.{3,})\s*$/, "").trim();
+}
+
+function resolveFeaturedImageFromMaps(
+  wpCourse: WPCourse,
+  mediaById: Map<number, string>,
+): string | null {
+  const youtubeThumb = wpCourse.thorius_youtube?.thumbnail_url?.trim();
+  if (youtubeThumb) {
+    return youtubeThumb;
+  }
+
+  const videoId = wpCourse.thorius_youtube?.video_id?.trim();
+  if (videoId) {
+    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  const mediaId = wpCourse.featured_media ?? 0;
+  if (mediaId > 0) {
+    return mediaById.get(mediaId) ?? null;
+  }
+
+  return null;
+}
+
+function mapCourseCategories(
+  wpCourse: WPCourse,
+  categoryById: Map<number, WPCategory>,
+): Course["categories"] {
+  const categoryIds = wpCourse["course-category"] ?? [];
+
+  return categoryIds
+    .map((categoryId) => categoryById.get(categoryId))
+    .filter((category): category is WPCategory => Boolean(category))
+    .map((category) => ({
+      id: category.id,
+      name: category.name,
+      slug: category.slug,
+    }));
+}
+
+function transformListingCourse(
+  wpCourse: WPCourse,
+  categoryById: Map<number, WPCategory>,
+  mediaById: Map<number, string>,
+): Course {
+  const title = stripHtml(wpCourse.title.rendered);
+  const featuredImage = resolveFeaturedImageFromMaps(wpCourse, mediaById);
+
+  return {
+    id: wpCourse.id,
+    slug: wpCourse.slug,
+    title,
+    excerpt: "",
+    content: "",
+    featuredImage,
+    imageAlt: title,
+    instructor: null,
+    categories: mapCourseCategories(wpCourse, categoryById),
+    tags: [],
+    wpLink: wpCourse.link,
+    publishedDate: wpCourse.date,
+  };
+}
+
+async function fetchFeaturedMediaMap(
+  mediaIds: number[],
+): Promise<Map<number, string>> {
+  const uniqueIds = Array.from(new Set(mediaIds.filter((id) => id > 0)));
+  const mediaById = new Map<number, string>();
+
+  if (uniqueIds.length === 0) {
+    return mediaById;
+  }
+
+  for (let offset = 0; offset < uniqueIds.length; offset += 100) {
+    const chunk = uniqueIds.slice(offset, offset + 100);
+    const res = await fetch(
+      `${WP_API_BASE}/media?include=${chunk.join(",")}&per_page=100&_fields=id,source_url,media_details`,
+      {
+        next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
+      },
+    );
+
+    if (!res.ok) {
+      console.error("WP media API error:", res.status, res.statusText);
+      continue;
+    }
+
+    const items: Array<{
+      id: number;
+      source_url?: string;
+      media_details?: {
+        sizes?: {
+          medium?: { source_url: string };
+          large?: { source_url: string };
+        };
+      };
+    }> = await res.json();
+
+    for (const item of items) {
+      const url =
+        item.media_details?.sizes?.medium?.source_url ||
+        item.media_details?.sizes?.large?.source_url ||
+        item.source_url ||
+        null;
+
+      if (url) {
+        mediaById.set(item.id, url);
+      }
+    }
+  }
+
+  return mediaById;
 }
 
 function resolveFeaturedImage(wpCourse: WPCourse): string | null {
@@ -137,11 +253,27 @@ async function fetchWPCourses(url: string): Promise<WPCourse[]> {
 
 export async function fetchCoursesForListing(): Promise<Course[]> {
   try {
-    const wpCourses = await fetchWPCourses(
-      `${WP_API_BASE}/courses?_embed=true&per_page=100&status=publish`,
-    );
+    const [wpCourses, categories] = await Promise.all([
+      fetchWPCourses(
+        `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=${LISTING_COURSE_FIELDS}`,
+      ),
+      fetchCategoryList(),
+    ]);
+
+    const categoryById = new Map(categories.map((category) => [category.id, category]));
+    const mediaIds = wpCourses
+      .filter(
+        (course) =>
+          !course.thorius_youtube?.thumbnail_url &&
+          !course.thorius_youtube?.video_id &&
+          (course.featured_media ?? 0) > 0,
+      )
+      .map((course) => course.featured_media);
+
+    const mediaById = await fetchFeaturedMediaMap(mediaIds);
+
     return wpCourses.map((course) =>
-      transformCourse(course, { includeContent: false }),
+      transformListingCourse(course, categoryById, mediaById),
     );
   } catch (error) {
     console.error("fetchCoursesForListing error:", error);
@@ -190,7 +322,7 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
   }
 }
 
-async function fetchCategoryList(): Promise<WPCategory[]> {
+export async function fetchCategoryList(): Promise<WPCategory[]> {
   const res = await fetch(
     `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
     {

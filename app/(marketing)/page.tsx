@@ -6,27 +6,22 @@ import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
 import { Button } from "@/components/ui/button";
-import { getAllCourseProducts } from "@/lib/actions/course-products";
-import { getCourseStatsMap } from "@/lib/actions/course-stats";
 import {
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
 } from "@/lib/course/pick-featured-courses";
-import { fetchAllCategories, fetchAllCourses } from "@/lib/wordpress/api";
+import { getCourseCatalog } from "@/lib/wordpress/catalog";
 import type { CourseProduct } from "@/types/course-product";
 
 export const revalidate = 3600;
 
 export default async function HomePage() {
-  const allCourses = await fetchAllCourses();
-  const [categories, products, statsBySlug] = await Promise.all([
-    fetchAllCategories(allCourses),
-    getAllCourseProducts(),
-    getCourseStatsMap(allCourses),
-  ]);
+  const catalog = await getCourseCatalog();
+  const { courses: allCourses, categories, products, stats } = catalog;
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
   );
+  const statsBySlug = new Map(Object.entries(stats));
   const featuredCourses = pickFeaturedCoursesByCategory(
     allCourses,
     categories,
