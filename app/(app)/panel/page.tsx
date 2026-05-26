@@ -21,10 +21,6 @@ export default async function PanelPage() {
 
   const access = await getInstructorAccess();
   const enrollments = await getUserEnrollments();
-
-  if (access.isInstructor && enrollments.length === 0) {
-    redirect(getInstructorPortalUrl());
-  }
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
   const completedEnrollments = enrollments.filter(
     (e) => e.status === "completed"

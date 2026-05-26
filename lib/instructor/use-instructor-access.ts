@@ -1,72 +1,55 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import type { User } from "@supabase/supabase-js";
-import { createClient } from "@/lib/supabase/client";
+import { getInstructorAccessSummary } from "@/lib/actions/instructor-access";
 
 interface InstructorAccessState {
   isInstructor: boolean;
+  hasStudentCourses: boolean;
   loading: boolean;
 }
 
 export function useInstructorAccess(user: User | null): InstructorAccessState {
-  const supabase = useMemo(() => createClient(), []);
   const [state, setState] = useState<InstructorAccessState>({
     isInstructor: false,
+    hasStudentCourses: false,
     loading: Boolean(user),
   });
 
   useEffect(() => {
     if (!user) {
-      setState({ isInstructor: false, loading: false });
+      setState({ isInstructor: false, hasStudentCourses: false, loading: false });
       return;
     }
 
-    const currentUser = user;
     let cancelled = false;
+    setState({ isInstructor: false, hasStudentCourses: false, loading: true });
 
-    async function load() {
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("wp_instructor_id")
-        .eq("id", currentUser.id)
-        .maybeSingle();
-
-      if (profile?.wp_instructor_id) {
-        if (!cancelled) {
-          setState({ isInstructor: true, loading: false });
-        }
-        return;
-      }
-
-      if (currentUser.email) {
-        const { data: instructor } = await supabase
-          .from("instructors")
-          .select("wp_user_id")
-          .eq("email", currentUser.email)
-          .maybeSingle();
-
+    getInstructorAccessSummary()
+      .then((summary) => {
         if (!cancelled) {
           setState({
-            isInstructor: Boolean(instructor?.wp_user_id),
+            isInstructor: summary.isInstructor,
+            hasStudentCourses: summary.hasStudentCourses,
             loading: false,
           });
         }
-        return;
-      }
-
-      if (!cancelled) {
-        setState({ isInstructor: false, loading: false });
-      }
-    }
-
-    setState({ isInstructor: false, loading: true });
-    void load();
+      })
+      .catch(() => {
+        if (!cancelled) {
+          setState({
+            isInstructor: false,
+            hasStudentCourses: false,
+            loading: false,
+          });
+        }
+      });
 
     return () => {
       cancelled = true;
     };
-  }, [supabase, user]);
+  }, [user]);
 
   return state;
 }

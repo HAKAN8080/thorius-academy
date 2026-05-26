@@ -12,7 +12,6 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
 import { getInstructorAccess } from "@/lib/instructor/access";
-import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -34,11 +33,7 @@ export default async function MyCoursesPage() {
   const access = await getInstructorAccess();
   const enrollments = await getUserEnrollments();
 
-  if (access.isInstructor && enrollments.length === 0) {
-    redirect(getInstructorPortalUrl());
-  }
-
-  const pageTitle = access.isInstructor ? "Kayıtlı Kurslarım" : "Kurslarım";
+  const pageTitle = access.isInstructor ? "Öğrenci Kurslarım" : "Kurslarım";
   const pageDescription = access.isInstructor
     ? "Öğrenci olarak kayıt olduğunuz kurslar"
     : "Kayıtlı olduğunuz tüm kurslar tek yerde.";
