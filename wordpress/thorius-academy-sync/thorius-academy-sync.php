@@ -440,6 +440,11 @@ function thorius_academy_sync_build_course_payload(WP_Post $post, ?string $previ
                 ? (float) $product->get_sale_price()
                 : null;
         }
+    } else {
+        $course['wc_product_id'] = 0;
+        $course['price_normal'] = 0;
+        $course['price_sale'] = null;
+        $course['is_free'] = true;
     }
 
     return $course;

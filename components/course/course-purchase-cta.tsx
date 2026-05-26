@@ -4,7 +4,7 @@ import Link from "next/link";
 import { EnrollButton } from "@/components/enrollment/enroll-button";
 import { BuyButton } from "@/components/course/buy-button";
 import { Button } from "@/components/ui/button";
-import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
+import { isFreeCourseProduct, isPurchasableCourseProduct } from "@/lib/course/course-product-utils";
 import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -48,7 +48,7 @@ export function CoursePurchaseCta({
     );
   }
 
-  if (courseProduct && !isFreeCourseProduct(courseProduct)) {
+  if (courseProduct && isPurchasableCourseProduct(courseProduct)) {
     return (
       <BuyButton
         wcProductId={courseProduct.wc_product_id}

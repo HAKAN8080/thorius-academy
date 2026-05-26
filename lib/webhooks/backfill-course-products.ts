@@ -18,6 +18,26 @@ interface WPCourseRow {
   id: number;
   slug: string;
   status: string;
+  thorius_youtube?: {
+    video_id?: string;
+  } | null;
+}
+
+function isFreeYouTubeCourse(course: WPCourseRow): boolean {
+  return Boolean(course.thorius_youtube?.video_id?.trim());
+}
+
+function buildFreeCoursePayload(course: WPCourseRow): WordPressCourseWebhookCourse {
+  return {
+    id: course.id,
+    slug: course.slug,
+    status: course.status,
+    title: course.slug,
+    wc_product_id: 0,
+    price_normal: 0,
+    price_sale: null,
+    is_free: true,
+  };
 }
 
 interface WooStoreProduct {
@@ -36,6 +56,7 @@ export interface BackfillCourseProductsResult {
   totalCourses: number;
   totalProducts: number;
   synced: number;
+  freeSynced: number;
   refreshed: number;
   skipped: number;
   failures: Array<{ slug: string; reason: string }>;
@@ -85,7 +106,7 @@ function mapWooProductToCoursePayload(
 
 async function fetchAllPublishedCourses(): Promise<WPCourseRow[]> {
   const firstRes = await fetch(
-    `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status`,
+    `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status,thorius_youtube`,
     { cache: "no-store" },
   );
 
@@ -104,7 +125,7 @@ async function fetchAllPublishedCourses(): Promise<WPCourseRow[]> {
     Array.from({ length: totalPages - 1 }, (_, index) => {
       const page = index + 2;
       return fetch(
-        `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status&page=${page}`,
+        `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=id,slug,status,thorius_youtube&page=${page}`,
         { cache: "no-store" },
       ).then(async (res) => {
         if (!res.ok) {
@@ -194,6 +215,7 @@ async function refreshExistingProducts(
 export async function backfillCourseProductsFromWordPress(): Promise<BackfillCourseProductsResult> {
   const failures: Array<{ slug: string; reason: string }> = [];
   let synced = 0;
+  let freeSynced = 0;
   let skipped = 0;
 
   try {
@@ -225,7 +247,20 @@ export async function backfillCourseProductsFromWordPress(): Promise<BackfillCou
 
       const product = productsBySlug.get(course.slug);
       if (!product) {
-        skipped += 1;
+        if (isFreeYouTubeCourse(course)) {
+          const freeResult = await syncCourseProduct(buildFreeCoursePayload(course));
+          if (freeResult.synced) {
+            freeSynced += 1;
+            existingSlugs.add(course.slug);
+          } else {
+            skipped += 1;
+            if (freeResult.reason) {
+              failures.push({ slug: course.slug, reason: freeResult.reason });
+            }
+          }
+        } else {
+          skipped += 1;
+        }
         continue;
       }
 
@@ -250,6 +285,7 @@ export async function backfillCourseProductsFromWordPress(): Promise<BackfillCou
       totalCourses: courses.length,
       totalProducts: wooProducts.length,
       synced,
+      freeSynced,
       refreshed,
       skipped,
       failures,
@@ -260,6 +296,7 @@ export async function backfillCourseProductsFromWordPress(): Promise<BackfillCou
       totalCourses: 0,
       totalProducts: 0,
       synced,
+      freeSynced,
       refreshed: 0,
       skipped,
       failures: [

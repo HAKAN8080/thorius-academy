@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { FREE_COURSE_WC_PRODUCT_ID } from "@/lib/course/course-product-utils";
 import type { WordPressCourseWebhookCourse } from "@/types/wordpress-webhook";
 
 export interface SyncCourseProductResult {
@@ -15,18 +16,34 @@ function parsePrice(value: unknown): number | null {
   return Number.isFinite(parsed) && parsed >= 0 ? parsed : null;
 }
 
-export async function syncCourseProduct(
-  course: WordPressCourseWebhookCourse,
-): Promise<SyncCourseProductResult> {
-  const wcProductId = course.wc_product_id;
-  if (!wcProductId) {
-    return { synced: false, reason: "no_wc_product" };
+function isExplicitlyFreeCourse(course: WordPressCourseWebhookCourse): boolean {
+  if (course.is_free === true) {
+    return true;
   }
 
   const priceNormal = parsePrice(course.price_normal);
   const priceSale = parsePrice(course.price_sale);
 
-  if (priceNormal === null && priceSale === null) {
+  return (
+    priceNormal === 0 &&
+    (priceSale === null || priceSale === 0) &&
+    (!course.wc_product_id || course.wc_product_id === FREE_COURSE_WC_PRODUCT_ID)
+  );
+}
+
+export async function syncCourseProduct(
+  course: WordPressCourseWebhookCourse,
+): Promise<SyncCourseProductResult> {
+  const wcProductId = course.wc_product_id ?? FREE_COURSE_WC_PRODUCT_ID;
+  const priceNormal = parsePrice(course.price_normal);
+  const priceSale = parsePrice(course.price_sale);
+  const isFree = isExplicitlyFreeCourse(course);
+
+  if (!isFree && wcProductId <= 0) {
+    return { synced: false, reason: "no_wc_product" };
+  }
+
+  if (!isFree && priceNormal === null && priceSale === null) {
     return { synced: false, reason: "no_price" };
   }
 
@@ -47,9 +64,9 @@ export async function syncCourseProduct(
     const row = {
       course_slug: course.slug,
       wp_course_id: course.id,
-      wc_product_id: wcProductId,
-      price_normal: priceNormal,
-      price_sale: priceSale,
+      wc_product_id: isFree ? FREE_COURSE_WC_PRODUCT_ID : wcProductId,
+      price_normal: isFree ? 0 : priceNormal,
+      price_sale: isFree ? null : priceSale,
       currency: "TRY",
       is_active: course.status === "publish",
     };

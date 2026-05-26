@@ -2,6 +2,7 @@
 
 import { unstable_cache } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { COURSE_PRODUCTS_CACHE_TAG } from "@/lib/wordpress/cache-tags";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -35,5 +36,14 @@ export async function getCourseProduct(
   courseSlug: string,
 ): Promise<CourseProduct | null> {
   const products = await getAllCourseProducts();
-  return products.find((product) => product.course_slug === courseSlug) ?? null;
+  const slugVariants = getCourseSlugLookupVariants(courseSlug);
+
+  for (const slug of slugVariants) {
+    const match = products.find((product) => product.course_slug === slug);
+    if (match) {
+      return match;
+    }
+  }
+
+  return null;
 }

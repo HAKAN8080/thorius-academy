@@ -13,6 +13,7 @@ export interface WordPressCourseWebhookCourse {
   wc_product_id?: number;
   price_normal?: number | null;
   price_sale?: number | null;
+  is_free?: boolean;
 }
 
 export interface WordPressCourseWebhookPayload {
