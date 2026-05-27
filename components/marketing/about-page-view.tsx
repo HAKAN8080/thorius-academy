@@ -51,7 +51,7 @@ export function AboutPageView() {
         </Container>
       </section>
 
-      <InspirationBanner />
+      <InspirationBanner compact />
 
       <section className="py-16 md:py-20" aria-labelledby="mission-heading">
         <Container size="narrow">
