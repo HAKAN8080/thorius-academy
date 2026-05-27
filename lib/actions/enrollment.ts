@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCourseProduct } from "@/lib/actions/course-products";
 import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
+import { syncEnrollmentToWp } from "@/lib/tutor/sync-enrollment-to-wp";
 import type { EnrollResult, Enrollment } from "@/types/enrollment";
 
 interface EnrollParams {
@@ -78,6 +79,25 @@ export async function enrollInCourse(params: EnrollParams): Promise<EnrollResult
     revalidatePath("/panel");
     revalidatePath("/panel/kurslarim");
     revalidatePath(`/kurslar/${params.courseSlug}`);
+
+    const wpCourseId = courseProduct.wp_course_id || params.courseId;
+    if (user.email && wpCourseId > 0) {
+      const syncResult = await syncEnrollmentToWp({
+        email: user.email,
+        fullName:
+          (typeof user.user_metadata?.full_name === "string"
+            ? user.user_metadata.full_name
+            : null) ?? null,
+        wpCourseId,
+      });
+
+      if (!syncResult.success && !syncResult.skipped) {
+        console.warn(
+          `[Enrollment] Tutor sync failed for ${params.courseSlug}:`,
+          syncResult.error,
+        );
+      }
+    }
 
     return { success: true, enrollment: data as Enrollment };
   } catch (error) {

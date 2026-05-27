@@ -1,5 +1,12 @@
 import crypto from "crypto";
 
+export function signWebhookPayload(payload: string, secret: string): string {
+  return crypto
+    .createHmac("sha256", secret)
+    .update(payload, "utf8")
+    .digest("base64");
+}
+
 export function verifyWebhookSignature(
   payload: string,
   signature: string | null,

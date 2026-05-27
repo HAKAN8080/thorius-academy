@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.3.0
+ * Version: 1.4.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.3.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.4.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -719,3 +719,173 @@ function thorius_academy_sync_on_topic_save(int $post_id, WP_Post $post): void
 }
 add_action('save_post_topics', 'thorius_academy_sync_on_topic_save', 999, 2);
 add_action('save_post_tutor_topic', 'thorius_academy_sync_on_topic_save', 999, 2);
+
+function thorius_academy_sync_verify_request_signature(string $payload): bool
+{
+    $settings = thorius_academy_sync_get_settings();
+    $secret = $settings['webhook_secret'] ?? '';
+
+    if ($secret === '') {
+        return false;
+    }
+
+    $signature = isset($_SERVER['HTTP_X_WP_WEBHOOK_SIGNATURE'])
+        ? sanitize_text_field(wp_unslash($_SERVER['HTTP_X_WP_WEBHOOK_SIGNATURE']))
+        : '';
+
+    if ($signature === '') {
+        return false;
+    }
+
+    $expected = base64_encode(hash_hmac('sha256', $payload, $secret, true));
+
+    return hash_equals($expected, $signature);
+}
+
+function thorius_academy_sync_find_or_create_wp_user(string $email, ?string $full_name = null): int
+{
+    $email = sanitize_email($email);
+    if ($email === '') {
+        return 0;
+    }
+
+    $existing_id = email_exists($email);
+    if ($existing_id) {
+        return (int) $existing_id;
+    }
+
+    $local_part = sanitize_user((string) strstr($email, '@', true), true);
+    if ($local_part === '') {
+        $local_part = 'student';
+    }
+
+    $login = $local_part;
+    $suffix = 1;
+    while (username_exists($login)) {
+        $login = $local_part . '_' . $suffix;
+        $suffix++;
+    }
+
+    add_filter('wp_send_new_user_notifications', '__return_false');
+
+    $user_id = wp_insert_user(array(
+        'user_login' => $login,
+        'user_email' => $email,
+        'user_pass' => wp_generate_password(24, true, true),
+        'display_name' => is_string($full_name) && $full_name !== '' ? $full_name : $local_part,
+        'role' => 'subscriber',
+    ));
+
+    remove_filter('wp_send_new_user_notifications', '__return_false');
+
+    if (is_wp_error($user_id)) {
+        error_log('[Thorius Academy Sync] WP user create failed: ' . $user_id->get_error_message());
+        return 0;
+    }
+
+    return (int) $user_id;
+}
+
+function thorius_academy_sync_enroll_user_in_course(int $user_id, int $course_id): array
+{
+    if ($user_id <= 0 || $course_id <= 0) {
+        return array(
+            'success' => false,
+            'message' => __('Geçersiz kullanıcı veya kurs.', 'thorius-academy-sync'),
+        );
+    }
+
+    if (!function_exists('tutor_utils')) {
+        return array(
+            'success' => false,
+            'message' => __('Tutor LMS etkin değil.', 'thorius-academy-sync'),
+        );
+    }
+
+    if (tutor_utils()->is_enrolled($course_id, $user_id)) {
+        return array(
+            'success' => true,
+            'already_enrolled' => true,
+            'user_id' => $user_id,
+        );
+    }
+
+    $enrollment_id = tutor_utils()->do_enroll($course_id, 0, $user_id);
+
+    if (!$enrollment_id) {
+        return array(
+            'success' => false,
+            'message' => __('Tutor kaydı oluşturulamadı.', 'thorius-academy-sync'),
+        );
+    }
+
+    return array(
+        'success' => true,
+        'already_enrolled' => false,
+        'user_id' => $user_id,
+        'enrollment_id' => (int) $enrollment_id,
+    );
+}
+
+function thorius_academy_sync_handle_academy_enroll(WP_REST_Request $request): WP_REST_Response
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $email = isset($payload['email']) ? sanitize_email((string) $payload['email']) : '';
+    $course_id = isset($payload['course_id']) ? (int) $payload['course_id'] : 0;
+    $full_name = isset($payload['full_name']) ? sanitize_text_field((string) $payload['full_name']) : '';
+
+    if ($email === '' || $course_id <= 0) {
+        return new WP_REST_Response(array('error' => 'Missing email or course_id'), 400);
+    }
+
+    $course = get_post($course_id);
+    if (!$course || !thorius_academy_sync_is_course_post($course)) {
+        return new WP_REST_Response(array('error' => 'Course not found'), 404);
+    }
+
+    $user_id = thorius_academy_sync_find_or_create_wp_user($email, $full_name !== '' ? $full_name : null);
+    if ($user_id <= 0) {
+        return new WP_REST_Response(array('error' => 'User resolution failed'), 500);
+    }
+
+    $result = thorius_academy_sync_enroll_user_in_course($user_id, $course_id);
+    $status = !empty($result['success']) ? 200 : 500;
+
+    return new WP_REST_Response($result, $status);
+}
+
+function thorius_academy_sync_register_rest_routes(): void
+{
+    register_rest_route(
+        'thorius/v1',
+        '/academy-enroll',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_enroll',
+            'permission_callback' => '__return_true',
+        )
+    );
+}
+add_action('rest_api_init', 'thorius_academy_sync_register_rest_routes');

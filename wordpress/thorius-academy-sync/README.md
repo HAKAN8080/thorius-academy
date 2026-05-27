@@ -43,4 +43,14 @@ Webhook şu durumlarda fiyatı Academy'ye yazar:
 
 Kurs WooCommerce ürününe bağlı değilse veya hiç webhook gitmemişse Academy'de **Ücretsiz** görünür.
 
+## Academy → Tutor kayıt senkronu (v1.4.0+)
+
+Academy'de ücretsiz kursa kayıt olunduğunda Tutor `kontrol-paneli/enrolled-courses/` listesine de düşmesi için:
+
+- Eklenti **etkin** olmalı ve **Webhook Secret** Academy `WP_WEBHOOK_SECRET` ile aynı olmalı
+- WordPress'te güncel `thorius-academy-sync` (v1.4.0+) yüklü olmalı
+- Endpoint: `POST /wp-json/thorius/v1/academy-enroll` (HMAC imzalı, e-posta + `course_id`)
+
+**Henüz kapsam dışı:** Mevcut Academy kayıtlarının geriye dönük toplu senkronu; satın alma (WC) kayıtları zaten Tutor tarafında oluşuyor olabilir.
+
 ## Not
