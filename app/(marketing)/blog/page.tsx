@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 import { Container } from "@/components/layout/container";
-import { BlogPostCard } from "@/components/marketing/blog-post-card";
+import { BlogPostListItem } from "@/components/marketing/blog-post-list-item";
 import { getBlogPosts } from "@/lib/wordpress/blog";
 
 export const metadata: Metadata = {
@@ -25,16 +25,16 @@ export default async function BlogPage() {
         </Container>
       </section>
 
-      <section className="py-16 md:py-20">
-        <Container size="wide">
+      <section className="py-12 md:py-16">
+        <Container size="narrow">
           {posts.length === 0 ? (
             <p className="text-center text-muted-foreground">
               Henüz blog yazısı bulunmuyor.
             </p>
           ) : (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="overflow-hidden rounded-2xl border border-primary-100 bg-white shadow-sm">
               {posts.map((post) => (
-                <BlogPostCard key={post.id} post={post} />
+                <BlogPostListItem key={post.id} post={post} />
               ))}
             </div>
           )}

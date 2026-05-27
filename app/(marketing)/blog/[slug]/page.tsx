@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import Image from "next/image";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
@@ -71,34 +70,12 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
               {formatDate(post.publishedDate)}
             </span>
             {post.author && (
-              <span className="inline-flex items-center gap-2">
-                {post.author.avatar && (
-                  <Image
-                    src={post.author.avatar}
-                    alt=""
-                    width={24}
-                    height={24}
-                    className="rounded-full"
-                  />
-                )}
+              <span className="inline-flex items-center gap-1.5">
                 <User className="h-4 w-4" aria-hidden="true" />
                 {post.author.name}
               </span>
             )}
           </div>
-
-          {post.featuredImage && (
-            <div className="relative mt-8 aspect-[16/9] overflow-hidden rounded-2xl bg-primary-100">
-              <Image
-                src={post.featuredImage}
-                alt={post.imageAlt}
-                fill
-                className="object-cover"
-                sizes="(max-width: 768px) 100vw, 768px"
-                priority
-              />
-            </div>
-          )}
         </Container>
       </header>
 

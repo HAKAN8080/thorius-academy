@@ -16,9 +16,25 @@ function parseExcerpt(html: string): string {
   return stripHtml(html).replace(/\s*(\[\.\.\.\]|…|\.{3,})\s*$/, "").trim();
 }
 
+function transformListingPost(wpPost: WPPost): BlogPost {
+  const title = stripHtml(wpPost.title.rendered);
+
+  return {
+    id: wpPost.id,
+    slug: wpPost.slug,
+    title,
+    excerpt: parseExcerpt(wpPost.excerpt.rendered),
+    content: "",
+    featuredImage: null,
+    imageAlt: title,
+    author: null,
+    publishedDate: wpPost.date,
+    wpLink: wpPost.link ?? "",
+  };
+}
+
 function transformPost(wpPost: WPPost): BlogPost {
   const title = stripHtml(wpPost.title.rendered);
-  const featuredMedia = wpPost._embedded?.["wp:featuredmedia"]?.[0];
   const author = wpPost._embedded?.author?.[0];
 
   return {
@@ -27,13 +43,13 @@ function transformPost(wpPost: WPPost): BlogPost {
     title,
     excerpt: parseExcerpt(wpPost.excerpt.rendered),
     content: wpPost.content.rendered,
-    featuredImage: featuredMedia?.source_url ?? null,
-    imageAlt: featuredMedia?.alt_text?.trim() || title,
+    featuredImage: null,
+    imageAlt: title,
     author: author
       ? {
           id: author.id,
           name: author.name,
-          avatar: author.avatar_urls?.["96"] ?? null,
+          avatar: null,
         }
       : null,
     publishedDate: wpPost.date,
@@ -43,7 +59,7 @@ function transformPost(wpPost: WPPost): BlogPost {
 
 export async function getBlogPosts(limit = 20): Promise<BlogPost[]> {
   const res = await fetch(
-    `${WP_API_BASE}/posts?per_page=${limit}&_embed=1&orderby=date&order=desc`,
+    `${WP_API_BASE}/posts?per_page=${limit}&orderby=date&order=desc&_fields=id,slug,date,title,excerpt`,
     {
       next: { revalidate: REVALIDATE_SECONDS, tags: [BLOG_CACHE_TAG] },
     },
@@ -55,12 +71,12 @@ export async function getBlogPosts(limit = 20): Promise<BlogPost[]> {
   }
 
   const posts = (await res.json()) as WPPost[];
-  return posts.map(transformPost);
+  return posts.map(transformListingPost);
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
   const res = await fetch(
-    `${WP_API_BASE}/posts?slug=${encodeURIComponent(slug)}&_embed=1`,
+    `${WP_API_BASE}/posts?slug=${encodeURIComponent(slug)}&_fields=id,slug,date,title,excerpt,content,link&_embed=author`,
     {
       next: {
         revalidate: REVALIDATE_SECONDS,
