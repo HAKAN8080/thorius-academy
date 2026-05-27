@@ -8,7 +8,7 @@ export default function Icon() {
     (
       <div
         style={{
-          background: "#0B1E3F",
+          background: "#060f24",
           width: "100%",
           height: "100%",
           display: "flex",
@@ -17,15 +17,25 @@ export default function Icon() {
           borderRadius: "8px",
         }}
       >
-        <svg width="24" height="24" viewBox="0 0 32 32">
-          <ellipse cx="16" cy="17" rx="10" ry="9" fill="#8B6914" />
-          <ellipse cx="16" cy="18" rx="7" ry="6" fill="#F5E6C8" />
-          <circle cx="12.5" cy="16" r="3" fill="white" />
-          <circle cx="19.5" cy="16" r="3" fill="white" />
-          <circle cx="12.5" cy="16" r="1.8" fill="#D4AF37" />
-          <circle cx="19.5" cy="16" r="1.8" fill="#D4AF37" />
-          <path d="M16 19 L14 22 L18 22 Z" fill="#D4AF37" />
-          <polygon points="16,4 8,8 24,8" fill="#1e3a6f" />
+        <svg width="22" height="22" viewBox="0 0 32 32" fill="none">
+          <path
+            d="M16 3L26 8V16C26 22.5 21.5 27.5 16 29C10.5 27.5 6 22.5 6 16V8L16 3Z"
+            stroke="#D4AF37"
+            strokeWidth="1.5"
+            fill="none"
+          />
+          <path
+            d="M12 18C12 14 14 11 16 11C18 11 20 14 20 18"
+            stroke="#D4AF37"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
+          <path
+            d="M16 11V7"
+            stroke="#D4AF37"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+          />
         </svg>
       </div>
     ),

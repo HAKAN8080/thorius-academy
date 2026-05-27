@@ -19,3 +19,9 @@ Tutor LMS `kontrol-paneli` sayfasının görünümünü Academy ile uyumlu hale 
 - Sol menü hover/active durumları
 
 Tutor güncellemelerinden sonra görünüm bozulursa CSS seçicileri güncellenmelidir.
+
+## v1.1.0
+
+- Sol menü açık zemin + okunaklı koyu metin
+- Koyu gradient yalnızca profil kartında
+- Aktif menü öğesinde altın sol çizgi

@@ -12,26 +12,11 @@ import { cn } from "@/lib/utils";
 
 const AUTO_PLAY_MS = 4500;
 
-const slideGradients = [
-  "from-primary-700 via-primary-800 to-primary-950",
-  "from-primary-600 via-primary-800 to-primary-950",
-  "from-primary-800 via-primary-900 to-primary-950",
-  "from-primary-700 via-primary-900 to-primary-950",
-  "from-primary-600 via-primary-700 to-primary-900",
-  "from-primary-800 via-primary-700 to-primary-950",
-];
-
 interface HeroCourseCarouselProps {
   courses: Course[];
 }
 
-function HeroCourseSlide({
-  course,
-  gradient,
-}: {
-  course: Course;
-  gradient: string;
-}) {
+function HeroCourseSlide({ course }: { course: Course }) {
   return (
     <Link
       href={`/kurslar/${course.slug}`}
@@ -39,20 +24,19 @@ function HeroCourseSlide({
       tabIndex={-1}
     >
       <Card className="group h-full overflow-hidden rounded-none border-0 bg-white shadow-none transition-shadow hover:shadow-none">
-        <div
-          className={cn(
-            "relative flex aspect-[16/10] flex-col justify-end overflow-hidden bg-gradient-to-br p-5",
-            gradient
-          )}
-        >
+        <div className="relative flex aspect-[16/10] flex-col justify-end overflow-hidden bg-primary-950 p-5">
           {course.featuredImage && (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={course.featuredImage}
               alt=""
-              className="absolute inset-0 h-full w-full object-cover opacity-30"
+              className="absolute inset-0 h-full w-full object-cover"
             />
           )}
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-primary-950/95 via-primary-950/40 to-primary-950/10"
+            aria-hidden="true"
+          />
           {course.categories.length > 0 && (
             <Badge className="relative z-10 mb-auto w-fit bg-accent-500/90 text-primary-950 hover:bg-accent-500">
               {course.categories[0].name}
@@ -183,13 +167,7 @@ export function HeroCourseCarousel({ courses }: HeroCourseCarouselProps) {
                     aria-label={`${slideIndex + 1} / ${count}: ${course.title}`}
                     aria-hidden={slideIndex !== index}
                   >
-                    <HeroCourseSlide
-                      course={course}
-                      gradient={
-                        slideGradients[slideIndex % slideGradients.length] ??
-                        slideGradients[0]
-                      }
-                    />
+                    <HeroCourseSlide course={course} />
                   </div>
                 ))}
               </div>

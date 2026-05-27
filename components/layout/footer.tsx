@@ -6,9 +6,9 @@ const footerColumns = [
   {
     title: "Hakkımızda",
     links: [
-      { href: "/#hakkimizda", label: "Misyonumuz" },
+      { href: "/hakkimizda", label: "Misyonumuz" },
       { href: "/#ecosystem", label: "Koçluk" },
-      { href: "https://thorius.com.tr/blog", label: "Blog" },
+      { href: "/blog", label: "Blog" },
     ],
   },
   {
@@ -34,7 +34,7 @@ const footerColumns = [
         href: "/egitmen-destek-kilavuzu",
         label: "Eğitmen Destek Kılavuzu",
       },
-      { href: "https://thorius.com.tr/blog", label: "Blog Yazıları" },
+      { href: "/blog", label: "Blog Yazıları" },
     ],
   },
   {

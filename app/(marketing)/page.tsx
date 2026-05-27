@@ -5,6 +5,7 @@ import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
+import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import {
   pickCoursesByCategorySlugs,
@@ -78,6 +79,8 @@ export default async function HomePage() {
         className="bg-primary-50"
       />
 
+      <InspirationBanner />
+
       <section
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"
         aria-labelledby="b2b-heading"
@@ -102,17 +105,17 @@ export default async function HomePage() {
         </Container>
       </section>
 
-      <section id="hakkimizda" className="py-16">
+      <section className="py-16">
         <Container size="narrow" className="text-center">
-          <p className="mb-3 text-2xl" aria-hidden="true">
-            🦉
-          </p>
           <h2 className="text-2xl font-bold text-primary-900">Hakkımızda</h2>
           <p className="mt-4 text-primary-700">
-            Thorius AI Academy, Türkiye perakende sektörünün lider markalarına
-            üst düzey, uygulanabilir ve sektöre özel eğitim sunar. AI destekli
-            içerikler ve saha deneyimini bir araya getiriyoruz.
+            Thorius Academy, profesyonellerin bilgi ve deneyimlerini
+            erişilebilir, kaliteli ve etki odaklı dijital eğitimlere
+            dönüştüren bir eğitim platformudur.
           </p>
+          <Button variant="outline" size="lg" className="mt-6" asChild>
+            <Link href="/hakkimizda">Daha Fazla Bilgi →</Link>
+          </Button>
         </Container>
       </section>
     </>

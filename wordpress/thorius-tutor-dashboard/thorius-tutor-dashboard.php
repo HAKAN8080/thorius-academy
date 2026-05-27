@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Tutor Dashboard
  * Description: Tutor LMS kontrol paneli (kontrol-paneli) görünümünü Thorius markasına uyarlar.
- * Version: 1.0.0
+ * Version: 1.1.0
  * Author: Thorius
  * Text Domain: thorius-tutor-dashboard
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_TUTOR_DASHBOARD_VERSION', '1.0.0');
+define('THORIUS_TUTOR_DASHBOARD_VERSION', '1.1.0');
 define('THORIUS_TUTOR_DASHBOARD_URL', plugin_dir_url(__FILE__));
 
 function thorius_tutor_dashboard_enqueue_assets(): void

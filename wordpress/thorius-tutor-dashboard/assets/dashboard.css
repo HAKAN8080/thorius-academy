@@ -1,80 +1,153 @@
-/* Thorius Tutor Dashboard — Academy marka renkleri */
+/* Thorius Tutor Dashboard v1.1 — Academy marka renkleri */
 
 :root {
   --thorius-primary-950: #060f24;
   --thorius-primary-900: #0b1e3f;
   --thorius-primary-700: #142850;
   --thorius-primary-100: #dce5f1;
+  --thorius-primary-50: #f4f7fb;
   --thorius-accent-500: #d4af37;
   --thorius-accent-400: #e4c55a;
 }
 
+/* Genel sayfa */
 body.tutor-dashboard,
-body.tutor-lms-dashboard,
-body.page-template-default.page-id-dashboard {
-  background: #f4f7fb !important;
-  color: #142850 !important;
+body.tutor-lms-dashboard {
+  background: var(--thorius-primary-50) !important;
+  color: var(--thorius-primary-700) !important;
 }
 
 .tutor-dashboard .tutor-wrap,
 .tutor-dashboard .tutor-dashboard-main-content,
-.tutor-dashboard .tutor-dashboard-content-inner {
+.tutor-dashboard .tutor-dashboard-content-inner,
+.tutor-dashboard .tutor-frontend-dashboard-maincontent {
   background: transparent !important;
 }
 
+/* Sol menü — açık zemin, okunaklı metin */
+.tutor-dashboard .tutor-dashboard-left-menu,
+.tutor-dashboard .tutor-dashboard-sidebar,
+.tutor-dashboard .tutor-dashboard-left-sidebar,
+.tutor-dashboard .tutor-dashboard-menu-wrap,
+.tutor-dashboard .tutor-dashboard-permalinks,
+.tutor-dashboard .tutor-dashboard-menu {
+  background: #ffffff !important;
+  color: var(--thorius-primary-700) !important;
+  border-color: var(--thorius-primary-100) !important;
+}
+
+.tutor-dashboard .tutor-dashboard-left-menu,
+.tutor-dashboard .tutor-dashboard-sidebar,
+.tutor-dashboard .tutor-dashboard-left-sidebar {
+  border-right: 1px solid var(--thorius-primary-100) !important;
+  border-radius: 16px !important;
+  box-shadow: 0 8px 24px rgba(6, 15, 36, 0.05) !important;
+  padding: 12px !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu,
+.tutor-dashboard .tutor-dashboard-menu ul {
+  list-style: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li,
+.tutor-dashboard .tutor-dashboard-menu-item {
+  margin: 0 0 4px !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li a,
+.tutor-dashboard .tutor-dashboard-menu-item-link,
+.tutor-dashboard .tutor-dashboard-left-menu a,
+.tutor-dashboard .tutor-dashboard-permalinks a {
+  display: flex !important;
+  align-items: center !important;
+  gap: 10px !important;
+  color: var(--thorius-primary-700) !important;
+  background: transparent !important;
+  border-radius: 10px !important;
+  padding: 10px 14px !important;
+  font-weight: 500 !important;
+  text-decoration: none !important;
+  border-left: 3px solid transparent !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li a:hover,
+.tutor-dashboard .tutor-dashboard-menu-item-link:hover,
+.tutor-dashboard .tutor-dashboard-left-menu a:hover,
+.tutor-dashboard .tutor-dashboard-permalinks a:hover {
+  background: var(--thorius-primary-50) !important;
+  color: var(--thorius-primary-900) !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li.active a,
+.tutor-dashboard .tutor-dashboard-menu li.is-active a,
+.tutor-dashboard .tutor-dashboard-menu-item.active .tutor-dashboard-menu-item-link,
+.tutor-dashboard .tutor-dashboard-permalinks a.active {
+  background: var(--thorius-primary-50) !important;
+  color: var(--thorius-primary-900) !important;
+  border-left-color: var(--thorius-accent-500) !important;
+  font-weight: 600 !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li a svg,
+.tutor-dashboard .tutor-dashboard-menu-item-link svg,
+.tutor-dashboard .tutor-dashboard-left-menu a svg {
+  color: var(--thorius-primary-700) !important;
+  fill: currentColor !important;
+  opacity: 0.85 !important;
+}
+
+.tutor-dashboard .tutor-dashboard-menu li.active a svg,
+.tutor-dashboard .tutor-dashboard-menu li.is-active a svg,
+.tutor-dashboard .tutor-dashboard-menu-item.active .tutor-dashboard-menu-item-link svg {
+  color: var(--thorius-accent-500) !important;
+  opacity: 1 !important;
+}
+
+/* Üst profil kartı — yalnızca avatar alanı koyu */
+.tutor-dashboard .tutor-dashboard-header-avatar,
+.tutor-dashboard .tutor-dashboard-header-user-info {
+  background: linear-gradient(
+    135deg,
+    var(--thorius-primary-900),
+    var(--thorius-primary-950)
+  ) !important;
+  border: none !important;
+  border-radius: 14px !important;
+  color: #ffffff !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+}
+
+.tutor-dashboard .tutor-dashboard-header-avatar-name,
+.tutor-dashboard .tutor-dashboard-header-avatar-role,
+.tutor-dashboard .tutor-dashboard-header-avatar a {
+  color: #ffffff !important;
+}
+
+.tutor-dashboard .tutor-dashboard-header-avatar-role {
+  color: rgba(255, 255, 255, 0.75) !important;
+}
+
+/* Genel header — koyu zemin uygulama (sol menüyü etkilemesin) */
+.tutor-dashboard .tutor-dashboard-header {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  color: inherit !important;
+}
+
+/* İçerik kartları */
 .tutor-dashboard .tutor-card,
 .tutor-dashboard .tutor-dashboard-content-inner > .tutor-card,
 .tutor-dashboard .tutor-dashboard-single-meta-box,
 .tutor-dashboard .tutor-frontend-dashboard-maincontent .tutor-card {
-  border: 1px solid #dce5f1 !important;
+  border: 1px solid var(--thorius-primary-100) !important;
   border-radius: 16px !important;
   box-shadow: 0 8px 24px rgba(6, 15, 36, 0.06) !important;
   background: #ffffff !important;
-}
-
-.tutor-dashboard .tutor-dashboard-header,
-.tutor-dashboard .tutor-dashboard-header-avatar,
-.tutor-dashboard .tutor-dashboard-permalinks {
-  background: linear-gradient(135deg, var(--thorius-primary-900), var(--thorius-primary-950)) !important;
-  border: none !important;
-  border-radius: 16px !important;
-  color: #ffffff !important;
-}
-
-.tutor-dashboard .tutor-dashboard-header a,
-.tutor-dashboard .tutor-dashboard-header .tutor-dashboard-header-avatar-name,
-.tutor-dashboard .tutor-dashboard-header .tutor-dashboard-header-avatar-role {
-  color: #ffffff !important;
-}
-
-.tutor-dashboard .tutor-dashboard-permalinks {
-  margin-top: 16px !important;
-  padding: 12px !important;
-}
-
-.tutor-dashboard .tutor-dashboard-permalinks a {
-  color: rgba(255, 255, 255, 0.88) !important;
-  border-radius: 10px !important;
-  padding: 10px 14px !important;
-}
-
-.tutor-dashboard .tutor-dashboard-permalinks a.active,
-.tutor-dashboard .tutor-dashboard-permalinks a:hover {
-  background: rgba(212, 175, 55, 0.18) !important;
-  color: var(--thorius-accent-400) !important;
-}
-
-.tutor-dashboard .tutor-dashboard-menu li a,
-.tutor-dashboard .tutor-dashboard-left-menu .tutor-dashboard-menu-item-link {
-  color: #142850 !important;
-  border-radius: 10px !important;
-}
-
-.tutor-dashboard .tutor-dashboard-menu li.active a,
-.tutor-dashboard .tutor-dashboard-menu li a:hover,
-.tutor-dashboard .tutor-dashboard-left-menu .tutor-dashboard-menu-item-link:hover {
-  background: #f0f4fa !important;
-  color: var(--thorius-primary-900) !important;
 }
 
 .tutor-dashboard .tutor-btn-primary,
@@ -111,13 +184,8 @@ body.page-template-default.page-id-dashboard {
 }
 
 .tutor-dashboard .tutor-table thead th {
-  background: #f0f4fa !important;
+  background: var(--thorius-primary-50) !important;
   color: var(--thorius-primary-900) !important;
-}
-
-.tutor-dashboard .tutor-alert,
-.tutor-dashboard .tutor-notification {
-  border-radius: 12px !important;
 }
 
 .tutor-dashboard .tutor-form-control,
@@ -126,9 +194,11 @@ body.page-template-default.page-id-dashboard {
 .tutor-dashboard input[type="password"],
 .tutor-dashboard select,
 .tutor-dashboard textarea {
-  border: 1px solid #dce5f1 !important;
+  border: 1px solid var(--thorius-primary-100) !important;
   border-radius: 12px !important;
   min-height: 44px !important;
+  color: var(--thorius-primary-700) !important;
+  background: #ffffff !important;
 }
 
 .tutor-dashboard .tutor-dashboard-content-inner a:not(.tutor-btn) {
@@ -136,12 +206,22 @@ body.page-template-default.page-id-dashboard {
 }
 
 .tutor-dashboard .tutor-dashboard-content-inner a:not(.tutor-btn):hover {
-  color: var(--thorius-accent-600, #c9a02e) !important;
+  color: #c9a02e !important;
 }
 
 @media (max-width: 991px) {
+  .tutor-dashboard .tutor-dashboard-left-menu,
+  .tutor-dashboard .tutor-dashboard-sidebar {
+    border-right: none !important;
+    border-bottom: 1px solid var(--thorius-primary-100) !important;
+    margin-bottom: 16px !important;
+  }
+
   .tutor-dashboard .tutor-dashboard-permalinks {
     overflow-x: auto !important;
     white-space: nowrap !important;
+    display: flex !important;
+    gap: 8px !important;
+    padding-bottom: 8px !important;
   }
 }

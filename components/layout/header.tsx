@@ -27,8 +27,8 @@ const baseNavLinks: NavLink[] = [
   { href: "/kurslar", label: "Kurslar" },
   { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
-  { href: "/#hakkimizda", label: "Hakkımızda" },
-  { href: "https://thorius.com.tr/blog", label: "Blog", external: true },
+  { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/blog", label: "Blog" },
 ];
 
 function NavItem({

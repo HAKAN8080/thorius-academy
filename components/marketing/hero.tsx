@@ -22,23 +22,20 @@ export function Hero({ courses }: HeroProps) {
       >
         <div className="absolute -right-16 -top-16 h-80 w-80 rounded-full bg-accent-500/20 blur-3xl md:-right-8 md:h-96 md:w-96" />
         <div className="absolute -left-24 bottom-0 h-64 w-64 rounded-full bg-primary-500/10 blur-3xl" />
-        <div className="owl-pattern absolute inset-0 opacity-[0.04]" />
       </div>
 
       <Container size="wide" className="relative">
         <div className="grid grid-cols-1 items-center gap-8 xl:grid-cols-[1.05fr_1fr] xl:gap-10">
           <div className="order-2 flex flex-col gap-4 sm:gap-6 xl:order-1">
-            <div className="flex items-center gap-3">
-              <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded-full ring-2 ring-accent-500/40 owl-glow">
-                <Image
-                  src="/images/bilge-baykus.png"
-                  alt=""
-                  fill
-                  className="object-cover object-top"
-                  sizes="48px"
-                  priority
-                />
-              </div>
+            <div className="flex flex-wrap items-center gap-3">
+              <Image
+                src="/images/thorius-academy-logo.png"
+                alt="Thorius Academy"
+                width={140}
+                height={56}
+                className="h-12 w-auto object-contain sm:h-14"
+                priority
+              />
               <p className="inline-flex items-center gap-2 rounded-full border border-accent-500/30 bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 sm:px-4 sm:py-2 sm:text-sm">
                 Premium İş Akademisi
               </p>

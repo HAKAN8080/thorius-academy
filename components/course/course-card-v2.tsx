@@ -54,8 +54,8 @@ export function CourseCardV2({
     >
       <div
         className={cn(
-          "relative w-full overflow-hidden bg-primary-50",
-          isCompact ? "aspect-[4/3]" : "aspect-video",
+          "relative w-full overflow-hidden bg-primary-100",
+          "aspect-video",
         )}
       >
         {thumbnail ? (
@@ -63,7 +63,12 @@ export function CourseCardV2({
             src={thumbnail}
             alt={imageAlt || title}
             fill
-            className="object-cover transition-transform duration-500 group-hover:scale-105"
+            className={cn(
+              "transition-transform duration-500 group-hover:scale-[1.02]",
+              isCompact
+                ? "object-contain object-center p-1.5"
+                : "object-cover group-hover:scale-105",
+            )}
             sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 25vw"
           />
         ) : (
