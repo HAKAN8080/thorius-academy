@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
+import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
 import { BookOpen, GraduationCap, ArrowRight, User, Presentation } from "lucide-react";
 
 export const metadata: Metadata = {
@@ -34,6 +35,10 @@ export default async function PanelPage() {
         </h1>
         <p className="text-lg text-muted-foreground">{user.email}</p>
       </header>
+
+      <div className="mb-10">
+        <TutorDashboardLink variant="student" />
+      </div>
 
       <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
         <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">

@@ -20,6 +20,14 @@ export function getStudentPortalUrl(): string {
   return "/panel/kurslarim";
 }
 
+/** Tutor LMS kontrol paneli (kazanç, ödeme, profil). */
+export function getTutorDashboardUrl(): string {
+  const path =
+    process.env.NEXT_PUBLIC_TUTOR_DASHBOARD_PATH ?? "/kontrol-paneli/";
+  const normalizedPath = path.startsWith("/") ? path : `/${path}`;
+  return `${getWpSiteUrl()}${normalizedPath.endsWith("/") ? normalizedPath : `${normalizedPath}/`}`;
+}
+
 export function isStudentPortalPath(pathname: string): boolean {
   if (pathname.startsWith("/panel/egitmen")) return false;
   return (

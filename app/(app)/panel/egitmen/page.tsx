@@ -5,6 +5,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { getInstructorCourses } from "@/lib/actions/instructor-dashboard";
 import { InstructorCourseCard } from "@/components/instructor/instructor-course-card";
+import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
 
 export const metadata: Metadata = {
   title: "Eğitmen Paneli",
@@ -60,6 +61,10 @@ export default async function InstructorDashboardPage() {
           </div>
         )}
       </header>
+
+      <div className="mb-10">
+        <TutorDashboardLink variant="instructor" />
+      </div>
 
       {courses.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-primary-100 bg-primary-50/50 p-12 text-center">

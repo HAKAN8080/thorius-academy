@@ -3,6 +3,7 @@ import {
   getInstructorPortalUrl,
   getStudentPortalUrl,
 } from "@/lib/config/portal-urls";
+import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
 import { getInstructorAccess } from "@/lib/instructor/access";
 
 export async function PanelNavLinks() {
@@ -23,6 +24,7 @@ export async function PanelNavLinks() {
         >
           Öğrenci Kurslarım
         </Link>
+        <TutorDashboardLink variant="instructor" compact />
         <Link
           href="/"
           className="text-sm text-primary-600 hover:text-primary-900"
@@ -41,6 +43,7 @@ export async function PanelNavLinks() {
       >
         Kurslarım
       </Link>
+      <TutorDashboardLink variant="student" compact />
       <Link
         href="/"
         className="text-sm text-primary-600 hover:text-primary-900"

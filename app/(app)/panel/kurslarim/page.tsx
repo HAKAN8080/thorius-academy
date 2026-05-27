@@ -12,6 +12,7 @@ import {
 import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
 import { getInstructorAccess } from "@/lib/instructor/access";
+import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 
@@ -55,6 +56,10 @@ export default async function MyCoursesPage() {
             : pageDescription}
         </p>
       </header>
+
+      <div className="mb-10">
+        <TutorDashboardLink variant="student" />
+      </div>
 
       {enrollments.length === 0 ? (
         <div className="rounded-2xl border-2 border-dashed border-primary-100 bg-primary-50/50 p-12 text-center">
