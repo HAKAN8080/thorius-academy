@@ -38,7 +38,11 @@ export default async function HomePage() {
     ["insan-kaynaklari", "yoga"],
     5,
   );
-  const carouselCourses = allCourses.slice(0, 5);
+  const carouselCourses = pickCoursesByCategorySlugs(
+    allCourses,
+    ["planlama", "insan-kaynaklari"],
+    5,
+  );
 
   return (
     <>
