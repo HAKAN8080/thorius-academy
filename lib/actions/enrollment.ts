@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
-import { getCourseProduct } from "@/lib/actions/course-products";
+import { resolveCourseProduct } from "@/lib/course/resolve-course-product";
 import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
 import { syncEnrollmentToWp } from "@/lib/tutor/sync-enrollment-to-wp";
 import type { EnrollResult, Enrollment } from "@/types/enrollment";
@@ -31,7 +31,10 @@ export async function enrollInCourse(params: EnrollParams): Promise<EnrollResult
       };
     }
 
-    const courseProduct = await getCourseProduct(params.courseSlug);
+    const courseProduct = await resolveCourseProduct({
+      courseSlug: params.courseSlug,
+      wpCourseId: params.courseId,
+    });
     if (!courseProduct) {
       return {
         success: false,

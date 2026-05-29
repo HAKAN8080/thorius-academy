@@ -8,7 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { checkEnrollment } from "@/lib/actions/enrollment";
-import { getCourseProduct } from "@/lib/actions/course-products";
+import { resolveCourseProduct } from "@/lib/course/resolve-course-product";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { splitFullName } from "@/lib/course/checkout-url";
 import { createClient } from "@/lib/supabase/server";
@@ -50,7 +50,11 @@ export default async function CourseDetailPage({
     data: { user },
   } = await supabase.auth.getUser();
   const enrollment = user ? await checkEnrollment(course.id) : null;
-  const courseProduct = await getCourseProduct(params.slug);
+  const courseProduct = await resolveCourseProduct({
+    courseSlug: course.slug,
+    wpCourseId: course.id,
+    youtubeVideoId: course.youtubeVideoId,
+  });
   const curriculum = await getCourseCurriculumPreview(course.id, params.slug);
 
   let customer = null;
@@ -87,6 +91,7 @@ export default async function CourseDetailPage({
     isAlreadyEnrolled: !!enrollment,
     courseProduct,
     customer,
+    isFreeYoutubeCourse: Boolean(course.youtubeVideoId),
   };
 
   return (

@@ -94,6 +94,7 @@ function transformListingCourse(
     tags: [],
     wpLink: wpCourse.link,
     publishedDate: wpCourse.date,
+    youtubeVideoId: wpCourse.thorius_youtube?.video_id?.trim() || null,
   };
 }
 
@@ -218,6 +219,7 @@ function transformCourse(
     tags,
     wpLink: wpCourse.link,
     publishedDate: wpCourse.date,
+    youtubeVideoId: wpCourse.thorius_youtube?.video_id?.trim() || null,
   };
 }
 

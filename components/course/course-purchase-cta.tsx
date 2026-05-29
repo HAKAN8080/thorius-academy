@@ -19,6 +19,7 @@ interface CoursePurchaseCtaProps {
   isAlreadyEnrolled: boolean;
   courseProduct: CourseProduct | null;
   customer: CheckoutCustomer | null;
+  isFreeYoutubeCourse?: boolean;
 }
 
 export function CoursePurchaseCta({
@@ -32,6 +33,7 @@ export function CoursePurchaseCta({
   isAlreadyEnrolled,
   courseProduct,
   customer,
+  isFreeYoutubeCourse = false,
 }: CoursePurchaseCtaProps) {
   if (isAlreadyEnrolled) {
     return (
@@ -62,6 +64,21 @@ export function CoursePurchaseCta({
   }
 
   if (courseProduct && isFreeCourseProduct(courseProduct)) {
+    return (
+      <EnrollButton
+        courseId={courseId}
+        courseSlug={courseSlug}
+        courseTitle={courseTitle}
+        courseImage={courseImage}
+        courseCategory={courseCategory}
+        instructorName={instructorName}
+        isLoggedIn={isLoggedIn}
+        isAlreadyEnrolled={false}
+      />
+    );
+  }
+
+  if (isFreeYoutubeCourse) {
     return (
       <EnrollButton
         courseId={courseId}

@@ -91,6 +91,7 @@ export interface Course {
   }>;
   wpLink: string;
   publishedDate: string;
+  youtubeVideoId?: string | null;
   level?: string;
   lessonCount?: number;
   duration?: string;

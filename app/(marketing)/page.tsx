@@ -83,7 +83,7 @@ export default async function HomePage() {
         className="bg-primary-50"
       />
 
-      <InspirationBanner />
+      <InspirationBanner compact />
 
       <section
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"
