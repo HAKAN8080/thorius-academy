@@ -66,10 +66,12 @@ export function EnrollButton({
 
       if (result.success) {
         toast.success("Kursa başarıyla kayıt oldunuz!");
-        router.push("/panel/kurslarim");
+        router.refresh();
+        router.push(`/panel/kurslarim/${courseSlug}`);
       } else if (result.alreadyEnrolled) {
         toast.info("Bu kursa zaten kayıtlısınız");
-        router.push("/panel/kurslarim");
+        router.refresh();
+        router.push(`/panel/kurslarim/${courseSlug}`);
       } else if (result.needsLogin) {
         router.push(`/giris?redirect=/kurslar/${courseSlug}`);
       } else {

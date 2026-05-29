@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { resolveCourseProduct } from "@/lib/course/resolve-course-product";
 import { isFreeCourseProduct } from "@/lib/course/course-product-utils";
+import { syncCourseFromTutor } from "@/lib/actions/lesson-sync";
 import { syncEnrollmentToWp } from "@/lib/tutor/sync-enrollment-to-wp";
 import type { EnrollResult, Enrollment } from "@/types/enrollment";
 
@@ -82,6 +83,9 @@ export async function enrollInCourse(params: EnrollParams): Promise<EnrollResult
     revalidatePath("/panel");
     revalidatePath("/panel/kurslarim");
     revalidatePath(`/kurslar/${params.courseSlug}`);
+    revalidatePath(`/panel/kurslarim/${params.courseSlug}`);
+
+    await syncCourseFromTutor(params.courseId, params.courseSlug);
 
     const wpCourseId = courseProduct.wp_course_id || params.courseId;
     if (user.email && wpCourseId > 0) {

@@ -9,9 +9,9 @@ import {
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
 import { checkEnrollment } from "@/lib/actions/enrollment";
 import { VideoPlayer } from "@/components/player/video-player";
+import { CourseLessonsEmpty } from "@/components/player/course-lessons-empty";
 import { MarkLessonCompleteButton } from "@/components/player/mark-lesson-complete-button";
 import { LessonSidebar } from "@/components/player/lesson-sidebar";
-import { Button } from "@/components/ui/button";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import { groupLessonsByTopic } from "@/lib/lessons/group-by-topic";
 import { pickActiveLesson } from "@/lib/lessons/pick-active-lesson";
@@ -21,6 +21,8 @@ interface Props {
   params: Promise<{ slug: string }>;
   searchParams: Promise<{ lesson?: string }>;
 }
+
+export const dynamic = "force-dynamic";
 
 function usesManualProgressTracking(
   videoType: string | null | undefined,
@@ -51,25 +53,12 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
   const enrollment = await checkEnrollment(course.id);
   if (!enrollment) redirect(`/kurslar/${slug}`);
 
-  let lessons = await getLessonsForCourse(slug);
-
-  await syncCourseFromTutor(course.id, slug);
-  lessons = await getLessonsForCourse(slug);
+  const lessonSlug = course.slug;
+  await syncCourseFromTutor(course.id, lessonSlug);
+  const lessons = await getLessonsForCourse(lessonSlug);
 
   if (lessons.length === 0) {
-    return (
-      <div className="container mx-auto max-w-3xl px-4 py-12">
-        <h1 className="mb-4 text-2xl font-bold text-primary-950">
-          Henüz ders eklenmemiş
-        </h1>
-        <p className="mb-6 text-muted-foreground">
-          Bu kurs için ders içeriği yüklenmesi devam ediyor.
-        </p>
-        <Button asChild>
-          <Link href="/panel/kurslarim">Kurslarıma Dön</Link>
-        </Button>
-      </div>
-    );
+    return <CourseLessonsEmpty courseId={course.id} courseSlug={lessonSlug} />;
   }
 
   const topics = groupLessonsByTopic(lessons);

@@ -4,6 +4,7 @@ import {
   COURSE_CATEGORY_CACHE_TAG,
   courseSlugCacheTag,
 } from "@/lib/wordpress/cache-tags";
+import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { decodeHtmlEntities } from "@/lib/utils/decode-html-entities";
 
 const WP_API_BASE =
@@ -307,27 +308,30 @@ export async function fetchAllCourses(): Promise<Course[]> {
 }
 
 export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
-  try {
-    const res = await fetch(
-      `${WP_API_BASE}/courses?slug=${encodeURIComponent(slug)}&_embed=true`,
-      {
-        next: {
-          revalidate: REVALIDATE_SECONDS,
-          tags: [COURSE_CACHE_TAG, courseSlugCacheTag(slug)],
+  for (const variant of getCourseSlugLookupVariants(slug)) {
+    try {
+      const res = await fetch(
+        `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=true`,
+        {
+          next: {
+            revalidate: REVALIDATE_SECONDS,
+            tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],
+          },
         },
-      },
-    );
+      );
 
-    if (!res.ok) return null;
+      if (!res.ok) continue;
 
-    const wpCourses: WPCourse[] = await res.json();
-    if (!wpCourses.length) return null;
-
-    return transformCourse(wpCourses[0]);
-  } catch (error) {
-    console.error("fetchCourseBySlug error:", error);
-    return null;
+      const wpCourses: WPCourse[] = await res.json();
+      if (wpCourses.length) {
+        return transformCourse(wpCourses[0]);
+      }
+    } catch (error) {
+      console.error("fetchCourseBySlug error:", error);
+    }
   }
+
+  return null;
 }
 
 export async function fetchCategoryList(): Promise<WPCategory[]> {
