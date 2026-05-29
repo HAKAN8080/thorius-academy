@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.4.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.5.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -742,16 +742,28 @@ function thorius_academy_sync_verify_request_signature(string $payload): bool
     return hash_equals($expected, $signature);
 }
 
-function thorius_academy_sync_find_or_create_wp_user(string $email, ?string $full_name = null): int
+function thorius_academy_sync_find_or_create_wp_user(string $email, ?string $full_name = null, ?string $password = null): int
+{
+    $result = thorius_academy_sync_register_wp_user($email, $full_name, $password);
+    return (int) ($result['user_id'] ?? 0);
+}
+
+function thorius_academy_sync_register_wp_user(string $email, ?string $full_name = null, ?string $password = null): array
 {
     $email = sanitize_email($email);
     if ($email === '') {
-        return 0;
+        return array(
+            'user_id' => 0,
+            'created' => false,
+        );
     }
 
     $existing_id = email_exists($email);
     if ($existing_id) {
-        return (int) $existing_id;
+        return array(
+            'user_id' => (int) $existing_id,
+            'created' => false,
+        );
     }
 
     $local_part = sanitize_user((string) strstr($email, '@', true), true);
@@ -766,12 +778,16 @@ function thorius_academy_sync_find_or_create_wp_user(string $email, ?string $ful
         $suffix++;
     }
 
+    $user_pass = is_string($password) && $password !== ''
+        ? $password
+        : wp_generate_password(24, true, true);
+
     add_filter('wp_send_new_user_notifications', '__return_false');
 
     $user_id = wp_insert_user(array(
         'user_login' => $login,
         'user_email' => $email,
-        'user_pass' => wp_generate_password(24, true, true),
+        'user_pass' => $user_pass,
         'display_name' => is_string($full_name) && $full_name !== '' ? $full_name : $local_part,
         'role' => 'subscriber',
     ));
@@ -780,10 +796,16 @@ function thorius_academy_sync_find_or_create_wp_user(string $email, ?string $ful
 
     if (is_wp_error($user_id)) {
         error_log('[Thorius Academy Sync] WP user create failed: ' . $user_id->get_error_message());
-        return 0;
+        return array(
+            'user_id' => 0,
+            'created' => false,
+        );
     }
 
-    return (int) $user_id;
+    return array(
+        'user_id' => (int) $user_id,
+        'created' => true,
+    );
 }
 
 function thorius_academy_sync_enroll_user_in_course(int $user_id, int $course_id): array
@@ -876,6 +898,63 @@ function thorius_academy_sync_handle_academy_enroll(WP_REST_Request $request): W
     return new WP_REST_Response($result, $status);
 }
 
+function thorius_academy_sync_handle_academy_register_user(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $email = isset($payload['email']) ? sanitize_email((string) $payload['email']) : '';
+    $full_name = isset($payload['full_name']) ? sanitize_text_field((string) $payload['full_name']) : '';
+    $password = isset($payload['password']) ? (string) $payload['password'] : '';
+
+    if ($email === '') {
+        return new WP_REST_Response(array('error' => 'Missing email'), 400);
+    }
+
+    if ($password !== '' && strlen($password) < 8) {
+        return new WP_REST_Response(array('error' => 'Password too short'), 400);
+    }
+
+    $result = thorius_academy_sync_register_wp_user(
+        $email,
+        $full_name !== '' ? $full_name : null,
+        $password !== '' ? $password : null
+    );
+
+    if (($result['user_id'] ?? 0) <= 0) {
+        return new WP_REST_Response(array('error' => 'User resolution failed'), 500);
+    }
+
+    return new WP_REST_Response(
+        array(
+            'success' => true,
+            'user_id' => (int) $result['user_id'],
+            'created' => !empty($result['created']),
+        ),
+        200
+    );
+}
+
 function thorius_academy_sync_register_rest_routes(): void
 {
     register_rest_route(
@@ -884,6 +963,16 @@ function thorius_academy_sync_register_rest_routes(): void
         array(
             'methods' => 'POST',
             'callback' => 'thorius_academy_sync_handle_academy_enroll',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-register-user',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_register_user',
             'permission_callback' => '__return_true',
         )
     );

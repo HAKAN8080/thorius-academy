@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getEmailRedirectUrl, safeNextPath } from "@/lib/auth/app-url";
+import { provisionLinkedAccounts } from "@/lib/auth/provision-linked-accounts";
 import { sendWelcomeCouponEmail } from "@/lib/email/send-welcome-coupon";
 import { createClient } from "@/lib/supabase/server";
 
@@ -86,6 +87,16 @@ export async function signUp(
 
     if (error) {
       return { error: "Kayıt oluşturulamadı. Lütfen tekrar deneyin." };
+    }
+
+    try {
+      await provisionLinkedAccounts({
+        email,
+        fullName: fullName.trim(),
+        password,
+      });
+    } catch (provisionError) {
+      console.error("Linked account provision failed:", provisionError);
     }
 
     try {

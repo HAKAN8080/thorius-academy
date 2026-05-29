@@ -53,4 +53,26 @@ Academy'de ücretsiz kursa kayıt olunduğunda Tutor `kontrol-paneli/enrolled-co
 
 **Henüz kapsam dışı:** Mevcut Academy kayıtlarının geriye dönük toplu senkronu; satın alma (WC) kayıtları zaten Tutor tarafında oluşuyor olabilir.
 
+## Academy kayıt → WordPress hesabı (v1.5.0+)
+
+Academy `/kayit` sonrası aynı e-posta ve şifre ile WordPress/Tutor girişi için:
+
+- Endpoint: `POST /wp-json/thorius/v1/academy-register-user`
+- HMAC imzalı gövde: `email`, `full_name`, `password`
+- Yeni kullanıcıda WP hesabı Academy şifresiyle açılır; mevcut e-postada şifre **değiştirilmez**
+
+## Coaching
+
+Academy kayıt akışı Coaching hesabı da açabilir (ayrı Supabase veya webhook):
+
+```env
+COACHING_SUPABASE_URL=
+COACHING_SUPABASE_SERVICE_ROLE_KEY=
+# veya
+COACHING_REGISTER_WEBHOOK_URL=https://coaching.thorius.com.tr/api/webhooks/academy-register
+COACHING_WEBHOOK_SECRET=
+```
+
+Academy ve Coaching aynı Supabase projesini kullanıyorsa ek provisioning gerekmez.
+
 ## Not
