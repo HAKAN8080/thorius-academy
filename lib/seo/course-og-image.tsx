@@ -27,6 +27,22 @@ export function formatCourseOgTitle(title: string): string {
   return `${trimmed.slice(0, 107).trimEnd()}…`;
 }
 
+export function formatCourseOgExcerpt(excerpt: string): string {
+  let text = excerpt
+    .replace(/\s*(\[\.\.\.\]|…|\.{3,}|\[&hellip;\])\s*$/i, "")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  // WP başlık + paragraf HTML'den aralıksız birleşince "BakışBu" gibi yapışır
+  text = text.replace(/([a-zığüşöç])([A-ZİĞÜŞÖÇ])/gu, "$1 $2");
+
+  if (text.length <= 120) {
+    return text;
+  }
+
+  return `${text.slice(0, 117).trimEnd()}…`;
+}
+
 function titleFontSize(title: string): number {
   if (title.length <= 42) return 58;
   if (title.length <= 68) return 46;
@@ -95,7 +111,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
     product,
     Boolean(course.youtubeVideoId),
   );
-  const excerpt = course.excerpt.trim().slice(0, 120);
+  const excerpt = formatCourseOgExcerpt(course.excerpt);
 
   return new ImageResponse(
     (
