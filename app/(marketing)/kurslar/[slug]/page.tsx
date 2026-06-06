@@ -1,15 +1,11 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
-import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
-import {
-  CourseDetailPurchasePanel,
-  CourseDetailPurchasePanelSkeleton,
-} from "@/components/course/course-detail-purchase-panel";
+import { CourseDetailPurchaseSection } from "@/components/course/course-detail-purchase-panel";
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
@@ -46,11 +42,6 @@ export default async function CourseDetailPage({
   if (!course) notFound();
 
   const curriculum = await getCourseCurriculumPreview(course.id, params.slug);
-  const purchasePanel = (
-    <Suspense fallback={<CourseDetailPurchasePanelSkeleton />}>
-      <CourseDetailPurchasePanel course={course} />
-    </Suspense>
-  );
 
   return (
     <article>
@@ -106,7 +97,7 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                {purchasePanel}
+                <CourseDetailPurchaseSection course={course} />
               </div>
             </div>
 
@@ -144,7 +135,7 @@ export default async function CourseDetailPage({
             <p className="mb-6 text-muted-foreground">
               Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
             </p>
-            {purchasePanel}
+            <CourseDetailPurchaseSection course={course} />
           </div>
         </Container>
       </section>

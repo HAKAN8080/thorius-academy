@@ -1,3 +1,4 @@
+import { Suspense } from "react";
 import { getCoursePurchaseState } from "@/lib/course/course-purchase-state";
 import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
 import type { Course } from "@/types/wordpress";
@@ -40,5 +41,15 @@ export function CourseDetailPurchasePanelSkeleton() {
       className="h-12 w-48 animate-pulse rounded-xl bg-primary-800/40"
       aria-hidden="true"
     />
+  );
+}
+
+export function CourseDetailPurchaseSection({
+  course,
+}: CourseDetailPurchasePanelProps) {
+  return (
+    <Suspense fallback={<CourseDetailPurchasePanelSkeleton />}>
+      <CourseDetailPurchasePanel course={course} />
+    </Suspense>
   );
 }
