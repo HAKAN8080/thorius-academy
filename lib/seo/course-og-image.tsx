@@ -5,6 +5,7 @@ import {
   isFreeCourseProduct,
   isPurchasableCourseProduct,
 } from "@/lib/course/course-product-utils";
+import { getSiteUrl } from "@/lib/seo/site-url";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
 export const COURSE_OG_SIZE = { width: 1200, height: 630 } as const;
@@ -50,23 +51,81 @@ function titleFontSize(title: string): number {
   return 32;
 }
 
-function formatCourseOgPriceLabel(
+type CourseOgPriceDisplay =
+  | { type: "paid"; amount: string }
+  | { type: "free" };
+
+function formatCourseOgPriceDisplay(
   product: Awaited<ReturnType<typeof getCourseProduct>>,
   isFreeYoutubeCourse: boolean,
-): string | null {
+): CourseOgPriceDisplay | null {
   if (product && isPurchasableCourseProduct(product)) {
     const price = getEffectiveCoursePrice(product);
-    return `${price.toLocaleString("tr-TR")} ₺`;
+    return {
+      type: "paid",
+      amount: price.toLocaleString("tr-TR"),
+    };
   }
 
   if (
     isFreeYoutubeCourse ||
     (product && isFreeCourseProduct(product))
   ) {
-    return "Ücretsiz";
+    return { type: "free" };
   }
 
   return null;
+}
+
+function CourseOgPriceBadge({ price }: { price: CourseOgPriceDisplay }) {
+  if (price.type === "free") {
+    return (
+      <div
+        style={{
+          background: BRAND.gold,
+          color: BRAND.navy,
+          padding: "10px 22px",
+          borderRadius: 999,
+          fontSize: 24,
+          fontWeight: 800,
+        }}
+      >
+        Ücretsiz
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+      <div
+        style={{
+          background: BRAND.gold,
+          color: BRAND.navy,
+          padding: "10px 20px",
+          borderRadius: 999,
+          fontSize: 24,
+          fontWeight: 800,
+        }}
+      >
+        {price.amount}
+      </div>
+      <div
+        style={{
+          border: `2px solid ${BRAND.gold}`,
+          color: BRAND.gold,
+          background: BRAND.navy,
+          padding: "10px 16px",
+          borderRadius: 999,
+          fontSize: 20,
+          fontWeight: 800,
+          minWidth: 52,
+          textAlign: "center",
+        }}
+      >
+        TL
+      </div>
+    </div>
+  );
 }
 
 export async function getCourseOgAlt(slug: string): Promise<string> {
@@ -107,16 +166,18 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
   const [product] = await Promise.all([getCourseProduct(course.slug)]);
   const displayTitle = formatCourseOgTitle(course.title);
   const category = course.categories[0]?.name ?? "Kurs";
-  const priceLabel = formatCourseOgPriceLabel(
+  const priceDisplay = formatCourseOgPriceDisplay(
     product,
     Boolean(course.youtubeVideoId),
   );
   const excerpt = formatCourseOgExcerpt(course.excerpt);
+  const logoUrl = `${getSiteUrl()}/images/thorius-academy-logo.png`;
 
   return new ImageResponse(
     (
       <div
         style={{
+          position: "relative",
           background: `linear-gradient(135deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 100%)`,
           width: "100%",
           height: "100%",
@@ -125,8 +186,22 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
           justifyContent: "space-between",
           padding: "64px 72px",
           fontFamily: "system-ui, -apple-system, sans-serif",
+          overflow: "hidden",
         }}
       >
+        <img
+          src={logoUrl}
+          alt=""
+          width={320}
+          height={320}
+          style={{
+            position: "absolute",
+            right: 48,
+            top: "50%",
+            transform: "translateY(-42%)",
+            opacity: 0.38,
+          }}
+        />
         <div
           style={{
             display: "flex",
@@ -156,20 +231,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
               gap: 16,
             }}
           >
-            {priceLabel ? (
-              <div
-                style={{
-                  background: BRAND.gold,
-                  color: BRAND.navy,
-                  padding: "10px 22px",
-                  borderRadius: 999,
-                  fontSize: 24,
-                  fontWeight: 800,
-                }}
-              >
-                {priceLabel}
-              </div>
-            ) : null}
+            {priceDisplay ? <CourseOgPriceBadge price={priceDisplay} /> : null}
             <div
               style={{
                 border: `2px solid ${BRAND.goldSoft}`,
@@ -190,7 +252,9 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             display: "flex",
             flexDirection: "column",
             gap: 24,
-            maxWidth: 980,
+            maxWidth: 760,
+            position: "relative",
+            zIndex: 1,
           }}
         >
           <div
