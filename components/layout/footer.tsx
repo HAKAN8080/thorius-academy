@@ -1,22 +1,16 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
+import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import { fetchCategoryList } from "@/lib/wordpress/api";
 
-const footerColumns = [
+const staticColumns = [
   {
     title: "Hakkımızda",
     links: [
       { href: "/hakkimizda", label: "Misyonumuz" },
       { href: "/#ecosystem", label: "Koçluk" },
       { href: "/blog", label: "Blog" },
-    ],
-  },
-  {
-    title: "Kurslar",
-    links: [
-      { href: "/kurslar", label: "Tüm Kurslar" },
-      { href: "/kurslar?kategori=ai-veri", label: "AI & Veri" },
-      { href: "/kurslar?kategori=liderlik", label: "Liderlik" },
     ],
   },
   {
@@ -59,7 +53,60 @@ const footerColumns = [
   },
 ] as const;
 
-export function Footer() {
+function FooterLink({ href, label }: { href: string; label: string }) {
+  const isExternal =
+    href.startsWith("http") ||
+    href.startsWith("mailto:") ||
+    href.startsWith("tel:");
+
+  if (isExternal) {
+    return (
+      <a
+        href={href}
+        className="text-sm text-primary-100 transition-colors hover:text-white"
+        {...(href.startsWith("http")
+          ? { target: "_blank", rel: "noopener noreferrer" }
+          : {})}
+      >
+        {label}
+      </a>
+    );
+  }
+
+  return (
+    <Link
+      href={href}
+      className="text-sm text-primary-100 transition-colors hover:text-white"
+    >
+      {label}
+    </Link>
+  );
+}
+
+export async function Footer() {
+  const categories = await fetchCategoryList();
+  const topCategories = categories
+    .filter((category) => category.count > 0)
+    .sort((a, b) => b.count - a.count)
+    .slice(0, 4);
+
+  const courseColumn = {
+    title: "Kurslar",
+    links: [
+      { href: "/kurslar", label: "Tüm Kurslar" },
+      ...topCategories.map((category) => ({
+        href: buildKurslarUrl({ categorySlug: category.slug }),
+        label: category.name,
+      })),
+    ],
+  };
+
+  const footerColumns = [
+    staticColumns[0],
+    courseColumn,
+    ...staticColumns.slice(1),
+  ];
+
   return (
     <footer className="bg-primary-900 text-white">
       <Container size="wide" className="py-12">
@@ -75,13 +122,8 @@ export function Footer() {
               </h3>
               <ul className="space-y-2">
                 {column.links.map((link) => (
-                  <li key={link.label}>
-                    <Link
-                      href={link.href}
-                      className="text-sm text-primary-100 transition-colors hover:text-white"
-                    >
-                      {link.label}
-                    </Link>
+                  <li key={`${column.title}-${link.label}`}>
+                    <FooterLink href={link.href} label={link.label} />
                   </li>
                 ))}
               </ul>
