@@ -3,7 +3,7 @@
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
-import { ShoppingCart, ExternalLink } from "lucide-react";
+import { Zap } from "lucide-react";
 import {
   buildWooCommerceCheckoutUrl,
   type CheckoutCustomer,
@@ -41,7 +41,7 @@ export function BuyButton({
     }
 
     const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer);
-    window.open(checkoutUrl, "_blank", "noopener,noreferrer");
+    window.location.href = checkoutUrl;
   }
 
   if (!finalPrice) {
@@ -55,9 +55,8 @@ export function BuyButton({
         onClick={handleBuy}
         className="w-full bg-accent-500 text-base font-bold text-primary-950 hover:bg-accent-600 sm:w-auto"
       >
-        <ShoppingCart className="mr-2 h-5 w-5" />
-        Satın Al — {finalPrice.toLocaleString("tr-TR")}₺
-        <ExternalLink className="ml-2 h-4 w-4 opacity-60" />
+        <Zap className="mr-2 h-5 w-5" />
+        Hemen Satın Al — {finalPrice.toLocaleString("tr-TR")}₺
       </Button>
 
       {hasDiscount && (

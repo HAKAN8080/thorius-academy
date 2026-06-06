@@ -1,8 +1,8 @@
 <?php
 /**
  * Plugin Name: Thorius Checkout
- * Description: Ödeme sayfası alanları, kurumsal fatura alanları ve checkout UI düzeltmeleri.
- * Version: 1.2.4
+ * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
+ * Version: 1.3.0
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,12 +11,12 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.2.4');
+define('THORIUS_CHECKOUT_VERSION', '1.3.0');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
 /**
- * Özel fatura alanları: İşletme Adı + Vergi Numarası (opsiyonel).
+ * Yalnızca ad, soyad ve e-posta alanlarını göster.
  */
 function thorius_checkout_billing_fields(array $fields): array
 {
@@ -24,46 +24,45 @@ function thorius_checkout_billing_fields(array $fields): array
         return $fields;
     }
 
+    $keep = array(
+        'billing_first_name',
+        'billing_last_name',
+        'billing_email',
+    );
+
+    foreach (array_keys($fields['billing']) as $key) {
+        if (!in_array($key, $keep, true)) {
+            unset($fields['billing'][$key]);
+        }
+    }
+
     $fields['billing']['billing_first_name']['priority'] = 10;
+    $fields['billing']['billing_first_name']['required'] = true;
+    $fields['billing']['billing_first_name']['class'] = array('form-row-first');
+
     $fields['billing']['billing_last_name']['priority'] = 20;
+    $fields['billing']['billing_last_name']['required'] = true;
+    $fields['billing']['billing_last_name']['class'] = array('form-row-last');
 
-    $fields['billing']['billing_company'] = array_merge(
-        $fields['billing']['billing_company'] ?? array(
-            'type' => 'text',
-            'class' => array('form-row-first'),
-        ),
-        array(
-            'label' => __('İşletme Adı', 'thorius-checkout'),
-            'placeholder' => __('Opsiyonel', 'thorius-checkout'),
-            'required' => false,
-            'priority' => 30,
-            'class' => array('form-row-first'),
-        )
-    );
-
-    $fields['billing']['billing_vkn'] = array(
-        'type' => 'text',
-        'label' => __('Vergi Numarası', 'thorius-checkout'),
-        'placeholder' => __('Opsiyonel', 'thorius-checkout'),
-        'required' => false,
-        'class' => array('form-row-last'),
-        'priority' => 31,
-        'maxlength' => 11,
-        'custom_attributes' => array(
-            'inputmode' => 'numeric',
-            'autocomplete' => 'off',
-        ),
-    );
-
-    $fields['billing']['billing_country']['priority'] = 40;
-    $fields['billing']['billing_address_1']['priority'] = 50;
-    $fields['billing']['billing_city']['priority'] = 60;
-    $fields['billing']['billing_phone']['priority'] = 70;
-    $fields['billing']['billing_email']['priority'] = 80;
+    $fields['billing']['billing_email']['priority'] = 30;
+    $fields['billing']['billing_email']['required'] = true;
+    $fields['billing']['billing_email']['class'] = array('form-row-wide');
 
     return $fields;
 }
 add_filter('woocommerce_checkout_fields', 'thorius_checkout_billing_fields', 20);
+
+/**
+ * Teslimat alanlarını kaldır.
+ */
+function thorius_checkout_remove_shipping_fields(array $fields): array
+{
+    unset($fields['shipping']);
+    unset($fields['order']);
+
+    return $fields;
+}
+add_filter('woocommerce_checkout_fields', 'thorius_checkout_remove_shipping_fields', 30);
 
 /**
  * Academy'den gelen billing alanlarını query string ile önceden doldur.
@@ -82,7 +81,6 @@ function thorius_checkout_prefill_from_query($value, string $input)
         'billing_email',
         'billing_first_name',
         'billing_last_name',
-        'billing_phone',
     );
 
     if (!in_array($input, $allowed, true)) {
@@ -94,32 +92,77 @@ function thorius_checkout_prefill_from_query($value, string $input)
 add_filter('woocommerce_checkout_get_value', 'thorius_checkout_prefill_from_query', 20, 2);
 
 /**
+ * WooCommerce / PayTR için görünmeyen varsayılan fatura bilgileri.
+ */
+function thorius_checkout_posted_data(array $data): array
+{
+    $defaults = array(
+        'billing_country' => 'TR',
+        'billing_city' => 'Istanbul',
+        'billing_address_1' => 'Dijital urun',
+        'billing_postcode' => '34000',
+        'billing_state' => 'TR34',
+        'billing_phone' => '',
+    );
+
+    foreach ($defaults as $key => $default) {
+        if (empty($data[$key])) {
+            $data[$key] = $default;
+        }
+    }
+
+    return $data;
+}
+add_filter('woocommerce_checkout_posted_data', 'thorius_checkout_posted_data', 20);
+
+/**
+ * Sipariş kaydında eksik fatura alanlarını tamamla.
+ */
+function thorius_checkout_create_order_defaults($order, array $data): void
+{
+    if (!is_a($order, 'WC_Order')) {
+        return;
+    }
+
+    if (!$order->get_billing_country()) {
+        $order->set_billing_country('TR');
+    }
+    if (!$order->get_billing_city()) {
+        $order->set_billing_city('Istanbul');
+    }
+    if (!$order->get_billing_address_1()) {
+        $order->set_billing_address_1('Dijital urun');
+    }
+    if (!$order->get_billing_postcode()) {
+        $order->set_billing_postcode('34000');
+    }
+    if (!$order->get_billing_state()) {
+        $order->set_billing_state('TR34');
+    }
+}
+add_action('woocommerce_checkout_create_order', 'thorius_checkout_create_order_defaults', 20, 2);
+
+/**
+ * Dijital ürün — teslimat adresi gerekmez.
+ */
+add_filter('woocommerce_cart_needs_shipping_address', '__return_false');
+add_filter('woocommerce_cart_needs_shipping', '__return_false');
+add_filter('woocommerce_enable_order_notes_field', '__return_false');
+add_filter('woocommerce_ship_to_different_address_checked', '__return_false');
+
+/**
  * Fatura formu üstünde zorunlu alan notu.
  */
 function thorius_checkout_billing_required_note(): void
 {
     echo '<p class="thorius-checkout-required-note">' .
-        esc_html__('Zorunlu alanlar * ile işaretlenmiştir.', 'thorius-checkout') .
+        esc_html__('Sadece ad, soyad ve e-posta yeterlidir. Zorunlu alanlar * ile işaretlenmiştir.', 'thorius-checkout') .
         '</p>';
 }
 add_action('woocommerce_before_checkout_billing_form', 'thorius_checkout_billing_required_note', 5);
 
 /**
- * Vergi numarasını sipariş meta olarak kaydet.
- */
-function thorius_checkout_save_vkn(int $order_id): void
-{
-    if (empty($_POST['billing_vkn'])) {
-        return;
-    }
-
-    $vkn = sanitize_text_field(wp_unslash($_POST['billing_vkn']));
-    update_post_meta($order_id, '_billing_vkn', $vkn);
-}
-add_action('woocommerce_checkout_update_order_meta', 'thorius_checkout_save_vkn');
-
-/**
- * Admin sipariş ekranında vergi numarasını göster.
+ * Eski siparişlerdeki vergi numarasını admin ekranında göster.
  */
 function thorius_checkout_admin_order_meta($order): void
 {

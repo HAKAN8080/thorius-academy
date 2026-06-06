@@ -1,6 +1,6 @@
 # Thorius Checkout (WordPress Eklentisi)
 
-WooCommerce ödeme sayfası (`/odeme/`) için kurumsal fatura alanları ve UI düzeltmeleri.
+WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sade checkout.
 
 ## Kurulum
 
@@ -9,32 +9,28 @@ WooCommerce ödeme sayfası (`/odeme/`) için kurumsal fatura alanları ve UI d�
    wp-content/plugins/thorius-checkout/
    ```
 2. WordPress Admin → Eklentiler → **Thorius Checkout** → Etkinleştir
-3. **Önemli:** Görünüm → Özelleştir → Ek CSS bölümünde şu satırı bulun ve `#billing_company_field,` kısmını kaldırın:
-
-   ```css
-   /* REMOVE UNUSED */
-   #billing_company_field,   ← BU SATIRI SİLİN
-   #billing_address_2_field,
-   ...
-   ```
+3. **Önemli:** Tema veya Özelleştir → Ek CSS içinde eski checkout gizleme kuralları varsa kaldırın (çakışma yapabilir).
 
 ## Ne yapar?
 
-### Fatura alanları
-- **İşletme Adı** — opsiyonel (WooCommerce `billing_company`)
-- **Vergi Numarası** — opsiyonel (`billing_vkn`, sipariş meta olarak kaydedilir)
-- Telefon + e-posta yan yana, kompakt padding
+### v1.3.0 — Minimal checkout
+- Yalnızca **Ad**, **Soyad**, **E-posta** görünür
+- Adres, şirket, vergi no, telefon ve ek bilgi alanları kaldırıldı
+- Dijital ürün: teslimat adresi istenmez
+- WooCommerce/PayTR için görünmeyen varsayılan fatura bilgileri otomatik doldurulur
 
-### UI düzeltmeleri (v1.2.1)
-- Sepet atlanır — `add-to-cart` sonrası doğrudan `/odeme/`
-- Ad/soyad ve telefon/e-posta yan yana, input yüksekliği artırıldı
-- Sağ panel (fiyat kutusu) sticky — form ile üstten hizalı kalır
-- Kupon kutusunda ikon/metin çakışması giderildi
-- PayTR açıklama metni koyu sidebar üzerinde beyaz/açık renk
+### Akış
+- Academy'den `Hemen Satın Al` → `?add-to-cart=...&billing_email=...`
+- Sepet atlanır → doğrudan `/odeme/`
+- Ödeme sonrası webhook ile Academy kaydı açılır
+
+### UI
+- Kupon kutusu ikon düzeltmesi
+- PayTR açıklama metni okunabilir renk
+- Sağ panel (fiyat kutusu) sticky
 
 ## Test
 
 1. `https://thorius.com.tr/odeme/?add-to-cart=3055` açın
-2. İşletme Adı + Vergi Numarası alanlarını görün (zorunlu değil)
-3. Kupon satırında ikon ile metin çakışmamalı
-4. PayTR açıklaması okunabilir olmalı
+2. Yalnızca ad, soyad ve e-posta alanları görünmeli
+3. Sipariş tamamlanabilmeli (PayTR test modu veya canlı)

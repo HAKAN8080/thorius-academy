@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
-   Thorius Checkout — UI düzeltmeleri v1.2.4
-   Kupon ikonu · PayTR okunabilirlik · Geniş form · Sticky sidebar
+   Thorius Checkout — UI düzeltmeleri v1.3.0
+   Minimal fatura (ad/soyad/e-posta) · PayTR · Sticky sidebar
    ═══════════════════════════════════════════════════════ */
 
 /* ── Checkout grid: hata kutusu tam genişlik, form yapısı korunur ── */
@@ -141,18 +141,13 @@ body.woocommerce-checkout
   display: none !important;
 }
 
-/* Tam genişlik satırlar */
-#billing_country_field,
-#billing_address_1_field,
-#billing_city_field {
+/* E-posta tam genişlik */
+#billing_email_field {
   grid-column: 1 / -1 !important;
 }
 
 #billing_first_name_field,
 #billing_last_name_field,
-#billing_company_field,
-#billing_vkn_field,
-#billing_phone_field,
 #billing_email_field {
   width: 100% !important;
   max-width: none !important;
@@ -163,7 +158,6 @@ body.woocommerce-checkout
 
 #billing_first_name_field .input-text,
 #billing_last_name_field .input-text,
-#billing_phone_field .input-text,
 #billing_email_field .input-text {
   min-width: 0 !important;
 }
@@ -203,11 +197,19 @@ body.woocommerce-checkout
   min-height: 72px !important;
 }
 
-/* Gereksiz alanları gizle */
+/* Teslimat ve ek bilgi alanlarını gizle */
+.woocommerce-shipping-fields,
+.woocommerce-additional-fields,
+#ship-to-different-address,
+#billing_address_1_field,
 #billing_address_2_field,
+#billing_city_field,
 #billing_postcode_field,
 #billing_state_field,
-.woocommerce-additional-fields {
+#billing_country_field,
+#billing_company_field,
+#billing_vkn_field,
+#billing_phone_field {
   display: none !important;
 }
 
@@ -275,9 +277,7 @@ body.woocommerce-checkout #payment .payment_box p {
     gap: 12px !important;
   }
 
-  #billing_country_field,
-  #billing_address_1_field,
-  #billing_city_field {
+  #billing_email_field {
     grid-column: auto !important;
   }
 
