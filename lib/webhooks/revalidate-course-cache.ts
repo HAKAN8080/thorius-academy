@@ -41,7 +41,7 @@ export function revalidateCourseCache(
     COURSE_STATS_CACHE_TAG,
     COURSE_PRODUCTS_CACHE_TAG,
   ];
-  const paths = ["/", "/kurslar"];
+  const paths = ["/", "/kurslar", "/sitemap.xml"];
 
   for (const tag of tags) {
     revalidateTag(tag);
@@ -58,7 +58,7 @@ export function revalidateCourseCache(
     revalidateSlug(slug, tags, paths);
   }
 
-  for (const path of ["/", "/kurslar"]) {
+  for (const path of ["/", "/kurslar", "/sitemap.xml"]) {
     revalidatePath(path);
   }
 
