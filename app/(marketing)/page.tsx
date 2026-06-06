@@ -8,6 +8,7 @@ import { CourseShowcaseSection } from "@/components/marketing/course-showcase-se
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import {
+  filterPurchasableCourses,
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
 } from "@/lib/course/pick-featured-courses";
@@ -24,7 +25,7 @@ export default async function HomePage() {
   );
   const statsBySlug = new Map(Object.entries(stats));
   const featuredCourses = pickFeaturedCoursesByCategory(
-    allCourses,
+    filterPurchasableCourses(allCourses, productBySlug),
     categories,
     5,
   );

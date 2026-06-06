@@ -1,4 +1,16 @@
+import { isPurchasableCourseProduct } from "@/lib/course/course-product-utils";
+import type { CourseProduct } from "@/types/course-product";
 import type { Course, WPCategory } from "@/types/wordpress";
+
+export function filterPurchasableCourses(
+  courses: Course[],
+  productBySlug: Map<string, CourseProduct>,
+): Course[] {
+  return courses.filter((course) => {
+    const product = productBySlug.get(course.slug);
+    return Boolean(product && isPurchasableCourseProduct(product));
+  });
+}
 
 function sortCoursesForDisplay(courses: Course[]): Course[] {
   return [...courses].sort((a, b) => {
