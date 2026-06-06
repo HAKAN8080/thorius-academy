@@ -2,7 +2,10 @@ import { getCourseProduct } from "@/lib/actions/course-products";
 import { FREE_COURSE_WC_PRODUCT_ID } from "@/lib/course/course-product-utils";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { COURSE_PRODUCTS_CACHE_TAG } from "@/lib/wordpress/cache-tags";
+import {
+  COURSE_CACHE_TAG,
+  COURSE_PRODUCTS_CACHE_TAG,
+} from "@/lib/wordpress/cache-tags";
 import { revalidateTag } from "next/cache";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -24,7 +27,12 @@ async function fetchCourseProductSource(
 ): Promise<WPCourseProductSource | null> {
   const res = await fetch(
     `${WP_API_BASE}/courses/${wpCourseId}?_fields=id,slug,status,thorius_youtube`,
-    { cache: "no-store" },
+    {
+      next: {
+        revalidate: 3600,
+        tags: [COURSE_PRODUCTS_CACHE_TAG, COURSE_CACHE_TAG],
+      },
+    },
   );
 
   if (!res.ok) {

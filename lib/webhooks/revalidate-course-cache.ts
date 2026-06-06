@@ -2,6 +2,7 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import {
   COURSE_CACHE_TAG,
   COURSE_CATEGORY_CACHE_TAG,
+  COURSE_LISTING_CACHE_TAG,
   COURSE_PRODUCTS_CACHE_TAG,
   COURSE_STATS_CACHE_TAG,
   courseSlugCacheTag,
@@ -36,6 +37,7 @@ export function revalidateCourseCache(
   const tags = [
     COURSE_CACHE_TAG,
     COURSE_CATEGORY_CACHE_TAG,
+    COURSE_LISTING_CACHE_TAG,
     COURSE_STATS_CACHE_TAG,
     COURSE_PRODUCTS_CACHE_TAG,
   ];

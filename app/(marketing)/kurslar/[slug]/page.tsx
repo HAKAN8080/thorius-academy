@@ -1,17 +1,17 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
+import { Suspense } from "react";
 import { notFound } from "next/navigation";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
-import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
+import {
+  CourseDetailPurchasePanel,
+  CourseDetailPurchasePanelSkeleton,
+} from "@/components/course/course-detail-purchase-panel";
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
-import { checkEnrollment } from "@/lib/actions/enrollment";
-import { resolveCourseProduct } from "@/lib/course/resolve-course-product";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
-import { splitFullName } from "@/lib/course/checkout-url";
-import { createClient } from "@/lib/supabase/server";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
 interface CourseDetailPageProps {
@@ -45,54 +45,12 @@ export default async function CourseDetailPage({
   const course = await fetchCourseBySlug(params.slug);
   if (!course) notFound();
 
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  const enrollment = user ? await checkEnrollment(course.id) : null;
-  const courseProduct = await resolveCourseProduct({
-    courseSlug: course.slug,
-    wpCourseId: course.id,
-    youtubeVideoId: course.youtubeVideoId,
-  });
   const curriculum = await getCourseCurriculumPreview(course.id, params.slug);
-
-  let customer = null;
-  if (user?.email) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("full_name")
-      .eq("id", user.id)
-      .maybeSingle();
-
-    const metadataName =
-      typeof user.user_metadata?.full_name === "string"
-        ? user.user_metadata.full_name
-        : "";
-    const { firstName, lastName } = splitFullName(
-      profile?.full_name ?? metadataName,
-    );
-
-    customer = {
-      email: user.email,
-      firstName,
-      lastName,
-    };
-  }
-
-  const ctaProps = {
-    courseId: course.id,
-    courseSlug: course.slug,
-    courseTitle: course.title,
-    courseImage: course.featuredImage,
-    courseCategory: course.categories[0]?.name,
-    instructorName: course.instructor?.name,
-    isLoggedIn: !!user,
-    isAlreadyEnrolled: !!enrollment,
-    courseProduct,
-    customer,
-    isFreeYoutubeCourse: Boolean(course.youtubeVideoId),
-  };
+  const purchasePanel = (
+    <Suspense fallback={<CourseDetailPurchasePanelSkeleton />}>
+      <CourseDetailPurchasePanel course={course} />
+    </Suspense>
+  );
 
   return (
     <article>
@@ -148,7 +106,7 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <CoursePurchaseCta {...ctaProps} />
+                {purchasePanel}
               </div>
             </div>
 
@@ -186,7 +144,7 @@ export default async function CourseDetailPage({
             <p className="mb-6 text-muted-foreground">
               Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
             </p>
-            <CoursePurchaseCta {...ctaProps} />
+            {purchasePanel}
           </div>
         </Container>
       </section>

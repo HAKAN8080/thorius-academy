@@ -1,6 +1,8 @@
 import { Footer } from "@/components/layout/footer";
-import { SiteHeader } from "@/components/layout/site-header";
+import { MarketingHeader } from "@/components/layout/marketing-header";
 import { PromoBanner } from "@/components/marketing/promo-banner";
+
+export const revalidate = 3600;
 
 export default function MarketingLayout({
   children,
@@ -10,7 +12,7 @@ export default function MarketingLayout({
   return (
     <div className="flex min-h-screen flex-col">
       <PromoBanner />
-      <SiteHeader />
+      <MarketingHeader />
       <main className="flex-1">{children}</main>
       <Footer />
     </div>

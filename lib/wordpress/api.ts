@@ -13,6 +13,8 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
+export const COURSES_PER_PAGE = 24;
+
 const LISTING_COURSE_FIELDS =
   "id,slug,date,title,link,featured_media,course-category,course-tag,thorius_youtube";
 
@@ -258,6 +260,134 @@ async function fetchWPCourses(url: string): Promise<WPCourse[]> {
   );
 
   return [...firstBatch, ...remainingBatches.flat()];
+}
+
+export interface CoursesListingPage {
+  courses: Course[];
+  page: number;
+  perPage: number;
+  total: number;
+  totalPages: number;
+}
+
+async function resolveCategoryId(categorySlug: string): Promise<number | null> {
+  const res = await fetch(
+    `${WP_API_BASE}/course-category?slug=${encodeURIComponent(categorySlug)}`,
+    {
+      next: {
+        revalidate: REVALIDATE_SECONDS,
+        tags: [COURSE_CATEGORY_CACHE_TAG],
+      },
+    },
+  );
+
+  if (!res.ok) {
+    return null;
+  }
+
+  const categories: WPCategory[] = await res.json();
+  return categories[0]?.id ?? null;
+}
+
+export async function fetchPublishedCourseTotal(): Promise<number> {
+  try {
+    const res = await fetch(
+      `${WP_API_BASE}/courses?per_page=1&status=publish&_fields=id`,
+      {
+        next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
+      },
+    );
+
+    if (!res.ok) {
+      return 0;
+    }
+
+    return parseInt(res.headers.get("X-WP-Total") || "0", 10);
+  } catch (error) {
+    console.error("fetchPublishedCourseTotal error:", error);
+    return 0;
+  }
+}
+
+export async function fetchCoursesListingPage(options: {
+  page?: number;
+  perPage?: number;
+  categorySlug?: string;
+}): Promise<CoursesListingPage> {
+  const perPage = options.perPage ?? COURSES_PER_PAGE;
+  const requestedPage = Math.max(1, options.page ?? 1);
+
+  try {
+    let url = `${WP_API_BASE}/courses?per_page=${perPage}&status=publish&page=${requestedPage}&_fields=${LISTING_COURSE_FIELDS}`;
+
+    if (options.categorySlug) {
+      const categoryId = await resolveCategoryId(options.categorySlug);
+      if (!categoryId) {
+        return {
+          courses: [],
+          page: requestedPage,
+          perPage,
+          total: 0,
+          totalPages: 0,
+        };
+      }
+      url += `&course-category=${categoryId}`;
+    }
+
+    const [res, categories] = await Promise.all([
+      fetch(url, {
+        next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
+      }),
+      fetchCategoryList(),
+    ]);
+
+    if (!res.ok) {
+      console.error("WP listing page error:", res.status, res.statusText, url);
+      return {
+        courses: [],
+        page: requestedPage,
+        perPage,
+        total: 0,
+        totalPages: 0,
+      };
+    }
+
+    const total = parseInt(res.headers.get("X-WP-Total") || "0", 10);
+    const totalPages = parseInt(res.headers.get("X-WP-TotalPages") || "0", 10);
+    const wpCourses: WPCourse[] = await res.json();
+    const categoryById = new Map(
+      categories.map((category) => [category.id, category]),
+    );
+    const mediaIds = wpCourses
+      .filter(
+        (course) =>
+          !course.thorius_youtube?.thumbnail_url &&
+          !course.thorius_youtube?.video_id &&
+          (course.featured_media ?? 0) > 0,
+      )
+      .map((course) => course.featured_media);
+    const mediaById = await fetchFeaturedMediaMap(mediaIds);
+    const courses = wpCourses.map((course) =>
+      transformListingCourse(course, categoryById, mediaById),
+    );
+
+    return {
+      courses,
+      page: requestedPage,
+      perPage,
+      total,
+      totalPages,
+    };
+  } catch (error) {
+    console.error("fetchCoursesListingPage error:", error);
+    return {
+      courses: [],
+      page: requestedPage,
+      perPage,
+      total: 0,
+      totalPages: 0,
+    };
+  }
 }
 
 export async function fetchCoursesForListing(): Promise<Course[]> {

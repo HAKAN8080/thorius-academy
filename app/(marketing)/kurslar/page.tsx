@@ -1,9 +1,14 @@
 import type { Metadata } from "next";
+import { redirect } from "next/navigation";
 import { Suspense } from "react";
 import { Container } from "@/components/layout/container";
 import { CourseGridSkeleton } from "@/components/marketing/course-card-skeleton";
 import { KurslarCatalog } from "@/components/marketing/kurslar-catalog";
-import { getCourseCatalog } from "@/lib/wordpress/catalog";
+import {
+  buildKurslarUrl,
+  parseKurslarPage,
+} from "@/lib/course/kurslar-url";
+import { getCourseListingPage } from "@/lib/wordpress/catalog";
 
 export const metadata: Metadata = {
   title: "Tüm Kurslar",
@@ -13,8 +18,48 @@ export const metadata: Metadata = {
 
 export const revalidate = 3600;
 
-export default async function KurslarPage() {
-  const catalog = await getCourseCatalog();
+interface KurslarPageProps {
+  searchParams: { kategori?: string; sayfa?: string };
+}
+
+async function KurslarCatalogSection({
+  page,
+  categorySlug,
+}: {
+  page: number;
+  categorySlug?: string;
+}) {
+  const listing = await getCourseListingPage({ page, categorySlug });
+
+  if (
+    page > listing.pagination.totalPages &&
+    listing.pagination.totalPages > 0
+  ) {
+    redirect(
+      buildKurslarUrl({
+        page: listing.pagination.totalPages,
+        categorySlug,
+      }),
+    );
+  }
+
+  return (
+    <KurslarCatalog
+      courses={listing.courses}
+      categories={listing.categories}
+      products={listing.products}
+      stats={listing.stats}
+      pagination={listing.pagination}
+      totalPublished={listing.totalPublished}
+      selectedCategory={listing.selectedCategory}
+    />
+  );
+}
+
+export default function KurslarPage({ searchParams }: KurslarPageProps) {
+  const page = parseKurslarPage(searchParams.sayfa);
+  const categorySlug = searchParams.kategori?.trim() || undefined;
+  const suspenseKey = `${categorySlug ?? "all"}-${page}`;
 
   return (
     <Container className="py-12 md:py-16">
@@ -27,13 +72,8 @@ export default async function KurslarPage() {
         </p>
       </div>
 
-      <Suspense fallback={<CourseGridSkeleton count={8} />}>
-        <KurslarCatalog
-          courses={catalog.courses}
-          categories={catalog.categories}
-          products={catalog.products}
-          stats={catalog.stats}
-        />
+      <Suspense key={suspenseKey} fallback={<CourseGridSkeleton count={8} />}>
+        <KurslarCatalogSection page={page} categorySlug={categorySlug} />
       </Suspense>
     </Container>
   );

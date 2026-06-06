@@ -1,7 +1,5 @@
-"use client";
-
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import type { WPCategory } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
 
@@ -16,8 +14,6 @@ export function CategoryFilter({
   selectedSlug,
   totalCount,
 }: CategoryFilterProps) {
-  const pathname = usePathname();
-
   return (
     <div className="space-y-1">
       <h3 className="mb-3 text-xs font-semibold uppercase tracking-wider text-muted-foreground">
@@ -25,7 +21,7 @@ export function CategoryFilter({
       </h3>
 
       <Link
-        href={pathname}
+        href={buildKurslarUrl()}
         className={cn(
           "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
           !selectedSlug
@@ -39,7 +35,7 @@ export function CategoryFilter({
       {categories.map((cat) => (
         <Link
           key={cat.id}
-          href={`${pathname}?kategori=${cat.slug}`}
+          href={buildKurslarUrl({ categorySlug: cat.slug })}
           className={cn(
             "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
             selectedSlug === cat.slug
