@@ -50,15 +50,18 @@ function ResendButton() {
 
 function RegisterSuccess({
   email,
+  couponCode,
   redirectTo,
   resendState,
   resendForm,
 }: {
   email: string;
+  couponCode?: string;
   redirectTo: string;
   resendState: AuthActionState;
   resendForm: ReactNode;
 }) {
+  const displayCoupon = couponCode ?? resendState.couponCode;
   return (
     <Card className="border-primary-100 shadow-lg">
       <CardContent className="space-y-6 pt-8">
@@ -78,9 +81,22 @@ function RegisterSuccess({
               <strong>{email}</strong> adresine doğrulama linki gönderdik.
             </p>
             <p>
+              Tek e-postada doğrulama linki ve %20 indirim kuponunuz var.
               Linke tıkladığınızda hesabınıza otomatik giriş yapılacak.
-              %20 indirim kuponunuz da e-posta kutunuzda.
             </p>
+            {displayCoupon && (
+              <div className="rounded-xl border-2 border-accent-500 bg-amber-50 px-4 py-3">
+                <p className="text-xs font-semibold uppercase tracking-wide text-amber-800">
+                  Kupon kodunuz
+                </p>
+                <p className="mt-1 font-mono text-2xl font-bold tracking-widest text-primary-900">
+                  {displayCoupon}
+                </p>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  E-posta gelmese bile ödeme adımında bu kodu kullanabilirsiniz.
+                </p>
+              </div>
+            )}
             <p className="text-muted-foreground">
               E-posta gelmiyor mu? Spam klasörünüzü kontrol edin.
             </p>
@@ -134,6 +150,7 @@ export function RegisterForm() {
     return (
       <RegisterSuccess
         email={registeredEmail}
+        couponCode={state.couponCode}
         redirectTo={redirectTo}
         resendState={resendState}
         resendForm={

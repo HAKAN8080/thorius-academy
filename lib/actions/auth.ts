@@ -4,7 +4,10 @@ import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
 import { getEmailRedirectUrl, safeNextPath } from "@/lib/auth/app-url";
 import { provisionLinkedAccounts } from "@/lib/auth/provision-linked-accounts";
-import { sendWelcomeCouponEmail } from "@/lib/email/send-welcome-coupon";
+import {
+  registerUser,
+  resendSignupWelcomeEmail,
+} from "@/lib/auth/register-user";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -12,6 +15,7 @@ export interface AuthActionState {
   success?: boolean;
   successMessage?: string;
   registeredEmail?: string;
+  couponCode?: string;
 }
 
 function getSafeRedirect(value: unknown): string {
@@ -75,17 +79,15 @@ export async function signUp(
       return { error: "KVKK metnini onaylamanız gerekmektedir." };
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: getEmailRedirectUrl(redirectTo),
-        data: { full_name: fullName.trim() },
-      },
-    });
-
-    if (error) {
+    let registration: Awaited<ReturnType<typeof registerUser>>;
+    try {
+      registration = await registerUser({
+        email,
+        password,
+        fullName: fullName.trim(),
+        redirectTo,
+      });
+    } catch {
       return { error: "Kayıt oluşturulamadı. Lütfen tekrar deneyin." };
     }
 
@@ -99,17 +101,13 @@ export async function signUp(
       console.error("Linked account provision failed:", provisionError);
     }
 
-    try {
-      await sendWelcomeCouponEmail(email, fullName.trim());
-    } catch (emailError) {
-      console.error("Welcome coupon email failed:", emailError);
-    }
-
     return {
       success: true,
       registeredEmail: email,
-      successMessage:
-        "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz e-postanıza gönderildi.",
+      couponCode: registration.couponCode,
+      successMessage: registration.verificationEmailSent
+        ? "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz tek e-postada gönderildi."
+        : "Hesabınız oluşturuldu. Kupon kodunuz aşağıda; doğrulama e-postası için tekrar gönderi deneyin.",
     };
   } catch {
     return { error: "Kayıt sırasında beklenmeyen bir hata oluştu." };
@@ -128,26 +126,24 @@ export async function resendVerificationEmail(
       return { error: "E-posta adresi gerekli." };
     }
 
-    const supabase = await createClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: email.trim(),
-      options: {
-        emailRedirectTo: getEmailRedirectUrl(redirectTo),
-      },
-    });
+    try {
+      const { couponCode } = await resendSignupWelcomeEmail(
+        email.trim(),
+        redirectTo,
+      );
 
-    if (error) {
+      return {
+        success: true,
+        registeredEmail: email.trim(),
+        couponCode,
+        successMessage:
+          "Doğrulama linki ve %20 indirim kuponunuz tekrar gönderildi.",
+      };
+    } catch {
       return {
         error: "Doğrulama e-postası gönderilemedi. Lütfen tekrar deneyin.",
       };
     }
-
-    return {
-      success: true,
-      registeredEmail: email.trim(),
-      successMessage: "Doğrulama e-postası tekrar gönderildi.",
-    };
   } catch {
     return { error: "E-posta gönderilirken beklenmeyen bir hata oluştu." };
   }
