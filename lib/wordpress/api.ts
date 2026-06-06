@@ -270,6 +270,108 @@ export interface CoursesListingPage {
   totalPages: number;
 }
 
+function normalizeWpSearchTerm(query: string): string {
+  const cleaned = query
+    .replace(/[^a-zA-Z0-9\u00C0-\u024F\s-]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
+
+  return cleaned || query;
+}
+
+function courseMatchesSearchQuery(
+  course: Pick<Course, "title" | "slug">,
+  query: string,
+): boolean {
+  const haystack = `${course.title} ${course.slug}`.toLowerCase();
+  const needle = query.toLowerCase().trim();
+
+  if (!needle) {
+    return true;
+  }
+
+  if (haystack.includes(needle)) {
+    return true;
+  }
+
+  return needle
+    .split(/\s+/)
+    .filter(Boolean)
+    .every((token) => haystack.includes(token));
+}
+
+async function fetchCoursesSearchListingPage(options: {
+  page: number;
+  perPage: number;
+  categorySlug?: string;
+  search: string;
+}): Promise<CoursesListingPage> {
+  const wpSearchTerm = normalizeWpSearchTerm(options.search);
+  const baseUrl = `${WP_API_BASE}/courses?per_page=100&status=publish&_fields=${LISTING_COURSE_FIELDS}`;
+
+  const searchUrls = new Set([
+    `${baseUrl}&search=${encodeURIComponent(wpSearchTerm)}`,
+  ]);
+
+  if (wpSearchTerm !== options.search) {
+    searchUrls.add(
+      `${baseUrl}&search=${encodeURIComponent(options.search)}`,
+    );
+  }
+
+  const [wpCourseGroups, categories] = await Promise.all([
+    Promise.all(
+      Array.from(searchUrls).map((url) => fetchWPCourses(url)),
+    ),
+    fetchCategoryList(),
+  ]);
+
+  const wpCoursesById = new Map<number, WPCourse>();
+  for (const group of wpCourseGroups) {
+    for (const course of group) {
+      wpCoursesById.set(course.id, course);
+    }
+  }
+
+  const categoryById = new Map(
+    categories.map((category) => [category.id, category]),
+  );
+  const wpCourses = Array.from(wpCoursesById.values());
+  const mediaIds = wpCourses
+    .filter(
+      (course) =>
+        !course.thorius_youtube?.thumbnail_url &&
+        !course.thorius_youtube?.video_id &&
+        (course.featured_media ?? 0) > 0,
+    )
+    .map((course) => course.featured_media);
+  const mediaById = await fetchFeaturedMediaMap(mediaIds);
+
+  let courses = wpCourses
+    .map((course) => transformListingCourse(course, categoryById, mediaById))
+    .filter((course) => courseMatchesSearchQuery(course, options.search));
+
+  if (options.categorySlug) {
+    courses = courses.filter((course) =>
+      course.categories.some(
+        (category) => category.slug === options.categorySlug,
+      ),
+    );
+  }
+
+  const total = courses.length;
+  const totalPages = total > 0 ? Math.ceil(total / options.perPage) : 0;
+  const start = (options.page - 1) * options.perPage;
+
+  return {
+    courses: courses.slice(start, start + options.perPage),
+    page: options.page,
+    perPage: options.perPage,
+    total,
+    totalPages,
+  };
+}
+
 async function resolveCategoryId(categorySlug: string): Promise<number | null> {
   const res = await fetch(
     `${WP_API_BASE}/course-category?slug=${encodeURIComponent(categorySlug)}`,
@@ -320,11 +422,16 @@ export async function fetchCoursesListingPage(options: {
   const search = options.search?.trim();
 
   try {
-    let url = `${WP_API_BASE}/courses?per_page=${perPage}&status=publish&page=${requestedPage}&_fields=${LISTING_COURSE_FIELDS}`;
-
     if (search) {
-      url += `&search=${encodeURIComponent(search)}`;
+      return fetchCoursesSearchListingPage({
+        page: requestedPage,
+        perPage,
+        categorySlug: options.categorySlug,
+        search,
+      });
     }
+
+    let url = `${WP_API_BASE}/courses?per_page=${perPage}&status=publish&page=${requestedPage}&_fields=${LISTING_COURSE_FIELDS}`;
 
     if (options.categorySlug) {
       const categoryId = await resolveCategoryId(options.categorySlug);

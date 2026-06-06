@@ -40,7 +40,7 @@ export function CourseSearchForm({
         <div className="flex shrink-0 gap-2">
           <Button
             type="submit"
-            className="h-11 rounded-xl bg-primary-950 px-6 hover:bg-primary-900"
+            className="h-11 rounded-xl bg-primary-950 px-6 text-white hover:bg-primary-900"
           >
             Ara
           </Button>

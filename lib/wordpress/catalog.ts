@@ -129,7 +129,7 @@ export async function getCourseListingPage(params: {
 
   return unstable_cache(
     () => buildCourseListingPage(params),
-    ["course-listing", categorySlug, String(page), search],
+    ["course-listing-v2", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: [
