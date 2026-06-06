@@ -7,12 +7,14 @@ interface CategoryFilterProps {
   categories: WPCategory[];
   selectedSlug?: string;
   totalCount: number;
+  searchQuery?: string;
 }
 
 export function CategoryFilter({
   categories,
   selectedSlug,
   totalCount,
+  searchQuery,
 }: CategoryFilterProps) {
   return (
     <div className="space-y-1">
@@ -21,12 +23,12 @@ export function CategoryFilter({
       </h3>
 
       <Link
-        href={buildKurslarUrl()}
+        href={buildKurslarUrl({ search: searchQuery })}
         className={cn(
           "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
           !selectedSlug
             ? "bg-primary-950 text-white"
-            : "text-primary-900 hover:bg-primary-50"
+            : "text-primary-900 hover:bg-primary-50",
         )}
       >
         Tümü ({totalCount})
@@ -35,12 +37,15 @@ export function CategoryFilter({
       {categories.map((cat) => (
         <Link
           key={cat.id}
-          href={buildKurslarUrl({ categorySlug: cat.slug })}
+          href={buildKurslarUrl({
+            categorySlug: cat.slug,
+            search: searchQuery,
+          })}
           className={cn(
             "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
             selectedSlug === cat.slug
               ? "bg-primary-950 text-white"
-              : "text-primary-900 hover:bg-primary-50"
+              : "text-primary-900 hover:bg-primary-50",
           )}
         >
           {cat.name} ({cat.count})

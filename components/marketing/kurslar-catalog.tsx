@@ -1,5 +1,6 @@
 import { CategoryFilter } from "@/components/marketing/category-filter";
 import { CatalogPagination } from "@/components/marketing/catalog-pagination";
+import { CourseSearchForm } from "@/components/marketing/course-search-form";
 import { CourseCard } from "@/components/marketing/course-card";
 import type { CourseStats } from "@/lib/actions/course-stats";
 import type { CourseProduct } from "@/types/course-product";
@@ -18,6 +19,36 @@ interface KurslarCatalogProps {
   };
   totalPublished: number;
   selectedCategory?: string;
+  searchQuery?: string;
+}
+
+function EmptyStateMessage({
+  searchQuery,
+  selectedCategory,
+}: {
+  searchQuery?: string;
+  selectedCategory?: string;
+}) {
+  if (searchQuery) {
+    return (
+      <p className="text-muted-foreground">
+        <span className="font-medium text-primary-900">
+          &ldquo;{searchQuery}&rdquo;
+        </span>{" "}
+        ile eşleşen kurs bulunamadı.
+      </p>
+    );
+  }
+
+  if (selectedCategory) {
+    return (
+      <p className="text-muted-foreground">
+        Bu kategoride henüz kurs bulunmuyor.
+      </p>
+    );
+  }
+
+  return <p className="text-muted-foreground">Henüz kurs yok.</p>;
 }
 
 export function KurslarCatalog({
@@ -28,12 +59,13 @@ export function KurslarCatalog({
   pagination,
   totalPublished,
   selectedCategory,
+  searchQuery,
 }: KurslarCatalogProps) {
   const productBySlug = new Map(
     products.map((product) => [product.course_slug, product]),
   );
 
-  if (totalPublished === 0 && courses.length === 0) {
+  if (totalPublished === 0 && courses.length === 0 && !searchQuery) {
     return (
       <div className="py-16 text-center">
         <p className="text-muted-foreground">Henüz kurs yok.</p>
@@ -48,15 +80,31 @@ export function KurslarCatalog({
           categories={categories}
           selectedSlug={selectedCategory}
           totalCount={totalPublished}
+          searchQuery={searchQuery}
         />
       </aside>
 
-      <div>
+      <div className="space-y-6">
+        <CourseSearchForm
+          defaultQuery={searchQuery}
+          categorySlug={selectedCategory}
+        />
+
+        {searchQuery ? (
+          <p className="text-sm text-muted-foreground">
+            <span className="font-medium text-primary-900">
+              &ldquo;{searchQuery}&rdquo;
+            </span>{" "}
+            için {pagination.total} sonuç bulundu
+          </p>
+        ) : null}
+
         {courses.length === 0 ? (
           <div className="py-16 text-center">
-            <p className="text-muted-foreground">
-              Bu kategoride henüz kurs bulunmuyor.
-            </p>
+            <EmptyStateMessage
+              searchQuery={searchQuery}
+              selectedCategory={selectedCategory}
+            />
           </div>
         ) : (
           <>
@@ -80,6 +128,7 @@ export function KurslarCatalog({
               totalPages={pagination.totalPages}
               total={pagination.total}
               categorySlug={selectedCategory}
+              searchQuery={searchQuery}
             />
           </>
         )}

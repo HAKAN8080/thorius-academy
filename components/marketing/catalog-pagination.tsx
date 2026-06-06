@@ -8,6 +8,7 @@ interface CatalogPaginationProps {
   totalPages: number;
   total: number;
   categorySlug?: string;
+  searchQuery?: string;
 }
 
 function getVisiblePages(
@@ -44,6 +45,7 @@ export function CatalogPagination({
   totalPages,
   total,
   categorySlug,
+  searchQuery,
 }: CatalogPaginationProps) {
   if (totalPages <= 1) {
     return null;
@@ -51,10 +53,16 @@ export function CatalogPagination({
 
   const visiblePages = getVisiblePages(page, totalPages);
   const prevHref =
-    page > 1 ? buildKurslarUrl({ page: page - 1, categorySlug }) : null;
+    page > 1
+      ? buildKurslarUrl({ page: page - 1, categorySlug, search: searchQuery })
+      : null;
   const nextHref =
     page < totalPages
-      ? buildKurslarUrl({ page: page + 1, categorySlug })
+      ? buildKurslarUrl({
+          page: page + 1,
+          categorySlug,
+          search: searchQuery,
+        })
       : null;
 
   return (
@@ -95,7 +103,11 @@ export function CatalogPagination({
           ) : (
             <Link
               key={item}
-              href={buildKurslarUrl({ page: item, categorySlug })}
+              href={buildKurslarUrl({
+                page: item,
+                categorySlug,
+                search: searchQuery,
+              })}
               aria-label={`Sayfa ${item}`}
               aria-current={item === page ? "page" : undefined}
               className={cn(

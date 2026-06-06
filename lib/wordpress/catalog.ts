@@ -70,16 +70,19 @@ export interface CourseListingPageData {
   };
   totalPublished: number;
   selectedCategory?: string;
+  searchQuery?: string;
 }
 
 async function buildCourseListingPage(params: {
   page?: number;
   categorySlug?: string;
+  search?: string;
 }): Promise<CourseListingPageData> {
   const [listing, categories, products, totalPublished] = await Promise.all([
     fetchCoursesListingPage({
       page: params.page,
       categorySlug: params.categorySlug,
+      search: params.search,
     }),
     fetchCategoryList(),
     getAllCourseProducts(),
@@ -111,19 +114,22 @@ async function buildCourseListingPage(params: {
     },
     totalPublished,
     selectedCategory: params.categorySlug,
+    searchQuery: params.search,
   };
 }
 
 export async function getCourseListingPage(params: {
   page?: number;
   categorySlug?: string;
+  search?: string;
 }): Promise<CourseListingPageData> {
   const page = params.page ?? 1;
   const categorySlug = params.categorySlug ?? "all";
+  const search = params.search?.trim() ?? "";
 
   return unstable_cache(
     () => buildCourseListingPage(params),
-    ["course-listing", categorySlug, String(page)],
+    ["course-listing", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: [

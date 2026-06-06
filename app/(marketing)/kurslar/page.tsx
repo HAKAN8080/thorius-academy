@@ -7,6 +7,7 @@ import { KurslarCatalog } from "@/components/marketing/kurslar-catalog";
 import {
   buildKurslarUrl,
   parseKurslarPage,
+  parseKurslarSearch,
 } from "@/lib/course/kurslar-url";
 import { getCourseListingPage } from "@/lib/wordpress/catalog";
 
@@ -19,17 +20,23 @@ export const metadata: Metadata = {
 export const revalidate = 3600;
 
 interface KurslarPageProps {
-  searchParams: { kategori?: string; sayfa?: string };
+  searchParams: { kategori?: string; sayfa?: string; ara?: string };
 }
 
 async function KurslarCatalogSection({
   page,
   categorySlug,
+  searchQuery,
 }: {
   page: number;
   categorySlug?: string;
+  searchQuery?: string;
 }) {
-  const listing = await getCourseListingPage({ page, categorySlug });
+  const listing = await getCourseListingPage({
+    page,
+    categorySlug,
+    search: searchQuery,
+  });
 
   if (
     page > listing.pagination.totalPages &&
@@ -39,6 +46,7 @@ async function KurslarCatalogSection({
       buildKurslarUrl({
         page: listing.pagination.totalPages,
         categorySlug,
+        search: searchQuery,
       }),
     );
   }
@@ -52,6 +60,7 @@ async function KurslarCatalogSection({
       pagination={listing.pagination}
       totalPublished={listing.totalPublished}
       selectedCategory={listing.selectedCategory}
+      searchQuery={listing.searchQuery}
     />
   );
 }
@@ -59,7 +68,8 @@ async function KurslarCatalogSection({
 export default function KurslarPage({ searchParams }: KurslarPageProps) {
   const page = parseKurslarPage(searchParams.sayfa);
   const categorySlug = searchParams.kategori?.trim() || undefined;
-  const suspenseKey = `${categorySlug ?? "all"}-${page}`;
+  const searchQuery = parseKurslarSearch(searchParams.ara);
+  const suspenseKey = `${categorySlug ?? "all"}-${page}-${searchQuery ?? ""}`;
 
   return (
     <Container className="py-12 md:py-16">
@@ -73,7 +83,11 @@ export default function KurslarPage({ searchParams }: KurslarPageProps) {
       </div>
 
       <Suspense key={suspenseKey} fallback={<CourseGridSkeleton count={8} />}>
-        <KurslarCatalogSection page={page} categorySlug={categorySlug} />
+        <KurslarCatalogSection
+          page={page}
+          categorySlug={categorySlug}
+          searchQuery={searchQuery}
+        />
       </Suspense>
     </Container>
   );

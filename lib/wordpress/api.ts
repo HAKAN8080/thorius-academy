@@ -313,12 +313,18 @@ export async function fetchCoursesListingPage(options: {
   page?: number;
   perPage?: number;
   categorySlug?: string;
+  search?: string;
 }): Promise<CoursesListingPage> {
   const perPage = options.perPage ?? COURSES_PER_PAGE;
   const requestedPage = Math.max(1, options.page ?? 1);
+  const search = options.search?.trim();
 
   try {
     let url = `${WP_API_BASE}/courses?per_page=${perPage}&status=publish&page=${requestedPage}&_fields=${LISTING_COURSE_FIELDS}`;
+
+    if (search) {
+      url += `&search=${encodeURIComponent(search)}`;
+    }
 
     if (options.categorySlug) {
       const categoryId = await resolveCategoryId(options.categorySlug);
