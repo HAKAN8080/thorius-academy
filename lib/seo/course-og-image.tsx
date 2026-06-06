@@ -5,7 +5,6 @@ import {
   isFreeCourseProduct,
   isPurchasableCourseProduct,
 } from "@/lib/course/course-product-utils";
-import { getSiteUrl } from "@/lib/seo/site-url";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
 export const COURSE_OG_SIZE = { width: 1200, height: 630 } as const;
@@ -171,13 +170,11 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
     Boolean(course.youtubeVideoId),
   );
   const excerpt = formatCourseOgExcerpt(course.excerpt);
-  const logoUrl = `${getSiteUrl()}/images/thorius-academy-logo.png`;
 
   return new ImageResponse(
     (
       <div
         style={{
-          position: "relative",
           background: `linear-gradient(135deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 100%)`,
           width: "100%",
           height: "100%",
@@ -186,22 +183,8 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
           justifyContent: "space-between",
           padding: "64px 72px",
           fontFamily: "system-ui, -apple-system, sans-serif",
-          overflow: "hidden",
         }}
       >
-        <img
-          src={logoUrl}
-          alt=""
-          width={320}
-          height={320}
-          style={{
-            position: "absolute",
-            right: 48,
-            top: "50%",
-            transform: "translateY(-42%)",
-            opacity: 0.38,
-          }}
-        />
         <div
           style={{
             display: "flex",
@@ -252,9 +235,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             display: "flex",
             flexDirection: "column",
             gap: 24,
-            maxWidth: 760,
-            position: "relative",
-            zIndex: 1,
+            maxWidth: 980,
           }}
         >
           <div
