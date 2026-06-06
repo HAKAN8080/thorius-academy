@@ -23,14 +23,20 @@ export async function generateMetadata({
   const course = await fetchCourseBySlug(params.slug);
   if (!course) return { title: "Kurs Bulunamadı" };
 
+  const description = course.excerpt.slice(0, 160);
+
   return {
     title: course.title,
-    description: course.excerpt.slice(0, 160),
+    description,
     openGraph: {
       title: course.title,
-      description: course.excerpt.slice(0, 160),
-      images: course.featuredImage ? [course.featuredImage] : [],
+      description,
       type: "article",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: course.title,
+      description,
     },
   };
 }
