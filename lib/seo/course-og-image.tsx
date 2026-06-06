@@ -11,8 +11,8 @@ export const COURSE_OG_SIZE = { width: 1200, height: 630 } as const;
 export const COURSE_OG_CONTENT_TYPE = "image/png";
 
 const BRAND = {
-  navy: "#060f24",
-  navyMid: "#0B1E3F",
+  navy: "#020610",
+  navyMid: "#05101f",
   gold: "#D4AF37",
   goldSoft: "rgba(212,175,55,0.85)",
   white: "#ffffff",
@@ -34,7 +34,7 @@ export function formatCourseOgExcerpt(excerpt: string): string {
     .trim();
 
   // WP başlık + paragraf HTML'den aralıksız birleşince "BakışBu" gibi yapışır
-  text = text.replace(/([a-zığüşöç])([A-ZİĞÜŞÖÇ])/gu, "$1 $2");
+  text = text.replace(/([a-zığüşöç])([A-ZİĞÜŞÖÇ])/g, "$1 $2");
 
   if (text.length <= 120) {
     return text;
