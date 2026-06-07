@@ -3,6 +3,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
+import {
+  getCareerPathAdminDiagnostics,
+  getSupabaseUrlForDisplay,
+} from "@/lib/career-path/admin-diagnostics";
 import { getCareerPathDbStatus } from "@/lib/career-path/db-status";
 import {
   listCareerPathStepsFromDb,
@@ -21,9 +25,10 @@ export default async function AdminCareerPathsPage() {
     redirect("/panel");
   }
 
-  const [paths, dbStatus] = await Promise.all([
+  const [paths, dbStatus, diagnostics] = await Promise.all([
     listCareerPathsFromDb({ includeUnpublished: true }),
     getCareerPathDbStatus(),
+    getCareerPathAdminDiagnostics(),
   ]);
   const usingStaticFallback = paths.some((path) => path.id.startsWith("static-"));
   const pathsWithStepCount = await Promise.all(
@@ -93,23 +98,72 @@ export default async function AdminCareerPathsPage() {
       ) : null}
 
       {pathsWithStepCount.length === 0 ? (
-        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
-          <p className="font-semibold">Liste boş — veritabanında kayıt yok veya yanlış proje.</p>
-          <p className="mt-2">
-            Supabase SQL Editor&apos;da önce kontrol edin:
+        <div className="mb-6 space-y-3 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+          <p className="font-semibold">
+            Liste boş — site Supabase&apos;den veri okuyamıyor.
           </p>
-          <pre className="mt-2 overflow-x-auto rounded-lg bg-amber-100/80 p-3 text-xs">
-            {`SELECT COUNT(*) FROM career_paths;`}
-          </pre>
-          <p className="mt-3">
-            Sonuç <strong>0</strong> ise aşağıdaki seed SQL&apos;ini çalıştırın
-            (migration dosyasının INSERT kısmı, satır 84–176).
-            Sonuç <strong>3</strong> olmalı; sonra bu sayfayı yenileyin.
-          </p>
-          <p className="mt-2">
-            Vercel&apos;deki <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_SUPABASE_URL</code> ile
-            Supabase Project Settings → API → Project URL aynı proje olmalı.
-          </p>
+          <div className="rounded-lg bg-amber-100/80 p-3 text-xs">
+            <p>
+              <strong>Site URL:</strong>{" "}
+              {getSupabaseUrlForDisplay() ?? "NEXT_PUBLIC_SUPABASE_URL eksik"}
+            </p>
+            <p>
+              <strong>Proje ref:</strong>{" "}
+              {diagnostics.projectRef ?? "bulunamadı"} (Supabase&apos;de{" "}
+              <strong>vgpvnzszdvyxucyxucdy</strong> olmalı)
+            </p>
+            <p>
+              <strong>Anon key:</strong>{" "}
+              {diagnostics.hasPublishableKey ? "tanımlı" : "eksik"}
+            </p>
+            <p>
+              <strong>Service role:</strong>{" "}
+              {diagnostics.hasServiceRole ? "tanımlı" : "eksik"}
+            </p>
+            <p>
+              <strong>Session ile okunan kayıt:</strong>{" "}
+              {diagnostics.sessionCount ?? "okunamadı"}
+              {diagnostics.sessionError
+                ? ` — ${diagnostics.sessionError}`
+                : ""}
+            </p>
+            <p>
+              <strong>Service role ile okunan kayıt:</strong>{" "}
+              {diagnostics.adminCount ?? "okunamadı"}
+              {diagnostics.adminError ? ` — ${diagnostics.adminError}` : ""}
+            </p>
+          </div>
+          {diagnostics.sessionCount === 3 || diagnostics.adminCount === 3 ? (
+            <p>Sunucu veriyi görüyor; sayfayı Ctrl+F5 ile yenileyin.</p>
+          ) : !diagnostics.hasPublishableKey ? (
+            <p>
+              Vercel&apos;e{" "}
+              <code className="rounded bg-amber-100 px-1">
+                NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY
+              </code>{" "}
+              ekleyin (Supabase API Keys → anon public). Üç env aynı projeden
+              olmalı: URL, anon key, service_role key.
+            </p>
+          ) : !diagnostics.hasServiceRole ? (
+            <p>
+              Vercel&apos;e{" "}
+              <code className="rounded bg-amber-100 px-1">
+                SUPABASE_SERVICE_ROLE_KEY
+              </code>{" "}
+              ekleyip redeploy edin.
+            </p>
+          ) : diagnostics.projectRef !== "vgpvnzszdvyxucyxucdy" ? (
+            <p>
+              Vercel yanlış Supabase projesine bağlı. Tüm anahtarları{" "}
+              <strong>vgpvnzszdvyxucyxucdy</strong> projesinden alın.
+            </p>
+          ) : (
+            <p>
+              Supabase SQL&apos;de 3 kayıt varsa anahtarlar başka projeden
+              kopyalanmış olabilir. API Keys sayfasından üçünü de aynı projede
+              yeniden kopyalayıp Vercel&apos;de güncelleyin ve redeploy edin.
+            </p>
+          )}
         </div>
       ) : null}
 

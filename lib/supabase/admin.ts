@@ -1,23 +1,27 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  getSupabaseServiceRoleKey,
+  getSupabaseUrl,
+} from "@/lib/supabase/env";
 
-function getServiceRoleKey(): string {
-  const key =
-    process.env.SUPABASE_SERVICE_ROLE_KEY ?? process.env.SUPABASE_SECRET_KEY;
+function requireServiceRoleKey(): string {
+  const key = getSupabaseServiceRoleKey();
   if (!key) {
     throw new Error("SUPABASE_SERVICE_ROLE_KEY is required");
   }
   return key;
 }
 
-function getSupabaseUrl(): string {
-  if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
+function requireSupabaseUrl(): string {
+  const url = getSupabaseUrl();
+  if (!url) {
     throw new Error("NEXT_PUBLIC_SUPABASE_URL is required");
   }
-  return process.env.NEXT_PUBLIC_SUPABASE_URL;
+  return url;
 }
 
 export function createSupabaseAdmin(): SupabaseClient {
-  return createClient(getSupabaseUrl(), getServiceRoleKey(), {
+  return createClient(requireSupabaseUrl(), requireServiceRoleKey(), {
     auth: {
       autoRefreshToken: false,
       persistSession: false,
