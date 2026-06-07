@@ -7,6 +7,8 @@ import {
   deleteCareerPath,
   saveCareerPath,
 } from "@/lib/actions/career-path-admin";
+import { AdminPathStepFields } from "@/components/career-path/admin-path-step-fields";
+import type { AdminCourseOption } from "@/lib/career-path/admin-course-options";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -15,6 +17,7 @@ import { Label } from "@/components/ui/label";
 interface AdminPathFormProps {
   pathId?: string;
   initial: CareerPathAdminInput;
+  courses: AdminCourseOption[];
 }
 
 function emptyStep(order: number) {
@@ -28,7 +31,7 @@ function emptyStep(order: number) {
   };
 }
 
-export function AdminPathForm({ pathId, initial }: AdminPathFormProps) {
+export function AdminPathForm({ pathId, initial, courses }: AdminPathFormProps) {
   const router = useRouter();
   const [form, setForm] = useState(initial);
   const [error, setError] = useState<string | null>(null);
@@ -59,6 +62,24 @@ export function AdminPathForm({ pathId, initial }: AdminPathFormProps) {
     setForm((current) => ({
       ...current,
       steps: [...current.steps, emptyStep(current.steps.length + 1)],
+    }));
+  }
+
+  function selectCourse(index: number, slug: string) {
+    const course = courses.find((item) => item.slug === slug);
+
+    setForm((current) => ({
+      ...current,
+      steps: current.steps.map((step, stepIndex) => {
+        if (stepIndex !== index) return step;
+
+        return {
+          ...step,
+          courseSlug: slug,
+          fallbackTitle: course?.title ?? step.fallbackTitle,
+          label: step.label.trim() ? step.label : (course?.title ?? step.label),
+        };
+      }),
     }));
   }
 
@@ -243,7 +264,8 @@ export function AdminPathForm({ pathId, initial }: AdminPathFormProps) {
               Sıralı adımlar
             </h2>
             <p className="text-sm text-muted-foreground">
-              Öğrenci önceki adımı tamamlamadan sonraki adıma geçemez.
+              Öğrenci önceki adımı tamamlamadan sonraki adıma geçemez. Her
+              adımda kursu katalogdan seçin; slug ve ad otomatik dolar.
             </p>
           </div>
           <Button type="button" variant="outline" onClick={addStep}>
@@ -273,58 +295,13 @@ export function AdminPathForm({ pathId, initial }: AdminPathFormProps) {
                   </Button>
                 ) : null}
               </div>
-              <div className="grid gap-3 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Seviye etiketi</Label>
-                  <Input
-                    value={step.level}
-                    onChange={(event) =>
-                      updateStep(index, "level", event.target.value)
-                    }
-                    placeholder="Başlangıç"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Adım başlığı</Label>
-                  <Input
-                    value={step.label}
-                    onChange={(event) =>
-                      updateStep(index, "label", event.target.value)
-                    }
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Kurs slug</Label>
-                  <Input
-                    value={step.courseSlug}
-                    onChange={(event) =>
-                      updateStep(index, "courseSlug", event.target.value)
-                    }
-                    placeholder="perakende-planlamaya-giris"
-                    required
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label>Yedek kurs adı</Label>
-                  <Input
-                    value={step.fallbackTitle}
-                    onChange={(event) =>
-                      updateStep(index, "fallbackTitle", event.target.value)
-                    }
-                  />
-                </div>
-                <div className="space-y-2 md:col-span-2">
-                  <Label>Açıklama</Label>
-                  <textarea
-                    className="min-h-20 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
-                    value={step.description}
-                    onChange={(event) =>
-                      updateStep(index, "description", event.target.value)
-                    }
-                  />
-                </div>
-              </div>
+              <AdminPathStepFields
+                step={step}
+                index={index}
+                courses={courses}
+                onUpdate={updateStep}
+                onSelectCourse={selectCourse}
+              />
             </div>
           ))}
         </div>

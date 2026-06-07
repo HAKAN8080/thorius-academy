@@ -4,6 +4,7 @@ import { notFound, redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AdminPathForm } from "@/components/career-path/admin-path-form";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
+import { getAdminCourseOptions } from "@/lib/career-path/admin-course-options";
 import { getCareerPathAdminById } from "@/lib/career-path/repository";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 
@@ -52,7 +53,10 @@ export default async function EditCareerPathPage({ params }: PageProps) {
   }
 
   const { id } = await params;
-  const data = await getCareerPathAdminById(id);
+  const [data, courses] = await Promise.all([
+    getCareerPathAdminById(id),
+    getAdminCourseOptions(),
+  ]);
   if (!data) {
     notFound();
   }
@@ -74,7 +78,11 @@ export default async function EditCareerPathPage({ params }: PageProps) {
         </p>
       </header>
 
-      <AdminPathForm pathId={id} initial={toAdminInput(data)} />
+      <AdminPathForm
+        pathId={id}
+        initial={toAdminInput(data)}
+        courses={courses}
+      />
     </div>
   );
 }

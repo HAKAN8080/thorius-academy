@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { AdminPathForm } from "@/components/career-path/admin-path-form";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
+import { getAdminCourseOptions } from "@/lib/career-path/admin-course-options";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 
 export const metadata: Metadata = {
@@ -35,7 +36,10 @@ const emptyForm: CareerPathAdminInput = {
 };
 
 export default async function NewCareerPathPage() {
-  const allowed = await isCareerPathAdmin();
+  const [allowed, courses] = await Promise.all([
+    isCareerPathAdmin(),
+    getAdminCourseOptions(),
+  ]);
   if (!allowed) {
     redirect("/panel");
   }
@@ -58,7 +62,7 @@ export default async function NewCareerPathPage() {
         </p>
       </header>
 
-      <AdminPathForm initial={emptyForm} />
+      <AdminPathForm initial={emptyForm} courses={courses} />
     </div>
   );
 }
