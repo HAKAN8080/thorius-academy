@@ -113,12 +113,16 @@ export default async function AdminCareerPathsPage() {
               <strong>vgpvnzszdvyxucyxucdy</strong> olmalı)
             </p>
             <p>
-              <strong>Anon key:</strong>{" "}
-              {diagnostics.hasPublishableKey ? "tanımlı" : "eksik"}
+              <strong>Publishable key:</strong>{" "}
+              {diagnostics.hasPublishableKey
+                ? diagnostics.publishableKeyKind
+                : "eksik"}
             </p>
             <p>
-              <strong>Service role:</strong>{" "}
-              {diagnostics.hasServiceRole ? "tanımlı" : "eksik"}
+              <strong>Service role key:</strong>{" "}
+              {diagnostics.hasServiceRole
+                ? diagnostics.serviceRoleKeyKind
+                : "eksik"}
             </p>
             <p>
               <strong>Session ile okunan kayıt:</strong>{" "}
@@ -173,11 +177,22 @@ export default async function AdminCareerPathsPage() {
               Vercel yanlış Supabase projesine bağlı. Tüm anahtarları{" "}
               <strong>vgpvnzszdvyxucyxucdy</strong> projesinden alın.
             </p>
+          ) : diagnostics.publishableKeyKind.includes("YANLIŞ") ||
+            diagnostics.serviceRoleKeyKind.includes("YANLIŞ") ? (
+            <p>
+              <strong>Anahtarlar karışmış.</strong> Vercel&apos;de: publishable
+              = Publishable veya legacy anon; service role ={" "}
+              <strong>Legacy service_role secret</strong> (yeni Secret değil).
+            </p>
           ) : (
             <p>
-              Supabase SQL&apos;de 3 kayıt varsa anahtarlar başka projeden
-              kopyalanmış olabilir. API Keys sayfasından üçünü de aynı projede
-              yeniden kopyalayıp Vercel&apos;de güncelleyin ve redeploy edin.
+              Supabase SQL Editor&apos;da{" "}
+              <code className="rounded bg-amber-100 px-1">
+                NOTIFY pgrst, &apos;reload schema&apos;;
+              </code>{" "}
+              çalıştırın. Vercel env değişkenlerinde{" "}
+              <strong>Production</strong> işaretli olduğundan emin olun, sonra
+              redeploy edin.
             </p>
           )}
         </div>

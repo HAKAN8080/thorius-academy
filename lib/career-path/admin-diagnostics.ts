@@ -1,5 +1,6 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
+  describeSupabaseKey,
   getSupabaseProjectRef,
   getSupabasePublishableKey,
   getSupabaseServiceRoleKey,
@@ -11,6 +12,8 @@ export interface CareerPathAdminDiagnostics {
   projectRef: string | null;
   hasPublishableKey: boolean;
   hasServiceRole: boolean;
+  publishableKeyKind: string;
+  serviceRoleKeyKind: string;
   sessionCount: number | null;
   adminCount: number | null;
   sessionError: string | null;
@@ -18,10 +21,15 @@ export interface CareerPathAdminDiagnostics {
 }
 
 export async function getCareerPathAdminDiagnostics(): Promise<CareerPathAdminDiagnostics> {
+  const publishableKey = getSupabasePublishableKey();
+  const serviceRoleKey = getSupabaseServiceRoleKey();
+
   const diagnostics: CareerPathAdminDiagnostics = {
     projectRef: getSupabaseProjectRef(),
-    hasPublishableKey: Boolean(getSupabasePublishableKey()),
-    hasServiceRole: Boolean(getSupabaseServiceRoleKey()),
+    hasPublishableKey: Boolean(publishableKey),
+    hasServiceRole: Boolean(serviceRoleKey),
+    publishableKeyKind: describeSupabaseKey(publishableKey, "publishable"),
+    serviceRoleKeyKind: describeSupabaseKey(serviceRoleKey, "service"),
     sessionCount: null,
     adminCount: null,
     sessionError: null,
@@ -30,14 +38,15 @@ export async function getCareerPathAdminDiagnostics(): Promise<CareerPathAdminDi
 
   try {
     const supabase = await createClient();
-    const { count, error } = await supabase
+    const { data, error } = await supabase
       .from("career_paths")
-      .select("*", { count: "exact", head: true });
+      .select("slug")
+      .limit(10);
 
     if (error) {
-      diagnostics.sessionError = error.message;
+      diagnostics.sessionError = `${error.message}${error.code ? ` (${error.code})` : ""}`;
     } else {
-      diagnostics.sessionCount = count ?? 0;
+      diagnostics.sessionCount = data?.length ?? 0;
     }
   } catch (error) {
     diagnostics.sessionError =
@@ -47,14 +56,15 @@ export async function getCareerPathAdminDiagnostics(): Promise<CareerPathAdminDi
   if (diagnostics.hasServiceRole) {
     try {
       const admin = getSupabaseAdmin();
-      const { count, error } = await admin
+      const { data, error } = await admin
         .from("career_paths")
-        .select("*", { count: "exact", head: true });
+        .select("slug")
+        .limit(10);
 
       if (error) {
-        diagnostics.adminError = error.message;
+        diagnostics.adminError = `${error.message}${error.code ? ` (${error.code})` : ""}`;
       } else {
-        diagnostics.adminCount = count ?? 0;
+        diagnostics.adminCount = data?.length ?? 0;
       }
     } catch (error) {
       diagnostics.adminError =
