@@ -123,16 +123,32 @@ export default async function AdminCareerPathsPage() {
             <p>
               <strong>Session ile okunan kayıt:</strong>{" "}
               {diagnostics.sessionCount ?? "okunamadı"}
-              {diagnostics.sessionError
-                ? ` — ${diagnostics.sessionError}`
-                : ""}
             </p>
+            {diagnostics.sessionError ? (
+              <p className="text-red-800">
+                <strong>Session hatası:</strong> {diagnostics.sessionError}
+              </p>
+            ) : null}
             <p>
               <strong>Service role ile okunan kayıt:</strong>{" "}
               {diagnostics.adminCount ?? "okunamadı"}
-              {diagnostics.adminError ? ` — ${diagnostics.adminError}` : ""}
             </p>
+            {diagnostics.adminError ? (
+              <p className="text-red-800">
+                <strong>Service role hatası:</strong> {diagnostics.adminError}
+              </p>
+            ) : null}
           </div>
+          {diagnostics.sessionError?.toLowerCase().includes("schema cache") ||
+          diagnostics.adminError?.toLowerCase().includes("schema cache") ? (
+            <p>
+              <strong>Çözüm:</strong> Supabase SQL Editor&apos;da şunu çalıştırın:{" "}
+              <code className="rounded bg-amber-100 px-1">
+                NOTIFY pgrst, &apos;reload schema&apos;;
+              </code>{" "}
+              Sonra 30 sn bekleyip sayfayı yenileyin.
+            </p>
+          ) : null}
           {diagnostics.sessionCount === 3 || diagnostics.adminCount === 3 ? (
             <p>Sunucu veriyi görüyor; sayfayı Ctrl+F5 ile yenileyin.</p>
           ) : !diagnostics.hasPublishableKey ? (
