@@ -92,6 +92,57 @@ body {
 }
 
 /* Hero carousel — premium altın çizgi süpürme geçişi */
+@keyframes career-path-neon-shift {
+  0%,
+  100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+@keyframes career-path-neon-pulse {
+  0%,
+  100% {
+    opacity: 1;
+    box-shadow:
+      0 0 10px rgba(255, 45, 85, 0.75),
+      0 0 22px rgba(199, 125, 255, 0.45);
+  }
+  50% {
+    opacity: 0.72;
+    box-shadow:
+      0 0 4px rgba(255, 45, 85, 0.35),
+      0 0 10px rgba(199, 125, 255, 0.2);
+  }
+}
+
+.career-path-neon-ring {
+  background: linear-gradient(
+    120deg,
+    #ff2d55,
+    #ff6b9d,
+    #c77dff,
+    #9d7aff,
+    #ff2d55
+  );
+  background-size: 280% 280%;
+  animation:
+    career-path-neon-shift 3.5s ease-in-out infinite,
+    career-path-neon-pulse 2.2s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .career-path-neon-ring {
+    animation: none;
+    background: linear-gradient(120deg, #ff2d55, #c77dff);
+    box-shadow:
+      0 0 10px rgba(255, 45, 85, 0.45),
+      0 0 18px rgba(199, 125, 255, 0.3);
+  }
+}
+
 @keyframes goldLineSweep {
   0%,
   12.5% {
