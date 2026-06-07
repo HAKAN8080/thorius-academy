@@ -7,6 +7,8 @@ import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
 import { getAdminCourseOptions } from "@/lib/career-path/admin-course-options";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 
+export const dynamic = "force-dynamic";
+
 export const metadata: Metadata = {
   title: "Yeni Kariyer Yolu",
 };

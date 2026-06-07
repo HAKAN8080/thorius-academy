@@ -251,34 +251,56 @@ export async function listCareerPathStepsFromDb(
   }
 }
 
-export async function getCareerPathAdminById(
-  id: string,
-): Promise<{ path: DbCareerPath; steps: DbCareerPathStep[] } | null> {
-  const admin = await getCareerPathReadClient({ includeUnpublished: true });
-  const { data: path, error } = await admin
-    .from("career_paths")
-    .select("*")
-    .eq("id", id)
-    .maybeSingle();
+const CAREER_PATH_UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
 
-  if (error || !path) {
+export async function getCareerPathAdminById(
+  idOrSlug: string,
+): Promise<{ path: DbCareerPath; steps: DbCareerPathStep[] } | null> {
+  try {
+    const admin = getSupabaseAdmin();
+    const isUuid = CAREER_PATH_UUID_PATTERN.test(idOrSlug);
+
+    let pathQuery = admin.from("career_paths").select("*");
+    pathQuery = isUuid
+      ? pathQuery.eq("id", idOrSlug)
+      : pathQuery.eq("slug", idOrSlug);
+
+    const { data: path, error } = await pathQuery.maybeSingle();
+
+    if (error) {
+      console.error("[Career Path Admin] Load path error:", error);
+      return null;
+    }
+
+    if (!path) {
+      return null;
+    }
+
+    const careerPathId = (path as DbCareerPath).id;
+    const { data: steps, error: stepsError } = await admin
+      .from("career_path_steps")
+      .select("*")
+      .eq("career_path_id", careerPathId)
+      .order("step_order", { ascending: true });
+
+    if (stepsError) {
+      console.error("[Career Path Admin] Load steps error:", stepsError);
+      return null;
+    }
+
+    return {
+      path: {
+        ...(path as DbCareerPath),
+        outcomes: parseOutcomes((path as DbCareerPath).outcomes),
+        milestones: SHARED_MILESTONES,
+      },
+      steps: (steps ?? []) as DbCareerPathStep[],
+    };
+  } catch (error) {
+    console.error("[Career Path Admin] Load failed:", error);
     return null;
   }
-
-  const { data: steps } = await admin
-    .from("career_path_steps")
-    .select("*")
-    .eq("career_path_id", id)
-    .order("step_order", { ascending: true });
-
-  return {
-    path: {
-      ...(path as DbCareerPath),
-      outcomes: parseOutcomes((path as DbCareerPath).outcomes),
-      milestones: SHARED_MILESTONES,
-    },
-    steps: (steps ?? []) as DbCareerPathStep[],
-  };
 }
 
 export function toCareerPathDefinition(

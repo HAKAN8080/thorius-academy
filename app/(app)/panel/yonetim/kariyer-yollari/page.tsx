@@ -268,8 +268,8 @@ NOTIFY pgrst, 'reload schema';`}
                     </span>
                   ) : (
                     <Link
-                      href={`/panel/yonetim/kariyer-yollari/${path.id}`}
-                      className="font-semibold text-accent-700 hover:text-accent-900"
+                      href={`/panel/yonetim/kariyer-yollari/${path.slug}`}
+                      className="inline-flex rounded-lg px-2 py-1 font-semibold text-accent-700 underline-offset-2 hover:bg-accent-50 hover:text-accent-900 hover:underline"
                     >
                       Düzenle
                     </Link>

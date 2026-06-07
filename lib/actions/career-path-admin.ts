@@ -69,7 +69,7 @@ function mapStepRows(careerPathId: string, input: CareerPathAdminInput) {
 export async function saveCareerPath(
   input: CareerPathAdminInput,
   id?: string,
-): Promise<{ success: boolean; error?: string; id?: string }> {
+): Promise<{ success: boolean; error?: string; id?: string; slug?: string }> {
   try {
     await requireCareerPathAdmin();
 
@@ -136,13 +136,14 @@ export async function saveCareerPath(
     }
 
     revalidatePath("/panel/yonetim/kariyer-yollari");
+    revalidatePath(`/panel/yonetim/kariyer-yollari/${pathRow.slug}`);
     revalidatePath(`/panel/yonetim/kariyer-yollari/${pathId}`);
     revalidatePath("/panel/kariyer-yolu");
     revalidatePath(`/panel/kariyer-yolu/${pathRow.slug}`);
     revalidatePath("/kariyer-yolu");
     revalidatePath(`/kariyer-yolu/${pathRow.slug}`);
 
-    return { success: true, id: pathId };
+    return { success: true, id: pathId, slug: pathRow.slug };
   } catch (error) {
     if (error instanceof Error && error.message === "CAREER_PATH_ADMIN_DENIED") {
       return { success: false, error: "Bu işlem için yetkiniz yok." };

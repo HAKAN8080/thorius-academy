@@ -107,8 +107,10 @@ export function AdminPathForm({ pathId, initial, courses }: AdminPathFormProps) 
         return;
       }
 
-      if (!pathId && result.id) {
-        router.push(`/panel/yonetim/kariyer-yollari/${result.id}`);
+      if (!pathId && (result.slug || result.id)) {
+        router.push(
+          `/panel/yonetim/kariyer-yollari/${result.slug ?? result.id}`,
+        );
       } else {
         router.refresh();
       }

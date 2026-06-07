@@ -8,13 +8,15 @@ import { getAdminCourseOptions } from "@/lib/career-path/admin-course-options";
 import { getCareerPathAdminById } from "@/lib/career-path/repository";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 
+export const dynamic = "force-dynamic";
+
 interface PageProps {
   params: Promise<{ id: string }>;
 }
 
 export async function generateMetadata({ params }: PageProps): Promise<Metadata> {
-  const { id } = await params;
-  const data = await getCareerPathAdminById(id);
+  const { id: slugOrId } = await params;
+  const data = await getCareerPathAdminById(slugOrId);
   return {
     title: data ? `${data.path.title} — Düzenle` : "Kariyer Yolu Düzenle",
   };
@@ -52,9 +54,9 @@ export default async function EditCareerPathPage({ params }: PageProps) {
     redirect("/panel");
   }
 
-  const { id } = await params;
+  const { id: slugOrId } = await params;
   const [data, courses] = await Promise.all([
-    getCareerPathAdminById(id),
+    getCareerPathAdminById(slugOrId),
     getAdminCourseOptions(),
   ]);
   if (!data) {
@@ -78,8 +80,15 @@ export default async function EditCareerPathPage({ params }: PageProps) {
         </p>
       </header>
 
+      {courses.length === 0 ? (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Kurs listesi şu an yüklenemedi. Adımları kaydedebilirsiniz; katalog
+          seçimi için sayfayı yenileyin veya slug ile devam edin.
+        </div>
+      ) : null}
+
       <AdminPathForm
-        pathId={id}
+        pathId={data.path.id}
         initial={toAdminInput(data)}
         courses={courses}
       />
