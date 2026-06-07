@@ -143,7 +143,30 @@ export default async function AdminCareerPathsPage() {
               </p>
             ) : null}
           </div>
-          {diagnostics.sessionError?.toLowerCase().includes("schema cache") ||
+          {diagnostics.sessionError?.includes("42501") ||
+          diagnostics.adminError?.includes("42501") ||
+          diagnostics.sessionError?.toLowerCase().includes("permission denied") ||
+          diagnostics.adminError?.toLowerCase().includes("permission denied") ? (
+            <div className="space-y-2">
+              <p>
+                <strong>Çözüm:</strong> Tablo var ama API izni yok. Supabase SQL
+                Editor&apos;da şu dosyayı çalıştırın:{" "}
+                <code className="rounded bg-amber-100 px-1">
+                  supabase/migrations/20260529120002_career_paths_grants.sql
+                </code>
+              </p>
+              <pre className="overflow-x-auto rounded-lg bg-amber-100/80 p-3 text-xs">
+                {`GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+GRANT SELECT ON public.career_paths TO anon, authenticated;
+GRANT ALL ON public.career_paths TO service_role;
+GRANT SELECT ON public.career_path_steps TO anon, authenticated;
+GRANT ALL ON public.career_path_steps TO service_role;
+GRANT SELECT, INSERT ON public.career_path_enrollments TO authenticated;
+GRANT ALL ON public.career_path_enrollments TO service_role;
+NOTIFY pgrst, 'reload schema';`}
+              </pre>
+            </div>
+          ) : diagnostics.sessionError?.toLowerCase().includes("schema cache") ||
           diagnostics.adminError?.toLowerCase().includes("schema cache") ? (
             <p>
               <strong>Çözüm:</strong> Supabase SQL Editor&apos;da şunu çalıştırın:{" "}

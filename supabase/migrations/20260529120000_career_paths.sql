@@ -81,6 +81,17 @@ CREATE POLICY "career_path_enrollments_insert_own"
   TO authenticated
   WITH CHECK (auth.uid() = user_id);
 
+GRANT USAGE ON SCHEMA public TO anon, authenticated, service_role;
+
+GRANT SELECT ON public.career_paths TO anon, authenticated;
+GRANT ALL ON public.career_paths TO service_role;
+
+GRANT SELECT ON public.career_path_steps TO anon, authenticated;
+GRANT ALL ON public.career_path_steps TO service_role;
+
+GRANT SELECT, INSERT ON public.career_path_enrollments TO authenticated;
+GRANT ALL ON public.career_path_enrollments TO service_role;
+
 -- İlk seed: mevcut 3 kariyer yolu (yayında)
 INSERT INTO public.career_paths (
   slug, title, subtitle, hero_eyebrow, outcomes, catalog_href, catalog_label,
