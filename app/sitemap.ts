@@ -17,6 +17,11 @@ const staticRoutes: Array<{
   { path: "/blog", changeFrequency: "weekly", priority: 0.8 },
   { path: "/kurumsal", changeFrequency: "monthly", priority: 0.7 },
   { path: "/hakkimizda", changeFrequency: "monthly", priority: 0.7 },
+  {
+    path: "/kariyer-yolu/retail-planning",
+    changeFrequency: "monthly",
+    priority: 0.85,
+  },
   { path: "/iletisim", changeFrequency: "monthly", priority: 0.6 },
   {
     path: "/egitmen-destek-kilavuzu",

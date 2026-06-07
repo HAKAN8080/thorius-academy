@@ -9,6 +9,10 @@ const staticColumns = [
     title: "Hakkımızda",
     links: [
       { href: "/hakkimizda", label: "Misyonumuz" },
+      {
+        href: "/kariyer-yolu/retail-planning",
+        label: "Retail Planning Yolu",
+      },
       { href: "/#ecosystem", label: "Koçluk" },
       { href: "/blog", label: "Blog" },
     ],

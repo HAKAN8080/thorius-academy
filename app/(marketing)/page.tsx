@@ -5,6 +5,7 @@ import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
+import { CareerOutcomesSection } from "@/components/marketing/career-outcomes-section";
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,6 +50,7 @@ export default async function HomePage() {
     <>
       <CategoryGrid categories={categories} />
       <Hero courses={carouselCourses} />
+      <CareerOutcomesSection className="bg-white py-14 md:py-20" />
       <EcosystemCards />
 
       <CourseShowcaseSection

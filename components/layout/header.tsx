@@ -25,6 +25,7 @@ type NavLink = {
 
 const baseNavLinks: NavLink[] = [
   { href: "/kurslar", label: "Kurslar" },
+  { href: "/kariyer-yolu/retail-planning", label: "Kariyer Yolu" },
   { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
   { href: "/hakkimizda", label: "Hakkımızda" },
