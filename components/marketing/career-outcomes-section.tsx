@@ -2,20 +2,32 @@ import Link from "next/link";
 import { ArrowRight, CheckCircle2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { RETAIL_PLANNING_OUTCOMES } from "@/lib/content/retail-planning-career-path";
+import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
 
 interface CareerOutcomesSectionProps {
   className?: string;
 }
 
+const CAREER_PATH_LINKS = [
+  {
+    href: "/kariyer-yolu/retail-planning",
+    label: "Retail Planning",
+  },
+  {
+    href: "/kariyer-yolu/insan-kaynaklari",
+    label: "İnsan Kaynakları",
+  },
+  {
+    href: "/kariyer-yolu/yapay-zeka",
+    label: "Yapay Zeka",
+  },
+] as const;
+
 export function CareerOutcomesSection({
   className,
 }: CareerOutcomesSectionProps) {
   return (
-    <section
-      className={className}
-      aria-labelledby="career-outcomes-heading"
-    >
+    <section className={className} aria-labelledby="career-outcomes-heading">
       <Container size="wide">
         <div className="grid gap-10 lg:grid-cols-[1fr_1.1fr] lg:items-center lg:gap-14">
           <div>
@@ -31,24 +43,34 @@ export function CareerOutcomesSection({
               alırsınız
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
-              Thorius Academy&apos;de amaç video izlemek değil; perakende
-              planlamada iş yapabilir hale gelmek. Retail Planning kariyer
-              yolu bu yetkinlikleri sırayla inşa eder.
+              Thorius Academy&apos;de amaç video izlemek değil; iş yapabilir
+              hale gelmek. Kariyer yolları bu yetkinlikleri sırayla inşa eder.
             </p>
+            <div className="mt-6 flex flex-wrap gap-2">
+              {CAREER_PATH_LINKS.map((item) => (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  className="rounded-full border border-primary-200 bg-primary-50 px-3 py-1.5 text-sm font-medium text-primary-800 transition-colors hover:border-accent-500/50 hover:bg-accent-50"
+                >
+                  {item.label}
+                </Link>
+              ))}
+            </div>
             <Button
               asChild
               size="lg"
               className="mt-8 rounded-xl bg-primary-950 text-white hover:bg-primary-900"
             >
-              <Link href="/kariyer-yolu/retail-planning">
-                Retail Planning yolunu gör
+              <Link href="/kariyer-yolu">
+                Tüm kariyer yolları
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
           </div>
 
           <ul className="grid gap-3 sm:grid-cols-2">
-            {RETAIL_PLANNING_OUTCOMES.map((outcome) => (
+            {RETAIL_PLANNING_PATH.outcomes.map((outcome) => (
               <li
                 key={outcome}
                 className="flex items-start gap-3 rounded-2xl border border-primary-100 bg-white p-4 shadow-sm"

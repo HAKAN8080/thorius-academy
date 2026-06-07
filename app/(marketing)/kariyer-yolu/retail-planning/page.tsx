@@ -1,9 +1,7 @@
 import type { Metadata } from "next";
 import { CareerPathView } from "@/components/marketing/career-path-view";
-import { RETAIL_PLANNING_STEPS } from "@/lib/content/retail-planning-career-path";
-import { resolveCareerPathSteps } from "@/lib/course/resolve-career-path-courses";
-import { getAllCourseProducts } from "@/lib/actions/course-products";
-import type { CourseProduct } from "@/types/course-product";
+import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
+import { loadCareerPathPage } from "@/lib/course/load-career-path-page";
 
 export const revalidate = 3600;
 
@@ -20,14 +18,9 @@ export const metadata: Metadata = {
 };
 
 export default async function RetailPlanningCareerPathPage() {
-  const [steps, products] = await Promise.all([
-    resolveCareerPathSteps(RETAIL_PLANNING_STEPS),
-    getAllCourseProducts(),
-  ]);
-
-  const productBySlug = new Map<string, CourseProduct>(
-    products.map((product) => [product.course_slug, product]),
+  const { path, steps, productBySlug } = await loadCareerPathPage(
+    RETAIL_PLANNING_PATH,
   );
 
-  return <CareerPathView steps={steps} productBySlug={productBySlug} />;
+  return <CareerPathView path={path} steps={steps} productBySlug={productBySlug} />;
 }

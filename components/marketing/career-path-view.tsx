@@ -4,22 +4,19 @@ import { ArrowDown, ArrowRight, Award, Briefcase, Users } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/components/marketing/course-card";
-import {
-  RETAIL_PLANNING_CAREER_PATH,
-  RETAIL_PLANNING_MILESTONES,
-  RETAIL_PLANNING_OUTCOMES,
-} from "@/lib/content/retail-planning-career-path";
+import type { CareerPathDefinition } from "@/lib/content/career-path-types";
 import type { ResolvedCareerPathStep } from "@/lib/course/resolve-career-path-courses";
 import type { CourseProduct } from "@/types/course-product";
 
 const milestoneIcons = [Award, Users, Briefcase] as const;
 
 interface CareerPathViewProps {
+  path: CareerPathDefinition;
   steps: ResolvedCareerPathStep[];
   productBySlug: Map<string, CourseProduct>;
 }
 
-export function CareerPathView({ steps, productBySlug }: CareerPathViewProps) {
+export function CareerPathView({ path, steps, productBySlug }: CareerPathViewProps) {
   const firstStepWithCourse = steps.find((step) => step.course);
 
   return (
@@ -27,13 +24,11 @@ export function CareerPathView({ steps, productBySlug }: CareerPathViewProps) {
       <section className="bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-16 text-white md:py-20">
         <Container size="narrow" className="text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-accent-400">
-            {RETAIL_PLANNING_CAREER_PATH.heroEyebrow}
+            {path.heroEyebrow}
           </p>
-          <h1 className="text-4xl font-bold sm:text-5xl">
-            {RETAIL_PLANNING_CAREER_PATH.title}
-          </h1>
+          <h1 className="text-4xl font-bold sm:text-5xl">{path.title}</h1>
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-primary-100">
-            {RETAIL_PLANNING_CAREER_PATH.subtitle}
+            {path.subtitle}
           </p>
           {firstStepWithCourse?.course && (
             <Button
@@ -59,7 +54,7 @@ export function CareerPathView({ steps, productBySlug }: CareerPathViewProps) {
             Bu yolu tamamlayanlar ne yapabilir?
           </h2>
           <ul className="mx-auto grid max-w-4xl gap-3 sm:grid-cols-2">
-            {RETAIL_PLANNING_OUTCOMES.map((outcome) => (
+            {path.outcomes.map((outcome) => (
               <li
                 key={outcome}
                 className="rounded-xl border border-primary-100 bg-primary-50/60 px-4 py-3 text-sm font-medium text-primary-900"
@@ -145,11 +140,11 @@ export function CareerPathView({ steps, productBySlug }: CareerPathViewProps) {
             Yolun sonunda
           </h2>
           <div className="grid gap-6 md:grid-cols-3">
-            {RETAIL_PLANNING_MILESTONES.map((milestone, index) => {
+            {path.milestones.map((milestone, index) => {
               const Icon = milestoneIcons[index] ?? Award;
               const content = (
                 <div className="flex h-full flex-col rounded-2xl border border-primary-100 bg-white p-6 shadow-sm">
-                  <div className="mb-4 inline-flex rounded-xl bg-accent-500/10 p-3 w-fit">
+                  <div className="mb-4 inline-flex w-fit rounded-xl bg-accent-500/10 p-3">
                     <Icon className="h-6 w-6 text-accent-600" aria-hidden="true" />
                   </div>
                   <h3 className="text-lg font-bold text-primary-950">
@@ -192,18 +187,20 @@ export function CareerPathView({ steps, productBySlug }: CareerPathViewProps) {
             />
           </div>
           <h2 className="text-2xl font-bold text-primary-950 md:text-3xl">
-            Perakende planlamada uzmanlaşmaya hazır mısınız?
+            {path.closingTitle}
           </h2>
           <p className="mx-auto mt-4 max-w-xl text-muted-foreground">
-            Tüm kurs kataloğunu keşfedin veya kurumsal paketler için ekibimizle
-            görüşün.
+            {path.closingDescription}
           </p>
           <div className="mt-8 flex flex-col justify-center gap-3 sm:flex-row">
             <Button asChild size="lg" variant="gold" className="rounded-xl">
-              <Link href="/kurslar?kategori=planlama">Planlama kursları</Link>
+              <Link href={path.catalogHref}>{path.catalogLabel}</Link>
             </Button>
             <Button asChild size="lg" variant="outline" className="rounded-xl">
               <Link href="/kurumsal">Kurumsal teklif</Link>
+            </Button>
+            <Button asChild size="lg" variant="ghost" className="rounded-xl">
+              <Link href="/kariyer-yolu">Tüm kariyer yolları</Link>
             </Button>
           </div>
         </Container>

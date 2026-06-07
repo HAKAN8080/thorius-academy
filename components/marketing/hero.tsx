@@ -59,9 +59,7 @@ export function Hero({ courses }: HeroProps) {
                 className="w-full rounded-xl bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600 sm:w-auto"
                 asChild
               >
-                <Link href="/kariyer-yolu/retail-planning">
-                  Kariyer yolunu gör
-                </Link>
+                <Link href="/kariyer-yolu">Kariyer yollarını gör</Link>
               </Button>
               <Button
                 size="lg"

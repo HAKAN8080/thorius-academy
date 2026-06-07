@@ -1,4 +1,4 @@
-import type { CareerPathStep } from "@/lib/content/retail-planning-career-path";
+import type { CareerPathStep } from "@/lib/content/career-path-types";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import type { Course } from "@/types/wordpress";
 
