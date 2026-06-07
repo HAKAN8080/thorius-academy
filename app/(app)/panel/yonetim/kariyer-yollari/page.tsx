@@ -3,6 +3,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { Plus, Settings2 } from "lucide-react";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
+import { getCareerPathDbStatus } from "@/lib/career-path/db-status";
 import {
   listCareerPathStepsFromDb,
   listCareerPathsFromDb,
@@ -20,7 +21,11 @@ export default async function AdminCareerPathsPage() {
     redirect("/panel");
   }
 
-  const paths = await listCareerPathsFromDb({ includeUnpublished: true });
+  const [paths, dbStatus] = await Promise.all([
+    listCareerPathsFromDb({ includeUnpublished: true }),
+    getCareerPathDbStatus(),
+  ]);
+  const usingStaticFallback = paths.some((path) => path.id.startsWith("static-"));
   const pathsWithStepCount = await Promise.all(
     paths.map(async (path) => {
       const steps = await listCareerPathStepsFromDb(path.id, path.slug);
@@ -51,6 +56,41 @@ export default async function AdminCareerPathsPage() {
           </Link>
         </Button>
       </header>
+
+      {usingStaticFallback ? (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          {!dbStatus.hasCareerPathsTable ? (
+            <p>
+              <strong>Veritabanı tablosu bulunamadı.</strong> Supabase SQL
+              Editor&apos;da migration dosyasını çalıştırın:{" "}
+              <code className="rounded bg-amber-100 px-1">
+                supabase/migrations/20260529120000_career_paths.sql
+              </code>
+            </p>
+          ) : !dbStatus.hasServiceRole ? (
+            <p>
+              <strong>Supabase service role anahtarı eksik.</strong> Vercel
+              ortam değişkenlerine{" "}
+              <code className="rounded bg-amber-100 px-1">
+                SUPABASE_SERVICE_ROLE_KEY
+              </code>{" "}
+              ekleyin (Supabase → Project Settings → API → service_role secret),
+              ardından siteyi yeniden deploy edin.
+            </p>
+          ) : (
+            <p>
+              <strong>DB bağlantısı doğrulanamadı.</strong> Sayfayı yenileyin;
+              sorun sürerse Supabase ve Vercel env ayarlarını kontrol edin.
+            </p>
+          )}
+        </div>
+      ) : !dbStatus.hasServiceRole ? (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          <strong>Kayıt ve silme için service role gerekli.</strong> Vercel&apos;e{" "}
+          <code className="rounded bg-amber-100 px-1">SUPABASE_SERVICE_ROLE_KEY</code>{" "}
+          ekleyip redeploy edin; aksi halde düzenleme kaydedilemez.
+        </div>
+      ) : null}
 
       <div className="overflow-hidden rounded-2xl border border-primary-100 bg-white">
         <table className="w-full text-left text-sm">

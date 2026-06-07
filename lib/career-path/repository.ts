@@ -104,17 +104,37 @@ function isMissingTableError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
     lower.includes("career_paths") &&
-    (lower.includes("does not exist") || lower.includes("could not find"))
+    (lower.includes("does not exist") ||
+      lower.includes("could not find") ||
+      lower.includes("schema cache"))
   );
+}
+
+async function getCareerPathReadClient(options?: {
+  includeUnpublished?: boolean;
+}): Promise<ReturnType<typeof getSupabaseAdmin>> {
+  if (!options?.includeUnpublished) {
+    return (await createClient()) as ReturnType<typeof getSupabaseAdmin>;
+  }
+
+  try {
+    return getSupabaseAdmin();
+  } catch (error) {
+    console.error(
+      "[Career Paths] Admin client unavailable, falling back to session client:",
+      error,
+    );
+    return (await createClient()) as ReturnType<typeof getSupabaseAdmin>;
+  }
 }
 
 export async function listCareerPathsFromDb(options?: {
   includeUnpublished?: boolean;
 }): Promise<DbCareerPath[]> {
+  const useStaticFallback = !options?.includeUnpublished;
+
   try {
-    const client = options?.includeUnpublished
-      ? getSupabaseAdmin()
-      : await createClient();
+    const client = await getCareerPathReadClient(options);
 
     let query = client
       .from("career_paths")
@@ -128,14 +148,14 @@ export async function listCareerPathsFromDb(options?: {
     const { data, error } = await query;
 
     if (error) {
-      if (isMissingTableError(error.message)) {
+      if (useStaticFallback && isMissingTableError(error.message)) {
         return CAREER_PATHS.map(mapStaticPath);
       }
       throw error;
     }
 
     if (!data?.length) {
-      return CAREER_PATHS.map(mapStaticPath);
+      return useStaticFallback ? CAREER_PATHS.map(mapStaticPath) : [];
     }
 
     return data.map((row) => ({
@@ -143,8 +163,9 @@ export async function listCareerPathsFromDb(options?: {
       outcomes: parseOutcomes((row as DbCareerPath).outcomes),
       milestones: parseMilestones((row as DbCareerPath).milestones),
     }));
-  } catch {
-    return CAREER_PATHS.map(mapStaticPath);
+  } catch (error) {
+    console.error("[Career Paths] listCareerPathsFromDb failed:", error);
+    return useStaticFallback ? CAREER_PATHS.map(mapStaticPath) : [];
   }
 }
 
@@ -194,7 +215,7 @@ export async function listCareerPathStepsFromDb(
 export async function getCareerPathAdminById(
   id: string,
 ): Promise<{ path: DbCareerPath; steps: DbCareerPathStep[] } | null> {
-  const admin = getSupabaseAdmin();
+  const admin = await getCareerPathReadClient({ includeUnpublished: true });
   const { data: path, error } = await admin
     .from("career_paths")
     .select("*")
