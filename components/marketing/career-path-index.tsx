@@ -1,8 +1,9 @@
 import Link from "next/link";
-import { ArrowRight, Brain, LineChart, Users } from "lucide-react";
+import { ArrowRight, Brain, LineChart, Map, Users } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { CAREER_PATH_SUMMARIES } from "@/lib/content/career-paths";
+import { listCareerPathsFromDb } from "@/lib/career-path/repository";
 
 const pathIcons = {
   "retail-planning": LineChart,
@@ -10,7 +11,19 @@ const pathIcons = {
   "yapay-zeka": Brain,
 } as const;
 
-export function CareerPathIndex() {
+export async function CareerPathIndex() {
+  const dbPaths = await listCareerPathsFromDb();
+  const summaries =
+    dbPaths.length > 0
+      ? dbPaths.map((path) => ({
+          slug: path.slug,
+          title: path.title,
+          description: path.subtitle,
+          highlight: path.hero_eyebrow,
+          href: `/kariyer-yolu/${path.slug}`,
+        }))
+      : CAREER_PATH_SUMMARIES;
+
   return (
     <>
       <section className="bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-16 text-white md:py-20">
@@ -29,7 +42,7 @@ export function CareerPathIndex() {
       <section className="py-14 md:py-20">
         <Container size="wide">
           <div className="grid gap-6 md:grid-cols-3">
-            {CAREER_PATH_SUMMARIES.map((summary) => {
+            {summaries.map((summary) => {
               const Icon =
                 pathIcons[summary.slug as keyof typeof pathIcons] ?? LineChart;
 
@@ -62,6 +75,17 @@ export function CareerPathIndex() {
                 </article>
               );
             })}
+          </div>
+
+          <div className="mt-12 rounded-2xl border border-accent-200 bg-accent-50/50 p-6 text-center">
+            <Map className="mx-auto mb-3 h-8 w-8 text-accent-600" aria-hidden="true" />
+            <p className="text-primary-900">
+              Kayıtlı öğrenciler panelde tamamladıkları adımları roadmap
+              olarak takip edebilir.
+            </p>
+            <Button asChild variant="outline" className="mt-4 rounded-xl">
+              <Link href="/panel/kariyer-yolu">Kariyer yoluma git</Link>
+            </Button>
           </div>
         </Container>
       </section>

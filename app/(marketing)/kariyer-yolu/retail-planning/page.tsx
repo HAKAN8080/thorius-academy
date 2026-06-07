@@ -1,7 +1,8 @@
 import type { Metadata } from "next";
+import { notFound } from "next/navigation";
 import { CareerPathView } from "@/components/marketing/career-path-view";
 import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
-import { loadCareerPathPage } from "@/lib/course/load-career-path-page";
+import { loadCareerPathBySlug } from "@/lib/course/load-career-path-by-slug";
 
 export const revalidate = 3600;
 
@@ -18,9 +19,17 @@ export const metadata: Metadata = {
 };
 
 export default async function RetailPlanningCareerPathPage() {
-  const { path, steps, productBySlug } = await loadCareerPathPage(
+  const data = await loadCareerPathBySlug(
+    "retail-planning",
     RETAIL_PLANNING_PATH,
   );
+  if (!data) notFound();
 
-  return <CareerPathView path={path} steps={steps} productBySlug={productBySlug} />;
+  return (
+    <CareerPathView
+      path={data.path}
+      steps={data.steps}
+      productBySlug={data.productBySlug}
+    />
+  );
 }

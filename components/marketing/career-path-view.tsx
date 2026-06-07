@@ -74,9 +74,17 @@ export function CareerPathView({ path, steps, productBySlug }: CareerPathViewPro
           >
             Adım adım öğrenme yolu
           </h2>
-          <p className="mx-auto mb-12 max-w-2xl text-center text-muted-foreground">
-            Her basamak gerçek bir Thorius kursuna bağlıdır. İstediğiniz
-            adımdan başlayabilir, eksiklerinizi tamamlayarak ilerleyebilirsiniz.
+          <p className="mx-auto mb-6 max-w-2xl text-center text-muted-foreground">
+            Her basamak gerçek bir Thorius kursuna bağlıdır. Adımlar sıralıdır;
+            bir sonraki adım, önceki kursu tamamladığınızda açılır.
+          </p>
+          <p className="mx-auto mb-12 max-w-2xl text-center">
+            <Link
+              href="/panel/kariyer-yolu"
+              className="text-sm font-semibold text-accent-700 hover:text-accent-900"
+            >
+              Panelde roadmap olarak ilerlemenizi görüntüleyin →
+            </Link>
           </p>
 
           <div className="flex flex-col items-center gap-6">

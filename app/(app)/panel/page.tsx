@@ -3,10 +3,19 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getUserEnrollments } from "@/lib/actions/enrollment";
+import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
 import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
-import { BookOpen, GraduationCap, ArrowRight, User, Presentation } from "lucide-react";
+import {
+  BookOpen,
+  GraduationCap,
+  ArrowRight,
+  User,
+  Presentation,
+  Map,
+  Settings2,
+} from "lucide-react";
 
 export const metadata: Metadata = {
   title: "Panel",
@@ -20,8 +29,11 @@ export default async function PanelPage() {
 
   if (!user) redirect("/giris");
 
-  const access = await getInstructorAccess();
-  const enrollments = await getUserEnrollments();
+  const [access, careerPathAdmin, enrollments] = await Promise.all([
+    getInstructorAccess(),
+    isCareerPathAdmin(),
+    getUserEnrollments(),
+  ]);
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
   const completedEnrollments = enrollments.filter(
     (e) => e.status === "completed"
@@ -98,6 +110,25 @@ export default async function PanelPage() {
         ) : null}
 
         <Link
+          href="/panel/kariyer-yolu"
+          className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
+        >
+          <div className="mb-3 flex items-center justify-between">
+            <div className="rounded-lg bg-accent-500/10 p-3">
+              <Map className="h-6 w-6 text-accent-600" />
+            </div>
+            <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
+          </div>
+          <h3 className="mb-2 text-xl font-bold text-primary-950">
+            Kariyer Yolum
+          </h3>
+          <p className="text-muted-foreground">
+            Sıralı uzmanlık yollarında tamamladığınız adımları roadmap olarak
+            takip edin
+          </p>
+        </Link>
+
+        <Link
           href="/panel/kurslarim"
           className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
         >
@@ -116,6 +147,26 @@ export default async function PanelPage() {
               : "Kayıtlı olduğunuz tüm kursları görüntüleyin"}
           </p>
         </Link>
+
+        {careerPathAdmin ? (
+          <Link
+            href="/panel/yonetim/kariyer-yollari"
+            className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
+          >
+            <div className="mb-3 flex items-center justify-between">
+              <div className="rounded-lg bg-primary-950 p-3">
+                <Settings2 className="h-6 w-6 text-accent-400" />
+              </div>
+              <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
+            </div>
+            <h3 className="mb-2 text-xl font-bold text-primary-950">
+              Kariyer Yolları Yönetimi
+            </h3>
+            <p className="text-muted-foreground">
+              Sıralı öğrenme yolları oluşturun, adımları düzenleyin ve yayınlayın
+            </p>
+          </Link>
+        ) : null}
 
         <Link
           href="/kurslar"

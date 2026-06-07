@@ -15,6 +15,6 @@ export const metadata: Metadata = {
   },
 };
 
-export default function CareerPathsPage() {
+export default async function CareerPathsPage() {
   return <CareerPathIndex />;
 }

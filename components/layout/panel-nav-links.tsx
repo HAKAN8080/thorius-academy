@@ -4,10 +4,14 @@ import {
   getStudentPortalUrl,
 } from "@/lib/config/portal-urls";
 import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
+import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
 import { getInstructorAccess } from "@/lib/instructor/access";
 
 export async function PanelNavLinks() {
-  const access = await getInstructorAccess();
+  const [access, careerPathAdmin] = await Promise.all([
+    getInstructorAccess(),
+    isCareerPathAdmin(),
+  ]);
 
   if (access.isInstructor) {
     return (
@@ -24,6 +28,20 @@ export async function PanelNavLinks() {
         >
           Öğrenci Kurslarım
         </Link>
+        <Link
+          href="/panel/kariyer-yolu"
+          className="text-sm font-medium text-primary-700 hover:text-primary-900"
+        >
+          Kariyer Yolum
+        </Link>
+        {careerPathAdmin ? (
+          <Link
+            href="/panel/yonetim/kariyer-yollari"
+            className="text-sm font-medium text-primary-700 hover:text-primary-900"
+          >
+            Kariyer Yolları Yönetimi
+          </Link>
+        ) : null}
         <TutorDashboardLink variant="instructor" compact />
         <Link
           href="/"
@@ -43,6 +61,20 @@ export async function PanelNavLinks() {
       >
         Kurslarım
       </Link>
+      <Link
+        href="/panel/kariyer-yolu"
+        className="text-sm font-medium text-primary-700 hover:text-primary-900"
+      >
+        Kariyer Yolum
+      </Link>
+      {careerPathAdmin ? (
+        <Link
+          href="/panel/yonetim/kariyer-yollari"
+          className="text-sm font-medium text-primary-700 hover:text-primary-900"
+        >
+          Kariyer Yolları Yönetimi
+        </Link>
+      ) : null}
       <TutorDashboardLink variant="student" compact />
       <Link
         href="/"

@@ -1,0 +1,248 @@
+import {
+  AI_CAREER_PATH,
+  CAREER_PATHS,
+  HR_CAREER_PATH,
+  RETAIL_PLANNING_PATH,
+} from "@/lib/content/career-paths";
+import type { CareerPathDefinition } from "@/lib/content/career-path-types";
+import type { DbCareerPath, DbCareerPathStep } from "@/lib/career-path/types";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { createClient } from "@/lib/supabase/server";
+
+const SHARED_MILESTONES = [
+  {
+    label: "Sertifika",
+    description:
+      "Her kursu tamamladığınızda dijital katılım belgesi; yolu bitirdiğinizde uzmanlık portföyü.",
+  },
+  {
+    label: "Thorius Coaching",
+    description: "CV, mülakat ve kariyer hedefi için bire bir koçluk desteği.",
+    href: "/#ecosystem",
+  },
+  {
+    label: "Kurumsal mentorluk",
+    description: "Ekip bazlı öğrenme paketleri ve şirket içi uygulama desteği.",
+    href: "/kurumsal",
+  },
+];
+
+function mapStaticPath(path: CareerPathDefinition): DbCareerPath {
+  return {
+    id: `static-${path.slug}`,
+    slug: path.slug,
+    title: path.title,
+    subtitle: path.subtitle,
+    hero_eyebrow: path.heroEyebrow,
+    outcomes: [...path.outcomes],
+    milestones: path.milestones.map((item) => ({ ...item })),
+    catalog_href: path.catalogHref,
+    catalog_label: path.catalogLabel,
+    closing_title: path.closingTitle,
+    closing_description: path.closingDescription,
+    is_published: true,
+    sort_order:
+      path.slug === "retail-planning"
+        ? 1
+        : path.slug === "insan-kaynaklari"
+          ? 2
+          : 3,
+    created_at: new Date(0).toISOString(),
+    updated_at: new Date(0).toISOString(),
+  };
+}
+
+function mapStaticSteps(path: CareerPathDefinition): DbCareerPathStep[] {
+  return path.steps.map((step, index) => ({
+    id: `static-${path.slug}-${index + 1}`,
+    career_path_id: `static-${path.slug}`,
+    step_order: index + 1,
+    level: step.level,
+    label: step.label,
+    course_slug: step.slug,
+    fallback_title: step.fallbackTitle,
+    description: step.description,
+  }));
+}
+
+function staticPathBySlug(slug: string): CareerPathDefinition | undefined {
+  if (slug === RETAIL_PLANNING_PATH.slug) return RETAIL_PLANNING_PATH;
+  if (slug === HR_CAREER_PATH.slug) return HR_CAREER_PATH;
+  if (slug === AI_CAREER_PATH.slug) return AI_CAREER_PATH;
+  return CAREER_PATHS.find((path) => path.slug === slug);
+}
+
+function parseOutcomes(value: unknown): string[] {
+  if (!Array.isArray(value)) {
+    return [];
+  }
+
+  return value.filter((item): item is string => typeof item === "string");
+}
+
+function parseMilestones(
+  value: unknown,
+): DbCareerPath["milestones"] {
+  if (!Array.isArray(value) || value.length === 0) {
+    return SHARED_MILESTONES.map((item) => ({ ...item }));
+  }
+
+  return value
+    .filter(
+      (item): item is { label: string; description: string; href?: string } =>
+        typeof item === "object" &&
+        item !== null &&
+        "label" in item &&
+        "description" in item &&
+        typeof (item as { label: unknown }).label === "string" &&
+        typeof (item as { description: unknown }).description === "string",
+    )
+    .map((item) => ({ ...item }));
+}
+
+function isMissingTableError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    lower.includes("career_paths") &&
+    (lower.includes("does not exist") || lower.includes("could not find"))
+  );
+}
+
+export async function listCareerPathsFromDb(options?: {
+  includeUnpublished?: boolean;
+}): Promise<DbCareerPath[]> {
+  try {
+    const client = options?.includeUnpublished
+      ? getSupabaseAdmin()
+      : await createClient();
+
+    let query = client
+      .from("career_paths")
+      .select("*")
+      .order("sort_order", { ascending: true });
+
+    if (!options?.includeUnpublished) {
+      query = query.eq("is_published", true);
+    }
+
+    const { data, error } = await query;
+
+    if (error) {
+      if (isMissingTableError(error.message)) {
+        return CAREER_PATHS.map(mapStaticPath);
+      }
+      throw error;
+    }
+
+    if (!data?.length) {
+      return CAREER_PATHS.map(mapStaticPath);
+    }
+
+    return data.map((row) => ({
+      ...(row as DbCareerPath),
+      outcomes: parseOutcomes((row as DbCareerPath).outcomes),
+      milestones: parseMilestones((row as DbCareerPath).milestones),
+    }));
+  } catch {
+    return CAREER_PATHS.map(mapStaticPath);
+  }
+}
+
+export async function getCareerPathBySlugFromDb(
+  slug: string,
+  options?: { includeUnpublished?: boolean },
+): Promise<DbCareerPath | null> {
+  const paths = await listCareerPathsFromDb(options);
+  return paths.find((path) => path.slug === slug) ?? null;
+}
+
+export async function listCareerPathStepsFromDb(
+  careerPathId: string,
+  pathSlug?: string,
+): Promise<DbCareerPathStep[]> {
+  if (careerPathId.startsWith("static-") && pathSlug) {
+    const staticPath = staticPathBySlug(pathSlug);
+    return staticPath ? mapStaticSteps(staticPath) : [];
+  }
+
+  try {
+    const client = await createClient();
+    const { data, error } = await client
+      .from("career_path_steps")
+      .select("*")
+      .eq("career_path_id", careerPathId)
+      .order("step_order", { ascending: true });
+
+    if (error) {
+      if (isMissingTableError(error.message) && pathSlug) {
+        const staticPath = staticPathBySlug(pathSlug);
+        return staticPath ? mapStaticSteps(staticPath) : [];
+      }
+      throw error;
+    }
+
+    return (data ?? []) as DbCareerPathStep[];
+  } catch {
+    if (!pathSlug) {
+      return [];
+    }
+    const staticPath = staticPathBySlug(pathSlug);
+    return staticPath ? mapStaticSteps(staticPath) : [];
+  }
+}
+
+export async function getCareerPathAdminById(
+  id: string,
+): Promise<{ path: DbCareerPath; steps: DbCareerPathStep[] } | null> {
+  const admin = getSupabaseAdmin();
+  const { data: path, error } = await admin
+    .from("career_paths")
+    .select("*")
+    .eq("id", id)
+    .maybeSingle();
+
+  if (error || !path) {
+    return null;
+  }
+
+  const { data: steps } = await admin
+    .from("career_path_steps")
+    .select("*")
+    .eq("career_path_id", id)
+    .order("step_order", { ascending: true });
+
+  return {
+    path: {
+      ...(path as DbCareerPath),
+      outcomes: parseOutcomes((path as DbCareerPath).outcomes),
+      milestones: SHARED_MILESTONES,
+    },
+    steps: (steps ?? []) as DbCareerPathStep[],
+  };
+}
+
+export function toCareerPathDefinition(
+  path: DbCareerPath,
+  steps: DbCareerPathStep[],
+): CareerPathDefinition {
+  return {
+    slug: path.slug,
+    title: path.title,
+    subtitle: path.subtitle,
+    heroEyebrow: path.hero_eyebrow,
+    outcomes: path.outcomes,
+    steps: steps.map((step) => ({
+      level: step.level,
+      label: step.label,
+      slug: step.course_slug,
+      fallbackTitle: step.fallback_title || step.label,
+      description: step.description,
+    })),
+    milestones:
+      path.milestones.length > 0 ? path.milestones : SHARED_MILESTONES,
+    catalogHref: path.catalog_href,
+    catalogLabel: path.catalog_label,
+    closingTitle: path.closing_title,
+    closingDescription: path.closing_description,
+  };
+}
