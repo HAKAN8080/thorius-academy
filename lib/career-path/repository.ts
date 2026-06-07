@@ -154,17 +154,56 @@ export async function listCareerPathsFromDb(options?: {
       throw error;
     }
 
-    if (!data?.length) {
-      return useStaticFallback ? CAREER_PATHS.map(mapStaticPath) : [];
+    if (data?.length) {
+      return data.map((row) => ({
+        ...(row as DbCareerPath),
+        outcomes: parseOutcomes((row as DbCareerPath).outcomes),
+        milestones: parseMilestones((row as DbCareerPath).milestones),
+      }));
     }
 
-    return data.map((row) => ({
-      ...(row as DbCareerPath),
-      outcomes: parseOutcomes((row as DbCareerPath).outcomes),
-      milestones: parseMilestones((row as DbCareerPath).milestones),
-    }));
+    if (options?.includeUnpublished) {
+      const sessionClient = await createClient();
+      const { data: published, error: publishedError } = await sessionClient
+        .from("career_paths")
+        .select("*")
+        .eq("is_published", true)
+        .order("sort_order", { ascending: true });
+
+      if (!publishedError && published?.length) {
+        return published.map((row) => ({
+          ...(row as DbCareerPath),
+          outcomes: parseOutcomes((row as DbCareerPath).outcomes),
+          milestones: parseMilestones((row as DbCareerPath).milestones),
+        }));
+      }
+    }
+
+    return useStaticFallback ? CAREER_PATHS.map(mapStaticPath) : [];
   } catch (error) {
     console.error("[Career Paths] listCareerPathsFromDb failed:", error);
+
+    if (options?.includeUnpublished) {
+      try {
+        const sessionClient = await createClient();
+        const { data: published } = await sessionClient
+          .from("career_paths")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
+
+        if (published?.length) {
+          return published.map((row) => ({
+            ...(row as DbCareerPath),
+            outcomes: parseOutcomes((row as DbCareerPath).outcomes),
+            milestones: parseMilestones((row as DbCareerPath).milestones),
+          }));
+        }
+      } catch (retryError) {
+        console.error("[Career Paths] Published retry failed:", retryError);
+      }
+    }
+
     return useStaticFallback ? CAREER_PATHS.map(mapStaticPath) : [];
   }
 }

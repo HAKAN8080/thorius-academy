@@ -17,15 +17,20 @@ export async function getCareerPathDbStatus(): Promise<CareerPathDbStatus> {
 
   try {
     const supabase = await createClient();
-    const { data, error } = await supabase
+    const { count, error } = await supabase
       .from("career_paths")
-      .select("id")
-      .limit(5);
+      .select("*", { count: "exact", head: true });
 
     if (error) {
+      const message = error.message.toLowerCase();
+      const tableMissing =
+        message.includes("does not exist") ||
+        message.includes("could not find") ||
+        message.includes("schema cache");
+
       return {
         hasServiceRole,
-        hasCareerPathsTable: false,
+        hasCareerPathsTable: !tableMissing,
         rowCount: 0,
       };
     }
@@ -33,7 +38,7 @@ export async function getCareerPathDbStatus(): Promise<CareerPathDbStatus> {
     return {
       hasServiceRole,
       hasCareerPathsTable: true,
-      rowCount: data?.length ?? 0,
+      rowCount: count ?? 0,
     };
   } catch {
     return {

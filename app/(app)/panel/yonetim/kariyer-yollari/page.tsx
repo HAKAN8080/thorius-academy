@@ -92,6 +92,27 @@ export default async function AdminCareerPathsPage() {
         </div>
       ) : null}
 
+      {pathsWithStepCount.length === 0 ? (
+        <div className="mb-6 rounded-xl border border-amber-200 bg-amber-50 px-5 py-4 text-sm text-amber-950">
+          <p className="font-semibold">Liste boş — veritabanında kayıt yok veya yanlış proje.</p>
+          <p className="mt-2">
+            Supabase SQL Editor&apos;da önce kontrol edin:
+          </p>
+          <pre className="mt-2 overflow-x-auto rounded-lg bg-amber-100/80 p-3 text-xs">
+            {`SELECT COUNT(*) FROM career_paths;`}
+          </pre>
+          <p className="mt-3">
+            Sonuç <strong>0</strong> ise aşağıdaki seed SQL&apos;ini çalıştırın
+            (migration dosyasının INSERT kısmı, satır 84–176).
+            Sonuç <strong>3</strong> olmalı; sonra bu sayfayı yenileyin.
+          </p>
+          <p className="mt-2">
+            Vercel&apos;deki <code className="rounded bg-amber-100 px-1">NEXT_PUBLIC_SUPABASE_URL</code> ile
+            Supabase Project Settings → API → Project URL aynı proje olmalı.
+          </p>
+        </div>
+      ) : null}
+
       <div className="overflow-hidden rounded-2xl border border-primary-100 bg-white">
         <table className="w-full text-left text-sm">
           <thead className="border-b border-primary-100 bg-primary-50/50">
@@ -104,6 +125,16 @@ export default async function AdminCareerPathsPage() {
             </tr>
           </thead>
           <tbody>
+            {pathsWithStepCount.length === 0 ? (
+              <tr>
+                <td
+                  colSpan={5}
+                  className="px-4 py-10 text-center text-muted-foreground"
+                >
+                  Henüz kariyer yolu yok veya veritabanı bağlantısı kurulamadı.
+                </td>
+              </tr>
+            ) : null}
             {pathsWithStepCount.map(({ path, stepCount }) => (
               <tr key={path.id} className="border-b border-primary-50 last:border-0">
                 <td className="px-4 py-4 font-medium text-primary-950">
