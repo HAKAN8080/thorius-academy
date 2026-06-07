@@ -5,19 +5,18 @@ import {
   isFreeCourseProduct,
   isPurchasableCourseProduct,
 } from "@/lib/course/course-product-utils";
+import {
+  loadOgBackgroundSrc,
+  OG_BRAND,
+  OG_CARD_SIZE,
+  OgCardFrame,
+  OgDomainFooter,
+  ThoriusWordmark,
+} from "@/lib/seo/og-card";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 
-export const COURSE_OG_SIZE = { width: 1200, height: 630 } as const;
+export const COURSE_OG_SIZE = OG_CARD_SIZE;
 export const COURSE_OG_CONTENT_TYPE = "image/png";
-
-const BRAND = {
-  navy: "#020610",
-  navyMid: "#05101f",
-  gold: "#D4AF37",
-  goldSoft: "rgba(212,175,55,0.85)",
-  white: "#ffffff",
-  muted: "rgba(255,255,255,0.72)",
-};
 
 export function formatCourseOgTitle(title: string): string {
   const trimmed = title.trim();
@@ -81,8 +80,8 @@ function CourseOgPriceBadge({ price }: { price: CourseOgPriceDisplay }) {
     return (
       <div
         style={{
-          background: BRAND.gold,
-          color: BRAND.navy,
+          background: OG_BRAND.gold,
+          color: OG_BRAND.navy,
           padding: "10px 22px",
           borderRadius: 999,
           fontSize: 24,
@@ -98,8 +97,8 @@ function CourseOgPriceBadge({ price }: { price: CourseOgPriceDisplay }) {
     <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
       <div
         style={{
-          background: BRAND.gold,
-          color: BRAND.navy,
+          background: OG_BRAND.gold,
+          color: OG_BRAND.navy,
           padding: "10px 20px",
           borderRadius: 999,
           fontSize: 24,
@@ -110,9 +109,9 @@ function CourseOgPriceBadge({ price }: { price: CourseOgPriceDisplay }) {
       </div>
       <div
         style={{
-          border: `2px solid ${BRAND.gold}`,
-          color: BRAND.gold,
-          background: BRAND.navy,
+          border: `2px solid ${OG_BRAND.gold}`,
+          color: OG_BRAND.gold,
+          background: "rgba(2,6,16,0.72)",
           padding: "10px 16px",
           borderRadius: 999,
           fontSize: 20,
@@ -137,26 +136,24 @@ export async function getCourseOgAlt(slug: string): Promise<string> {
 
 export async function renderCourseOgImage(slug: string): Promise<ImageResponse> {
   const course = await fetchCourseBySlug(slug);
+  const backgroundSrc = await loadOgBackgroundSrc(course?.featuredImage);
 
   if (!course) {
     return new ImageResponse(
       (
-        <div
-          style={{
-            background: `linear-gradient(135deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 100%)`,
-            width: "100%",
-            height: "100%",
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-            fontFamily: "system-ui, -apple-system, sans-serif",
-            color: BRAND.white,
-            fontSize: 48,
-            fontWeight: 700,
-          }}
-        >
-          Thorius Academy
-        </div>
+        <OgCardFrame backgroundSrc={backgroundSrc}>
+          <ThoriusWordmark />
+          <div
+            style={{
+              fontSize: 48,
+              fontWeight: 700,
+              color: OG_BRAND.white,
+            }}
+          >
+            Thorius Academy
+          </div>
+          <OgDomainFooter />
+        </OgCardFrame>
       ),
       { ...COURSE_OG_SIZE },
     );
@@ -173,18 +170,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
 
   return new ImageResponse(
     (
-      <div
-        style={{
-          background: `linear-gradient(135deg, ${BRAND.navyMid} 0%, ${BRAND.navy} 100%)`,
-          width: "100%",
-          height: "100%",
-          display: "flex",
-          flexDirection: "column",
-          justifyContent: "space-between",
-          padding: "64px 72px",
-          fontFamily: "system-ui, -apple-system, sans-serif",
-        }}
-      >
+      <OgCardFrame backgroundSrc={backgroundSrc}>
         <div
           style={{
             display: "flex",
@@ -193,19 +179,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             width: "100%",
           }}
         >
-          <div
-            style={{
-              display: "flex",
-              alignItems: "center",
-              fontSize: 42,
-              fontWeight: 900,
-              color: BRAND.white,
-              letterSpacing: -2,
-            }}
-          >
-            THORIUS
-            <span style={{ color: BRAND.gold, marginLeft: 4 }}>.</span>
-          </div>
+          <ThoriusWordmark />
 
           <div
             style={{
@@ -217,8 +191,9 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             {priceDisplay ? <CourseOgPriceBadge price={priceDisplay} /> : null}
             <div
               style={{
-                border: `2px solid ${BRAND.goldSoft}`,
-                color: BRAND.gold,
+                border: `2px solid ${OG_BRAND.goldSoft}`,
+                color: OG_BRAND.gold,
+                background: "rgba(2,6,16,0.55)",
                 padding: "10px 22px",
                 borderRadius: 999,
                 fontSize: 22,
@@ -234,7 +209,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
           style={{
             display: "flex",
             flexDirection: "column",
-            gap: 24,
+            gap: 20,
             maxWidth: 980,
           }}
         >
@@ -242,9 +217,10 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             style={{
               fontSize: titleFontSize(displayTitle),
               fontWeight: 800,
-              color: BRAND.white,
+              color: OG_BRAND.white,
               lineHeight: 1.15,
               letterSpacing: -1.5,
+              textShadow: "0 2px 20px rgba(0,0,0,0.4)",
             }}
           >
             {displayTitle}
@@ -254,7 +230,7 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
             <div
               style={{
                 fontSize: 26,
-                color: BRAND.muted,
+                color: OG_BRAND.muted,
                 lineHeight: 1.45,
               }}
             >
@@ -263,21 +239,8 @@ export async function renderCourseOgImage(slug: string): Promise<ImageResponse> 
           ) : null}
         </div>
 
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            width: "100%",
-            fontSize: 22,
-            color: BRAND.goldSoft,
-            fontWeight: 500,
-          }}
-        >
-          <span>Perakendenin Yeni Nesil Akademisi</span>
-          <span>academy.thorius.com.tr</span>
-        </div>
-      </div>
+        <OgDomainFooter />
+      </OgCardFrame>
     ),
     { ...COURSE_OG_SIZE },
   );
