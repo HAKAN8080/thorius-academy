@@ -2,11 +2,15 @@ export interface CertificateData {
   fullName: string;
   courseTitle: string;
   completionDate: Date;
+  certificateId: string;
+  verifyUrl: string;
+  qrDataUrl?: string;
 }
 
 export interface GenerateCertificateResult {
   success: true;
   certificate_url: string;
+  certificate_id: string;
   emailed: boolean;
 }
 

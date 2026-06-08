@@ -255,6 +255,33 @@ export interface Database {
         };
         Relationships: [];
       };
+      course_certificates: {
+        Row: {
+          id: string;
+          user_id: string;
+          course_id: number;
+          course_title: string;
+          participant_name: string;
+          issued_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          course_id: number;
+          course_title: string;
+          participant_name: string;
+          issued_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          course_id?: number;
+          course_title?: string;
+          participant_name?: string;
+          issued_at?: string;
+        };
+        Relationships: [];
+      };
       enrollments: {
         Row: {
           id: string;

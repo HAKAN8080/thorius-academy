@@ -1,12 +1,18 @@
+import { randomUUID } from "node:crypto";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { getCourseProgressForUser } from "@/lib/progress/lesson-progress-service";
 import { generateCertificatePdf } from "@/lib/certificate/generate-pdf";
+import {
+  createCertificateRecord,
+  getCertificateByUserCourse,
+} from "@/lib/certificate/certificate-repository";
 import {
   certificateExists,
   getCertificatePublicUrl,
   uploadCertificatePdf,
 } from "@/lib/certificate/storage";
 import { sendCertificateEmail } from "@/lib/certificate/send-certificate-email";
+import { getCertificateVerifyUrl } from "@/lib/certificate/verify-url";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import type { GenerateCertificateResponse } from "@/lib/certificate/types";
 
@@ -105,11 +111,14 @@ export async function generateCourseCertificate(
     };
   }
 
-  const alreadyExists = await certificateExists(userId, courseId);
-  if (alreadyExists) {
+  const existingRecord = await getCertificateByUserCourse(userId, courseId);
+  const pdfExists = await certificateExists(userId, courseId);
+
+  if (existingRecord && pdfExists) {
     return {
       success: true,
       certificate_url: getCertificatePublicUrl(userId, courseId),
+      certificate_id: existingRecord.id,
       emailed: false,
     };
   }
@@ -137,10 +146,26 @@ export async function generateCourseCertificate(
     enrollment.completed_at,
   );
 
+  const certificateId = existingRecord?.id ?? randomUUID();
+  const verifyUrl = getCertificateVerifyUrl(certificateId);
+
+  if (!existingRecord) {
+    await createCertificateRecord({
+      id: certificateId,
+      userId,
+      courseId,
+      courseTitle: enrollment.course_title,
+      participantName: fullName,
+      issuedAt: completionDate,
+    });
+  }
+
   const pdfBuffer = await generateCertificatePdf({
     fullName,
     courseTitle: enrollment.course_title,
     completionDate,
+    certificateId,
+    verifyUrl,
   });
 
   const certificateUrl = await uploadCertificatePdf(userId, courseId, pdfBuffer);
@@ -159,6 +184,7 @@ export async function generateCourseCertificate(
   return {
     success: true,
     certificate_url: certificateUrl,
+    certificate_id: certificateId,
     emailed,
   };
 }

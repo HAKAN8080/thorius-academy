@@ -47,6 +47,7 @@ export async function POST(request: Request) {
 
   return NextResponse.json({
     certificate_url: result.certificate_url,
+    certificate_id: result.certificate_id,
     emailed: result.emailed,
   });
 }

@@ -5,8 +5,12 @@ import {
   Text,
   View,
   StyleSheet,
+  Image,
+  Svg,
+  Path,
 } from "@react-pdf/renderer";
 import type { CertificateData } from "@/lib/certificate/types";
+import { DottedBackground } from "@/lib/certificate/dotted-background";
 import { formatCertificateDate } from "@/lib/certificate/format-date";
 
 const NAVY = "#0B1E3F";
@@ -26,13 +30,25 @@ const innerFrameMargin =
 const styles = StyleSheet.create({
   page: {
     backgroundColor: NAVY,
-    fontFamily: "Helvetica",
+    fontFamily: "NotoSans",
+    padding: 0,
+  },
+  root: {
+    width: PAGE_WIDTH,
+    height: PAGE_HEIGHT,
+    position: "relative",
+  },
+  backgroundLayer: {
+    position: "absolute",
+    top: 0,
+    left: 0,
     width: PAGE_WIDTH,
     height: PAGE_HEIGHT,
   },
   outerBorder: {
     margin: OUTER_MARGIN,
-    flex: 1,
+    width: PAGE_WIDTH - OUTER_MARGIN * 2,
+    height: PAGE_HEIGHT - OUTER_MARGIN * 2,
     borderWidth: OUTER_BORDER,
     borderColor: GOLD,
     position: "relative",
@@ -66,10 +82,22 @@ const styles = StyleSheet.create({
     borderColor: GOLD,
     paddingHorizontal: 48,
     paddingBottom: 36,
+    display: "flex",
+    flexDirection: "column",
+  },
+  qrCode: {
+    position: "absolute",
+    top: 24,
+    right: 0,
+    width: 68,
+    height: 68,
+    backgroundColor: "#FFFFFF",
+    padding: 4,
   },
   topSection: {
     paddingTop: 37,
     alignItems: "center",
+    paddingRight: 80,
   },
   brand: {
     fontSize: 28,
@@ -116,15 +144,31 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: "#FFFFFF",
     textAlign: "center",
-    marginBottom: 12,
+    marginBottom: 16,
+  },
+  courseNameWrapper: {
+    alignItems: "center",
+    marginTop: 4,
+  },
+  courseNameLine: {
+    width: 200,
+    height: 1,
+    backgroundColor: GOLD,
+    opacity: 0.75,
+  },
+  courseNameDiamond: {
+    marginVertical: 6,
   },
   courseName: {
-    fontSize: 20,
+    fontFamily: "NotoSans",
+    fontSize: 28,
     fontWeight: 700,
     fontStyle: "italic",
-    color: "#FFFFFF",
+    color: GOLD,
     textAlign: "center",
-    maxWidth: 620,
+    letterSpacing: 2,
+    maxWidth: 580,
+    marginVertical: 4,
   },
   bottomSection: {
     borderTopWidth: 1,
@@ -134,15 +178,15 @@ const styles = StyleSheet.create({
     justifyContent: "space-between",
     alignItems: "flex-end",
   },
+  brandSignature: {
+    fontSize: 18,
+    fontWeight: 700,
+    color: GOLD,
+  },
   completionDate: {
     fontSize: 12,
     color: "#FFFFFF",
-  },
-  companyName: {
-    fontSize: 11,
-    color: GOLD,
     textAlign: "right",
-    maxWidth: 280,
   },
 });
 
@@ -157,41 +201,69 @@ function CornerDecorations() {
   );
 }
 
+function GoldDiamond() {
+  return (
+    <Svg width={8} height={8} viewBox="0 0 8 8" style={styles.courseNameDiamond}>
+      <Path d="M4,0 L8,4 L4,8 L0,4 Z" fill={GOLD} />
+    </Svg>
+  );
+}
+
+function ArtisticCourseName({ title }: { title: string }) {
+  return (
+    <View style={styles.courseNameWrapper}>
+      <View style={styles.courseNameLine} />
+      <GoldDiamond />
+      <Text style={styles.courseName}>{title}</Text>
+      <GoldDiamond />
+      <View style={styles.courseNameLine} />
+    </View>
+  );
+}
+
 export function CertificateDocument({ data }: { data: CertificateData }) {
   const formattedDate = formatCertificateDate(data.completionDate);
 
   return (
     <Document>
-      <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.page}>
-        <View style={styles.outerBorder}>
-          <CornerDecorations />
+      <Page size="A4" orientation="landscape" style={styles.page}>
+        <View style={styles.root}>
+          <View style={styles.backgroundLayer}>
+            <DottedBackground width={PAGE_WIDTH} height={PAGE_HEIGHT} />
+          </View>
 
-          <View style={styles.innerBorder}>
-            <View style={styles.topSection}>
-              <Text style={styles.brand}>THORIUS ACADEMY</Text>
-              <View style={styles.topDivider} />
-            </View>
+          <View style={styles.outerBorder}>
+            <CornerDecorations />
 
-            <View style={styles.centerSection}>
-              <Text style={styles.certificateTitle}>
-                CERTIFICATE OF PARTICIPATION
-              </Text>
-              <View style={styles.centerSpacer} />
-              <Text style={styles.certifyLead}>This is to certify that</Text>
-              <Text style={styles.participantName}>{data.fullName}</Text>
-              <Text style={styles.certifyFollow}>
-                has successfully completed the course
-              </Text>
-              <Text style={styles.courseName}>{data.courseTitle}</Text>
-            </View>
+            <View style={styles.innerBorder}>
+              {data.qrDataUrl ? (
+                <Image src={data.qrDataUrl} style={styles.qrCode} />
+              ) : null}
 
-            <View style={styles.bottomSection}>
-              <Text style={styles.completionDate}>
-                Date of Completion: {formattedDate}
-              </Text>
-              <Text style={styles.companyName}>
-                Thorius Eğitim ve Danışmanlık Ltd. Şti.
-              </Text>
+              <View style={styles.topSection}>
+                <Text style={styles.brand}>THORIUS ACADEMY</Text>
+                <View style={styles.topDivider} />
+              </View>
+
+              <View style={styles.centerSection}>
+                <Text style={styles.certificateTitle}>
+                  CERTIFICATE OF PARTICIPATION
+                </Text>
+                <View style={styles.centerSpacer} />
+                <Text style={styles.certifyLead}>This is to certify that</Text>
+                <Text style={styles.participantName}>{data.fullName}</Text>
+                <Text style={styles.certifyFollow}>
+                  has successfully completed the course
+                </Text>
+                <ArtisticCourseName title={data.courseTitle} />
+              </View>
+
+              <View style={styles.bottomSection}>
+                <Text style={styles.brandSignature}>Thorius</Text>
+                <Text style={styles.completionDate}>
+                  Date of Completion: {formattedDate}
+                </Text>
+              </View>
             </View>
           </View>
         </View>
