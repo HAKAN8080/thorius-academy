@@ -1,5 +1,6 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { deliverCertificateOnCourseComplete } from "@/lib/certificate/certificate-service";
 
 export async function syncEnrollmentProgress(
   supabase: SupabaseClient,
@@ -18,6 +19,15 @@ export async function syncEnrollmentProgress(
     .eq("user_id", userId)
     .eq("course_id", courseId)
     .eq("completed", true);
+
+  const { data: enrollment } = await supabase
+    .from("enrollments")
+    .select("status")
+    .eq("user_id", userId)
+    .eq("course_id", courseId)
+    .maybeSingle();
+
+  const wasAlreadyComplete = enrollment?.status === "completed";
 
   const total = totalLessons ?? 0;
   const completed = completedLessons ?? 0;
@@ -49,5 +59,13 @@ export async function syncEnrollmentProgress(
   revalidatePath("/panel/kurslarim");
   if (options?.courseSlug) {
     revalidatePath(`/panel/kurslarim/${options.courseSlug}`);
+  }
+
+  if (isCourseComplete && !wasAlreadyComplete) {
+    void deliverCertificateOnCourseComplete(supabase, userId, courseId).catch(
+      (error) => {
+        console.error("[Certificate] Auto-delivery failed:", error);
+      },
+    );
   }
 }

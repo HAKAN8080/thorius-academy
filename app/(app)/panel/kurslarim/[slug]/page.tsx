@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/lesson-sync";
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
 import { checkEnrollment } from "@/lib/actions/enrollment";
+import { DownloadCertificateButton } from "@/components/certificate/download-button";
 import { CourseProgressBar } from "@/components/player/course-progress-bar";
 import { VideoPlayer } from "@/components/player/video-player";
 import { CourseLessonsEmpty } from "@/components/player/course-lessons-empty";
@@ -88,10 +89,13 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
             <h1 className="truncate text-base font-semibold text-primary-950">
               {course.title}
             </h1>
-            <CourseProgressBar
-              courseId={course.id}
-              className="hidden sm:block"
-            />
+            <div className="hidden items-center gap-4 sm:flex">
+              <CourseProgressBar courseId={course.id} />
+              <DownloadCertificateButton
+                courseId={course.id}
+                initialCompletionPercent={enrollment.progress}
+              />
+            </div>
           </div>
         </div>
       </div>
@@ -107,6 +111,12 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
               lessonId={activeLesson.id}
               courseId={course.id}
               initialWatchedSeconds={activeProgress?.watched_seconds || 0}
+            />
+
+            <DownloadCertificateButton
+              courseId={course.id}
+              initialCompletionPercent={enrollment.progress}
+              className="sm:hidden"
             />
 
             {usesManualProgressTracking(activeLesson.video_type) ? (
