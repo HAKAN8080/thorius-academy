@@ -1,7 +1,12 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
-import { updateLessonProgress } from "@/lib/actions/lesson-progress";
+import { useRef, useEffect, useMemo } from "react";
+import { useVideoProgress } from "@/hooks/use-video-progress";
+import { useEmbedVideoProgress } from "@/hooks/use-embed-video-progress";
+import {
+  buildVimeoEmbedUrl,
+  buildYouTubeEmbedUrl,
+} from "@/lib/video/embed";
 
 interface Props {
   videoType: "external_url" | "youtube" | "html5" | "vimeo" | null;
@@ -9,8 +14,6 @@ interface Props {
   embedUrl: string | null;
   lessonId: string;
   courseId: number;
-  courseSlug: string;
-  wpLessonId: number;
   initialWatchedSeconds?: number;
   onComplete?: () => void;
 }
@@ -21,14 +24,26 @@ export function VideoPlayer({
   embedUrl,
   lessonId,
   courseId,
-  courseSlug,
-  wpLessonId,
   initialWatchedSeconds = 0,
   onComplete,
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const [hasMarkedComplete, setHasMarkedComplete] = useState(false);
-  const lastSavedRef = useRef(initialWatchedSeconds);
+  const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const youtubeEmbedUrl = useMemo(() => {
+    if (videoType !== "youtube") {
+      return null;
+    }
+    const source = embedUrl || videoUrl;
+    return source ? buildYouTubeEmbedUrl(source) : null;
+  }, [embedUrl, videoType, videoUrl]);
+
+  const vimeoEmbedUrl = useMemo(() => {
+    if (videoType !== "vimeo" || !videoUrl) {
+      return null;
+    }
+    return buildVimeoEmbedUrl(videoUrl);
+  }, [videoType, videoUrl]);
 
   useEffect(() => {
     if (videoRef.current && initialWatchedSeconds > 0) {
@@ -36,41 +51,32 @@ export function VideoPlayer({
     }
   }, [initialWatchedSeconds, lessonId]);
 
-  useEffect(() => {
-    if (videoType === "youtube" || !videoRef.current) return;
+  useVideoProgress({
+    lessonId,
+    courseId,
+    videoRef,
+    initialWatchedSeconds,
+    enabled: videoType === "html5" || videoType === null,
+    onComplete,
+  });
 
-    const video = videoRef.current;
-    const interval = setInterval(() => {
-      const current = Math.floor(video.currentTime);
-      if (current - lastSavedRef.current >= 15) {
-        updateLessonProgress({
-          lessonId,
-          courseId,
-          courseSlug,
-          wpLessonId,
-          watchedSeconds: current,
-        });
-        lastSavedRef.current = current;
-      }
-    }, 15000);
+  useEmbedVideoProgress({
+    provider: "youtube",
+    lessonId,
+    courseId,
+    iframeRef,
+    enabled: videoType === "youtube" && Boolean(youtubeEmbedUrl),
+    onComplete,
+  });
 
-    return () => clearInterval(interval);
-  }, [lessonId, courseId, courseSlug, wpLessonId, videoType]);
-
-  function handleEnded() {
-    if (!hasMarkedComplete) {
-      setHasMarkedComplete(true);
-      updateLessonProgress({
-        lessonId,
-        courseId,
-        courseSlug,
-        wpLessonId,
-        watchedSeconds: videoRef.current?.duration || 0,
-        completed: true,
-      });
-      onComplete?.();
-    }
-  }
+  useEmbedVideoProgress({
+    provider: "vimeo",
+    lessonId,
+    courseId,
+    iframeRef,
+    enabled: videoType === "vimeo" && Boolean(vimeoEmbedUrl),
+    onComplete,
+  });
 
   if (!videoUrl) {
     return (
@@ -80,14 +86,30 @@ export function VideoPlayer({
     );
   }
 
-  if (videoType === "youtube" && embedUrl) {
+  if (videoType === "youtube" && youtubeEmbedUrl) {
     return (
       <div className="aspect-video overflow-hidden rounded-2xl bg-black">
         <iframe
-          src={embedUrl}
+          ref={iframeRef}
+          src={youtubeEmbedUrl}
           className="h-full w-full"
           allowFullScreen
           allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+          title="Ders videosu"
+        />
+      </div>
+    );
+  }
+
+  if (videoType === "vimeo" && vimeoEmbedUrl) {
+    return (
+      <div className="aspect-video overflow-hidden rounded-2xl bg-black">
+        <iframe
+          ref={iframeRef}
+          src={vimeoEmbedUrl}
+          className="h-full w-full"
+          allowFullScreen
+          allow="autoplay; fullscreen; picture-in-picture"
           title="Ders videosu"
         />
       </div>
@@ -102,7 +124,6 @@ export function VideoPlayer({
         controls
         controlsList="nodownload"
         crossOrigin="anonymous"
-        onEnded={handleEnded}
         className="h-full w-full"
         playsInline
       >

@@ -8,6 +8,7 @@ import {
 } from "@/lib/actions/lesson-sync";
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
 import { checkEnrollment } from "@/lib/actions/enrollment";
+import { CourseProgressBar } from "@/components/player/course-progress-bar";
 import { VideoPlayer } from "@/components/player/video-player";
 import { CourseLessonsEmpty } from "@/components/player/course-lessons-empty";
 import { MarkLessonCompleteButton } from "@/components/player/mark-lesson-complete-button";
@@ -27,11 +28,7 @@ export const dynamic = "force-dynamic";
 function usesManualProgressTracking(
   videoType: string | null | undefined,
 ): boolean {
-  return (
-    videoType === "youtube" ||
-    videoType === "vimeo" ||
-    videoType === "external_url"
-  );
+  return videoType === "external_url";
 }
 
 export default async function CoursePlayerPage({ params, searchParams }: Props) {
@@ -76,8 +73,6 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
     lessonParam,
   );
   const activeProgress = progressMap[activeLesson.id];
-  const completedCount = progress.filter((p) => p.completed).length;
-
   return (
     <div className="min-h-screen bg-primary-50/30">
       <div className="border-b border-primary-100 bg-white">
@@ -93,10 +88,10 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
             <h1 className="truncate text-base font-semibold text-primary-950">
               {course.title}
             </h1>
-            <div className="hidden text-sm text-muted-foreground sm:block">
-              {completedCount}/{lessons.length} tamamlandı
-              {enrollment.progress > 0 ? ` · %${enrollment.progress}` : ""}
-            </div>
+            <CourseProgressBar
+              courseId={course.id}
+              className="hidden sm:block"
+            />
           </div>
         </div>
       </div>
@@ -111,8 +106,6 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
               embedUrl={activeLesson.video_embed_url}
               lessonId={activeLesson.id}
               courseId={course.id}
-              courseSlug={slug}
-              wpLessonId={activeLesson.wp_lesson_id}
               initialWatchedSeconds={activeProgress?.watched_seconds || 0}
             />
 
