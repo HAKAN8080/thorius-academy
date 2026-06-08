@@ -1,3 +1,4 @@
+import React from "react";
 import { renderToBuffer } from "@react-pdf/renderer";
 import { CertificateDocument } from "@/lib/certificate/certificate-document";
 import type { CertificateData } from "@/lib/certificate/types";

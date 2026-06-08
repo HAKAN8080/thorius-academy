@@ -1,3 +1,4 @@
+import React from "react";
 import {
   Document,
   Page,
@@ -10,123 +11,185 @@ import { formatCertificateDate } from "@/lib/certificate/format-date";
 
 const NAVY = "#0B1E3F";
 const GOLD = "#D4AF37";
+const PAGE_WIDTH = 842;
+const PAGE_HEIGHT = 595;
+const OUTER_MARGIN = 15;
+const OUTER_BORDER = 3;
+const INNER_MARGIN_FROM_PAGE = 22;
+const INNER_BORDER = 1;
+const CORNER_SIZE = 8;
+const CORNER_OFFSET = CORNER_SIZE / 2;
+
+const innerFrameMargin =
+  INNER_MARGIN_FROM_PAGE - OUTER_MARGIN - OUTER_BORDER;
 
 const styles = StyleSheet.create({
   page: {
-    backgroundColor: "#FFFFFF",
-    padding: 48,
+    backgroundColor: NAVY,
     fontFamily: "Helvetica",
+    width: PAGE_WIDTH,
+    height: PAGE_HEIGHT,
   },
   outerBorder: {
+    margin: OUTER_MARGIN,
     flex: 1,
-    borderWidth: 3,
-    borderColor: NAVY,
-    padding: 6,
+    borderWidth: OUTER_BORDER,
+    borderColor: GOLD,
+    position: "relative",
+  },
+  cornerSquare: {
+    position: "absolute",
+    width: CORNER_SIZE,
+    height: CORNER_SIZE,
+    backgroundColor: GOLD,
+  },
+  cornerTopLeft: {
+    top: -CORNER_OFFSET,
+    left: -CORNER_OFFSET,
+  },
+  cornerTopRight: {
+    top: -CORNER_OFFSET,
+    right: -CORNER_OFFSET,
+  },
+  cornerBottomLeft: {
+    bottom: -CORNER_OFFSET,
+    left: -CORNER_OFFSET,
+  },
+  cornerBottomRight: {
+    bottom: -CORNER_OFFSET,
+    right: -CORNER_OFFSET,
   },
   innerBorder: {
+    margin: innerFrameMargin,
     flex: 1,
-    borderWidth: 1,
+    borderWidth: INNER_BORDER,
     borderColor: GOLD,
-    padding: 40,
-    justifyContent: "space-between",
+    paddingHorizontal: 48,
+    paddingBottom: 36,
   },
-  header: {
+  topSection: {
+    paddingTop: 37,
     alignItems: "center",
-    marginBottom: 24,
   },
   brand: {
-    fontSize: 14,
-    color: GOLD,
-    letterSpacing: 4,
-    marginBottom: 20,
-  },
-  title: {
-    fontSize: 32,
+    fontSize: 28,
     fontWeight: 700,
-    color: NAVY,
-    letterSpacing: 3,
+    color: GOLD,
     textAlign: "center",
   },
-  divider: {
-    width: 120,
-    height: 3,
+  topDivider: {
+    width: "100%",
+    height: 1,
     backgroundColor: GOLD,
     marginTop: 16,
-    alignSelf: "center",
   },
-  body: {
+  centerSection: {
     flex: 1,
     justifyContent: "center",
-    paddingHorizontal: 24,
+    alignItems: "center",
+    paddingVertical: 24,
   },
-  bodyText: {
-    fontSize: 18,
-    color: NAVY,
-    lineHeight: 1.8,
+  certificateTitle: {
+    fontSize: 36,
+    fontWeight: 700,
+    color: "#FFFFFF",
     textAlign: "center",
+    letterSpacing: 1,
   },
-  emphasis: {
+  centerSpacer: {
+    height: 32,
+  },
+  certifyLead: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  participantName: {
+    fontSize: 24,
     fontWeight: 700,
-    color: NAVY,
-  },
-  dateBlock: {
-    alignItems: "center",
-    marginTop: 32,
-  },
-  dateLabel: {
-    fontSize: 12,
     color: GOLD,
-    letterSpacing: 2,
-    marginBottom: 6,
+    textAlign: "center",
+    marginBottom: 12,
   },
-  dateValue: {
-    fontSize: 16,
-    color: NAVY,
+  certifyFollow: {
+    fontSize: 14,
+    color: "#FFFFFF",
+    textAlign: "center",
+    marginBottom: 12,
+  },
+  courseName: {
+    fontSize: 20,
     fontWeight: 700,
+    fontStyle: "italic",
+    color: "#FFFFFF",
+    textAlign: "center",
+    maxWidth: 620,
   },
-  footer: {
-    alignItems: "center",
-    marginTop: 24,
+  bottomSection: {
     borderTopWidth: 1,
     borderTopColor: GOLD,
     paddingTop: 20,
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-end",
   },
-  footerText: {
+  completionDate: {
     fontSize: 12,
-    color: NAVY,
-    textAlign: "center",
+    color: "#FFFFFF",
+  },
+  companyName: {
+    fontSize: 11,
+    color: GOLD,
+    textAlign: "right",
+    maxWidth: 280,
   },
 });
+
+function CornerDecorations() {
+  return (
+    <>
+      <View style={[styles.cornerSquare, styles.cornerTopLeft]} />
+      <View style={[styles.cornerSquare, styles.cornerTopRight]} />
+      <View style={[styles.cornerSquare, styles.cornerBottomLeft]} />
+      <View style={[styles.cornerSquare, styles.cornerBottomRight]} />
+    </>
+  );
+}
 
 export function CertificateDocument({ data }: { data: CertificateData }) {
   const formattedDate = formatCertificateDate(data.completionDate);
 
   return (
     <Document>
-      <Page size="A4" orientation="landscape" style={styles.page}>
+      <Page size={[PAGE_WIDTH, PAGE_HEIGHT]} style={styles.page}>
         <View style={styles.outerBorder}>
+          <CornerDecorations />
+
           <View style={styles.innerBorder}>
-            <View style={styles.header}>
+            <View style={styles.topSection}>
               <Text style={styles.brand}>THORIUS ACADEMY</Text>
-              <Text style={styles.title}>KATILIM BELGESİ</Text>
-              <View style={styles.divider} />
+              <View style={styles.topDivider} />
             </View>
 
-            <View style={styles.body}>
-              <Text style={styles.bodyText}>
-                <Text style={styles.emphasis}>{data.fullName}</Text> adlı katılımcı{" "}
-                <Text style={styles.emphasis}>{data.courseTitle}</Text> eğitimine
-                katılmıştır.
+            <View style={styles.centerSection}>
+              <Text style={styles.certificateTitle}>
+                CERTIFICATE OF PARTICIPATION
               </Text>
-
-              <View style={styles.dateBlock}>
-                <Text style={styles.dateLabel}>TARİH</Text>
-                <Text style={styles.dateValue}>{formattedDate}</Text>
-              </View>
+              <View style={styles.centerSpacer} />
+              <Text style={styles.certifyLead}>This is to certify that</Text>
+              <Text style={styles.participantName}>{data.fullName}</Text>
+              <Text style={styles.certifyFollow}>
+                has successfully completed the course
+              </Text>
+              <Text style={styles.courseName}>{data.courseTitle}</Text>
             </View>
 
-            <View style={styles.footer}>
-              <Text style={styles.footerText}>
+            <View style={styles.bottomSection}>
+              <Text style={styles.completionDate}>
+                Date of Completion: {formattedDate}
+              </Text>
+              <Text style={styles.companyName}>
                 Thorius Eğitim ve Danışmanlık Ltd. Şti.
               </Text>
             </View>
