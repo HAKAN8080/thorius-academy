@@ -14,6 +14,7 @@ import {
   resolveRatingStats,
 } from "@/lib/tutor/instructor-api";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { withCoursesCacheSlug } from "@/lib/instructor/course-cache-access";
 import { provisionInstructorAcademyAccount } from "@/lib/instructor/provision-academy-account";
 import type { SyncInstructorStatsResult } from "@/types/instructor";
 
@@ -165,16 +166,18 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
       statsCoursesUpserted += 1;
 
       await supabase.from("courses_cache").upsert(
-        {
-          wp_course_id: courseId,
-          instructor_wp_user_id: authorId,
-          course_slug: course.post_name,
-          title: decodeHtmlEntities(course.post_title),
-          cover_image_url:
-            resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
-          published: course.post_status === "publish",
-          updated_at: syncedAt,
-        },
+        withCoursesCacheSlug(
+          {
+            wp_course_id: courseId,
+            instructor_wp_user_id: authorId,
+            title: decodeHtmlEntities(course.post_title),
+            cover_image_url:
+              resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
+            published: course.post_status === "publish",
+            updated_at: syncedAt,
+          },
+          course.post_name,
+        ),
         { onConflict: "wp_course_id" },
       );
 

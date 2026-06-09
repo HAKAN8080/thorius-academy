@@ -14,6 +14,28 @@ export function normalizeCourseCacheId(
   return String(id);
 }
 
+/** Production tablosunda legacy `slug` kolonu da zorunlu olabilir. */
+export function buildCoursesCacheSlugFields(slug: string): {
+  course_slug: string;
+  slug: string;
+} {
+  const normalized = slug.trim();
+  return {
+    course_slug: normalized,
+    slug: normalized,
+  };
+}
+
+export function withCoursesCacheSlug<T extends Record<string, unknown>>(
+  payload: T,
+  slug: string,
+): T & { course_slug: string; slug: string } {
+  return {
+    ...payload,
+    ...buildCoursesCacheSlugFields(slug),
+  };
+}
+
 export function normalizeCoursesCacheRow(
   row: Record<string, unknown>,
 ): CoursesCache {

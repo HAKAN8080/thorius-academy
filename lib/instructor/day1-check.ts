@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { withCoursesCacheSlug } from "@/lib/instructor/course-cache-access";
 
 export type Day1CheckStatus = "pass" | "fail" | "warn";
 
@@ -78,18 +79,22 @@ async function testCourseWrite(instructorWpId: number): Promise<Day1CheckItem> {
 
   const { data, error } = await admin
     .from("courses_cache")
-    .insert({
-      wp_course_id: testWpCourseId,
-      instructor_wp_user_id: instructorWpId,
-      course_slug: "day1-check-test",
-      title: "Day1 Check Test",
-      published: false,
-      pricing_model: "free",
-      price: 0,
-      level: "Başlangıç",
-      language: "Türkçe",
-      visibility: "public",
-    })
+    .insert(
+      withCoursesCacheSlug(
+        {
+          wp_course_id: testWpCourseId,
+          instructor_wp_user_id: instructorWpId,
+          title: "Day1 Check Test",
+          published: false,
+          pricing_model: "free",
+          price: 0,
+          level: "Başlangıç",
+          language: "Türkçe",
+          visibility: "public",
+        },
+        "day1-check-test",
+      ),
+    )
     .select("id")
     .single();
 

@@ -5,11 +5,13 @@ import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireCurriculumAccess } from "@/lib/instructor/curriculum-access";
 import {
+  buildCoursesCacheSlugFields,
   normalizeCourseCacheId,
   normalizeCoursesCacheRow,
   requireCourseCacheAccess,
   slugifyCourseTitle,
   verifyCourseCacheAccess,
+  withCoursesCacheSlug,
 } from "@/lib/instructor/course-cache-access";
 import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
 import type {
@@ -260,18 +262,22 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
 
   const { data, error } = await admin
     .from("courses_cache")
-    .insert({
-      wp_course_id: wpCourseId,
-      instructor_wp_user_id: access.wpInstructorId,
-      course_slug: slug,
-      title: "Yeni Kurs",
-      published: false,
-      pricing_model: "free",
-      price: 0,
-      level: "Başlangıç",
-      language: "Türkçe",
-      visibility: "public",
-    })
+    .insert(
+      withCoursesCacheSlug(
+        {
+          wp_course_id: wpCourseId,
+          instructor_wp_user_id: access.wpInstructorId,
+          title: "Yeni Kurs",
+          published: false,
+          pricing_model: "free",
+          price: 0,
+          level: "Başlangıç",
+          language: "Türkçe",
+          visibility: "public",
+        },
+        slug,
+      ),
+    )
     .select("id")
     .single();
 
@@ -350,7 +356,7 @@ export async function saveCourseBasics(
         category: input.category?.trim() || null,
         visibility: input.visibility,
         published: input.published,
-        course_slug: slug,
+        ...buildCoursesCacheSlugFields(slug),
         updated_at: new Date().toISOString(),
       })
       .eq("id", courseCacheId)
