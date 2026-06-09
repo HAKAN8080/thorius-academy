@@ -1,7 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
 import { notFound, redirect } from "next/navigation";
-import { ArrowLeft, Star, Users } from "lucide-react";
+import { ArrowLeft, BookOpen, Star, Users } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import {
@@ -82,6 +82,13 @@ export default async function InstructorCourseDetailPage({ params }: Props) {
                 )}
               </span>
             </div>
+            <Link
+              href={`/instructor/courses/${course.wp_course_id}/curriculum`}
+              className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#0B1E3F] px-4 py-2 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#0B1E3F]/90"
+            >
+              <BookOpen className="h-4 w-4" />
+              Müfredatı Yönet
+            </Link>
           </div>
         </div>
       </div>

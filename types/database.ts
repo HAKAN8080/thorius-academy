@@ -17,18 +17,21 @@ export interface Database {
           id: string;
           full_name: string | null;
           wp_instructor_id: number | null;
+          role: "student" | "instructor" | "admin";
           created_at: string;
         };
         Insert: {
           id: string;
           full_name?: string | null;
           wp_instructor_id?: number | null;
+          role?: "student" | "instructor" | "admin";
           created_at?: string;
         };
         Update: {
           id?: string;
           full_name?: string | null;
           wp_instructor_id?: number | null;
+          role?: "student" | "instructor" | "admin";
           created_at?: string;
         };
       };
@@ -140,6 +143,10 @@ export interface Database {
           lesson_order: number;
           title: string;
           description: string | null;
+          type: "video" | "text";
+          content_md: string | null;
+          published: boolean;
+          duration_minutes: number | null;
           duration_seconds: number | null;
           video_type: "external_url" | "youtube" | "html5" | "vimeo" | null;
           video_url: string | null;
@@ -158,6 +165,10 @@ export interface Database {
           lesson_order: number;
           title: string;
           description?: string | null;
+          type?: "video" | "text";
+          content_md?: string | null;
+          published?: boolean;
+          duration_minutes?: number | null;
           duration_seconds?: number | null;
           video_type?: "external_url" | "youtube" | "html5" | "vimeo" | null;
           video_url?: string | null;
@@ -176,6 +187,10 @@ export interface Database {
           lesson_order?: number;
           title?: string;
           description?: string | null;
+          type?: "video" | "text";
+          content_md?: string | null;
+          published?: boolean;
+          duration_minutes?: number | null;
           duration_seconds?: number | null;
           video_type?: "external_url" | "youtube" | "html5" | "vimeo" | null;
           video_url?: string | null;

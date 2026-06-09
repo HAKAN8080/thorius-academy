@@ -35,6 +35,7 @@ export async function getLessonsForCourse(
     .from("lessons")
     .select("*")
     .in("course_slug", slugVariants)
+    .eq("published", true)
     .order("topic_order", { ascending: true })
     .order("lesson_order", { ascending: true });
 
