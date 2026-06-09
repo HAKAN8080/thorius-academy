@@ -1,5 +1,6 @@
 import { getAuthCallbackUrl, getAppOrigin } from "@/lib/auth/app-url";
 import { EnrollmentEmail } from "@/lib/email/templates/enrollment";
+import { recordEnrollmentEarning } from "@/lib/earnings/record-enrollment-earning";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
@@ -158,6 +159,10 @@ export async function processWooCommerceOrder(
 
   const supabaseAdmin = getSupabaseAdmin();
   const enrolledCourses: EnrolledCourse[] = [];
+  const orderTotalAmount = Number.parseFloat(order.total);
+  const saleAmountBase = Number.isFinite(orderTotalAmount) ? orderTotalAmount : 0;
+  const mappableLineItems = (order.line_items ?? []).length || 1;
+  const saleAmountPerCourse = saleAmountBase / mappableLineItems;
 
   for (const item of order.line_items ?? []) {
     const wcProductId = item.product_id;
@@ -218,6 +223,13 @@ export async function processWooCommerceOrder(
       console.error("[Webhook] Enrollment failed:", enrollError.message);
       continue;
     }
+
+    await recordEnrollmentEarning({
+      wcOrderId: order.id,
+      wpCourseId: courseProduct.wp_course_id,
+      saleAmount: saleAmountPerCourse,
+      userId,
+    });
 
     enrolledCourses.push({ slug: courseSlug, title: course?.title ?? item.name });
     console.log(`[Webhook] Enrolled: ${courseSlug}`);

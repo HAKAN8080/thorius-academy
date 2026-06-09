@@ -8,6 +8,7 @@ import {
   getCourseReviews,
   getInstructorCourseBySlug,
 } from "@/lib/actions/instructor-dashboard";
+import { getCourseCacheIdByWpCourseId } from "@/lib/instructor/course-cache-access";
 import { InstructorReviewsList } from "@/components/instructor/instructor-reviews-list";
 
 interface Props {
@@ -35,6 +36,9 @@ export default async function InstructorCourseDetailPage({ params }: Props) {
   if (!course) notFound();
 
   const reviews = await getCourseReviews(course.wp_course_id);
+  const courseCacheId =
+    (await getCourseCacheIdByWpCourseId(course.wp_course_id)) ??
+    String(course.wp_course_id);
 
   return (
     <div className="container mx-auto max-w-5xl px-4 py-10 sm:px-6 lg:px-8">
@@ -83,7 +87,7 @@ export default async function InstructorCourseDetailPage({ params }: Props) {
               </span>
             </div>
             <Link
-              href={`/instructor/courses/${course.wp_course_id}/curriculum`}
+              href={`/instructor/courses/${courseCacheId}/curriculum`}
               className="mt-5 inline-flex items-center gap-2 rounded-lg bg-[#0B1E3F] px-4 py-2 text-sm font-semibold text-[#D4AF37] transition hover:bg-[#0B1E3F]/90"
             >
               <BookOpen className="h-4 w-4" />

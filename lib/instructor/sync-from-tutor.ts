@@ -134,6 +134,20 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
         continue;
       }
 
+      await supabase.from("courses_cache").upsert(
+        {
+          wp_course_id: courseId,
+          instructor_wp_user_id: authorId,
+          course_slug: course.post_name,
+          title: decodeHtmlEntities(course.post_title),
+          cover_image_url:
+            resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
+          published: course.post_status === "publish",
+          updated_at: syncedAt,
+        },
+        { onConflict: "wp_course_id" },
+      );
+
       const reviewRows = reviews
         .map((review) => mapReviewToRow(review, courseId))
         .filter((row): row is NonNullable<typeof row> => row !== null)

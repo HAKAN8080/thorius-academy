@@ -1,0 +1,402 @@
+"use server";
+
+import { revalidatePath } from "next/cache";
+import { redirect } from "next/navigation";
+import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { requireCurriculumAccess } from "@/lib/instructor/curriculum-access";
+import {
+  requireCourseCacheAccess,
+  slugifyCourseTitle,
+  verifyCourseCacheAccess,
+} from "@/lib/instructor/course-cache-access";
+import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
+import type {
+  CourseAdditionalInput,
+  CourseBasicsInput,
+  CoursesCache,
+  InstructorCourseListItem,
+  InstructorDashboardStats,
+} from "@/types/instructor-course";
+
+function mapCourse(row: Record<string, unknown>): CoursesCache {
+  return row as unknown as CoursesCache;
+}
+
+async function nextSyntheticWpCourseId(): Promise<number> {
+  const admin = getSupabaseAdmin();
+  const { data } = await admin
+    .from("courses_cache")
+    .select("wp_course_id")
+    .not("wp_course_id", "is", null)
+    .lt("wp_course_id", 0)
+    .order("wp_course_id", { ascending: true })
+    .limit(1);
+
+  const currentMin = data?.[0]?.wp_course_id;
+  return typeof currentMin === "number" ? currentMin - 1 : -1000;
+}
+
+export async function getInstructorDashboardStats(): Promise<InstructorDashboardStats> {
+  const access = await requireCurriculumAccess();
+  if (!access.wpInstructorId && !access.isAdmin) {
+    return {
+      totalCourses: 0,
+      activeCourses: 0,
+      totalStudents: 0,
+      totalEarnings: 0,
+    };
+  }
+
+  const admin = getSupabaseAdmin();
+
+  if (access.wpInstructorId) {
+    await ensureCoursesCacheForInstructor(access.wpInstructorId);
+  }
+
+  let totalCourses = 0;
+  let activeCourses = 0;
+  let totalStudents = 0;
+
+  if (access.wpInstructorId) {
+    const { data: statRows } = await admin
+      .from("instructor_course_stats")
+      .select("status, enrollment_count")
+      .eq("instructor_wp_user_id", access.wpInstructorId);
+
+    const rows = statRows ?? [];
+    totalCourses = rows.length;
+    activeCourses = rows.filter((row) => row.status === "publish").length;
+    totalStudents = rows.reduce(
+      (sum, row) => sum + Number(row.enrollment_count ?? 0),
+      0,
+    );
+  } else if (access.isAdmin) {
+    const { data: courses } = await admin.from("courses_cache").select("id, published");
+    const courseRows = courses ?? [];
+    totalCourses = courseRows.length;
+    activeCourses = courseRows.filter((c) => c.published).length;
+  }
+
+  let coursesQuery = admin.from("courses_cache").select("id, published");
+  if (!access.isAdmin && access.wpInstructorId) {
+    coursesQuery = coursesQuery.eq("instructor_wp_user_id", access.wpInstructorId);
+  }
+
+  const { data: courses } = await coursesQuery;
+  const courseRows = courses ?? [];
+
+  if (totalCourses === 0) {
+    totalCourses = courseRows.length;
+    activeCourses = courseRows.filter((c) => c.published).length;
+  }
+
+  const wpCourseIds = courseRows
+    .map((c) => (c as { wp_course_id?: number }).wp_course_id)
+    .filter((id): id is number => typeof id === "number");
+
+  if (totalStudents === 0 && wpCourseIds.length > 0) {
+    const { data: stats } = await admin
+      .from("instructor_course_stats")
+      .select("enrollment_count")
+      .in("wp_course_id", wpCourseIds);
+    totalStudents = (stats ?? []).reduce(
+      (sum, row) => sum + ((row.enrollment_count as number) ?? 0),
+      0,
+    );
+  }
+
+  let earningsQuery = admin
+    .from("earnings")
+    .select("instructor_share");
+  if (!access.isAdmin && access.wpInstructorId) {
+    earningsQuery = earningsQuery.eq(
+      "instructor_wp_user_id",
+      access.wpInstructorId,
+    );
+  }
+
+  const { data: earnings } = await earningsQuery;
+  const totalEarnings = (earnings ?? []).reduce(
+    (sum, row) => sum + Number(row.instructor_share ?? 0),
+    0,
+  );
+
+  return {
+    totalCourses,
+    activeCourses,
+    totalStudents,
+    totalEarnings,
+  };
+}
+
+export async function getInstructorCourseList(): Promise<
+  InstructorCourseListItem[]
+> {
+  const access = await requireCurriculumAccess();
+  const admin = getSupabaseAdmin();
+
+  if (access.wpInstructorId) {
+    await ensureCoursesCacheForInstructor(access.wpInstructorId);
+  }
+
+  let query = admin
+    .from("courses_cache")
+    .select("*")
+    .order("updated_at", { ascending: false });
+
+  if (!access.isAdmin && access.wpInstructorId) {
+    query = query.eq("instructor_wp_user_id", access.wpInstructorId);
+  }
+
+  const { data: courses, error } = await query;
+  if (error) {
+    return [];
+  }
+
+  let courseRows = courses ?? [];
+
+  if (courseRows.length === 0 && access.wpInstructorId) {
+    const { data: statsOnly } = await admin
+      .from("instructor_course_stats")
+      .select("wp_course_id")
+      .eq("instructor_wp_user_id", access.wpInstructorId);
+
+    const wpIdsFromStats = (statsOnly ?? [])
+      .map((row) => row.wp_course_id as number)
+      .filter((id) => typeof id === "number");
+
+    if (wpIdsFromStats.length > 0) {
+      const { data: cacheRows } = await admin
+        .from("courses_cache")
+        .select("*")
+        .in("wp_course_id", wpIdsFromStats)
+        .order("updated_at", { ascending: false });
+
+      courseRows = cacheRows ?? [];
+    }
+  }
+
+  const wpIds = courseRows
+    .map((c) => c.wp_course_id as number | null)
+    .filter((id): id is number => typeof id === "number");
+
+  const statsMap = new Map<
+    number,
+    {
+      enrollment_count: number;
+      status: string;
+      published_at: string | null;
+      rating_avg: number;
+      rating_count: number;
+      image_url: string | null;
+    }
+  >();
+  if (wpIds.length > 0) {
+    const { data: stats } = await admin
+      .from("instructor_course_stats")
+      .select(
+        "wp_course_id, enrollment_count, status, published_at, rating_avg, rating_count, image_url",
+      )
+      .in("wp_course_id", wpIds);
+    for (const row of stats ?? []) {
+      statsMap.set(row.wp_course_id as number, {
+        enrollment_count: row.enrollment_count as number,
+        status: row.status as string,
+        published_at: row.published_at as string | null,
+        rating_avg: Number(row.rating_avg ?? 0),
+        rating_count: Number(row.rating_count ?? 0),
+        image_url: row.image_url as string | null,
+      });
+    }
+  }
+
+  let earningsQuery = admin
+    .from("earnings")
+    .select("course_id, instructor_share");
+  if (!access.isAdmin && access.wpInstructorId) {
+    earningsQuery = earningsQuery.eq(
+      "instructor_wp_user_id",
+      access.wpInstructorId,
+    );
+  }
+  const { data: earningsRows } = await earningsQuery;
+  const earningsMap = new Map<string, number>();
+  for (const row of earningsRows ?? []) {
+    const courseId = row.course_id as string | null;
+    if (!courseId) continue;
+    earningsMap.set(
+      courseId,
+      (earningsMap.get(courseId) ?? 0) + Number(row.instructor_share ?? 0),
+    );
+  }
+
+  return courseRows.map((row) => {
+    const wpCourseId = row.wp_course_id as number | null;
+    const stat = typeof wpCourseId === "number" ? statsMap.get(wpCourseId) : undefined;
+
+    return {
+      id: String(row.id),
+      wp_course_id: wpCourseId,
+      title: row.title as string,
+      cover_image_url:
+        (row.cover_image_url as string | null) ?? stat?.image_url ?? null,
+      enrollment_count: stat?.enrollment_count ?? 0,
+      earnings_total: earningsMap.get(String(row.id)) ?? 0,
+      published: row.published as boolean,
+      course_slug: row.course_slug as string | null,
+      status: stat?.status ?? ((row.published as boolean) ? "publish" : "draft"),
+      published_at: stat?.published_at ?? null,
+      rating_avg: stat?.rating_avg ?? 0,
+      rating_count: stat?.rating_count ?? 0,
+    };
+  });
+}
+
+export async function createInstructorCourse(): Promise<{ id: string }> {
+  const access = await requireCurriculumAccess();
+  if (!access.wpInstructorId) {
+    throw new Error("INSTRUCTOR_REQUIRED");
+  }
+
+  const admin = getSupabaseAdmin();
+  const wpCourseId = await nextSyntheticWpCourseId();
+  const slug = `yeni-kurs-${Math.abs(wpCourseId)}`;
+
+  const { data, error } = await admin
+    .from("courses_cache")
+    .insert({
+      wp_course_id: wpCourseId,
+      instructor_wp_user_id: access.wpInstructorId,
+      course_slug: slug,
+      title: "Yeni Kurs",
+      published: false,
+    })
+    .select("id")
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Kurs oluşturulamadı");
+  }
+
+  await admin.from("instructor_course_stats").upsert(
+    {
+      wp_course_id: wpCourseId,
+      course_slug: slug,
+      instructor_wp_user_id: access.wpInstructorId,
+      title: "Yeni Kurs",
+      status: "draft",
+      enrollment_count: 0,
+      rating_avg: 0,
+      rating_count: 0,
+    },
+    { onConflict: "wp_course_id" },
+  );
+
+  revalidatePath("/instructor/dashboard");
+  revalidatePath("/instructor/courses");
+  return { id: data.id as string };
+}
+
+export async function createInstructorCourseAndRedirect() {
+  const { id } = await createInstructorCourse();
+  redirect(`/instructor/courses/${id}/basics`);
+}
+
+export async function getCourseBasics(
+  courseCacheId: string,
+): Promise<CoursesCache | { error: string }> {
+  try {
+    return await requireCourseCacheAccess(courseCacheId);
+  } catch {
+    return { error: "Kurs bulunamadı veya erişim yok." };
+  }
+}
+
+export async function saveCourseBasics(
+  courseCacheId: string,
+  input: CourseBasicsInput,
+): Promise<{ course: CoursesCache } | { error: string }> {
+  try {
+    const existing = await requireCourseCacheAccess(courseCacheId);
+    const admin = getSupabaseAdmin();
+    const slug =
+      existing.course_slug ||
+      slugifyCourseTitle(input.title) ||
+      `kurs-${Math.abs(existing.wp_course_id ?? 0)}`;
+
+    const { data, error } = await admin
+      .from("courses_cache")
+      .update({
+        title: input.title.trim(),
+        subtitle: input.subtitle?.trim() || null,
+        description_md: input.description_md ?? null,
+        cover_image_url: input.cover_image_url?.trim() || null,
+        intro_video_url: input.intro_video_url?.trim() || null,
+        pricing_model: input.pricing_model,
+        price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
+        sale_price: input.sale_price ?? null,
+        level: input.level ?? "Başlangıç",
+        language: input.language ?? "Türkçe",
+        category: input.category?.trim() || null,
+        visibility: input.visibility,
+        published: input.published,
+        course_slug: slug,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", courseCacheId)
+      .select("*")
+      .single();
+
+    if (error || !data) {
+      return { error: error?.message ?? "Kaydedilemedi" };
+    }
+
+    if (existing.wp_course_id) {
+      await admin
+        .from("instructor_course_stats")
+        .update({
+          title: input.title.trim(),
+          course_slug: slug,
+          image_url: input.cover_image_url?.trim() || null,
+          status: input.published ? "publish" : "draft",
+        })
+        .eq("wp_course_id", existing.wp_course_id);
+    }
+
+    revalidatePath(`/instructor/courses/${courseCacheId}/basics`);
+    return { course: mapCourse(data as Record<string, unknown>) };
+  } catch {
+    return { error: "Kaydedilemedi" };
+  }
+}
+
+export async function saveCourseAdditional(
+  courseCacheId: string,
+  input: CourseAdditionalInput,
+): Promise<{ success: true } | { error: string }> {
+  try {
+    await requireCourseCacheAccess(courseCacheId);
+    const admin = getSupabaseAdmin();
+    const { error } = await admin
+      .from("courses_cache")
+      .update({
+        what_will_learn: input.what_will_learn ?? null,
+        target_audience: input.target_audience ?? null,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", courseCacheId);
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath(`/instructor/courses/${courseCacheId}/additional`);
+    return { success: true };
+  } catch {
+    return { error: "Kaydedilemedi" };
+  }
+}
+
+export async function getCourseForBuilder(courseCacheId: string) {
+  return verifyCourseCacheAccess(courseCacheId);
+}
