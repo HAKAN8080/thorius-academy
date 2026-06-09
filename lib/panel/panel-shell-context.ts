@@ -28,7 +28,8 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   const access = await getInstructorAccess();
   const loginEmail = user.email ?? null;
 
-  const { data: profile } = await supabase
+  const admin = getSupabaseAdmin();
+  const { data: profile } = await admin
     .from("profiles")
     .select("full_name")
     .eq("id", user.id)
@@ -44,7 +45,6 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   let avatarUrl: string | null = null;
 
   if (access.isInstructor && access.wpInstructorId) {
-    const admin = getSupabaseAdmin();
     const { data: instructor } = await admin
       .from("instructors")
       .select("full_name, avatar_url, email")

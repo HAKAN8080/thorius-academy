@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getPreferredProfileName } from "@/lib/instructor/display-name";
 
 export interface InstructorAccess {
   isInstructor: boolean;
@@ -180,12 +181,77 @@ async function persistInstructorProfile(
   if (linkedName) {
     payload.full_name = linkedName;
   } else if (wrongLinkedName) {
-    payload.full_name = null;
+    payload.full_name = getPreferredProfileName({
+      loginEmail,
+      profileName,
+      instructorName: instructor?.full_name,
+    });
   } else if (profileName) {
-    payload.full_name = profileName;
+    payload.full_name = getPreferredProfileName({
+      loginEmail,
+      profileName,
+      instructorName: instructor?.full_name,
+    });
   }
 
   await admin.from("profiles").upsert(payload, { onConflict: "id" });
+}
+
+async function repairBorrowedProfileName(
+  admin: AdminClient,
+  userId: string,
+  loginEmail: string | null,
+  profile: ProfileRow | null | undefined,
+): Promise<void> {
+  const profileName = profile?.full_name?.trim() ?? "";
+  if (!profileName) {
+    return;
+  }
+
+  const preferred = getPreferredProfileName({
+    loginEmail,
+    profileName,
+    instructorName: profileName,
+  });
+
+  if (!preferred || preferred === profileName) {
+    return;
+  }
+
+  await admin
+    .from("profiles")
+    .update({ full_name: preferred })
+    .eq("id", userId);
+}
+
+async function lookupInstructorViaAllowlist(
+  admin: AdminClient,
+  loginEmail: string,
+): Promise<InstructorRow | null> {
+  const envEmails = getEnvInstructorEmails();
+  if (!envEmails.includes(loginEmail)) {
+    return null;
+  }
+
+  const direct = await lookupInstructorByEmail(admin, loginEmail);
+  if (direct) {
+    return direct;
+  }
+
+  const peers: InstructorRow[] = [];
+  for (const allowedEmail of envEmails) {
+    const row = await lookupInstructorByEmail(admin, allowedEmail);
+    if (row) {
+      peers.push(row);
+    }
+  }
+
+  const uniqueIds = new Set(peers.map((peer) => peer.wp_user_id));
+  if (uniqueIds.size === 1 && peers[0]) {
+    return peers[0];
+  }
+
+  return null;
 }
 
 async function resolveInstructorIdentity(
@@ -198,6 +264,14 @@ async function resolveInstructorIdentity(
     const byEmail = await lookupInstructorByEmail(admin, email);
     if (byEmail) {
       return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
+    }
+
+    const viaAllowlist = await lookupInstructorViaAllowlist(admin, email);
+    if (viaAllowlist) {
+      return {
+        wpInstructorId: viaAllowlist.wp_user_id,
+        instructor: viaAllowlist,
+      };
     }
   }
 
@@ -221,13 +295,6 @@ async function resolveInstructorIdentity(
         wpInstructorId: profile.wp_instructor_id,
         instructor,
       };
-    }
-  }
-
-  if (email && getEnvInstructorEmails().includes(email)) {
-    const byEmail = await lookupInstructorByEmail(admin, email);
-    if (byEmail) {
-      return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
     }
   }
 
@@ -352,6 +419,7 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
   );
 
   if (!resolved) {
+    await repairBorrowedProfileName(admin, user.id, email, profile);
     return { isInstructor: false, wpInstructorId: null, instructorName: null };
   }
 
