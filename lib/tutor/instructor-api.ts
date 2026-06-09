@@ -88,13 +88,28 @@ function parseNumber(value: unknown): number {
   return 0;
 }
 
+function parseAuthorFromUnknown(value: unknown): number {
+  if (typeof value === "number" && Number.isFinite(value)) {
+    return Math.trunc(value);
+  }
+  if (typeof value === "string" && value.trim()) {
+    const parsed = parseInt(value, 10);
+    return Number.isNaN(parsed) ? 0 : parsed;
+  }
+  if (value && typeof value === "object") {
+    const obj = value as Record<string, unknown>;
+    return parseNumber(obj.ID ?? obj.id ?? obj.user_id ?? obj.post_author);
+  }
+  return 0;
+}
+
 function normalizeCourseItem(raw: unknown): TutorCourseListItem {
   const item = (raw ?? {}) as Record<string, unknown>;
   return {
     ID: parseNumber(item.ID ?? item.id),
-    post_author: (item.post_author ?? item.author ?? item.instructor_id ?? 0) as
-      | number
-      | string,
+    post_author: parseAuthorFromUnknown(
+      item.post_author ?? item.author ?? item.instructor_id ?? 0,
+    ),
     post_title: String(item.post_title ?? item.title ?? ""),
     post_name: String(item.post_name ?? item.slug ?? ""),
     post_status: String(item.post_status ?? item.status ?? "publish"),
@@ -201,8 +216,55 @@ function parseCourseId(course: TutorCourseListItem): number {
 }
 
 function parseAuthorId(course: TutorCourseListItem): number {
-  const author = course.post_author;
-  return typeof author === "string" ? parseInt(author, 10) : author;
+  return parseAuthorFromUnknown(course.post_author);
+}
+
+function mergeCourseRecords(
+  primary: TutorCourseListItem,
+  secondary: TutorCourseListItem,
+): TutorCourseListItem {
+  const primaryAuthor = parseAuthorId(primary);
+  const secondaryAuthor = parseAuthorId(secondary);
+
+  return {
+    ...secondary,
+    ...primary,
+    post_author: primaryAuthor > 0 ? primaryAuthor : secondaryAuthor,
+    post_title: primary.post_title || secondary.post_title,
+    post_name: primary.post_name || secondary.post_name,
+    post_status: primary.post_status || secondary.post_status,
+    post_date: primary.post_date || secondary.post_date,
+    post_date_gmt: primary.post_date_gmt ?? secondary.post_date_gmt,
+    thumbnail_url: primary.thumbnail_url ?? secondary.thumbnail_url,
+    thumbnail: primary.thumbnail ?? secondary.thumbnail,
+    image: primary.image ?? secondary.image,
+  };
+}
+
+function mergeCourseCatalog(
+  tutorCourses: TutorCourseListItem[],
+  wpCourses: TutorCourseListItem[],
+): TutorCourseListItem[] {
+  const byId = new Map<number, TutorCourseListItem>();
+
+  for (const course of wpCourses) {
+    const id = parseCourseId(course);
+    if (id > 0) {
+      byId.set(id, course);
+    }
+  }
+
+  for (const course of tutorCourses) {
+    const id = parseCourseId(course);
+    if (id <= 0) {
+      continue;
+    }
+
+    const existing = byId.get(id);
+    byId.set(id, existing ? mergeCourseRecords(course, existing) : course);
+  }
+
+  return Array.from(byId.values());
 }
 
 export async function fetchTutorCoursesPage(
@@ -224,28 +286,37 @@ export async function fetchTutorCoursesPage(
 
 export async function fetchAllTutorCourses(): Promise<{
   courses: TutorCourseListItem[];
-  source: "tutor-api" | "wp-rest";
+  source: "tutor-api" | "wp-rest" | "merged";
 }> {
-  const all: TutorCourseListItem[] = [];
+  const tutorCourses: TutorCourseListItem[] = [];
   let page = 1;
 
   try {
     while (page <= 20) {
-      const batch = await fetchTutorCoursesPage(page);
+      const batch = await fetchTutorCoursesPage(page, 100);
       if (batch.length === 0) break;
-      all.push(...batch);
-      if (batch.length < 50) break;
+      tutorCourses.push(...batch);
+      if (batch.length < 100) break;
       page += 1;
     }
   } catch (error) {
     console.warn("[Tutor Courses] Tutor API failed:", error);
   }
 
-  if (all.length > 0) {
-    return { courses: all, source: "tutor-api" };
+  const wpCourses = await fetchAllCoursesFromWpRest();
+  const merged = mergeCourseCatalog(tutorCourses, wpCourses);
+
+  if (tutorCourses.length > 0 && wpCourses.length > 0) {
+    console.log(
+      `[Tutor Courses] merged tutor=${tutorCourses.length} wp=${wpCourses.length} total=${merged.length}`,
+    );
+    return { courses: merged, source: "merged" };
   }
 
-  const wpCourses = await fetchAllCoursesFromWpRest();
+  if (tutorCourses.length > 0) {
+    return { courses: tutorCourses, source: "tutor-api" };
+  }
+
   console.log(`[Tutor Courses] WP REST fallback: ${wpCourses.length} courses`);
   return { courses: wpCourses, source: "wp-rest" };
 }

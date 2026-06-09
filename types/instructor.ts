@@ -39,7 +39,7 @@ export interface SyncInstructorStatsResult {
   accountsLinked?: number;
   accountsCreated?: number;
   inviteEmailsSent?: number;
-  courseSource?: "tutor-api" | "wp-rest";
+  courseSource?: "tutor-api" | "wp-rest" | "merged";
   warning?: string;
   error?: string;
 }
