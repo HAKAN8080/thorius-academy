@@ -5,22 +5,13 @@ import Link from "next/link";
 import type { User } from "@supabase/supabase-js";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
-import {
-  getInstructorPortalUrl,
-  getStudentPortalUrl,
-} from "@/lib/config/portal-urls";
 
 interface AuthButtonsProps {
-  isInstructor?: boolean;
   onNavigate?: () => void;
   className?: string;
 }
 
-export function AuthButtons({
-  isInstructor = false,
-  onNavigate,
-  className,
-}: AuthButtonsProps) {
+export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -50,33 +41,11 @@ export function AuthButtons({
   }
 
   if (user) {
-    if (isInstructor) {
-      return (
-        <div className={className}>
-          <Button variant="ghost" asChild>
-            <Link href={getInstructorPortalUrl()} onClick={onNavigate}>
-              Eğitmen Paneli
-            </Link>
-          </Button>
-          <Button variant="gold" asChild>
-            <Link href={getStudentPortalUrl()} onClick={onNavigate}>
-              Öğrenci Kurslarım
-            </Link>
-          </Button>
-        </div>
-      );
-    }
-
     return (
       <div className={className}>
-        <Button variant="ghost" asChild>
-          <Link href={getStudentPortalUrl()} onClick={onNavigate}>
-            Kurslarım
-          </Link>
-        </Button>
         <Button variant="gold" asChild>
           <Link href="/panel" onClick={onNavigate}>
-            Panel
+            Panelim
           </Link>
         </Button>
       </div>

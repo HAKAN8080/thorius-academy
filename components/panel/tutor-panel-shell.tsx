@@ -172,7 +172,7 @@ export function TutorPanelShell({
 
           <div className="p-3">
             <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
-              Eğitmen
+              Eğitmenlik
             </p>
             <nav className="space-y-1">
               {instructorPanelNav.map((item) => (

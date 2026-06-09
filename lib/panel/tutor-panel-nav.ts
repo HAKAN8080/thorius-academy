@@ -39,7 +39,7 @@ export const studentPanelNav: PanelNavItem[] = [
   },
   {
     id: "enrolled",
-    label: "Kayıtlı Kurslar",
+    label: "Kurslarım",
     href: "/panel/kurslarim",
     icon: BookOpen,
   },
@@ -88,17 +88,17 @@ export const studentPanelNav: PanelNavItem[] = [
 
 export const instructorPanelNav: PanelNavItem[] = [
   {
-    id: "instructor-courses",
-    label: "Kurslarım",
-    href: "/instructor/courses",
-    icon: BookOpen,
-    requiresInstructor: true,
-  },
-  {
     id: "instructor-dashboard",
     label: "Eğitmen Özeti",
     href: "/instructor/dashboard",
     icon: BarChart3,
+    requiresInstructor: true,
+  },
+  {
+    id: "instructor-courses",
+    label: "Kurs Yönetimi",
+    href: "/instructor/courses",
+    icon: BookOpen,
     requiresInstructor: true,
   },
   {

@@ -95,11 +95,9 @@ export default async function PanelDashboardPage() {
       ) : (
         <div className="rounded-xl border border-primary-100 bg-white p-6">
           <p className="text-sm text-primary-600">
-            Sol menüden <strong>Kayıtlı Kurslar</strong> veya{" "}
-            <strong>Kariyer Yolum</strong> bölümlerine geçebilirsiniz.
-            {shell.isInstructor
-              ? " Eğitmen olarak kurslarınızı yönetmek için Eğitmen → Kurslarım menüsünü kullanın."
-              : null}
+            Sol menüden <strong>Kurslarım</strong>,{" "}
+            <strong>Kariyer Yolum</strong> veya eğitmen iseniz{" "}
+            <strong>Kurs Yönetimi</strong> bölümlerine geçebilirsiniz.
           </p>
         </div>
       )}
