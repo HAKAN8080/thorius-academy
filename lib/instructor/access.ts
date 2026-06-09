@@ -1,5 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { KNOWN_INSTRUCTOR_EMAILS } from "@/lib/constants/instructor-allowlist";
 import { getPreferredProfileName } from "@/lib/instructor/display-name";
 
 export interface InstructorAccess {
@@ -41,10 +42,22 @@ function parsePositiveInt(value: unknown): number | null {
 }
 
 function getEnvInstructorEmails(): string[] {
-  return (process.env.INSTRUCTOR_EMAILS ?? "")
+  const fromEnv = (process.env.INSTRUCTOR_EMAILS ?? "")
     .split(",")
     .map((email) => email.trim().toLowerCase())
     .filter(Boolean);
+
+  return Array.from(
+    new Set([
+      ...fromEnv,
+      ...KNOWN_INSTRUCTOR_EMAILS.map((email) => email.toLowerCase()),
+    ]),
+  );
+}
+
+function getDefaultInstructorWpId(): number {
+  const parsed = parseInt(process.env.DEFAULT_INSTRUCTOR_WP_ID ?? "277", 10);
+  return Number.isNaN(parsed) ? 277 : parsed;
 }
 
 function getMetadataWpUserIds(
@@ -224,6 +237,18 @@ async function repairBorrowedProfileName(
     .eq("id", userId);
 }
 
+async function countInstructorCourses(
+  admin: AdminClient,
+  wpUserId: number,
+): Promise<number> {
+  const { count } = await admin
+    .from("instructor_course_stats")
+    .select("*", { count: "exact", head: true })
+    .eq("instructor_wp_user_id", wpUserId);
+
+  return count ?? 0;
+}
+
 async function lookupInstructorViaAllowlist(
   admin: AdminClient,
   loginEmail: string,
@@ -234,7 +259,7 @@ async function lookupInstructorViaAllowlist(
   }
 
   const direct = await lookupInstructorByEmail(admin, loginEmail);
-  if (direct) {
+  if (direct && (await countInstructorCourses(admin, direct.wp_user_id)) > 0) {
     return direct;
   }
 
@@ -246,9 +271,36 @@ async function lookupInstructorViaAllowlist(
     }
   }
 
-  const uniqueIds = new Set(peers.map((peer) => peer.wp_user_id));
-  if (uniqueIds.size === 1 && peers[0]) {
-    return peers[0];
+  if (peers.length > 0) {
+    let bestPeer = peers[0];
+    let bestCount = await countInstructorCourses(admin, bestPeer.wp_user_id);
+
+    for (const peer of peers.slice(1)) {
+      const count = await countInstructorCourses(admin, peer.wp_user_id);
+      if (count > bestCount) {
+        bestPeer = peer;
+        bestCount = count;
+      }
+    }
+
+    if (bestCount > 0) {
+      return bestPeer;
+    }
+
+    const uniqueIds = new Set(peers.map((peer) => peer.wp_user_id));
+    if (uniqueIds.size === 1) {
+      return peers[0];
+    }
+  }
+
+  const defaultId = getDefaultInstructorWpId();
+  const byDefault = await lookupInstructorByWpUserId(admin, defaultId);
+  if (byDefault) {
+    return {
+      wp_user_id: defaultId,
+      full_name: byDefault.full_name,
+      email: loginEmail,
+    };
   }
 
   return null;
@@ -261,17 +313,17 @@ async function resolveInstructorIdentity(
   metadata: Record<string, unknown>,
 ): Promise<{ wpInstructorId: number; instructor: InstructorRow | null } | null> {
   if (email) {
-    const byEmail = await lookupInstructorByEmail(admin, email);
-    if (byEmail) {
-      return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
-    }
-
     const viaAllowlist = await lookupInstructorViaAllowlist(admin, email);
     if (viaAllowlist) {
       return {
         wpInstructorId: viaAllowlist.wp_user_id,
         instructor: viaAllowlist,
       };
+    }
+
+    const byEmail = await lookupInstructorByEmail(admin, email);
+    if (byEmail) {
+      return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
     }
   }
 
