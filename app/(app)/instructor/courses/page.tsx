@@ -1,4 +1,5 @@
 import { requireInstructorLayoutAccess } from "@/lib/instructor/require-instructor-layout";
+import { getCurriculumAccess } from "@/lib/instructor/curriculum-access";
 import { getInstructorCourseList } from "@/lib/actions/instructor-courses";
 import { InstructorCoursesView } from "@/components/instructor/instructor-courses-view";
 
@@ -19,9 +20,16 @@ function parseTab(value: string | undefined): CourseTab {
 
 export default async function InstructorCoursesPage({ searchParams }: Props) {
   await requireInstructorLayoutAccess();
+  const access = await getCurriculumAccess();
   const { status } = await searchParams;
   const activeTab = parseTab(status);
   const courses = await getInstructorCourseList();
 
-  return <InstructorCoursesView courses={courses} activeTab={activeTab} />;
+  return (
+    <InstructorCoursesView
+      courses={courses}
+      activeTab={activeTab}
+      instructorLinked={Boolean(access.wpInstructorId)}
+    />
+  );
 }

@@ -135,79 +135,41 @@ export async function getInstructorCourseList(): Promise<
   const access = await requireCurriculumAccess();
   const admin = getSupabaseAdmin();
 
+  if (!access.wpInstructorId && !access.isAdmin) {
+    return [];
+  }
+
   if (access.wpInstructorId) {
     await ensureCoursesCacheForInstructor(access.wpInstructorId);
   }
 
-  let query = admin
-    .from("courses_cache")
+  let statsQuery = admin
+    .from("instructor_course_stats")
     .select("*")
-    .order("updated_at", { ascending: false });
+    .order("published_at", { ascending: false });
 
   if (!access.isAdmin && access.wpInstructorId) {
-    query = query.eq("instructor_wp_user_id", access.wpInstructorId);
+    statsQuery = statsQuery.eq("instructor_wp_user_id", access.wpInstructorId);
   }
 
-  const { data: courses, error } = await query;
-  if (error) {
+  const { data: statsRows, error: statsError } = await statsQuery;
+
+  if (statsError || !statsRows?.length) {
     return [];
   }
 
-  let courseRows = courses ?? [];
+  const wpIds = statsRows
+    .map((row) => row.wp_course_id as number)
+    .filter((id) => typeof id === "number");
 
-  if (courseRows.length === 0 && access.wpInstructorId) {
-    const { data: statsOnly } = await admin
-      .from("instructor_course_stats")
-      .select("wp_course_id")
-      .eq("instructor_wp_user_id", access.wpInstructorId);
+  const { data: cacheRows } = await admin
+    .from("courses_cache")
+    .select("id, wp_course_id")
+    .in("wp_course_id", wpIds);
 
-    const wpIdsFromStats = (statsOnly ?? [])
-      .map((row) => row.wp_course_id as number)
-      .filter((id) => typeof id === "number");
-
-    if (wpIdsFromStats.length > 0) {
-      const { data: cacheRows } = await admin
-        .from("courses_cache")
-        .select("*")
-        .in("wp_course_id", wpIdsFromStats)
-        .order("updated_at", { ascending: false });
-
-      courseRows = cacheRows ?? [];
-    }
-  }
-
-  const wpIds = courseRows
-    .map((c) => c.wp_course_id as number | null)
-    .filter((id): id is number => typeof id === "number");
-
-  const statsMap = new Map<
-    number,
-    {
-      enrollment_count: number;
-      status: string;
-      published_at: string | null;
-      rating_avg: number;
-      rating_count: number;
-      image_url: string | null;
-    }
-  >();
-  if (wpIds.length > 0) {
-    const { data: stats } = await admin
-      .from("instructor_course_stats")
-      .select(
-        "wp_course_id, enrollment_count, status, published_at, rating_avg, rating_count, image_url",
-      )
-      .in("wp_course_id", wpIds);
-    for (const row of stats ?? []) {
-      statsMap.set(row.wp_course_id as number, {
-        enrollment_count: row.enrollment_count as number,
-        status: row.status as string,
-        published_at: row.published_at as string | null,
-        rating_avg: Number(row.rating_avg ?? 0),
-        rating_count: Number(row.rating_count ?? 0),
-        image_url: row.image_url as string | null,
-      });
-    }
+  const cacheIdByWp = new Map<number, string>();
+  for (const row of cacheRows ?? []) {
+    cacheIdByWp.set(row.wp_course_id as number, String(row.id));
   }
 
   let earningsQuery = admin
@@ -222,7 +184,7 @@ export async function getInstructorCourseList(): Promise<
   const { data: earningsRows } = await earningsQuery;
   const earningsMap = new Map<string, number>();
   for (const row of earningsRows ?? []) {
-    const courseId = row.course_id as string | null;
+    const courseId = row.course_id != null ? String(row.course_id) : null;
     if (!courseId) continue;
     earningsMap.set(
       courseId,
@@ -230,24 +192,23 @@ export async function getInstructorCourseList(): Promise<
     );
   }
 
-  return courseRows.map((row) => {
-    const wpCourseId = row.wp_course_id as number | null;
-    const stat = typeof wpCourseId === "number" ? statsMap.get(wpCourseId) : undefined;
+  return statsRows.map((row) => {
+    const wpCourseId = row.wp_course_id as number;
+    const cacheId = cacheIdByWp.get(wpCourseId);
 
     return {
-      id: String(row.id),
+      id: cacheId ?? String(wpCourseId),
       wp_course_id: wpCourseId,
       title: row.title as string,
-      cover_image_url:
-        (row.cover_image_url as string | null) ?? stat?.image_url ?? null,
-      enrollment_count: stat?.enrollment_count ?? 0,
-      earnings_total: earningsMap.get(String(row.id)) ?? 0,
-      published: row.published as boolean,
-      course_slug: row.course_slug as string | null,
-      status: stat?.status ?? ((row.published as boolean) ? "publish" : "draft"),
-      published_at: stat?.published_at ?? null,
-      rating_avg: stat?.rating_avg ?? 0,
-      rating_count: stat?.rating_count ?? 0,
+      cover_image_url: row.image_url as string | null,
+      enrollment_count: Number(row.enrollment_count ?? 0),
+      earnings_total: cacheId ? (earningsMap.get(cacheId) ?? 0) : 0,
+      published: row.status === "publish",
+      course_slug: row.course_slug as string,
+      status: row.status as string,
+      published_at: row.published_at as string | null,
+      rating_avg: Number(row.rating_avg ?? 0),
+      rating_count: Number(row.rating_count ?? 0),
     };
   });
 }

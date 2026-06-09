@@ -10,9 +10,9 @@ export function getWpSiteUrl(): string {
   );
 }
 
-/** Academy eğitmen paneli. */
+/** Academy eğitmen paneli (kurs yönetimi). */
 export function getInstructorPortalUrl(): string {
-  return "/panel/egitmen";
+  return "/instructor/courses";
 }
 
 /** Academy öğrenci paneli. */
@@ -38,5 +38,7 @@ export function isStudentPortalPath(pathname: string): boolean {
 }
 
 export function isInstructorPortalPath(pathname: string): boolean {
-  return pathname.startsWith("/panel/egitmen");
+  return (
+    pathname.startsWith("/instructor") || pathname.startsWith("/panel/egitmen")
+  );
 }
