@@ -30,14 +30,14 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
     description_md: course.description_md ?? "",
     cover_image_url: course.cover_image_url ?? "",
     intro_video_url: course.intro_video_url ?? "",
-    pricing_model: course.pricing_model,
+    pricing_model: course.pricing_model ?? "free",
     price: Number(course.price ?? 0),
     sale_price: course.sale_price ? Number(course.sale_price) : null,
-    level: course.level,
-    language: course.language,
+    level: course.level ?? "Başlangıç",
+    language: course.language ?? "Türkçe",
     category: course.category ?? "",
-    visibility: course.visibility,
-    published: course.published,
+    visibility: course.visibility ?? "public",
+    published: course.published ?? false,
   });
   const [isPending, startTransition] = useTransition();
 
@@ -55,7 +55,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
         toast.error(result.error);
         return;
       }
-      toast.success("Saved ✓");
+      toast.success("Kaydedildi ✓");
       if (nextPath) {
         window.location.href = nextPath;
       }
@@ -69,7 +69,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
       <div className="rounded-2xl border border-primary-100 bg-white p-6 shadow-sm">
         <div className="grid gap-5">
           <div className="space-y-2">
-            <Label htmlFor="title">Title</Label>
+            <Label htmlFor="title">Kurs Başlığı</Label>
             <Input
               id="title"
               value={form.title}
@@ -79,7 +79,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="subtitle">Subtitle</Label>
+            <Label htmlFor="subtitle">Alt Başlık</Label>
             <Input
               id="subtitle"
               value={form.subtitle ?? ""}
@@ -88,7 +88,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2" data-color-mode="light">
-            <Label>Description</Label>
+            <Label>Açıklama</Label>
             <MarkdownEditor
               value={form.description_md ?? ""}
               onChange={(value) => update("description_md", value ?? "")}
@@ -97,7 +97,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="cover">Cover Image URL</Label>
+            <Label htmlFor="cover">Kapak Görseli URL</Label>
             <Input
               id="cover"
               value={form.cover_image_url ?? ""}
@@ -107,7 +107,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
               <div className="relative mt-2 h-40 w-full max-w-md overflow-hidden rounded-xl border border-primary-100">
                 <Image
                   src={form.cover_image_url}
-                  alt="Cover preview"
+                  alt="Kapak önizleme"
                   fill
                   className="object-cover"
                 />
@@ -116,7 +116,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="intro">Intro Video URL</Label>
+            <Label htmlFor="intro">Tanıtım Videosu URL</Label>
             <Input
               id="intro"
               value={form.intro_video_url ?? ""}
@@ -126,7 +126,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label>Pricing Model</Label>
+            <Label>Fiyatlandırma</Label>
             <div className="flex gap-3">
               {(["free", "paid"] as const).map((option) => (
                 <button
@@ -139,7 +139,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
                       : "border border-primary-200 text-[#0B1E3F]"
                   }`}
                 >
-                  {option === "free" ? "Free" : "Paid"}
+                  {option === "free" ? "Ücretsiz" : "Ücretli"}
                 </button>
               ))}
             </div>
@@ -148,7 +148,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           {form.pricing_model === "paid" ? (
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-2">
-                <Label htmlFor="price">Price TRY</Label>
+                <Label htmlFor="price">Fiyat (TRY)</Label>
                 <Input
                   id="price"
                   type="number"
@@ -158,7 +158,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="sale">Sale Price TRY</Label>
+                <Label htmlFor="sale">İndirimli Fiyat (TRY)</Label>
                 <Input
                   id="sale"
                   type="number"
@@ -177,7 +177,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
 
           <div className="grid gap-4 sm:grid-cols-2">
             <div className="space-y-2">
-              <Label htmlFor="level">Difficulty Level</Label>
+              <Label htmlFor="level">Seviye</Label>
               <select
                 id="level"
                 value={form.level}
@@ -190,7 +190,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
               </select>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="language">Language</Label>
+              <Label htmlFor="language">Dil</Label>
               <select
                 id="language"
                 value={form.language}
@@ -204,7 +204,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="category">Category</Label>
+            <Label htmlFor="category">Kategori</Label>
             <Input
               id="category"
               value={form.category ?? ""}
@@ -215,7 +215,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
           <div className="grid gap-3 sm:grid-cols-2">
             <label className="flex items-center justify-between rounded-xl border border-primary-100 px-4 py-3">
               <span className="text-sm font-medium text-[#0B1E3F]">
-                Visibility: {form.visibility === "public" ? "Public" : "Private"}
+                Görünürlük: {form.visibility === "public" ? "Herkese Açık" : "Gizli"}
               </span>
               <input
                 type="checkbox"
@@ -226,7 +226,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
               />
             </label>
             <label className="flex items-center justify-between rounded-xl border border-primary-100 px-4 py-3">
-              <span className="text-sm font-medium text-[#0B1E3F]">Published</span>
+              <span className="text-sm font-medium text-[#0B1E3F]">Yayında</span>
               <input
                 type="checkbox"
                 checked={form.published}
@@ -238,7 +238,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
 
         <StepNavButtons
           nextHref={`/instructor/courses/${course.id}/curriculum`}
-          nextLabel="Next →"
+          nextLabel="İleri →"
           showUpdate
           isPending={isPending}
           onUpdate={() => handleSave()}
@@ -253,7 +253,7 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
             }
             className="rounded-lg bg-[#D4AF37] px-5 py-2 text-sm font-semibold text-[#0B1E3F]"
           >
-            Save & Next →
+            Kaydet ve İlerle →
           </button>
         </div>
       </div>

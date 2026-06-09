@@ -30,3 +30,17 @@ export function isKnownInstructorEmail(email: string | null | undefined): boolea
     ) || normalized in KNOWN_INSTRUCTOR_WP_USER_IDS
   );
 }
+
+/** WP legacy sync: aynı kişinin tüm bilinen e-postalarını dene. */
+export function getLegacySyncEmails(loginEmail: string): string[] {
+  const normalized = loginEmail.trim().toLowerCase();
+  const emails = new Set<string>([normalized]);
+
+  if (isKnownInstructorEmail(normalized)) {
+    for (const alias of KNOWN_INSTRUCTOR_EMAILS) {
+      emails.add(alias.toLowerCase());
+    }
+  }
+
+  return Array.from(emails);
+}

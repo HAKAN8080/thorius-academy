@@ -5,6 +5,8 @@ import { redirect } from "next/navigation";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireCurriculumAccess } from "@/lib/instructor/curriculum-access";
 import {
+  normalizeCourseCacheId,
+  normalizeCoursesCacheRow,
   requireCourseCacheAccess,
   slugifyCourseTitle,
   verifyCourseCacheAccess,
@@ -19,7 +21,7 @@ import type {
 } from "@/types/instructor-course";
 
 function mapCourse(row: Record<string, unknown>): CoursesCache {
-  return row as unknown as CoursesCache;
+  return normalizeCoursesCacheRow(row);
 }
 
 async function nextSyntheticWpCourseId(): Promise<number> {
@@ -32,8 +34,26 @@ async function nextSyntheticWpCourseId(): Promise<number> {
     .order("wp_course_id", { ascending: true })
     .limit(1);
 
-  const currentMin = data?.[0]?.wp_course_id;
-  return typeof currentMin === "number" ? currentMin - 1 : -1000;
+  let candidate =
+    typeof data?.[0]?.wp_course_id === "number"
+      ? data[0].wp_course_id - 1
+      : -1000;
+
+  for (let attempt = 0; attempt < 20; attempt += 1) {
+    const { data: existing } = await admin
+      .from("courses_cache")
+      .select("id")
+      .eq("wp_course_id", candidate)
+      .maybeSingle();
+
+    if (!existing) {
+      return candidate;
+    }
+
+    candidate -= 1;
+  }
+
+  return candidate;
 }
 
 export async function getInstructorDashboardStats(): Promise<InstructorDashboardStats> {
@@ -221,13 +241,19 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
 
   const admin = getSupabaseAdmin();
 
-  await admin.from("instructors").upsert(
+  const { error: instructorError } = await admin.from("instructors").upsert(
     {
       wp_user_id: access.wpInstructorId,
       synced_at: new Date().toISOString(),
     },
     { onConflict: "wp_user_id" },
   );
+
+  if (instructorError) {
+    throw new Error(
+      `Eğitmen kaydı güncellenemedi: ${instructorError.message}`,
+    );
+  }
 
   const wpCourseId = await nextSyntheticWpCourseId();
   const slug = `yeni-kurs-${Math.abs(wpCourseId)}`;
@@ -240,6 +266,11 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
       course_slug: slug,
       title: "Yeni Kurs",
       published: false,
+      pricing_model: "free",
+      price: 0,
+      level: "Başlangıç",
+      language: "Türkçe",
+      visibility: "public",
     })
     .select("id")
     .single();
@@ -248,7 +279,11 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
     throw new Error(error?.message ?? "Kurs oluşturulamadı.");
   }
 
-  await admin.from("instructor_course_stats").upsert(
+  const courseCacheId = normalizeCourseCacheId(
+    data.id as string | number | bigint,
+  );
+
+  const { error: statsError } = await admin.from("instructor_course_stats").upsert(
     {
       wp_course_id: wpCourseId,
       course_slug: slug,
@@ -262,9 +297,14 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
     { onConflict: "wp_course_id" },
   );
 
+  if (statsError) {
+    throw new Error(`Kurs istatistiği oluşturulamadı: ${statsError.message}`);
+  }
+
   revalidatePath("/instructor/dashboard");
   revalidatePath("/instructor/courses");
-  return { id: data.id as string };
+  revalidatePath(`/instructor/courses/${courseCacheId}/basics`);
+  return { id: courseCacheId };
 }
 
 export async function createInstructorCourseAndRedirect() {

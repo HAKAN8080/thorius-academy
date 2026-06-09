@@ -204,6 +204,24 @@ export async function deleteSection(
   try {
     const course = await requireCourseCacheAccess(courseCacheId);
     const admin = getSupabaseAdmin();
+
+    if (course.wp_course_id) {
+      const { data: sectionLessons } = await admin
+        .from("lessons")
+        .select("id")
+        .eq("course_id", course.wp_course_id)
+        .eq("section_id", sectionId);
+
+      for (const row of sectionLessons ?? []) {
+        await admin.from("lesson_progress").delete().eq("lesson_id", row.id);
+        await admin
+          .from("lessons")
+          .delete()
+          .eq("id", row.id)
+          .eq("course_id", course.wp_course_id);
+      }
+    }
+
     const { error } = await admin
       .from("sections")
       .delete()
@@ -426,5 +444,35 @@ export async function toggleBuilderLessonPublished(
     return { lesson: mapLesson(data as DbLessonRow) };
   } catch {
     return { error: "Güncellenemedi" };
+  }
+}
+
+export async function deleteBuilderLesson(
+  courseCacheId: string,
+  lessonId: string,
+): Promise<{ success: true } | { error: string }> {
+  try {
+    const course = await requireCourseCacheAccess(courseCacheId);
+    if (!course.wp_course_id) {
+      return { error: "Geçersiz kurs" };
+    }
+
+    const admin = getSupabaseAdmin();
+    await admin.from("lesson_progress").delete().eq("lesson_id", lessonId);
+
+    const { error } = await admin
+      .from("lessons")
+      .delete()
+      .eq("id", lessonId)
+      .eq("course_id", course.wp_course_id);
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidateBuilderPaths(courseCacheId, course.course_slug);
+    return { success: true };
+  } catch {
+    return { error: "Ders silinemedi" };
   }
 }

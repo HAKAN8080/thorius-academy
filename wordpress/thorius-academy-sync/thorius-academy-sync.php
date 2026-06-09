@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.5.0
+ * Version: 1.7.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.5.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.7.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -955,6 +955,249 @@ function thorius_academy_sync_handle_academy_register_user(WP_REST_Request $requ
     );
 }
 
+function thorius_academy_sync_collect_user_legacy_data(string $email): array
+{
+    if (!function_exists('tutor_utils')) {
+        return array(
+            'found' => false,
+            'enrollments' => array(),
+        );
+    }
+
+    $email = sanitize_email($email);
+    if ($email === '') {
+        return array(
+            'found' => false,
+            'enrollments' => array(),
+        );
+    }
+
+    $user = get_user_by('email', $email);
+    if (!$user) {
+        return array(
+            'found' => false,
+            'enrollments' => array(),
+        );
+    }
+
+    $user_id = (int) $user->ID;
+    $course_ids = tutor_utils()->get_enrolled_courses_ids_by_user($user_id);
+    $enrollments = array();
+
+    if (!is_array($course_ids)) {
+        $course_ids = array();
+    }
+
+    global $wpdb;
+
+    foreach ($course_ids as $course_id) {
+        $course_id = (int) $course_id;
+        if ($course_id <= 0) {
+            continue;
+        }
+
+        $course = get_post($course_id);
+        if (!$course || !thorius_academy_sync_is_course_post($course)) {
+            continue;
+        }
+
+        $enrolled_at = $wpdb->get_var(
+            $wpdb->prepare(
+                "SELECT post_date
+                FROM {$wpdb->posts}
+                WHERE post_type = 'tutor_enrolled'
+                    AND post_parent = %d
+                    AND post_author = %d
+                ORDER BY post_date ASC
+                LIMIT 1",
+                $course_id,
+                $user_id
+            )
+        );
+
+        $stats = tutor_utils()->get_course_completed_percent($course_id, $user_id, true);
+        $progress_percent = 0;
+        if (is_array($stats) && isset($stats['completed_percent'])) {
+            $progress_percent = (int) $stats['completed_percent'];
+        } elseif (is_numeric($stats)) {
+            $progress_percent = (int) $stats;
+        }
+
+        $lesson_ids = tutor_utils()->get_course_content_ids_by(
+            tutor()->lesson_post_type,
+            tutor()->course_post_type,
+            $course_id
+        );
+
+        $completed_lesson_ids = array();
+        $last_lesson_id = 0;
+
+        if (is_array($lesson_ids)) {
+            foreach ($lesson_ids as $lesson_id) {
+                $lesson_id = (int) $lesson_id;
+                if ($lesson_id <= 0) {
+                    continue;
+                }
+
+                if (tutor_utils()->is_completed_lesson($lesson_id, $user_id)) {
+                    $completed_lesson_ids[] = $lesson_id;
+                    $last_lesson_id = $lesson_id;
+                }
+            }
+        }
+
+        $enrollments[] = array(
+            'course_id' => $course_id,
+            'course_slug' => (string) $course->post_name,
+            'course_title' => (string) get_the_title($course_id),
+            'enrolled_at' => is_string($enrolled_at) ? $enrolled_at : null,
+            'progress_percent' => $progress_percent,
+            'completed_lesson_ids' => $completed_lesson_ids,
+            'last_lesson_id' => $last_lesson_id > 0 ? $last_lesson_id : null,
+            'course_completed' => (bool) tutor_utils()->is_completed_course($course_id, $user_id),
+        );
+    }
+
+    return array(
+        'found' => true,
+        'wp_user_id' => $user_id,
+        'enrollments' => $enrollments,
+    );
+}
+
+function thorius_academy_sync_handle_academy_user_legacy(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $email = isset($payload['email']) ? sanitize_email((string) $payload['email']) : '';
+    if ($email === '') {
+        return new WP_REST_Response(array('error' => 'Missing email'), 400);
+    }
+
+    $result = thorius_academy_sync_collect_user_legacy_data($email);
+
+    return new WP_REST_Response($result, 200);
+}
+
+function thorius_academy_sync_list_members(int $offset = 0, int $limit = 100): array
+{
+    global $wpdb;
+
+    $offset = max(0, $offset);
+    $limit = max(1, min(100, $limit));
+
+    $total = (int) $wpdb->get_var(
+        "SELECT COUNT(DISTINCT u.ID)
+        FROM {$wpdb->users} u
+        INNER JOIN {$wpdb->posts} e ON e.post_author = u.ID
+        WHERE e.post_type = 'tutor_enrolled'
+            AND e.post_status = 'completed'
+            AND u.user_email <> ''"
+    );
+
+    $rows = $wpdb->get_results(
+        $wpdb->prepare(
+            "SELECT
+                u.ID AS user_id,
+                u.user_email AS email,
+                u.display_name AS full_name,
+                COUNT(DISTINCT e.post_parent) AS course_count
+            FROM {$wpdb->users} u
+            INNER JOIN {$wpdb->posts} e ON e.post_author = u.ID
+            WHERE e.post_type = 'tutor_enrolled'
+                AND e.post_status = 'completed'
+                AND u.user_email <> ''
+            GROUP BY u.ID, u.user_email, u.display_name
+            ORDER BY u.ID ASC
+            LIMIT %d OFFSET %d",
+            $limit,
+            $offset
+        ),
+        ARRAY_A
+    );
+
+    $members = array();
+
+    if (is_array($rows)) {
+        foreach ($rows as $row) {
+            $email = isset($row['email']) ? sanitize_email((string) $row['email']) : '';
+            if ($email === '') {
+                continue;
+            }
+
+            $members[] = array(
+                'wp_user_id' => (int) ($row['user_id'] ?? 0),
+                'email' => $email,
+                'full_name' => isset($row['full_name']) ? sanitize_text_field((string) $row['full_name']) : '',
+                'course_count' => (int) ($row['course_count'] ?? 0),
+            );
+        }
+    }
+
+    return array(
+        'members' => $members,
+        'total' => $total,
+        'offset' => $offset,
+        'limit' => $limit,
+        'has_more' => ($offset + count($members)) < $total,
+    );
+}
+
+function thorius_academy_sync_handle_academy_member_list(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $offset = isset($payload['offset']) ? (int) $payload['offset'] : 0;
+    $limit = isset($payload['limit']) ? (int) $payload['limit'] : 100;
+
+    return new WP_REST_Response(
+        thorius_academy_sync_list_members($offset, $limit),
+        200
+    );
+}
+
 function thorius_academy_sync_register_rest_routes(): void
 {
     register_rest_route(
@@ -973,6 +1216,26 @@ function thorius_academy_sync_register_rest_routes(): void
         array(
             'methods' => 'POST',
             'callback' => 'thorius_academy_sync_handle_academy_register_user',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-user-legacy',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_user_legacy',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-member-list',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_member_list',
             'permission_callback' => '__return_true',
         )
     );

@@ -31,6 +31,7 @@ import type { BuilderLesson, BuilderLessonInput, CourseSection } from "@/types/i
 import {
   createBuilderLesson,
   createSection,
+  deleteBuilderLesson,
   deleteSection,
   reorderBuilderLessons,
   reorderSections,
@@ -102,14 +103,14 @@ function SortableLessonRow({
       )}
       {lesson.is_free_preview ? (
         <span className="rounded bg-green-100 px-1.5 py-0.5 text-[10px] font-semibold text-green-700">
-          Free
+          Ücretsiz
         </span>
       ) : null}
       <input
         type="checkbox"
         checked={lesson.published}
         onChange={(e) => onTogglePublished(e.target.checked)}
-        aria-label="Published"
+        aria-label="Yayında"
       />
     </div>
   );
@@ -222,10 +223,10 @@ function SectionBlock({
         <p className="flex-1 truncate text-sm font-semibold text-[#0B1E3F]">
           {section.title}
         </p>
-        <button type="button" onClick={onEditTitle} aria-label="Edit section">
+        <button type="button" onClick={onEditTitle} aria-label="Bölümü düzenle">
           <Pencil className="h-3.5 w-3.5 text-primary-500" />
         </button>
-        <button type="button" onClick={onDelete} aria-label="Delete section">
+        <button type="button" onClick={onDelete} aria-label="Bölümü sil">
           <Trash2 className="h-3.5 w-3.5 text-red-500" />
         </button>
       </div>
@@ -266,7 +267,7 @@ function SectionBlock({
             className="mt-3 w-full border-[#0B1E3F]/20 text-[#0B1E3F]"
           >
             <Plus className="mr-1.5 h-3.5 w-3.5" />
-            Add Lesson
+            Ders Ekle
           </Button>
         </>
       ) : null}
@@ -389,7 +390,28 @@ export function BuilderCurriculumEditor({
       setLessons((current) =>
         current.map((l) => (l.id === result.lesson.id ? result.lesson : l)),
       );
-      toast.success("Saved ✓");
+      toast.success("Kaydedildi ✓");
+    });
+  }
+
+  function handleDeleteLesson(lessonId: string) {
+    if (!window.confirm("Bu ders silinsin mi?")) return;
+
+    startTransition(async () => {
+      const result = await deleteBuilderLesson(courseCacheId, lessonId);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setLessons((current) => {
+        const remaining = current.filter((l) => l.id !== lessonId);
+        setSelectedLessonId((selected) => {
+          if (selected !== lessonId) return selected;
+          return remaining[0]?.id ?? null;
+        });
+        return remaining;
+      });
+      toast.success("Ders silindi");
     });
   }
 
@@ -511,7 +533,7 @@ export function BuilderCurriculumEditor({
             className="mt-4 w-full bg-[#0B1E3F] text-[#D4AF37] hover:bg-[#0B1E3F]/90"
           >
             <Plus className="mr-2 h-4 w-4" />
-            Add Topic
+            Bölüm Ekle
           </Button>
         </section>
 
@@ -520,13 +542,14 @@ export function BuilderCurriculumEditor({
           lesson={selectedLesson}
           isPending={isPending}
           onSave={handleSaveLesson}
+          onDelete={handleDeleteLesson}
         />
       </div>
 
       <StepNavButtons
         previousHref={`/instructor/courses/${courseCacheId}/basics`}
         nextHref={`/instructor/courses/${courseCacheId}/additional`}
-        nextLabel="Next →"
+        nextLabel="İleri →"
       />
     </div>
   );

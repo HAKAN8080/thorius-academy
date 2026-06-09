@@ -1,6 +1,13 @@
+import {
+  getKnownInstructorWpUserId,
+  getLegacySyncEmails,
+} from "@/lib/constants/instructor-allowlist";
 import { linkInstructorProfileFromWpUserId } from "@/lib/instructor/access";
 import { fetchLegacyUserDataFromWp } from "@/lib/tutor/fetch-legacy-user-data";
-import type { TutorLegacyEnrollment } from "@/lib/tutor/legacy-user-data";
+import type {
+  TutorLegacyEnrollment,
+  TutorLegacyUserData,
+} from "@/lib/tutor/legacy-user-data";
 import { syncLessonsFromTutor } from "@/lib/lessons/sync-from-tutor";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
@@ -39,6 +46,44 @@ function shouldRunLegacySync(
   }
 
   return Date.now() - lastSyncMs > LEGACY_SYNC_STALE_MS;
+}
+
+async function fetchMergedLegacyUserData(
+  loginEmail: string,
+): Promise<TutorLegacyUserData | null> {
+  const enrollmentBySlug = new Map<string, TutorLegacyEnrollment>();
+  let wpUserId: number | undefined;
+  let found = false;
+
+  for (const tryEmail of getLegacySyncEmails(loginEmail)) {
+    const data = await fetchLegacyUserDataFromWp(tryEmail);
+    if (!data?.found) {
+      continue;
+    }
+
+    found = true;
+
+    if (typeof data.wp_user_id === "number" && data.wp_user_id > 0) {
+      wpUserId = data.wp_user_id;
+    }
+
+    for (const enrollment of data.enrollments) {
+      if (!enrollment.course_slug) {
+        continue;
+      }
+      enrollmentBySlug.set(enrollment.course_slug, enrollment);
+    }
+  }
+
+  if (!found) {
+    return null;
+  }
+
+  return {
+    found: true,
+    wp_user_id: wpUserId,
+    enrollments: Array.from(enrollmentBySlug.values()),
+  };
 }
 
 async function upsertLegacyEnrollment(
@@ -211,7 +256,7 @@ export async function syncLegacyUserData(
     };
   }
 
-  const legacyData = await fetchLegacyUserDataFromWp(email);
+  const legacyData = await fetchMergedLegacyUserData(email);
   if (!legacyData?.found) {
     await admin.auth.admin.updateUserById(userId, {
       user_metadata: {
@@ -229,7 +274,9 @@ export async function syncLegacyUserData(
   }
 
   const wpUserId =
-    legacyData.wp_user_id ?? authUser.user.user_metadata?.wp_user_id;
+    legacyData.wp_user_id ??
+    getKnownInstructorWpUserId(email) ??
+    authUser.user.user_metadata?.wp_user_id;
 
   await admin.auth.admin.updateUserById(userId, {
     user_metadata: {

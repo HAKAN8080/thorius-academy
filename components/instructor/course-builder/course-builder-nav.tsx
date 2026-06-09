@@ -47,7 +47,7 @@ interface StepNavButtonsProps {
 export function StepNavButtons({
   previousHref,
   nextHref,
-  nextLabel = "Next →",
+  nextLabel = "İleri →",
   showUpdate,
   onUpdate,
   isPending,
@@ -59,7 +59,7 @@ export function StepNavButtons({
           href={previousHref}
           className="rounded-lg border border-[#0B1E3F]/20 px-4 py-2 text-sm font-medium text-[#0B1E3F] hover:border-[#D4AF37]"
         >
-          ← Previous
+          ← Geri
         </Link>
       ) : (
         <span />
@@ -73,7 +73,7 @@ export function StepNavButtons({
             onClick={onUpdate}
             className="rounded-lg bg-[#0B1E3F] px-5 py-2 text-sm font-semibold text-[#D4AF37] hover:bg-[#0B1E3F]/90 disabled:opacity-60"
           >
-            Update
+            Güncelle
           </button>
         ) : null}
         {nextHref ? (

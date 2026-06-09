@@ -28,7 +28,7 @@ export function CourseAdditionalForm({ course }: CourseAdditionalFormProps) {
         toast.error(result.error);
         return;
       }
-      toast.success("Saved ✓");
+      toast.success("Kaydedildi ✓");
     });
   }
 
@@ -39,7 +39,7 @@ export function CourseAdditionalForm({ course }: CourseAdditionalFormProps) {
       <div className="rounded-2xl border border-primary-100 bg-white p-6 shadow-sm">
         <div className="space-y-5">
           <div className="space-y-2">
-            <Label htmlFor="learn">What Will I Learn?</Label>
+            <Label htmlFor="learn">Neler Öğreneceksiniz?</Label>
             <textarea
               id="learn"
               rows={8}
@@ -56,7 +56,7 @@ export function CourseAdditionalForm({ course }: CourseAdditionalFormProps) {
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="audience">Target Audience</Label>
+            <Label htmlFor="audience">Hedef Kitle</Label>
             <textarea
               id="audience"
               rows={8}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Tutor Dashboard
  * Description: Tutor LMS kontrol paneli (kontrol-paneli) görünümünü Thorius markasına uyarlar.
- * Version: 1.1.0
+ * Version: 1.2.1
  * Author: Thorius
  * Text Domain: thorius-tutor-dashboard
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_TUTOR_DASHBOARD_VERSION', '1.1.0');
+define('THORIUS_TUTOR_DASHBOARD_VERSION', '1.2.1');
 define('THORIUS_TUTOR_DASHBOARD_URL', plugin_dir_url(__FILE__));
 
 function thorius_tutor_dashboard_enqueue_assets(): void
@@ -46,5 +46,11 @@ function thorius_tutor_dashboard_enqueue_assets(): void
         array('tutor-frontend-dashboard-css'),
         THORIUS_TUTOR_DASHBOARD_VERSION
     );
+
+    // Tutor koyu sidebar temasını kesin override et
+    wp_add_inline_style(
+        'thorius-tutor-dashboard',
+        '.tutor-dashboard-left-menu,.tutor-dashboard .tutor-dashboard-left-menu{background:#fff!important;color:#142850!important}'
+    );
 }
-add_action('wp_enqueue_scripts', 'thorius_tutor_dashboard_enqueue_assets', 99);
+add_action('wp_enqueue_scripts', 'thorius_tutor_dashboard_enqueue_assets', 999);

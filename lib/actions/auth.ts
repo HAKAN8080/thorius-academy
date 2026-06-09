@@ -149,6 +149,48 @@ export async function resendVerificationEmail(
   }
 }
 
+export async function updatePassword(
+  _prevState: AuthActionState,
+  formData: FormData,
+): Promise<AuthActionState> {
+  try {
+    const password = formData.get("password");
+    const confirmPassword = formData.get("confirmPassword");
+    const redirectTo = getSafeRedirect(formData.get("redirect"));
+
+    if (typeof password !== "string" || password.length < 8) {
+      return { error: "Parola en az 8 karakter olmalıdır." };
+    }
+
+    if (password !== confirmPassword) {
+      return { error: "Parolalar eşleşmiyor." };
+    }
+
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return { error: "Oturum bulunamadı. Lütfen e-postanızdaki bağlantıyı tekrar açın." };
+    }
+
+    const { error } = await supabase.auth.updateUser({ password });
+
+    if (error) {
+      return { error: "Parola güncellenemedi. Lütfen tekrar deneyin." };
+    }
+
+    revalidatePath("/", "layout");
+    redirect(redirectTo);
+  } catch (error) {
+    if (error instanceof Error && error.message === "NEXT_REDIRECT") {
+      throw error;
+    }
+    return { error: "Parola güncellenirken beklenmeyen bir hata oluştu." };
+  }
+}
+
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut();

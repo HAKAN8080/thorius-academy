@@ -13,15 +13,26 @@ Tutor LMS `kontrol-paneli` sayfasının görünümünü Academy ile uyumlu hale 
 
 ## Ne yapar?
 
-- Koyu lacivert header (Academy primary)
-- Altın vurgulu butonlar (accent)
-- Yuvarlatılmış kartlar, daha temiz tablo/form stilleri
-- Sol menü hover/active durumları
+- Açık zemin + beyaz sol menü (okunaklı koyu metin)
+- Altın vurgulu butonlar ve aktif menü çizgisi (Academy accent)
+- Yuvarlatılmış istatistik/kurs kartları
+- `tutor-screen-frontend-dashboard` body sınıfına uygun seçiciler
 
 Tutor güncellemelerinden sonra görünüm bozulursa CSS seçicileri güncellenmelidir.
+
+## v1.2.1
+
+- **Layout düzeltmesi:** v1.2.0'daki `display:flex`, `width:260px`, `position:sticky` ve mobil `display:flex` kuralları kaldırıldı
+- Tutor'un yerel grid yapısı (`.tutor-row` / `.tutor-col-*`) korunur; yalnızca renk/tipografi override edilir
+- Beyaz sidebar, altın aktif/hover vurgusu ve Academy kart stilleri korunur
+
+## v1.2.0
+
+- Doğru Tutor body/class seçicileri (`tutor-screen-frontend-dashboard`)
+- Sol menü tamamen beyaz kart; koyu mavi sidebar kaldırıldı
+- CSS Tutor stillerinden sonra yüklenir (priority 999)
 
 ## v1.1.0
 
 - Sol menü açık zemin + okunaklı koyu metin
-- Koyu gradient yalnızca profil kartında
 - Aktif menü öğesinde altın sol çizgi

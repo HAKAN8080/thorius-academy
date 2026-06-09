@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
 import Image from "next/image";
+import { Trash2 } from "lucide-react";
 import type { BuilderLesson, BuilderLessonInput } from "@/types/instructor-course";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -19,6 +20,7 @@ interface BuilderLessonFormProps {
   lesson: BuilderLesson | null;
   isPending: boolean;
   onSave: (input: BuilderLessonInput) => void;
+  onDelete?: (lessonId: string) => void;
 }
 
 function ToggleField({
@@ -43,6 +45,7 @@ export function BuilderLessonForm({
   lesson,
   isPending,
   onSave,
+  onDelete,
 }: BuilderLessonFormProps) {
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "text">("video");
@@ -110,11 +113,26 @@ export function BuilderLessonForm({
 
   return (
     <section className="rounded-2xl border border-primary-100 bg-white p-5 shadow-sm lg:p-6">
-      <h2 className="mb-6 text-lg font-semibold text-[#0B1E3F]">Ders Düzenle</h2>
+      <div className="mb-6 flex items-center justify-between gap-3">
+        <h2 className="text-lg font-semibold text-[#0B1E3F]">Ders Düzenle</h2>
+        {onDelete ? (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={() => onDelete(lesson.id)}
+            className="border-red-200 text-red-600 hover:bg-red-50"
+          >
+            <Trash2 className="mr-1.5 h-3.5 w-3.5" />
+            Dersi Sil
+          </Button>
+        ) : null}
+      </div>
 
       <form onSubmit={handleSubmit} className="space-y-5">
         <div className="space-y-2">
-          <Label htmlFor="lesson-title">Lesson Name</Label>
+          <Label htmlFor="lesson-title">Ders Adı</Label>
           <Input
             id="lesson-title"
             value={title}
@@ -124,7 +142,7 @@ export function BuilderLessonForm({
         </div>
 
         <div className="space-y-2">
-          <Label>Type</Label>
+          <Label>Tür</Label>
           <div className="grid grid-cols-2 gap-3">
             {(["video", "text"] as const).map((option) => (
               <button
@@ -137,7 +155,7 @@ export function BuilderLessonForm({
                     : "border-primary-200 text-[#0B1E3F]"
                 }`}
               >
-                {option === "video" ? "Video" : "Text"}
+                {option === "video" ? "Video" : "Metin"}
               </button>
             ))}
           </div>
@@ -155,7 +173,7 @@ export function BuilderLessonForm({
               />
             </div>
             <div className="space-y-2">
-              <Label>Duration</Label>
+              <Label>Süre</Label>
               <div className="grid grid-cols-3 gap-3">
                 <Input
                   type="number"
@@ -185,7 +203,7 @@ export function BuilderLessonForm({
           </>
         ) : (
           <div className="space-y-2" data-color-mode="light">
-            <Label>Content</Label>
+            <Label>İçerik</Label>
             <MarkdownEditor
               value={contentMd}
               onChange={(value) => setContentMd(value ?? "")}
@@ -196,7 +214,7 @@ export function BuilderLessonForm({
         )}
 
         <div className="space-y-2">
-          <Label htmlFor="featured">Featured Image URL</Label>
+          <Label htmlFor="featured">Kapak Görseli URL</Label>
           <Input
             id="featured"
             value={featuredImageUrl}
@@ -206,7 +224,7 @@ export function BuilderLessonForm({
             <div className="relative mt-2 h-24 w-40 overflow-hidden rounded-lg border border-primary-100">
               <Image
                 src={featuredImageUrl}
-                alt="Featured"
+                alt="Kapak önizleme"
                 fill
                 className="object-cover"
               />
@@ -215,7 +233,7 @@ export function BuilderLessonForm({
         </div>
 
         <div className="space-y-2">
-          <Label htmlFor="attachment">Upload Attachment</Label>
+          <Label htmlFor="attachment">Ek Dosya URL</Label>
           <Input
             id="attachment"
             value={attachmentUrl}
@@ -230,18 +248,18 @@ export function BuilderLessonForm({
         </div>
 
         <ToggleField
-          label="Lesson Preview (free preview)"
+          label="Ücretsiz önizleme"
           checked={isFreePreview}
           onChange={setIsFreePreview}
         />
-        <ToggleField label="Published" checked={published} onChange={setPublished} />
+        <ToggleField label="Yayında" checked={published} onChange={setPublished} />
 
         <Button
           type="submit"
           disabled={isPending}
           className="bg-[#0B1E3F] text-[#D4AF37] hover:bg-[#0B1E3F]/90"
         >
-          Save
+          Kaydet
         </Button>
       </form>
     </section>

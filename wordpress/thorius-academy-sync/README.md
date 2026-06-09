@@ -51,7 +51,44 @@ Academy'de ücretsiz kursa kayıt olunduğunda Tutor `kontrol-paneli/enrolled-co
 - WordPress'te güncel `thorius-academy-sync` (v1.4.0+) yüklü olmalı
 - Endpoint: `POST /wp-json/thorius/v1/academy-enroll` (HMAC imzalı, e-posta + `course_id`)
 
-**Henüz kapsam dışı:** Mevcut Academy kayıtlarının geriye dönük toplu senkronu; satın alma (WC) kayıtları zaten Tutor tarafında oluşuyor olabilir.
+## Eski Tutor üyeleri → Academy (v1.6.0+)
+
+thorius.com.tr'de daha önce kayıt olmuş ve kurs satın almış üyeler, Academy'de **aynı e-posta** ile giriş yaptığında kursları ve izleme ilerlemesi otomatik içe aktarılır.
+
+- Endpoint: `POST /wp-json/thorius/v1/academy-user-legacy`
+- HMAC imzalı gövde: `email`
+- Dönen veri: Tutor kayıtlı kurslar, tamamlanan dersler, ilerleme yüzdesi
+- Academy paneli açılışında (en fazla 6 saatte bir) senkron çalışır
+
+**Eski üye için adımlar:**
+
+1. `academy.thorius.com.tr/kayit` veya `/giris` — **thorius.com.tr ile aynı e-posta**
+2. İlk kez Academy kullanıyorsa kayıt olun veya parola sıfırlayın
+3. `/panel/kurslarim` — eski kurslar ve kaldığı ders görünür
+
+WordPress'te güncel `thorius-academy-sync` **v1.6.0+** yüklü olmalı.
+
+## Toplu üyelik yenileme e-postası (v1.7.0+)
+
+Tüm Tutor kayıtlı üyelere “şifre süreniz doldu” + yeni kurslar (MIT vb.) e-postası göndermek için:
+
+1. WordPress **v1.7.0+** (`/academy-member-list` endpoint)
+2. Academy deploy + `RESEND_API_KEY`, `CRON_SECRET`, `WP_WEBHOOK_SECRET`
+3. Önce dry-run:
+
+```bash
+curl "https://academy.thorius.com.tr/api/admin/membership-renewal-campaign?secret=CRON_SECRET&offset=0&limit=25&dry_run=true"
+```
+
+4. Gönderim (25’er batch, `has_more` false olana kadar `offset` artırın):
+
+```bash
+curl -X POST "https://academy.thorius.com.tr/api/admin/membership-renewal-campaign?secret=CRON_SECRET&offset=0&limit=25"
+```
+
+Opsiyonel: `CAMPAIGN_COURSE_SLUGS=slug1,slug2` ile e-postadaki kursları sabitleyin.
+
+Alıcılar `/yeni-parola` sayfasında şifre belirler; panelde eski kurslar legacy senkron ile gelir.
 
 ## Academy kayıt → WordPress hesabı (v1.5.0+)
 

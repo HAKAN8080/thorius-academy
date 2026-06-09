@@ -44,7 +44,9 @@ export function LoginForm({ callbackError }: LoginFormProps) {
       <CardHeader>
         <CardTitle className="text-primary-900">Hoş Geldiniz</CardTitle>
         <CardDescription>
-          Hesabınıza giriş yaparak eğitimlerinize devam edin
+          Hesabınıza giriş yaparak eğitimlerinize devam edin. thorius.com.tr
+          üyesiyseniz aynı e-postayı kullanın; eski kurslarınız otomatik
+          senkronlanır.
         </CardDescription>
       </CardHeader>
       <form action={formAction}>
