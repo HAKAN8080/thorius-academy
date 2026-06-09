@@ -1,6 +1,10 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { KNOWN_INSTRUCTOR_EMAILS } from "@/lib/constants/instructor-allowlist";
+import {
+  getKnownInstructorWpUserId,
+  isKnownInstructorEmail,
+  KNOWN_INSTRUCTOR_EMAILS,
+} from "@/lib/constants/instructor-allowlist";
 import { getPreferredProfileName } from "@/lib/instructor/display-name";
 
 export interface InstructorAccess {
@@ -254,8 +258,18 @@ async function lookupInstructorViaAllowlist(
   loginEmail: string,
 ): Promise<InstructorRow | null> {
   const envEmails = getEnvInstructorEmails();
-  if (!envEmails.includes(loginEmail)) {
+  if (!envEmails.includes(loginEmail) && !isKnownInstructorEmail(loginEmail)) {
     return null;
+  }
+
+  const mappedWpId = getKnownInstructorWpUserId(loginEmail);
+  if (mappedWpId) {
+    const mapped = await lookupInstructorByWpUserId(admin, mappedWpId);
+    return {
+      wp_user_id: mappedWpId,
+      full_name: mapped?.full_name ?? null,
+      email: loginEmail,
+    };
   }
 
   const direct = await lookupInstructorByEmail(admin, loginEmail);
@@ -475,34 +489,13 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
     return { isInstructor: false, wpInstructorId: null, instructorName: null };
   }
 
-  if (profile?.wp_instructor_id !== resolved.wpInstructorId) {
-    return grantInstructorAccess(
-      user.id,
-      resolved.wpInstructorId,
-      email,
-      profile,
-      resolved.instructor,
-    );
-  }
-
-  await ensureInstructorRow(
-    admin,
+  return grantInstructorAccess(
+    user.id,
     resolved.wpInstructorId,
-    resolved.instructor?.email ?? email,
-    resolved.instructor?.full_name ?? profile?.full_name ?? null,
+    email,
+    profile,
+    resolved.instructor,
   );
-
-  const instructorName =
-    emailsMatch(email, resolved.instructor?.email) &&
-    resolved.instructor?.full_name
-      ? resolved.instructor.full_name
-      : profile?.full_name ?? email;
-
-  return {
-    isInstructor: true,
-    wpInstructorId: resolved.wpInstructorId,
-    instructorName,
-  };
 }
 
 export async function requireInstructorAccess(): Promise<{
