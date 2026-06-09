@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getInstructorAccess } from "@/lib/instructor/access";
+import { resolvePanelDisplayName } from "@/lib/instructor/display-name";
 
 export interface PanelShellContext {
   userEmail: string | null;
@@ -25,6 +26,7 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   }
 
   const access = await getInstructorAccess();
+  const loginEmail = user.email ?? null;
 
   const { data: profile } = await supabase
     .from("profiles")
@@ -35,27 +37,42 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   const metadataName =
     typeof user.user_metadata?.full_name === "string"
       ? user.user_metadata.full_name.trim()
-      : "";
+      : null;
 
-  let userName = profile?.full_name?.trim() || metadataName || null;
+  let instructorName: string | null = null;
+  let instructorEmail: string | null = null;
   let avatarUrl: string | null = null;
 
   if (access.isInstructor && access.wpInstructorId) {
     const admin = getSupabaseAdmin();
     const { data: instructor } = await admin
       .from("instructors")
-      .select("full_name, avatar_url")
+      .select("full_name, avatar_url, email")
       .eq("wp_user_id", access.wpInstructorId)
       .maybeSingle();
 
-    if (!userName) {
-      userName = instructor?.full_name ?? access.instructorName;
+    instructorName = instructor?.full_name ?? access.instructorName;
+    instructorEmail = instructor?.email ?? null;
+
+    if (
+      instructorEmail &&
+      loginEmail &&
+      instructorEmail.toLowerCase() === loginEmail.toLowerCase()
+    ) {
+      avatarUrl = instructor?.avatar_url ?? null;
     }
-    avatarUrl = instructor?.avatar_url ?? null;
   }
 
+  const userName = resolvePanelDisplayName({
+    loginEmail,
+    profileName: profile?.full_name,
+    metadataName,
+    instructorName,
+    instructorEmail,
+  });
+
   return {
-    userEmail: user.email ?? null,
+    userEmail: loginEmail,
     userName,
     avatarUrl,
     isInstructor: access.isInstructor,

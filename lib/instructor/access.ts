@@ -15,6 +15,11 @@ type InstructorRow = {
   email: string | null;
 };
 
+type ProfileRow = {
+  wp_instructor_id: number | null;
+  full_name: string | null;
+};
+
 function normalizeEmail(email: string | null | undefined): string | null {
   if (!email) return null;
   const trimmed = email.trim().toLowerCase();
@@ -41,11 +46,6 @@ function getEnvInstructorEmails(): string[] {
     .filter(Boolean);
 }
 
-function getDefaultInstructorWpId(): number {
-  const parsed = parseInt(process.env.DEFAULT_INSTRUCTOR_WP_ID ?? "277", 10);
-  return Number.isNaN(parsed) ? 277 : parsed;
-}
-
 function getMetadataWpUserIds(
   metadata: Record<string, unknown> | undefined,
 ): number[] {
@@ -59,26 +59,52 @@ function getMetadataWpUserIds(
   return Array.from(ids);
 }
 
-async function ensureProfileInstructorLink(
-  userId: string,
-  wpInstructorId: number,
-  fullName?: string | null,
-): Promise<void> {
-  const admin = getSupabaseAdmin();
-  const payload: {
-    id: string;
-    wp_instructor_id: number;
-    full_name?: string;
-  } = {
-    id: userId,
-    wp_instructor_id: wpInstructorId,
-  };
+function emailsMatch(
+  left: string | null | undefined,
+  right: string | null | undefined,
+): boolean {
+  const a = normalizeEmail(left);
+  const b = normalizeEmail(right);
+  return Boolean(a && b && a === b);
+}
 
-  if (fullName?.trim()) {
-    payload.full_name = fullName.trim();
+async function ensureInstructorRow(
+  admin: AdminClient,
+  wpUserId: number,
+  email: string | null,
+  fullName: string | null,
+): Promise<void> {
+  const { data: existing } = await admin
+    .from("instructors")
+    .select("wp_user_id, email, full_name")
+    .eq("wp_user_id", wpUserId)
+    .maybeSingle();
+
+  if (existing?.wp_user_id) {
+    return;
   }
 
-  await admin.from("profiles").upsert(payload, { onConflict: "id" });
+  await admin.from("instructors").upsert(
+    {
+      wp_user_id: wpUserId,
+      email,
+      full_name: fullName,
+      synced_at: new Date().toISOString(),
+    },
+    { onConflict: "wp_user_id" },
+  );
+}
+
+async function hasInstructorCourses(
+  admin: AdminClient,
+  wpUserId: number,
+): Promise<boolean> {
+  const { count } = await admin
+    .from("instructor_course_stats")
+    .select("*", { count: "exact", head: true })
+    .eq("instructor_wp_user_id", wpUserId);
+
+  return (count ?? 0) > 0;
 }
 
 async function lookupInstructorByWpUserId(
@@ -95,12 +121,7 @@ async function lookupInstructorByWpUserId(
     return instructor as InstructorRow;
   }
 
-  const { count } = await admin
-    .from("instructor_course_stats")
-    .select("*", { count: "exact", head: true })
-    .eq("instructor_wp_user_id", wpUserId);
-
-  if ((count ?? 0) > 0) {
+  if (await hasInstructorCourses(admin, wpUserId)) {
     return {
       wp_user_id: wpUserId,
       full_name: null,
@@ -111,24 +132,141 @@ async function lookupInstructorByWpUserId(
   return null;
 }
 
+async function lookupInstructorByEmail(
+  admin: AdminClient,
+  email: string,
+): Promise<InstructorRow | null> {
+  const { data: instructor } = await admin
+    .from("instructors")
+    .select("wp_user_id, full_name, email")
+    .ilike("email", email)
+    .maybeSingle();
+
+  return instructor?.wp_user_id ? (instructor as InstructorRow) : null;
+}
+
+async function persistInstructorProfile(
+  userId: string,
+  wpInstructorId: number,
+  loginEmail: string | null,
+  profile: ProfileRow | null | undefined,
+  instructor: InstructorRow | null,
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+  const payload: {
+    id: string;
+    wp_instructor_id: number;
+    full_name?: string | null;
+    role?: string;
+  } = {
+    id: userId,
+    wp_instructor_id: wpInstructorId,
+    role: "instructor",
+  };
+
+  const linkedName =
+    instructor &&
+    emailsMatch(loginEmail, instructor.email) &&
+    instructor.full_name?.trim()
+      ? instructor.full_name.trim()
+      : null;
+
+  const profileName = profile?.full_name?.trim() ?? "";
+  const wrongLinkedName =
+    instructor?.full_name?.trim() &&
+    profileName.toLowerCase() === instructor.full_name.trim().toLowerCase() &&
+    !emailsMatch(loginEmail, instructor.email);
+
+  if (linkedName) {
+    payload.full_name = linkedName;
+  } else if (wrongLinkedName) {
+    payload.full_name = null;
+  } else if (profileName) {
+    payload.full_name = profileName;
+  }
+
+  await admin.from("profiles").upsert(payload, { onConflict: "id" });
+}
+
+async function resolveInstructorIdentity(
+  admin: AdminClient,
+  email: string | null,
+  profile: ProfileRow | null | undefined,
+  metadata: Record<string, unknown>,
+): Promise<{ wpInstructorId: number; instructor: InstructorRow | null } | null> {
+  if (email) {
+    const byEmail = await lookupInstructorByEmail(admin, email);
+    if (byEmail) {
+      return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
+    }
+  }
+
+  for (const wpUserId of getMetadataWpUserIds(metadata)) {
+    const instructor = await lookupInstructorByWpUserId(admin, wpUserId);
+    if (instructor) {
+      return { wpInstructorId: wpUserId, instructor };
+    }
+  }
+
+  if (profile?.wp_instructor_id) {
+    const instructor = await lookupInstructorByWpUserId(
+      admin,
+      profile.wp_instructor_id,
+    );
+    if (
+      instructor &&
+      (!instructor.email || !email || emailsMatch(email, instructor.email))
+    ) {
+      return {
+        wpInstructorId: profile.wp_instructor_id,
+        instructor,
+      };
+    }
+  }
+
+  if (email && getEnvInstructorEmails().includes(email)) {
+    const byEmail = await lookupInstructorByEmail(admin, email);
+    if (byEmail) {
+      return { wpInstructorId: byEmail.wp_user_id, instructor: byEmail };
+    }
+  }
+
+  return null;
+}
+
 async function grantInstructorAccess(
   userId: string,
   wpInstructorId: number,
-  instructor: Pick<InstructorRow, "full_name" | "email"> | null,
-  profile: { full_name: string | null } | null | undefined,
-  email: string | null,
+  loginEmail: string | null,
+  profile: ProfileRow | null | undefined,
+  instructor: InstructorRow | null,
 ): Promise<InstructorAccess> {
-  await ensureProfileInstructorLink(
+  const admin = getSupabaseAdmin();
+
+  await ensureInstructorRow(
+    admin,
+    wpInstructorId,
+    instructor?.email ?? loginEmail,
+    instructor?.full_name ?? profile?.full_name ?? null,
+  );
+
+  await persistInstructorProfile(
     userId,
     wpInstructorId,
-    instructor?.full_name ?? profile?.full_name,
+    loginEmail,
+    profile,
+    instructor,
   );
+
+  const displayName =
+    emailsMatch(loginEmail, instructor?.email) && instructor?.full_name
+      ? instructor.full_name
+      : profile?.full_name ?? loginEmail;
 
   return {
     isInstructor: true,
     wpInstructorId,
-    instructorName:
-      instructor?.full_name ?? profile?.full_name ?? email,
+    instructorName: displayName,
   };
 }
 
@@ -153,10 +291,20 @@ export async function linkInstructorProfileFromWpUserId(
     return false;
   }
 
-  await ensureProfileInstructorLink(
+  const { data: authUser } = await admin.auth.admin.getUserById(userId);
+  const email = normalizeEmail(authUser.user?.email);
+  const { data: profile } = await admin
+    .from("profiles")
+    .select("wp_instructor_id, full_name")
+    .eq("id", userId)
+    .maybeSingle();
+
+  await grantInstructorAccess(
     userId,
     parsedId,
-    instructor.full_name,
+    email,
+    profile,
+    instructor,
   );
   return true;
 }
@@ -196,91 +344,45 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
     .eq("id", user.id)
     .maybeSingle();
 
-  if (profile?.wp_instructor_id) {
-    const { data: instructor } = await admin
-      .from("instructors")
-      .select("full_name, email")
-      .eq("wp_user_id", profile.wp_instructor_id)
-      .maybeSingle();
+  const resolved = await resolveInstructorIdentity(
+    admin,
+    email,
+    profile,
+    metadata,
+  );
 
-    return {
-      isInstructor: true,
-      wpInstructorId: profile.wp_instructor_id,
-      instructorName:
-        profile.full_name ??
-        instructor?.full_name ??
-        email ??
-        user.email ??
-        null,
-    };
+  if (!resolved) {
+    return { isInstructor: false, wpInstructorId: null, instructorName: null };
   }
 
-  for (const wpUserId of getMetadataWpUserIds(metadata)) {
-    const instructor = await lookupInstructorByWpUserId(admin, wpUserId);
-    if (instructor) {
-      return grantInstructorAccess(
-        user.id,
-        wpUserId,
-        instructor,
-        profile,
-        email,
-      );
-    }
+  if (profile?.wp_instructor_id !== resolved.wpInstructorId) {
+    return grantInstructorAccess(
+      user.id,
+      resolved.wpInstructorId,
+      email,
+      profile,
+      resolved.instructor,
+    );
   }
 
-  if (email) {
-    const { data: instructor } = await admin
-      .from("instructors")
-      .select("wp_user_id, full_name, email")
-      .ilike("email", email)
-      .maybeSingle();
+  await ensureInstructorRow(
+    admin,
+    resolved.wpInstructorId,
+    resolved.instructor?.email ?? email,
+    resolved.instructor?.full_name ?? profile?.full_name ?? null,
+  );
 
-    if (instructor?.wp_user_id) {
-      return grantInstructorAccess(
-        user.id,
-        instructor.wp_user_id,
-        instructor as InstructorRow,
-        profile,
-        email,
-      );
-    }
+  const instructorName =
+    emailsMatch(email, resolved.instructor?.email) &&
+    resolved.instructor?.full_name
+      ? resolved.instructor.full_name
+      : profile?.full_name ?? email;
 
-    const envEmails = getEnvInstructorEmails();
-    if (envEmails.includes(email)) {
-      const { data: envInstructor } = await admin
-        .from("instructors")
-        .select("wp_user_id, full_name, email")
-        .ilike("email", email)
-        .maybeSingle();
-
-      if (envInstructor?.wp_user_id) {
-        return grantInstructorAccess(
-          user.id,
-          envInstructor.wp_user_id,
-          envInstructor as InstructorRow,
-          profile,
-          email,
-        );
-      }
-
-      const wpInstructorId = getDefaultInstructorWpId();
-      const { data: fallbackInstructor } = await admin
-        .from("instructors")
-        .select("full_name, email")
-        .eq("wp_user_id", wpInstructorId)
-        .maybeSingle();
-
-      return grantInstructorAccess(
-        user.id,
-        wpInstructorId,
-        fallbackInstructor as InstructorRow | null,
-        profile,
-        email,
-      );
-    }
-  }
-
-  return { isInstructor: false, wpInstructorId: null, instructorName: null };
+  return {
+    isInstructor: true,
+    wpInstructorId: resolved.wpInstructorId,
+    instructorName,
+  };
 }
 
 export async function requireInstructorAccess(): Promise<{

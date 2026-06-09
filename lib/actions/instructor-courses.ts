@@ -216,10 +216,19 @@ export async function getInstructorCourseList(): Promise<
 export async function createInstructorCourse(): Promise<{ id: string }> {
   const access = await requireCurriculumAccess();
   if (!access.wpInstructorId) {
-    throw new Error("INSTRUCTOR_REQUIRED");
+    throw new Error("Eğitmen hesabı bağlanamadı. Çıkış yapıp tekrar giriş deneyin.");
   }
 
   const admin = getSupabaseAdmin();
+
+  await admin.from("instructors").upsert(
+    {
+      wp_user_id: access.wpInstructorId,
+      synced_at: new Date().toISOString(),
+    },
+    { onConflict: "wp_user_id" },
+  );
+
   const wpCourseId = await nextSyntheticWpCourseId();
   const slug = `yeni-kurs-${Math.abs(wpCourseId)}`;
 
@@ -236,7 +245,7 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
     .single();
 
   if (error || !data) {
-    throw new Error(error?.message ?? "Kurs oluşturulamadı");
+    throw new Error(error?.message ?? "Kurs oluşturulamadı.");
   }
 
   await admin.from("instructor_course_stats").upsert(
