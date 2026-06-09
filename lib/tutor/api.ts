@@ -3,8 +3,8 @@ import type { TutorApiResponse, TutorLesson, TutorTopic } from "@/types/tutor";
 export const TUTOR_API_BASE = "https://thorius.com.tr/wp-json/tutor/v1";
 
 function getAuthHeader(): string {
-  const key = process.env.TUTOR_CONSUMER_KEY;
-  const secret = process.env.TUTOR_CONSUMER_SECRET;
+  const key = process.env.TUTOR_CONSUMER_KEY?.trim();
+  const secret = process.env.TUTOR_CONSUMER_SECRET?.trim();
   if (!key || !secret) {
     throw new Error("Tutor API credentials missing in env");
   }

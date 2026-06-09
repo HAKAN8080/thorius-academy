@@ -127,9 +127,73 @@ function extractCourseList(data: unknown): TutorCourseListItem[] {
     if (Array.isArray(obj.data)) {
       return obj.data.map(normalizeCourseItem);
     }
+    if (Array.isArray(obj.posts)) {
+      return obj.posts.map(normalizeCourseItem);
+    }
   }
 
   return [];
+}
+
+function getWpRestBase(): string {
+  const wpApi = process.env.NEXT_PUBLIC_WP_API_URL?.replace(/\/$/, "");
+  if (wpApi) {
+    return wpApi;
+  }
+
+  return "https://thorius.com.tr/wp-json/wp/v2";
+}
+
+function normalizeWpRestCourse(raw: Record<string, unknown>): TutorCourseListItem {
+  const title = raw.title as { rendered?: string } | undefined;
+  return {
+    ID: parseNumber(raw.id ?? raw.ID),
+    post_author: parseNumber(raw.author ?? raw.post_author),
+    post_title: title?.rendered ?? String(raw.post_title ?? raw.title ?? ""),
+    post_name: String(raw.slug ?? raw.post_name ?? ""),
+    post_status: String(raw.status ?? raw.post_status ?? "publish"),
+    post_date: String(raw.date ?? raw.post_date ?? ""),
+    post_date_gmt:
+      typeof raw.date_gmt === "string"
+        ? raw.date_gmt
+        : typeof raw.post_date_gmt === "string"
+          ? raw.post_date_gmt
+          : undefined,
+  };
+}
+
+async function fetchAllCoursesFromWpRest(): Promise<TutorCourseListItem[]> {
+  const base = getWpRestBase();
+  const all: TutorCourseListItem[] = [];
+  let page = 1;
+
+  while (page <= 20) {
+    const response = await fetch(
+      `${base}/courses?per_page=100&page=${page}&status=any`,
+      { cache: "no-store" },
+    );
+
+    if (!response.ok) {
+      console.warn("[WP REST] courses fetch failed:", response.status, page);
+      break;
+    }
+
+    const batch = (await response.json().catch(() => null)) as
+      | Record<string, unknown>[]
+      | null;
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    all.push(...batch.map(normalizeWpRestCourse));
+    if (batch.length < 100) {
+      break;
+    }
+    page += 1;
+  }
+
+  return all;
 }
 
 function parseCourseId(course: TutorCourseListItem): number {
@@ -149,22 +213,41 @@ export async function fetchTutorCoursesPage(
     `/courses?order=desc&orderby=ID&paged=${page}&per_page=${perPage}`,
     { fresh: true },
   );
-  return extractCourseList(data.data);
+
+  const fromData = extractCourseList(data.data);
+  if (fromData.length > 0) {
+    return fromData;
+  }
+
+  return extractCourseList(data);
 }
 
-export async function fetchAllTutorCourses(): Promise<TutorCourseListItem[]> {
+export async function fetchAllTutorCourses(): Promise<{
+  courses: TutorCourseListItem[];
+  source: "tutor-api" | "wp-rest";
+}> {
   const all: TutorCourseListItem[] = [];
   let page = 1;
 
-  while (true) {
-    const batch = await fetchTutorCoursesPage(page);
-    if (batch.length === 0) break;
-    all.push(...batch);
-    if (batch.length < 50) break;
-    page += 1;
+  try {
+    while (page <= 20) {
+      const batch = await fetchTutorCoursesPage(page);
+      if (batch.length === 0) break;
+      all.push(...batch);
+      if (batch.length < 50) break;
+      page += 1;
+    }
+  } catch (error) {
+    console.warn("[Tutor Courses] Tutor API failed:", error);
   }
 
-  return all;
+  if (all.length > 0) {
+    return { courses: all, source: "tutor-api" };
+  }
+
+  const wpCourses = await fetchAllCoursesFromWpRest();
+  console.log(`[Tutor Courses] WP REST fallback: ${wpCourses.length} courses`);
+  return { courses: wpCourses, source: "wp-rest" };
 }
 
 export async function fetchTutorCourseDetail(

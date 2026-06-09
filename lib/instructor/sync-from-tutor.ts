@@ -21,7 +21,7 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
   const supabase = getSupabaseAdmin();
 
   try {
-    const courses = await fetchAllTutorCourses();
+    const { courses, source: courseSource } = await fetchAllTutorCourses();
     const instructorIds = new Set<number>();
 
     for (const course of courses) {
@@ -177,6 +177,11 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
       accountsLinked,
       accountsCreated,
       inviteEmailsSent,
+      courseSource,
+      warning:
+        courses.length === 0
+          ? "Hiç kurs bulunamadı. Tutor API anahtarlarını ve thorius.com.tr erişimini kontrol edin."
+          : undefined,
     };
   } catch (err) {
     console.error("[Instructor Sync] Exception:", err);
