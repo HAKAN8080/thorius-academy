@@ -17,38 +17,64 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { provisionInstructorAcademyAccount } from "@/lib/instructor/provision-academy-account";
 import type { SyncInstructorStatsResult } from "@/types/instructor";
 
+function getDefaultInstructorWpId(): number {
+  const parsed = parseInt(process.env.DEFAULT_INSTRUCTOR_WP_ID ?? "277", 10);
+  return Number.isNaN(parsed) ? 277 : parsed;
+}
+
 export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStatsResult> {
   const supabase = getSupabaseAdmin();
+  const defaultInstructorId = getDefaultInstructorWpId();
 
   try {
-    const { courses, source: courseSource } = await fetchAllTutorCourses();
-    const instructorIds = new Set<number>();
+    const {
+      courses,
+      source: courseSource,
+      wpCoursesFetched,
+      tutorCoursesFetched,
+    } = await fetchAllTutorCourses();
 
+    const instructorIds = new Set<number>([defaultInstructorId]);
     for (const course of courses) {
       const authorId = parseAuthorId(course);
-      if (authorId > 0) instructorIds.add(authorId);
+      if (authorId > 0) {
+        instructorIds.add(authorId);
+      }
     }
 
     const syncedAt = new Date().toISOString();
+    const syncErrors: string[] = [];
 
-    for (const instructorId of Array.from(instructorIds)) {
-      await supabase.from("instructors").upsert(
-        { wp_user_id: instructorId, synced_at: syncedAt },
-        { onConflict: "wp_user_id" },
-      );
-    }
+    await supabase.from("instructors").upsert(
+      {
+        wp_user_id: defaultInstructorId,
+        email: "siriusdanismanlik.tr@gmail.com",
+        full_name: "Sirius",
+        synced_at: syncedAt,
+      },
+      { onConflict: "wp_user_id" },
+    );
 
     let instructorsSynced = 0;
     let accountsLinked = 0;
     let accountsCreated = 0;
     let inviteEmailsSent = 0;
+    let statsCoursesUpserted = 0;
 
     for (const instructorId of Array.from(instructorIds)) {
-      const author = await fetchTutorAuthorInfo(instructorId);
+      const author =
+        instructorId === defaultInstructorId
+          ? {
+              user_email: "siriusdanismanlik.tr@gmail.com",
+              email: "siriusdanismanlik.tr@gmail.com",
+              display_name: "Sirius",
+            }
+          : await fetchTutorAuthorInfo(instructorId);
+
       const fullName =
         author?.display_name?.trim() ||
         [author?.first_name, author?.last_name].filter(Boolean).join(" ").trim() ||
-        null;
+        (instructorId === defaultInstructorId ? "Sirius" : null);
       const email = author?.user_email ?? author?.email ?? null;
 
       const { error } = await supabase.from("instructors").upsert(
@@ -63,27 +89,26 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
       );
 
       if (error) {
-        console.error(
-          `[Instructor Sync] Instructor upsert failed (${instructorId}):`,
-          error.message,
-        );
-      } else {
-        instructorsSynced += 1;
+        const message = `Instructor ${instructorId}: ${error.message}`;
+        syncErrors.push(message);
+        console.error(`[Instructor Sync] ${message}`);
+        continue;
       }
 
-      const provision =
-        process.env.INSTRUCTOR_AUTO_PROVISION !== "false"
-          ? await provisionInstructorAcademyAccount({
-              email,
-              fullName,
-              wpUserId: instructorId,
-            })
-          : null;
+      instructorsSynced += 1;
 
-      if (provision) {
-        accountsLinked += 1;
-        if (provision.created) accountsCreated += 1;
-        if (provision.inviteSent) inviteEmailsSent += 1;
+      if (process.env.INSTRUCTOR_AUTO_PROVISION !== "false" && email) {
+        const provision = await provisionInstructorAcademyAccount({
+          email,
+          fullName,
+          wpUserId: instructorId,
+        });
+
+        if (provision) {
+          accountsLinked += 1;
+          if (provision.created) accountsCreated += 1;
+          if (provision.inviteSent) inviteEmailsSent += 1;
+        }
       }
     }
 
@@ -91,7 +116,10 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
 
     for (const course of courses) {
       const courseId = parseCourseId(course);
-      const authorId = parseAuthorId(course);
+      let authorId = parseAuthorId(course);
+      if (authorId <= 0) {
+        authorId = defaultInstructorId;
+      }
 
       const [detail, rating, reviews, enrollmentFallback] = await Promise.all([
         fetchTutorCourseDetail(courseId),
@@ -115,7 +143,8 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
             course_slug: course.post_name,
             instructor_wp_user_id: authorId,
             title: decodeHtmlEntities(course.post_title),
-            image_url: resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
+            image_url:
+              resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
             status: course.post_status,
             enrollment_count: enrollmentCount,
             rating_avg: ratingAvg,
@@ -127,12 +156,13 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
         );
 
       if (courseError) {
-        console.error(
-          `[Instructor Sync] Course upsert failed (${courseId}):`,
-          courseError.message,
-        );
+        const message = `Course ${courseId}: ${courseError.message}`;
+        syncErrors.push(message);
+        console.error(`[Instructor Sync] ${message}`);
         continue;
       }
+
+      statsCoursesUpserted += 1;
 
       await supabase.from("courses_cache").upsert(
         {
@@ -172,16 +202,25 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
     return {
       success: true,
       coursesSynced: courses.length,
+      statsCoursesUpserted,
       reviewsSynced,
       instructorsSynced,
       accountsLinked,
       accountsCreated,
       inviteEmailsSent,
       courseSource,
+      wpCoursesFetched,
+      tutorCoursesFetched,
+      instructorIds: Array.from(instructorIds),
+      syncErrors: syncErrors.length > 0 ? syncErrors.slice(0, 5) : undefined,
       warning:
         courses.length === 0
-          ? "Hiç kurs bulunamadı. Tutor API anahtarlarını ve thorius.com.tr erişimini kontrol edin."
-          : undefined,
+          ? "Hiç kurs bulunamadı."
+          : instructorsSynced === 0
+            ? "Eğitmen kaydı yazılamadı. syncErrors alanına bakın."
+            : statsCoursesUpserted === 0
+              ? "Kurs istatistikleri yazılamadı. instructors FK veya tablo şemasını kontrol edin."
+              : undefined,
     };
   } catch (err) {
     console.error("[Instructor Sync] Exception:", err);

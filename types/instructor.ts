@@ -34,12 +34,17 @@ export interface InstructorCourseReview {
 export interface SyncInstructorStatsResult {
   success: boolean;
   coursesSynced?: number;
+  statsCoursesUpserted?: number;
   reviewsSynced?: number;
   instructorsSynced?: number;
   accountsLinked?: number;
   accountsCreated?: number;
   inviteEmailsSent?: number;
   courseSource?: "tutor-api" | "wp-rest" | "merged";
+  wpCoursesFetched?: number;
+  tutorCoursesFetched?: number;
+  instructorIds?: number[];
+  syncErrors?: string[];
   warning?: string;
   error?: string;
 }

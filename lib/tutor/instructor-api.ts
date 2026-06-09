@@ -1,4 +1,5 @@
 import { tutorFetch, TUTOR_API_BASE } from "@/lib/tutor/api";
+import { getWpSiteOrigin } from "@/lib/wordpress/wp-site-origin";
 import type { TutorApiResponse } from "@/types/tutor";
 
 export interface TutorCourseListItem {
@@ -150,13 +151,69 @@ function extractCourseList(data: unknown): TutorCourseListItem[] {
   return [];
 }
 
-function getWpRestBase(): string {
-  const wpApi = process.env.NEXT_PUBLIC_WP_API_URL?.replace(/\/$/, "");
-  if (wpApi) {
-    return wpApi;
+function getWpRestBaseCandidates(): string[] {
+  const candidates = new Set<string>();
+
+  const fromEnv = process.env.NEXT_PUBLIC_WP_API_URL?.replace(/\/$/, "");
+  if (fromEnv) {
+    candidates.add(fromEnv);
   }
 
-  return "https://thorius.com.tr/wp-json/wp/v2";
+  const wpApiUrl = process.env.WP_API_URL?.replace(/\/$/, "");
+  if (wpApiUrl) {
+    candidates.add(
+      wpApiUrl.includes("/wp-json/")
+        ? wpApiUrl
+        : `${wpApiUrl}/wp-json/wp/v2`,
+    );
+  }
+
+  const origin = getWpSiteOrigin();
+  if (origin) {
+    candidates.add(`${origin}/wp-json/wp/v2`);
+  }
+
+  candidates.add("https://thorius.com.tr/wp-json/wp/v2");
+
+  return Array.from(candidates);
+}
+
+async function fetchCoursesFromWpRestBase(
+  base: string,
+): Promise<TutorCourseListItem[]> {
+  const all: TutorCourseListItem[] = [];
+  let page = 1;
+
+  while (page <= 20) {
+    const response = await fetch(
+      `${base}/courses?per_page=100&page=${page}&status=any`,
+      {
+        cache: "no-store",
+        headers: { Accept: "application/json" },
+      },
+    );
+
+    if (!response.ok) {
+      console.warn("[WP REST] courses fetch failed:", base, response.status, page);
+      break;
+    }
+
+    const batch = (await response.json().catch(() => null)) as
+      | Record<string, unknown>[]
+      | null;
+
+    if (!Array.isArray(batch) || batch.length === 0) {
+      break;
+    }
+
+    all.push(...batch.map(normalizeWpRestCourse));
+    if (batch.length < 100) {
+      break;
+    }
+    page += 1;
+  }
+
+  return all;
 }
 
 function normalizeWpRestCourse(raw: Record<string, unknown>): TutorCourseListItem {
@@ -178,37 +235,45 @@ function normalizeWpRestCourse(raw: Record<string, unknown>): TutorCourseListIte
 }
 
 async function fetchAllCoursesFromWpRest(): Promise<TutorCourseListItem[]> {
-  const base = getWpRestBase();
-  const all: TutorCourseListItem[] = [];
-  let page = 1;
-
-  while (page <= 20) {
-    const response = await fetch(
-      `${base}/courses?per_page=100&page=${page}&status=any`,
-      { cache: "no-store" },
-    );
-
-    if (!response.ok) {
-      console.warn("[WP REST] courses fetch failed:", response.status, page);
-      break;
+  for (const base of getWpRestBaseCandidates()) {
+    const courses = await fetchCoursesFromWpRestBase(base);
+    if (courses.length > 0) {
+      console.log(`[WP REST] loaded ${courses.length} courses from ${base}`);
+      return courses;
     }
-
-    const batch = (await response.json().catch(() => null)) as
-      | Record<string, unknown>[]
-      | null;
-
-    if (!Array.isArray(batch) || batch.length === 0) {
-      break;
-    }
-
-    all.push(...batch.map(normalizeWpRestCourse));
-    if (batch.length < 100) {
-      break;
-    }
-    page += 1;
   }
 
-  return all;
+  return [];
+}
+
+export async function enrichCoursesWithAuthorIds(
+  courses: TutorCourseListItem[],
+  defaultAuthorId: number,
+): Promise<TutorCourseListItem[]> {
+  const wpCourses = await fetchAllCoursesFromWpRest();
+  const authorByCourseId = new Map<number, number>();
+
+  for (const wpCourse of wpCourses) {
+    const courseId = parseCourseId(wpCourse);
+    const authorId = parseAuthorId(wpCourse);
+    if (courseId > 0 && authorId > 0) {
+      authorByCourseId.set(courseId, authorId);
+    }
+  }
+
+  return courses.map((course) => {
+    const courseId = parseCourseId(course);
+    const currentAuthor = parseAuthorId(course);
+    if (currentAuthor > 0) {
+      return course;
+    }
+
+    const mappedAuthor = courseId > 0 ? authorByCourseId.get(courseId) : undefined;
+    return {
+      ...course,
+      post_author: mappedAuthor && mappedAuthor > 0 ? mappedAuthor : defaultAuthorId,
+    };
+  });
 }
 
 function parseCourseId(course: TutorCourseListItem): number {
@@ -287,6 +352,8 @@ export async function fetchTutorCoursesPage(
 export async function fetchAllTutorCourses(): Promise<{
   courses: TutorCourseListItem[];
   source: "tutor-api" | "wp-rest" | "merged";
+  wpCoursesFetched: number;
+  tutorCoursesFetched: number;
 }> {
   const tutorCourses: TutorCourseListItem[] = [];
   let page = 1;
@@ -305,20 +372,39 @@ export async function fetchAllTutorCourses(): Promise<{
 
   const wpCourses = await fetchAllCoursesFromWpRest();
   const merged = mergeCourseCatalog(tutorCourses, wpCourses);
+  const defaultAuthorId = parseInt(
+    process.env.DEFAULT_INSTRUCTOR_WP_ID ?? "277",
+    10,
+  );
+  const enriched = await enrichCoursesWithAuthorIds(
+    merged.length > 0 ? merged : tutorCourses,
+    Number.isNaN(defaultAuthorId) ? 277 : defaultAuthorId,
+  );
 
   if (tutorCourses.length > 0 && wpCourses.length > 0) {
-    console.log(
-      `[Tutor Courses] merged tutor=${tutorCourses.length} wp=${wpCourses.length} total=${merged.length}`,
-    );
-    return { courses: merged, source: "merged" };
+    return {
+      courses: enriched,
+      source: "merged",
+      wpCoursesFetched: wpCourses.length,
+      tutorCoursesFetched: tutorCourses.length,
+    };
   }
 
   if (tutorCourses.length > 0) {
-    return { courses: tutorCourses, source: "tutor-api" };
+    return {
+      courses: enriched,
+      source: "tutor-api",
+      wpCoursesFetched: wpCourses.length,
+      tutorCoursesFetched: tutorCourses.length,
+    };
   }
 
-  console.log(`[Tutor Courses] WP REST fallback: ${wpCourses.length} courses`);
-  return { courses: wpCourses, source: "wp-rest" };
+  return {
+    courses: enriched,
+    source: "wp-rest",
+    wpCoursesFetched: wpCourses.length,
+    tutorCoursesFetched: 0,
+  };
 }
 
 export async function fetchTutorCourseDetail(
