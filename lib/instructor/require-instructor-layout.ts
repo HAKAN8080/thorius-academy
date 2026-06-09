@@ -9,7 +9,7 @@ export async function requireInstructorLayoutAccess() {
   }
 
   if (!access.canManage) {
-    redirect("/panel/kurslarim");
+    redirect("/panel");
   }
 
   return access;

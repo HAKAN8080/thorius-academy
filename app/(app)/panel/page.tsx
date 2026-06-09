@@ -1,187 +1,108 @@
-import type { Metadata } from "next";
 import Link from "next/link";
-import { redirect } from "next/navigation";
-import { createClient } from "@/lib/supabase/server";
-import { getUserEnrollments } from "@/lib/actions/enrollment";
-import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
-import { getInstructorAccess } from "@/lib/instructor/access";
-import { getInstructorPortalUrl } from "@/lib/config/portal-urls";
-import { TutorDashboardLink } from "@/components/layout/tutor-dashboard-link";
+import { BookOpen, DollarSign, GraduationCap, Layers } from "lucide-react";
 import {
-  BookOpen,
-  GraduationCap,
-  ArrowRight,
-  User,
-  Presentation,
-  Map,
-  Settings2,
-} from "lucide-react";
+  getInstructorCourseList,
+  getInstructorDashboardStats,
+} from "@/lib/actions/instructor-courses";
+import { getUserEnrollments } from "@/lib/actions/enrollment";
+import { getPanelShellContext } from "@/lib/panel/panel-shell-context";
+import { InstructorCourseGridCard } from "@/components/instructor/instructor-course-grid-card";
 
-export const metadata: Metadata = {
-  title: "Panel",
-};
+export const dynamic = "force-dynamic";
 
-export default async function PanelPage() {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  if (!user) redirect("/giris");
-
-  const [access, careerPathAdmin, enrollments] = await Promise.all([
-    getInstructorAccess(),
-    isCareerPathAdmin(),
-    getUserEnrollments(),
-  ]);
+export default async function PanelDashboardPage() {
+  const shell = await getPanelShellContext();
+  const enrollments = await getUserEnrollments();
   const activeEnrollments = enrollments.filter((e) => e.status === "active");
-  const completedEnrollments = enrollments.filter(
-    (e) => e.status === "completed"
-  );
+
+  const instructorStats = shell.isInstructor
+    ? await getInstructorDashboardStats()
+    : null;
+  const instructorCourses = shell.isInstructor
+    ? await getInstructorCourseList()
+    : [];
 
   return (
-    <div className="container mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-      <header className="mb-10">
-        <h1 className="mb-2 text-3xl font-bold text-primary-950 md:text-4xl">
-          Hoş geldiniz! 👋
-        </h1>
-        <p className="text-lg text-muted-foreground">{user.email}</p>
-      </header>
+    <div>
+      <h1 className="mb-6 text-2xl font-bold text-[#0B1E3F]">Kontrol Paneli</h1>
 
-      <div className="mb-10">
-        <TutorDashboardLink variant="student" />
-      </div>
-
-      <div className="mb-10 grid grid-cols-1 gap-6 md:grid-cols-3">
-        <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg bg-primary-950 p-2">
-              <BookOpen className="h-5 w-5 text-accent-400" />
-            </div>
-            <h3 className="font-semibold text-primary-950">Aktif Kurslar</h3>
+      <div className="mb-8 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div className="rounded-xl border border-primary-100 bg-white p-5">
+          <div className="mb-2 flex items-center justify-between text-sm text-primary-600">
+            Kayıtlı Kurslarım
+            <BookOpen className="h-4 w-4 text-[#D4AF37]" />
           </div>
-          <p className="text-3xl font-bold text-primary-950">
+          <p className="text-2xl font-bold text-[#0B1E3F]">
             {activeEnrollments.length}
           </p>
         </div>
 
-        <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg bg-primary-950 p-2">
-              <GraduationCap className="h-5 w-5 text-accent-400" />
+        {instructorStats ? (
+          <>
+            <div className="rounded-xl border border-primary-100 bg-white p-5">
+              <div className="mb-2 flex items-center justify-between text-sm text-primary-600">
+                Verdiğim Kurslar
+                <Layers className="h-4 w-4 text-[#D4AF37]" />
+              </div>
+              <p className="text-2xl font-bold text-[#0B1E3F]">
+                {instructorStats.totalCourses}
+              </p>
             </div>
-            <h3 className="font-semibold text-primary-950">Tamamlanan</h3>
-          </div>
-          <p className="text-3xl font-bold text-primary-950">
-            {completedEnrollments.length}
-          </p>
-        </div>
-
-        <div className="rounded-2xl border border-accent-500/20 bg-gradient-to-br from-primary-900 to-primary-950 p-6 text-white">
-          <div className="mb-2 flex items-center gap-3">
-            <div className="rounded-lg bg-accent-500/20 p-2">
-              <User className="h-5 w-5 text-accent-400" />
+            <div className="rounded-xl border border-primary-100 bg-white p-5">
+              <div className="mb-2 flex items-center justify-between text-sm text-primary-600">
+                Toplam Öğrenci
+                <GraduationCap className="h-4 w-4 text-[#D4AF37]" />
+              </div>
+              <p className="text-2xl font-bold text-[#0B1E3F]">
+                {instructorStats.totalStudents}
+              </p>
             </div>
-            <h3 className="font-semibold">Hesabım</h3>
-          </div>
-          <p className="truncate text-sm text-primary-100">{user.email}</p>
-        </div>
+            <div className="rounded-xl border border-primary-100 bg-white p-5">
+              <div className="mb-2 flex items-center justify-between text-sm text-primary-600">
+                Toplam Kazanç
+                <DollarSign className="h-4 w-4 text-[#D4AF37]" />
+              </div>
+              <p className="text-2xl font-bold text-[#0B1E3F]">
+                ₺{instructorStats.totalEarnings.toLocaleString("tr-TR")}
+              </p>
+            </div>
+          </>
+        ) : null}
       </div>
 
-      <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-        {access.isInstructor ? (
-          <Link
-            href={getInstructorPortalUrl()}
-            className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <div className="rounded-lg bg-accent-500/10 p-3">
-                <Presentation className="h-6 w-6 text-accent-600" />
-              </div>
-              <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
-            </div>
-            <h3 className="mb-2 text-xl font-bold text-primary-950">
-              Eğitmen Paneli
-            </h3>
-            <p className="text-muted-foreground">
-              Verdiğiniz kursları, öğrenci sayılarını ve yorumları görün
-            </p>
-          </Link>
-        ) : null}
-
-        <Link
-          href="/panel/kariyer-yolu"
-          className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <div className="rounded-lg bg-accent-500/10 p-3">
-              <Map className="h-6 w-6 text-accent-600" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
+      {shell.isInstructor && instructorCourses.length > 0 ? (
+        <section>
+          <div className="mb-4 flex items-center justify-between">
+            <h2 className="text-lg font-semibold text-[#0B1E3F]">
+              Yayında Olan Kurslarım
+            </h2>
+            <Link
+              href="/instructor/courses?status=publish"
+              className="text-sm font-semibold text-[#D4AF37] hover:underline"
+            >
+              Tümünü Gör
+            </Link>
           </div>
-          <h3 className="mb-2 text-xl font-bold text-primary-950">
-            Kariyer Yolum
-          </h3>
-          <p className="text-muted-foreground">
-            Sıralı uzmanlık yollarında tamamladığınız adımları roadmap olarak
-            takip edin
+          <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
+            {instructorCourses
+              .filter((c) => c.status === "publish")
+              .slice(0, 6)
+              .map((course) => (
+                <InstructorCourseGridCard key={course.id} course={course} />
+              ))}
+          </div>
+        </section>
+      ) : (
+        <div className="rounded-xl border border-primary-100 bg-white p-6">
+          <p className="text-sm text-primary-600">
+            Sol menüden <strong>Kayıtlı Kurslar</strong> veya{" "}
+            <strong>Kariyer Yolum</strong> bölümlerine geçebilirsiniz.
+            {shell.isInstructor
+              ? " Eğitmen olarak kurslarınızı yönetmek için Eğitmen → Kurslarım menüsünü kullanın."
+              : null}
           </p>
-        </Link>
-
-        <Link
-          href="/panel/kurslarim"
-          className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <div className="rounded-lg bg-accent-500/10 p-3">
-              <BookOpen className="h-6 w-6 text-accent-600" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
-          </div>
-          <h3 className="mb-2 text-xl font-bold text-primary-950">
-            {access.isInstructor ? "Kayıtlı Kurslarım" : "Kurslarım"}
-          </h3>
-          <p className="text-muted-foreground">
-            {access.isInstructor
-              ? "Öğrenci olarak kayıt olduğunuz kursları görüntüleyin"
-              : "Kayıtlı olduğunuz tüm kursları görüntüleyin"}
-          </p>
-        </Link>
-
-        {careerPathAdmin ? (
-          <Link
-            href="/panel/yonetim/kariyer-yollari"
-            className="group rounded-2xl border-2 border-primary-100 bg-white p-6 transition-all hover:border-accent-500 hover:shadow-xl"
-          >
-            <div className="mb-3 flex items-center justify-between">
-              <div className="rounded-lg bg-primary-950 p-3">
-                <Settings2 className="h-6 w-6 text-accent-400" />
-              </div>
-              <ArrowRight className="h-5 w-5 text-primary-400 transition-all group-hover:translate-x-1 group-hover:text-accent-600" />
-            </div>
-            <h3 className="mb-2 text-xl font-bold text-primary-950">
-              Kariyer Yolları Yönetimi
-            </h3>
-            <p className="text-muted-foreground">
-              Sıralı öğrenme yolları oluşturun, adımları düzenleyin ve yayınlayın
-            </p>
-          </Link>
-        ) : null}
-
-        <Link
-          href="/kurslar"
-          className="group rounded-2xl border border-accent-500/30 bg-gradient-to-br from-primary-900 to-primary-950 p-6 text-white transition-all hover:shadow-xl"
-        >
-          <div className="mb-3 flex items-center justify-between">
-            <div className="rounded-lg bg-accent-500/20 p-3">
-              <GraduationCap className="h-6 w-6 text-accent-400" />
-            </div>
-            <ArrowRight className="h-5 w-5 text-primary-100 transition-all group-hover:translate-x-1 group-hover:text-accent-400" />
-          </div>
-          <h3 className="mb-2 text-xl font-bold">Yeni Kurs Keşfet</h3>
-          <p className="text-primary-100">65+ premium kursumuzu inceleyin</p>
-        </Link>
-      </div>
+        </div>
+      )}
     </div>
   );
 }
