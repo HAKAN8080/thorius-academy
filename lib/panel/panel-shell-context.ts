@@ -31,7 +31,7 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   const admin = getSupabaseAdmin();
   const { data: profile } = await admin
     .from("profiles")
-    .select("full_name")
+    .select("full_name, avatar_url")
     .eq("id", user.id)
     .maybeSingle();
 
@@ -74,7 +74,7 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
   return {
     userEmail: loginEmail,
     userName,
-    avatarUrl,
+    avatarUrl: profile?.avatar_url ?? avatarUrl,
     isInstructor: access.isInstructor,
   };
 }

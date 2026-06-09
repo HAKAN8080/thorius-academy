@@ -3,6 +3,7 @@ import {
   getLegacySyncEmails,
 } from "@/lib/constants/instructor-allowlist";
 import { linkInstructorProfileFromWpUserId } from "@/lib/instructor/access";
+import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { fetchLegacyUserDataFromWp } from "@/lib/tutor/fetch-legacy-user-data";
 import type {
   TutorLegacyEnrollment,
@@ -288,6 +289,7 @@ export async function syncLegacyUserData(
 
   if (typeof wpUserId === "number" && wpUserId > 0) {
     try {
+      await ensureUserProfile(userId, { wpUserId });
       await linkInstructorProfileFromWpUserId(userId, wpUserId);
     } catch (error) {
       console.error("[Legacy Sync] Instructor link failed:", error);

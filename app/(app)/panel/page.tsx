@@ -7,13 +7,14 @@ import {
 import { getUserEnrollments } from "@/lib/actions/enrollment";
 import { getPanelShellContext } from "@/lib/panel/panel-shell-context";
 import { InstructorCourseGridCard } from "@/components/instructor/instructor-course-grid-card";
+import { EnrollmentCourseCard } from "@/components/panel/enrollment-course-card";
 
 export const dynamic = "force-dynamic";
 
 export default async function PanelDashboardPage() {
   const shell = await getPanelShellContext();
   const enrollments = await getUserEnrollments();
-  const activeEnrollments = enrollments.filter((e) => e.status === "active");
+  const activeEnrollments = enrollments.filter((e) => e.status !== "cancelled");
 
   const instructorStats = shell.isInstructor
     ? await getInstructorDashboardStats()
@@ -70,6 +71,47 @@ export default async function PanelDashboardPage() {
         ) : null}
       </div>
 
+      <section className="mb-10">
+        <div className="mb-4 flex items-center justify-between">
+          <h2 className="text-lg font-semibold text-[#0B1E3F]">
+            {shell.isInstructor ? "Öğrenci Kurslarım" : "Kurslarım"}
+          </h2>
+          {activeEnrollments.length > 0 ? (
+            <Link
+              href="/panel/kurslarim"
+              className="text-sm font-semibold text-[#D4AF37] hover:underline"
+            >
+              Tümünü Gör
+            </Link>
+          ) : null}
+        </div>
+
+        {activeEnrollments.length === 0 ? (
+          <div className="rounded-xl border border-dashed border-primary-200 bg-white p-6">
+            <p className="mb-4 text-sm text-primary-600">
+              Henüz kayıtlı kursunuz yok. Katalogdan bir kurs seçerek
+              başlayabilirsiniz.
+            </p>
+            <Link
+              href="/kurslar"
+              className="text-sm font-semibold text-[#D4AF37] hover:underline"
+            >
+              Kurslara Göz At →
+            </Link>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            {activeEnrollments.slice(0, 5).map((enrollment) => (
+              <EnrollmentCourseCard
+                key={enrollment.id}
+                enrollment={enrollment}
+                compact
+              />
+            ))}
+          </div>
+        )}
+      </section>
+
       {shell.isInstructor && instructorCourses.length > 0 ? (
         <section>
           <div className="mb-4 flex items-center justify-between">
@@ -92,15 +134,7 @@ export default async function PanelDashboardPage() {
               ))}
           </div>
         </section>
-      ) : (
-        <div className="rounded-xl border border-primary-100 bg-white p-6">
-          <p className="text-sm text-primary-600">
-            Sol menüden <strong>Kurslarım</strong>,{" "}
-            <strong>Kariyer Yolum</strong> veya eğitmen iseniz{" "}
-            <strong>Kurs Yönetimi</strong> bölümlerine geçebilirsiniz.
-          </p>
-        </div>
-      )}
+      ) : null}
     </div>
   );
 }

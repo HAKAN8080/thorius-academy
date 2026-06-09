@@ -32,7 +32,12 @@ function NavLink({
   pathname: string;
 }) {
   const locked = item.requiresInstructor && !isInstructor;
+  const hidden = item.hideForInstructor && isInstructor;
   const inactive = item.disabled || locked;
+
+  if (hidden) {
+    return null;
+  }
   const active = item.href ? isPanelNavActive(pathname, item.href) : false;
 
   const className = cn(

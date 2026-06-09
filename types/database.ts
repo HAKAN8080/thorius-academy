@@ -17,6 +17,10 @@ export interface Database {
           id: string;
           full_name: string | null;
           wp_instructor_id: number | null;
+          wp_user_id: number | null;
+          phone: string | null;
+          bio: string | null;
+          avatar_url: string | null;
           role: "student" | "instructor" | "admin";
           created_at: string;
         };
@@ -24,6 +28,10 @@ export interface Database {
           id: string;
           full_name?: string | null;
           wp_instructor_id?: number | null;
+          wp_user_id?: number | null;
+          phone?: string | null;
+          bio?: string | null;
+          avatar_url?: string | null;
           role?: "student" | "instructor" | "admin";
           created_at?: string;
         };
@@ -31,8 +39,59 @@ export interface Database {
           id?: string;
           full_name?: string | null;
           wp_instructor_id?: number | null;
+          wp_user_id?: number | null;
+          phone?: string | null;
+          bio?: string | null;
+          avatar_url?: string | null;
           role?: "student" | "instructor" | "admin";
           created_at?: string;
+        };
+      };
+      instructor_applications: {
+        Row: {
+          id: string;
+          user_id: string;
+          email: string;
+          full_name: string;
+          phone: string | null;
+          expertise: string;
+          motivation: string;
+          sample_course_url: string | null;
+          status: "pending" | "approved" | "rejected";
+          admin_notes: string | null;
+          reviewed_at: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          user_id: string;
+          email: string;
+          full_name: string;
+          phone?: string | null;
+          expertise: string;
+          motivation: string;
+          sample_course_url?: string | null;
+          status?: "pending" | "approved" | "rejected";
+          admin_notes?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          user_id?: string;
+          email?: string;
+          full_name?: string;
+          phone?: string | null;
+          expertise?: string;
+          motivation?: string;
+          sample_course_url?: string | null;
+          status?: "pending" | "approved" | "rejected";
+          admin_notes?: string | null;
+          reviewed_at?: string | null;
+          created_at?: string;
+          updated_at?: string;
         };
       };
       instructors: {

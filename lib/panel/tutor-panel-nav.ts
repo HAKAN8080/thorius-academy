@@ -3,6 +3,7 @@ import {
   BarChart3,
   BookOpen,
   Calendar,
+  GraduationCap,
   HelpCircle,
   Heart,
   LayoutDashboard,
@@ -15,7 +16,6 @@ import {
   User,
   Wallet,
 } from "lucide-react";
-import { getTutorDashboardUrl } from "@/lib/config/portal-urls";
 
 export type PanelNavItem = {
   id: string;
@@ -24,6 +24,7 @@ export type PanelNavItem = {
   externalHref?: string;
   icon: LucideIcon;
   requiresInstructor?: boolean;
+  hideForInstructor?: boolean;
   disabled?: boolean;
   disabledReason?: string;
 };
@@ -33,9 +34,8 @@ export const studentPanelNav: PanelNavItem[] = [
   {
     id: "profile",
     label: "Profilim",
-    externalHref: getTutorDashboardUrl(),
+    href: "/panel/profil",
     icon: User,
-    disabledReason: "Tutor hesap panelinde",
   },
   {
     id: "enrolled",
@@ -50,6 +50,19 @@ export const studentPanelNav: PanelNavItem[] = [
     icon: Map,
   },
   {
+    id: "orders",
+    label: "Sipariş Geçmişi",
+    href: "/panel/siparisler",
+    icon: ShoppingBag,
+  },
+  {
+    id: "instructor-apply",
+    label: "Eğitmen Ol",
+    href: "/panel/egitmen-basvuru",
+    icon: GraduationCap,
+    hideForInstructor: true,
+  },
+  {
     id: "reviews-student",
     label: "Yorumlar",
     disabled: true,
@@ -61,14 +74,7 @@ export const studentPanelNav: PanelNavItem[] = [
     label: "İstek Listesi",
     disabled: true,
     icon: Heart,
-    disabledReason: "Tutor panelinde",
-  },
-  {
-    id: "orders",
-    label: "Order History",
-    externalHref: getTutorDashboardUrl(),
-    icon: ShoppingBag,
-    disabledReason: "Tutor sipariş geçmişi",
+    disabledReason: "Yakında",
   },
   {
     id: "qa",
@@ -112,10 +118,10 @@ export const instructorPanelNav: PanelNavItem[] = [
   {
     id: "withdraw",
     label: "Para Çekme",
-    externalHref: getTutorDashboardUrl(),
+    disabled: true,
     icon: Wallet,
     requiresInstructor: true,
-    disabledReason: "Tutor kazanç paneli",
+    disabledReason: "Yakında",
   },
   {
     id: "instructor-reviews",
@@ -127,10 +133,9 @@ export const instructorPanelNav: PanelNavItem[] = [
   {
     id: "instructor-settings",
     label: "Ayarlar",
-    externalHref: getTutorDashboardUrl(),
+    href: "/panel/profil",
     icon: Settings,
     requiresInstructor: true,
-    disabledReason: "Tutor ayarları",
   },
 ];
 
@@ -143,6 +148,9 @@ export function isPanelNavActive(pathname: string, href: string): boolean {
       pathname === "/instructor/courses" ||
       pathname.startsWith("/instructor/courses/")
     );
+  }
+  if (href === "/panel/profil") {
+    return pathname === "/panel/profil";
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

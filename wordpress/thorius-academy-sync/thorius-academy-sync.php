@@ -1198,6 +1198,91 @@ function thorius_academy_sync_handle_academy_member_list(WP_REST_Request $reques
     );
 }
 
+function thorius_academy_sync_handle_academy_update_user(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $email = isset($payload['email']) ? sanitize_email((string) $payload['email']) : '';
+    $full_name = isset($payload['full_name']) ? sanitize_text_field((string) $payload['full_name']) : '';
+    $phone = isset($payload['phone']) ? sanitize_text_field((string) $payload['phone']) : '';
+    $bio = isset($payload['bio']) ? sanitize_textarea_field((string) $payload['bio']) : '';
+    $avatar_url = isset($payload['avatar_url']) ? esc_url_raw((string) $payload['avatar_url']) : '';
+    $wp_user_id = isset($payload['wp_user_id']) ? absint($payload['wp_user_id']) : 0;
+
+    if ($email === '' && $wp_user_id <= 0) {
+        return new WP_REST_Response(array('error' => 'Missing email or wp_user_id'), 400);
+    }
+
+    $user_id = $wp_user_id;
+    if ($user_id <= 0 && $email !== '') {
+        $existing_id = email_exists($email);
+        $user_id = $existing_id ? (int) $existing_id : 0;
+    }
+
+    if ($user_id <= 0) {
+        return new WP_REST_Response(array('error' => 'User not found'), 404);
+    }
+
+    $update = array('ID' => $user_id);
+    if ($full_name !== '') {
+        $update['display_name'] = $full_name;
+        $parts = preg_split('/\s+/', $full_name, 2);
+        $update['first_name'] = $parts[0] ?? '';
+        $update['last_name'] = $parts[1] ?? '';
+    }
+
+    $result = wp_update_user($update);
+    if (is_wp_error($result)) {
+        return new WP_REST_Response(
+            array('error' => $result->get_error_message()),
+            500
+        );
+    }
+
+    if ($phone !== '') {
+        update_user_meta($user_id, 'phone_number', $phone);
+        update_user_meta($user_id, '_tutor_profile_phone', $phone);
+    }
+
+    if ($bio !== '') {
+        update_user_meta($user_id, 'description', $bio);
+        update_user_meta($user_id, '_tutor_profile_bio', $bio);
+    }
+
+    if ($avatar_url !== '') {
+        update_user_meta($user_id, '_thorius_academy_avatar_url', $avatar_url);
+    }
+
+    return new WP_REST_Response(
+        array(
+            'success' => true,
+            'user_id' => (int) $user_id,
+        ),
+        200
+    );
+}
+
 function thorius_academy_sync_register_rest_routes(): void
 {
     register_rest_route(
@@ -1236,6 +1321,16 @@ function thorius_academy_sync_register_rest_routes(): void
         array(
             'methods' => 'POST',
             'callback' => 'thorius_academy_sync_handle_academy_member_list',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-update-user',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_update_user',
             'permission_callback' => '__return_true',
         )
     );
