@@ -14,7 +14,7 @@ import {
   resolveRatingStats,
 } from "@/lib/tutor/instructor-api";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { withCoursesCacheSlug } from "@/lib/instructor/course-cache-access";
+import { buildCoursesCacheDraftPayload } from "@/lib/instructor/course-cache-access";
 import { provisionInstructorAcademyAccount } from "@/lib/instructor/provision-academy-account";
 import type { SyncInstructorStatsResult } from "@/types/instructor";
 
@@ -166,7 +166,7 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
       statsCoursesUpserted += 1;
 
       await supabase.from("courses_cache").upsert(
-        withCoursesCacheSlug(
+        buildCoursesCacheDraftPayload(
           {
             wp_course_id: courseId,
             instructor_wp_user_id: authorId,

@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { withCoursesCacheSlug } from "@/lib/instructor/course-cache-access";
+import { buildCoursesCacheDraftPayload } from "@/lib/instructor/course-cache-access";
 
 interface StatsRow {
   wp_course_id: number;
@@ -30,7 +30,7 @@ export async function ensureCoursesCacheForInstructor(
 
   for (const row of stats as StatsRow[]) {
     const published = row.status === "publish";
-    const payload = withCoursesCacheSlug(
+    const payload = buildCoursesCacheDraftPayload(
       {
         wp_course_id: row.wp_course_id,
         instructor_wp_user_id: wpInstructorId,

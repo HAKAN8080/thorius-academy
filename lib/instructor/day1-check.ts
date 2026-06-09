@@ -1,5 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { withCoursesCacheSlug } from "@/lib/instructor/course-cache-access";
+import { buildCoursesCacheDraftPayload } from "@/lib/instructor/course-cache-access";
 
 export type Day1CheckStatus = "pass" | "fail" | "warn";
 
@@ -77,33 +77,45 @@ async function testCourseWrite(instructorWpId: number): Promise<Day1CheckItem> {
     .delete()
     .eq("wp_course_id", testWpCourseId);
 
-  const { data, error } = await admin
-    .from("courses_cache")
-    .insert(
-      withCoursesCacheSlug(
+  const levelAttempts = ["beginner", "all_levels", "intermediate", "expert"];
+  let lastError: string | null = null;
+  let insertedId: string | number | null = null;
+
+  for (const level of levelAttempts) {
+    const payload = {
+      ...buildCoursesCacheDraftPayload(
         {
           wp_course_id: testWpCourseId,
           instructor_wp_user_id: instructorWpId,
           title: "Day1 Check Test",
           published: false,
-          pricing_model: "free",
-          price: 0,
-          level: "Başlangıç",
-          language: "Türkçe",
-          visibility: "public",
         },
         "day1-check-test",
       ),
-    )
-    .select("id")
-    .single();
+      level,
+    };
 
-  if (error || !data) {
+    const { data, error } = await admin
+      .from("courses_cache")
+      .insert(payload)
+      .select("id")
+      .single();
+
+    if (!error && data) {
+      insertedId = data.id as string | number;
+      lastError = null;
+      break;
+    }
+
+    lastError = error?.message ?? "Insert başarısız";
+  }
+
+  if (!insertedId) {
     return {
       id: "courses_cache_write",
       label: "courses_cache yazma izni (Yeni Kurs)",
       status: "fail",
-      detail: error?.message ?? "Insert başarısız",
+      detail: lastError ?? "Insert başarısız",
     };
   }
 

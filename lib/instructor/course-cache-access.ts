@@ -4,6 +4,10 @@ import {
   requireCurriculumAccess,
 } from "@/lib/instructor/curriculum-access";
 import type { CoursesCache } from "@/types/instructor-course";
+import {
+  fromCoursesCacheLanguageLabel,
+  fromCoursesCacheLevelLabel,
+} from "@/lib/instructor/courses-cache-write";
 
 export function normalizeCourseCacheId(
   id: string | number | bigint | null | undefined,
@@ -36,6 +40,35 @@ export function withCoursesCacheSlug<T extends Record<string, unknown>>(
   };
 }
 
+export function buildCoursesCacheDraftPayload(
+  base: {
+    wp_course_id: number;
+    instructor_wp_user_id: number;
+    title: string;
+    published?: boolean;
+    cover_image_url?: string | null;
+    updated_at?: string;
+  },
+  slug: string,
+) {
+  return withCoursesCacheSlug(
+    {
+      wp_course_id: base.wp_course_id,
+      instructor_wp_user_id: base.instructor_wp_user_id,
+      title: base.title,
+      published: base.published ?? false,
+      cover_image_url: base.cover_image_url ?? null,
+      updated_at: base.updated_at,
+      pricing_model: "free",
+      price: 0,
+      level: "beginner",
+      language: "turkish",
+      visibility: "public",
+    },
+    slug,
+  );
+}
+
 export function normalizeCoursesCacheRow(
   row: Record<string, unknown>,
 ): CoursesCache {
@@ -55,8 +88,10 @@ export function normalizeCoursesCacheRow(
     price: Number(row.price ?? 0),
     sale_price:
       row.sale_price == null ? null : Number(row.sale_price),
-    level: (row.level as string) || "Başlangıç",
-    language: (row.language as string) || "Türkçe",
+    level: fromCoursesCacheLevelLabel(row.level as string | null | undefined),
+    language: fromCoursesCacheLanguageLabel(
+      row.language as string | null | undefined,
+    ),
     category: (row.category as string | null) ?? null,
     visibility:
       row.visibility === "private"

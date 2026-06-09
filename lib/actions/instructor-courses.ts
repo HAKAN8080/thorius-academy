@@ -6,13 +6,14 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { requireCurriculumAccess } from "@/lib/instructor/curriculum-access";
 import {
   buildCoursesCacheSlugFields,
+  buildCoursesCacheDraftPayload,
   normalizeCourseCacheId,
   normalizeCoursesCacheRow,
   requireCourseCacheAccess,
   slugifyCourseTitle,
   verifyCourseCacheAccess,
-  withCoursesCacheSlug,
 } from "@/lib/instructor/course-cache-access";
+import { normalizeCoursesCacheWritePayload } from "@/lib/instructor/courses-cache-write";
 import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
 import type {
   CourseAdditionalInput,
@@ -263,17 +264,12 @@ export async function createInstructorCourse(): Promise<{ id: string }> {
   const { data, error } = await admin
     .from("courses_cache")
     .insert(
-      withCoursesCacheSlug(
+      buildCoursesCacheDraftPayload(
         {
           wp_course_id: wpCourseId,
           instructor_wp_user_id: access.wpInstructorId,
           title: "Yeni Kurs",
           published: false,
-          pricing_model: "free",
-          price: 0,
-          level: "Başlangıç",
-          language: "Türkçe",
-          visibility: "public",
         },
         slug,
       ),
@@ -342,23 +338,25 @@ export async function saveCourseBasics(
 
     const { data, error } = await admin
       .from("courses_cache")
-      .update({
-        title: input.title.trim(),
-        subtitle: input.subtitle?.trim() || null,
-        description_md: input.description_md ?? null,
-        cover_image_url: input.cover_image_url?.trim() || null,
-        intro_video_url: input.intro_video_url?.trim() || null,
-        pricing_model: input.pricing_model,
-        price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
-        sale_price: input.sale_price ?? null,
-        level: input.level ?? "Başlangıç",
-        language: input.language ?? "Türkçe",
-        category: input.category?.trim() || null,
-        visibility: input.visibility,
-        published: input.published,
-        ...buildCoursesCacheSlugFields(slug),
-        updated_at: new Date().toISOString(),
-      })
+      .update(
+        normalizeCoursesCacheWritePayload({
+          title: input.title.trim(),
+          subtitle: input.subtitle?.trim() || null,
+          description_md: input.description_md ?? null,
+          cover_image_url: input.cover_image_url?.trim() || null,
+          intro_video_url: input.intro_video_url?.trim() || null,
+          pricing_model: input.pricing_model,
+          price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
+          sale_price: input.sale_price ?? null,
+          level: input.level ?? "Başlangıç",
+          language: input.language ?? "Türkçe",
+          category: input.category?.trim() || null,
+          visibility: input.visibility,
+          published: input.published,
+          ...buildCoursesCacheSlugFields(slug),
+          updated_at: new Date().toISOString(),
+        }),
+      )
       .eq("id", courseCacheId)
       .select("*")
       .single();
