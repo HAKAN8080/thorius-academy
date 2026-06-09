@@ -1,3 +1,4 @@
+import { linkInstructorProfileFromWpUserId } from "@/lib/instructor/access";
 import { fetchLegacyUserDataFromWp } from "@/lib/tutor/fetch-legacy-user-data";
 import type { TutorLegacyEnrollment } from "@/lib/tutor/legacy-user-data";
 import { syncLessonsFromTutor } from "@/lib/lessons/sync-from-tutor";
@@ -211,7 +212,7 @@ export async function syncLegacyUserData(
   }
 
   const legacyData = await fetchLegacyUserDataFromWp(email);
-  if (!legacyData?.found || legacyData.enrollments.length === 0) {
+  if (!legacyData?.found) {
     await admin.auth.admin.updateUserById(userId, {
       user_metadata: {
         ...authUser.user.user_metadata,
@@ -219,6 +220,34 @@ export async function syncLegacyUserData(
       },
     });
 
+    return {
+      skipped: true,
+      reason: "no_wp_user",
+      importedEnrollments: 0,
+      updatedProgress: 0,
+    };
+  }
+
+  const wpUserId =
+    legacyData.wp_user_id ?? authUser.user.user_metadata?.wp_user_id;
+
+  await admin.auth.admin.updateUserById(userId, {
+    user_metadata: {
+      ...authUser.user.user_metadata,
+      tutor_legacy_synced_at: new Date().toISOString(),
+      wp_user_id: wpUserId,
+    },
+  });
+
+  if (typeof wpUserId === "number" && wpUserId > 0) {
+    try {
+      await linkInstructorProfileFromWpUserId(userId, wpUserId);
+    } catch (error) {
+      console.error("[Legacy Sync] Instructor link failed:", error);
+    }
+  }
+
+  if (legacyData.enrollments.length === 0) {
     return {
       skipped: true,
       reason: "no_wp_enrollments",
@@ -252,14 +281,6 @@ export async function syncLegacyUserData(
 
     updatedProgress += await importLessonProgress(userId, legacyEnrollment);
   }
-
-  await admin.auth.admin.updateUserById(userId, {
-    user_metadata: {
-      ...authUser.user.user_metadata,
-      tutor_legacy_synced_at: new Date().toISOString(),
-      wp_user_id: legacyData.wp_user_id ?? authUser.user.user_metadata?.wp_user_id,
-    },
-  });
 
   console.log(
     `[Legacy Sync] user=${userId} enrollments=${importedEnrollments} progress=${updatedProgress}`,
