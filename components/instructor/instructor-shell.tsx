@@ -10,7 +10,7 @@ import {
   Settings,
   Star,
 } from "lucide-react";
-import { NewCourseButton } from "@/components/instructor/course-builder/instructor-sub-nav";
+import { NewCourseButton } from "@/components/instructor/course-builder/new-course-button";
 
 interface InstructorShellProps {
   children: React.ReactNode;

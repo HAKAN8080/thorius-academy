@@ -4,6 +4,8 @@ import { syncLegacyUserData } from "@/lib/tutor/sync-legacy-user-data";
 import { TutorPanelShell } from "@/components/panel/tutor-panel-shell";
 import { getPanelShellContext } from "@/lib/panel/panel-shell-context";
 
+export const dynamic = "force-dynamic";
+
 export default async function AppLayout({
   children,
 }: {

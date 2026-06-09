@@ -3,9 +3,9 @@
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { Bell, LogOut, Plus, Star } from "lucide-react";
-import { signOut } from "@/lib/actions/auth";
-import { NewCourseButton } from "@/components/instructor/course-builder/instructor-sub-nav";
+import { Bell, Plus, Star } from "lucide-react";
+import { NewCourseButton } from "@/components/instructor/course-builder/new-course-button";
+import { SignOutButton } from "@/components/panel/sign-out-button";
 import {
   instructorPanelNav,
   isPanelNavActive,
@@ -187,15 +187,7 @@ export function TutorPanelShell({
           </div>
 
           <div className="border-t border-gray-200 p-3">
-            <form action={signOut}>
-              <button
-                type="submit"
-                className="flex w-full items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-[#0B1E3F] hover:bg-gray-50"
-              >
-                <LogOut className="h-4 w-4" />
-                Çıkış yap
-              </button>
-            </form>
+            <SignOutButton />
           </div>
         </aside>
 
