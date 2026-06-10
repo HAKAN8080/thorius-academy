@@ -4,6 +4,7 @@ import { ArrowLeft, CheckCircle2 } from "lucide-react";
 import { createClient } from "@/lib/supabase/server";
 import {
   getLessonsForCourse,
+  reconcileCourseLessons,
   syncCourseFromTutor,
 } from "@/lib/actions/lesson-sync";
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
@@ -53,10 +54,11 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
 
   const lessonSlug = course.slug;
   await syncCourseFromTutor(course.id, lessonSlug);
+  await reconcileCourseLessons(lessonSlug, course.id);
   const lessons = await getLessonsForCourse(lessonSlug, course.id);
 
   if (lessons.length === 0) {
-    return <CourseLessonsEmpty courseId={course.id} courseSlug={lessonSlug} />;
+    return <CourseLessonsEmpty courseSlug={lessonSlug} />;
   }
 
   const topics = groupLessonsByTopic(lessons);

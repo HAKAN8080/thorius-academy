@@ -56,7 +56,7 @@ export function BuilderLessonForm({
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
   const [isFreePreview, setIsFreePreview] = useState(false);
-  const [published, setPublished] = useState(false);
+  const [published, setPublished] = useState(true);
 
   useEffect(() => {
     if (!lesson) return;

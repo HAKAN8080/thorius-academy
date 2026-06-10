@@ -131,7 +131,10 @@ export default async function CourseDetailPage({
           />
 
           {curriculum && curriculum.totalLessons > 0 ? (
-            <CourseCurriculumPreview curriculum={curriculum} />
+            <CourseCurriculumPreview
+              courseSlug={params.slug}
+              curriculum={curriculum}
+            />
           ) : null}
 
           <div className="mt-12 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-8 text-center">

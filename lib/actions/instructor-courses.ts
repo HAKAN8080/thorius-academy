@@ -594,7 +594,11 @@ export async function saveCourseBasics(
         })
         .eq("wp_course_id", statsWpCourseId);
 
-      await syncLessonsForCoursePublish(statsWpCourseId, resolvedSlug, published);
+      await syncLessonsForCoursePublish(
+        statsWpCourseId,
+        resolvedSlug,
+        published || existing.published,
+      );
     }
 
     revalidatePath(`/instructor/courses/${courseCacheId}/basics`);

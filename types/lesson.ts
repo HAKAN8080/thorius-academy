@@ -12,6 +12,7 @@ export interface Lesson {
   video_embed_url: string | null;
   topic_title: string | null;
   topic_order: number | null;
+  section_id: string | null;
   is_free: boolean;
   created_at: string;
   updated_at: string;

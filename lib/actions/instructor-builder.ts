@@ -285,7 +285,7 @@ export async function createBuilderLesson(
         lesson_order: (last?.lesson_order ?? 0) + 1,
         title: "Yeni Ders",
         type: "video",
-        published: false,
+        published: true,
         is_free: false,
         topic_title: "Müfredat",
         topic_order: 1,
@@ -322,6 +322,14 @@ export async function saveBuilderLesson(
     const courseSlug =
       course.course_slug ?? `kurs-${Math.abs(course.wp_course_id)}`;
 
+    const { data: section } = input.section_id
+      ? await admin
+          .from("sections")
+          .select("title, sort_order")
+          .eq("id", input.section_id)
+          .maybeSingle()
+      : { data: null };
+
     const payload: Record<string, unknown> = {
       title: input.title.trim(),
       type: input.type,
@@ -334,6 +342,11 @@ export async function saveBuilderLesson(
       attachment_name: input.attachment_name?.trim() || null,
       updated_at: new Date().toISOString(),
     };
+
+    if (section?.title) {
+      payload.topic_title = section.title;
+      payload.topic_order = section.sort_order ?? 1;
+    }
 
     if (input.type === "text") {
       payload.content_md = input.content_md ?? "";
@@ -364,6 +377,14 @@ export async function saveBuilderLesson(
       if (totalSeconds != null) {
         payload.duration_seconds = totalSeconds;
         payload.duration_minutes = Math.max(1, Math.round(totalSeconds / 60));
+      }
+
+      if (
+        !input.published &&
+        (parsed.video_url || input.content_md?.trim()) &&
+        course.published
+      ) {
+        payload.published = true;
       }
     }
 
