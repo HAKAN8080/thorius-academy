@@ -103,7 +103,7 @@ async function replaceSyntheticWpCourseId(
 
   await admin
     .from("lessons")
-    .update({ course_id: newWpCourseId })
+    .update({ course_id: newWpCourseId, course_slug: stats.slug })
     .eq("course_id", oldWpCourseId);
 
   await admin
@@ -140,6 +140,40 @@ async function replaceSyntheticWpCourseId(
       updated_at: new Date().toISOString(),
     })
     .eq("id", courseCacheId);
+}
+
+async function syncLessonsForCoursePublish(
+  wpCourseId: number,
+  courseSlug: string,
+  publishLessons: boolean,
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+
+  const { error: slugError } = await admin
+    .from("lessons")
+    .update({ course_slug: courseSlug })
+    .eq("course_id", wpCourseId);
+
+  if (slugError) {
+    console.warn("[saveCourseBasics] lesson slug sync failed:", slugError.message);
+  }
+
+  if (!publishLessons) {
+    return;
+  }
+
+  const { error: publishError } = await admin
+    .from("lessons")
+    .update({ published: true })
+    .eq("course_id", wpCourseId)
+    .eq("published", false);
+
+  if (publishError) {
+    console.warn(
+      "[saveCourseBasics] lesson publish sync failed:",
+      publishError.message,
+    );
+  }
 }
 
 export async function getInstructorDashboardStats(): Promise<InstructorDashboardStats> {
@@ -559,6 +593,8 @@ export async function saveCourseBasics(
           status: published ? "publish" : "draft",
         })
         .eq("wp_course_id", statsWpCourseId);
+
+      await syncLessonsForCoursePublish(statsWpCourseId, resolvedSlug, published);
     }
 
     revalidatePath(`/instructor/courses/${courseCacheId}/basics`);

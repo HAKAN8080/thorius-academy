@@ -319,10 +319,14 @@ export async function saveBuilderLesson(
 
     const admin = getSupabaseAdmin();
 
+    const courseSlug =
+      course.course_slug ?? `kurs-${Math.abs(course.wp_course_id)}`;
+
     const payload: Record<string, unknown> = {
       title: input.title.trim(),
       type: input.type,
       section_id: input.section_id,
+      course_slug: courseSlug,
       is_free: input.is_free_preview,
       published: input.published,
       featured_image_url: input.featured_image_url?.trim() || null,

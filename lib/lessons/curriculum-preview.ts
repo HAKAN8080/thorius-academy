@@ -34,7 +34,7 @@ export async function getCourseCurriculumPreview(
   courseId: number,
   courseSlug: string,
 ): Promise<CourseCurriculumPreview | null> {
-  const lessons = await getLessonsForCourse(courseSlug);
+  const lessons = await getLessonsForCourse(courseSlug, courseId);
 
   if (lessons.length > 0) {
     const topics = groupLessonsByTopic(lessons).map((topic) => ({

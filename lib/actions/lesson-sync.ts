@@ -28,14 +28,20 @@ export async function syncCourseFromTutor(
 
 export async function getLessonsForCourse(
   courseSlug: string,
+  courseId?: number,
 ): Promise<Lesson[]> {
   const slugVariants = getCourseSlugLookupVariants(courseSlug);
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("lessons")
-    .select("*")
-    .in("course_slug", slugVariants)
-    .eq("published", true)
+
+  let query = supabase.from("lessons").select("*").eq("published", true);
+
+  if (typeof courseId === "number" && Number.isFinite(courseId)) {
+    query = query.eq("course_id", courseId);
+  } else {
+    query = query.in("course_slug", slugVariants);
+  }
+
+  const { data, error } = await query
     .order("topic_order", { ascending: true })
     .order("lesson_order", { ascending: true });
 

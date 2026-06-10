@@ -53,7 +53,7 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
 
   const lessonSlug = course.slug;
   await syncCourseFromTutor(course.id, lessonSlug);
-  const lessons = await getLessonsForCourse(lessonSlug);
+  const lessons = await getLessonsForCourse(lessonSlug, course.id);
 
   if (lessons.length === 0) {
     return <CourseLessonsEmpty courseId={course.id} courseSlug={lessonSlug} />;
