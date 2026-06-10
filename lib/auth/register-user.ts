@@ -1,5 +1,4 @@
 import { getEmailRedirectUrl } from "@/lib/auth/app-url";
-import { findAuthUserByEmail } from "@/lib/auth/find-user-by-email";
 import {
   isSignupEmailConfigured,
   sendSignupWelcomeEmail,
@@ -9,6 +8,7 @@ import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { getSupabaseServiceRoleKey } from "@/lib/supabase/env";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
+import type { SupabaseClient } from "@supabase/supabase-js";
 
 export interface RegisterUserParams {
   email: string;
@@ -22,6 +22,10 @@ export interface RegisterUserResult {
   verificationEmailSent: boolean;
   recoveredPendingSignup?: boolean;
 }
+
+export type RegisterUserOutcome =
+  | { ok: true; result: RegisterUserResult }
+  | { ok: false; error: string };
 
 export class SignupError extends Error {
   userMessage: string;
@@ -48,9 +52,6 @@ export function mapSignupAuthError(message: string): string {
   if (/rate limit|too many requests/.test(lower)) {
     return "Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.";
   }
-  if (/database error|saving new user|unexpected failure/i.test(lower)) {
-    return "Hesap kaydı tamamlanamadı. Lütfen bir süre sonra tekrar deneyin veya destek ile iletişime geçin.";
-  }
   if (/signups? not allowed|signup disabled|email provider disabled/i.test(lower)) {
     return "Yeni üyelikler şu an kapalı. Lütfen daha sonra tekrar deneyin.";
   }
@@ -58,13 +59,14 @@ export function mapSignupAuthError(message: string): string {
   return "Kayıt oluşturulamadı. Lütfen tekrar deneyin.";
 }
 
-function isRecoverableSignupError(message: string): boolean {
+function isFatalSignupError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
-    /already|registered|exists|duplicate/i.test(message) ||
-    /confirmation email|error sending|email.*send|mailer|smtp|user already/i.test(
-      lower,
-    )
+    (/password/.test(lower) &&
+      /short|least|weak|characters|length/.test(lower)) ||
+    /invalid email|valid email|email address/.test(lower) ||
+    /rate limit|too many requests/.test(lower) ||
+    /signups? not allowed|signup disabled|email provider disabled/.test(lower)
   );
 }
 
@@ -126,8 +128,7 @@ async function generateMagicLink(
   email: string,
   redirectTo: string,
 ): Promise<string | null> {
-  const serviceKey = getSupabaseServiceRoleKey();
-  if (!serviceKey) {
+  if (!getSupabaseServiceRoleKey()) {
     return null;
   }
 
@@ -155,101 +156,81 @@ async function generateMagicLink(
 
 async function deliverSignupEmail(
   params: RegisterUserParams,
-  options?: { recoveredPendingSignup?: boolean },
-): Promise<RegisterUserResult> {
-  const couponCode = getSignupCouponCode();
+): Promise<boolean> {
   const email = normalizeEmail(params.email);
   const fullName = params.fullName.trim();
 
-  if (!isSignupEmailConfigured()) {
-    const fallbackSent = await sendSupabaseVerificationFallback(
+  try {
+    if (!isSignupEmailConfigured()) {
+      return sendSupabaseVerificationFallback(email, params.redirectTo);
+    }
+
+    const verificationLink = await generateMagicLink(email, params.redirectTo);
+
+    if (!verificationLink) {
+      return sendSupabaseVerificationFallback(email, params.redirectTo);
+    }
+
+    const emailSent = await sendSignupWelcomeEmail({
       email,
-      params.redirectTo,
-    );
-    return {
-      couponCode,
-      verificationEmailSent: fallbackSent,
-      recoveredPendingSignup: options?.recoveredPendingSignup,
-    };
+      fullName,
+      verificationLink,
+    });
+
+    if (!emailSent) {
+      return sendSupabaseVerificationFallback(email, params.redirectTo);
+    }
+
+    return true;
+  } catch (error) {
+    logSignupFailure("deliverSignupEmail", error);
+    return sendSupabaseVerificationFallback(email, params.redirectTo);
+  }
+}
+
+async function probeSignInState(
+  supabase: SupabaseClient,
+  email: string,
+  password: string,
+): Promise<"confirmed" | "unconfirmed" | "unknown"> {
+  try {
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizeEmail(email),
+      password,
+    });
+
+    if (!error && data.user) {
+      await supabase.auth.signOut();
+      return "confirmed";
+    }
+
+    const message = error?.message.toLowerCase() ?? "";
+    if (message.includes("email not confirmed")) {
+      return "unconfirmed";
+    }
+  } catch (error) {
+    logSignupFailure("probeSignInState", error);
   }
 
-  const verificationLink = await generateMagicLink(email, params.redirectTo);
+  return "unknown";
+}
 
-  if (!verificationLink) {
-    const fallbackSent = await sendSupabaseVerificationFallback(
-      email,
-      params.redirectTo,
-    );
-    return {
-      couponCode,
-      verificationEmailSent: fallbackSent,
-      recoveredPendingSignup: options?.recoveredPendingSignup,
-    };
-  }
-
-  const emailSent = await sendSignupWelcomeEmail({
-    email,
-    fullName,
-    verificationLink,
-  });
-
-  if (!emailSent) {
-    const fallbackSent = await sendSupabaseVerificationFallback(
-      email,
-      params.redirectTo,
-    );
-    return {
-      couponCode,
-      verificationEmailSent: fallbackSent,
-      recoveredPendingSignup: options?.recoveredPendingSignup,
-    };
-  }
+async function buildSuccessResult(
+  params: RegisterUserParams,
+  options?: { recoveredPendingSignup?: boolean },
+): Promise<RegisterUserResult> {
+  const verificationEmailSent = await deliverSignupEmail(params);
 
   return {
-    couponCode,
-    verificationEmailSent: true,
+    couponCode: getSignupCouponCode(),
+    verificationEmailSent,
     recoveredPendingSignup: options?.recoveredPendingSignup,
   };
 }
 
-async function finishSignup(
-  params: RegisterUserParams,
-  options?: { recoveredPendingSignup?: boolean },
-): Promise<RegisterUserResult> {
-  const emailResult = await deliverSignupEmail(params, options);
-  return {
-    ...emailResult,
-    couponCode: getSignupCouponCode(),
-  };
-}
-
-async function resolveExistingSignup(
-  params: RegisterUserParams,
-): Promise<RegisterUserResult | null> {
-  if (!getSupabaseServiceRoleKey()) {
-    return null;
-  }
-
-  const existing = await findAuthUserByEmail(params.email);
-  if (!existing) {
-    return null;
-  }
-
-  if (existing.email_confirmed_at) {
-    throw new SignupError(mapSignupAuthError("already registered"));
-  }
-
-  await safeEnsureUserProfile(existing.id, {
-    email: params.email,
-    fullName: params.fullName.trim(),
-  });
-
-  return finishSignup(params, { recoveredPendingSignup: true });
-}
-
 export async function registerUser(
   params: RegisterUserParams,
-): Promise<RegisterUserResult> {
+): Promise<RegisterUserOutcome> {
   const email = normalizeEmail(params.email);
   const fullName = params.fullName.trim();
 
@@ -258,70 +239,85 @@ export async function registerUser(
     supabase = await createClient();
   } catch (error) {
     logSignupFailure("createClient", error);
-    throw new SignupError(
-      "Kayıt servisi yapılandırması eksik. Lütfen daha sonra tekrar deneyin.",
-    );
+    return {
+      ok: false,
+      error:
+        "Kayıt servisi yapılandırması eksik. Lütfen daha sonra tekrar deneyin.",
+    };
   }
 
-  const { data, error } = await supabase.auth.signUp({
-    email,
-    password: params.password,
-    options: {
-      emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
-      data: { full_name: fullName },
-    },
-  });
+  try {
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: params.password,
+      options: {
+        emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
+        data: { full_name: fullName },
+      },
+    });
 
-  const userId = data.user?.id ?? null;
-
-  if (userId) {
-    await safeEnsureUserProfile(userId, { email, fullName });
-  }
-
-  if (!error && userId) {
-    return finishSignup(params);
-  }
-
-  if (error) {
-    logSignupFailure("auth.signUp", error.message);
-
-    if (userId || isRecoverableSignupError(error.message)) {
-      return finishSignup(params, { recoveredPendingSignup: true });
+    const userId = data.user?.id ?? null;
+    if (userId) {
+      await safeEnsureUserProfile(userId, { email, fullName });
     }
 
-    const existingResult = await resolveExistingSignup(params);
-    if (existingResult) {
-      return existingResult;
+    if (error) {
+      logSignupFailure("auth.signUp", error.message);
+
+      const signInState = await probeSignInState(
+        supabase,
+        email,
+        params.password,
+      );
+
+      if (signInState === "confirmed") {
+        return {
+          ok: false,
+          error: mapSignupAuthError("already registered"),
+        };
+      }
+
+      if (isFatalSignupError(error.message)) {
+        return { ok: false, error: mapSignupAuthError(error.message) };
+      }
+
+      return {
+        ok: true,
+        result: await buildSuccessResult(params, {
+          recoveredPendingSignup: true,
+        }),
+      };
     }
 
-    throw new SignupError(mapSignupAuthError(error.message));
+    return {
+      ok: true,
+      result: await buildSuccessResult(params, {
+        recoveredPendingSignup: !userId,
+      }),
+    };
+  } catch (error) {
+    logSignupFailure("registerUser.unhandled", error);
+    return {
+      ok: false,
+      error: "Kayıt oluşturulamadı. Lütfen tekrar deneyin.",
+    };
   }
-
-  const existingResult = await resolveExistingSignup(params);
-  if (existingResult) {
-    return existingResult;
-  }
-
-  throw new SignupError("Kayıt oluşturulamadı. Lütfen tekrar deneyin.");
 }
 
 export async function resendSignupWelcomeEmail(
   email: string,
   redirectTo: string,
 ): Promise<{ couponCode: string; sent: boolean }> {
-  const result = await finishSignup(
-    {
-      email,
-      password: "unused-resend",
-      fullName: "",
-      redirectTo,
-    },
-    { recoveredPendingSignup: true },
-  );
+  const verificationEmailSent = await deliverSignupEmail({
+    email,
+    password: "unused-resend",
+    fullName: "",
+    redirectTo,
+  });
 
-  if (!result.verificationEmailSent) {
+  if (!verificationEmailSent) {
     throw new Error("RESEND_FAILED");
   }
 
-  return { couponCode: result.couponCode, sent: true };
+  return { couponCode: getSignupCouponCode(), sent: true };
 }

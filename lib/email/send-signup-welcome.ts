@@ -23,25 +23,33 @@ export async function sendSignupWelcomeEmail(
     return false;
   }
 
-  const couponCode = getSignupCouponCode();
-  const resend = getResendClient();
-  const customerName = params.fullName.trim() || "Üyemiz";
+  try {
+    const couponCode = getSignupCouponCode();
+    const resend = getResendClient();
+    const customerName = params.fullName.trim() || "Üyemiz";
 
-  const { error } = await resend.emails.send({
-    from: getResendFromAddress(),
-    to: params.email,
-    subject: `Thorius Academy — E-postanızı doğrulayın & %${SIGNUP_DISCOUNT_PERCENT} kuponunuz: ${couponCode}`,
-    react: SignupWelcomeEmail({
-      customerName,
-      couponCode,
-      verificationLink: params.verificationLink,
-    }),
-  });
+    const { error } = await resend.emails.send({
+      from: getResendFromAddress(),
+      to: params.email,
+      subject: `Thorius Academy — E-postanızı doğrulayın & %${SIGNUP_DISCOUNT_PERCENT} kuponunuz: ${couponCode}`,
+      react: SignupWelcomeEmail({
+        customerName,
+        couponCode,
+        verificationLink: params.verificationLink,
+      }),
+    });
 
-  if (error) {
-    console.error("Signup welcome email failed:", error.message);
+    if (error) {
+      console.error("Signup welcome email failed:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error(
+      "Signup welcome email threw:",
+      error instanceof Error ? error.message : error,
+    );
     return false;
   }
-
-  return true;
 }

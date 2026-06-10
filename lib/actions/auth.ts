@@ -7,7 +7,6 @@ import { provisionLinkedAccounts } from "@/lib/auth/provision-linked-accounts";
 import {
   registerUser,
   resendSignupWelcomeEmail,
-  SignupError,
 } from "@/lib/auth/register-user";
 import { createClient } from "@/lib/supabase/server";
 
@@ -96,34 +95,26 @@ export async function signUp(
       return { error: "KVKK metnini onaylamanız gerekmektedir." };
     }
 
-    let registration: Awaited<ReturnType<typeof registerUser>>;
-    try {
-      registration = await registerUser({
-        email,
-        password,
-        fullName: fullName.trim(),
-        redirectTo,
-      });
-    } catch (error) {
-      if (error instanceof SignupError) {
-        return { error: error.userMessage };
-      }
-      console.error("Signup failed:", error);
-      return {
-        error:
-          "Kayıt oluşturulamadı. Lütfen tekrar deneyin veya farklı bir e-posta ile deneyin.",
-      };
+    const outcome = await registerUser({
+      email,
+      password,
+      fullName: fullName.trim(),
+      redirectTo,
+    });
+
+    if (!outcome.ok) {
+      return { error: outcome.error };
     }
 
-    try {
-      await provisionLinkedAccounts({
-        email,
-        fullName: fullName.trim(),
-        password,
-      });
-    } catch (provisionError) {
+    const registration = outcome.result;
+
+    void provisionLinkedAccounts({
+      email,
+      fullName: fullName.trim(),
+      password,
+    }).catch((provisionError) => {
       console.error("Linked account provision failed:", provisionError);
-    }
+    });
 
     return {
       success: true,
