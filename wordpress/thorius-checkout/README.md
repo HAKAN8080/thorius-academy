@@ -13,6 +13,11 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.4.0 — Checkout validation fix
+- Gizli zorunlu fatura alanlari (telefon, adres, ulke) otomatik doldurulur
+- PayTR icin varsayilan telefon numarasi eklenir
+- Diger eklentilerin ekledigi zorunlu fatura alanlari kaldirilir / hatalari temizlenir
+
 ### v1.3.0 — Minimal checkout
 - Yalnızca **Ad**, **Soyad**, **E-posta** görünür
 - Adres, şirket, vergi no, telefon ve ek bilgi alanları kaldırıldı
