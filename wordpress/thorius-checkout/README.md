@@ -13,6 +13,10 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.5.1 — Sepet uyari duzeltmesi
+- "Zaten sepetinizde" + bos sepet celiskisi giderildi
+- Urun sepetteyse tekrar ekleme yerine odeme/sepete yonlendirme
+
 ### v1.5.0 — Sepet erişimi
 - `/sepet/` artık engellenmiyor; adet düzenleyebilir / ürün silebilirsiniz
 - Ödeme sayfasında **Sepeti düzenle** linki

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.5.0
+ * Version: 1.5.1
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.5.0');
+define('THORIUS_CHECKOUT_VERSION', '1.5.1');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -298,38 +298,106 @@ add_filter('woocommerce_quantity_input_min', static function ($min, $product) {
 }, 20, 2);
 
 /**
- * Ayni kurs tekrar sepete eklenmesin (x2 sorunu).
+ * Urun zaten sepetteyse tekrar ekleme yerine yonlendir (bos sepet + uyari bug'ini onler).
  */
-function thorius_checkout_prevent_duplicate_cart_items(
-    bool $passed,
-    int $product_id,
-    int $quantity
-): bool {
-    if (!$passed || !function_exists('WC') || !WC()->cart) {
-        return $passed;
+function thorius_checkout_redirect_if_already_in_cart(): void
+{
+    if (is_admin() || wp_doing_ajax()) {
+        return;
+    }
+
+    if (!isset($_GET['add-to-cart']) || $_GET['add-to-cart'] === '') {
+        return;
+    }
+
+    if (!function_exists('WC') || !WC()->cart) {
+        return;
+    }
+
+    $product_id = absint(wp_unslash($_GET['add-to-cart']));
+    if ($product_id <= 0) {
+        return;
     }
 
     foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
-        $cart_product_id = (int) ($cart_item['product_id'] ?? 0);
-        if ($cart_product_id !== $product_id) {
+        if ((int) ($cart_item['product_id'] ?? 0) !== $product_id) {
             continue;
         }
 
         WC()->cart->set_quantity($cart_item_key, 1, true);
 
-        if (function_exists('wc_add_notice')) {
-            wc_add_notice(
-                __('Bu kurs zaten sepetinizde. Adet 1 olarak bırakıldı.', 'thorius-checkout'),
-                'notice'
-            );
+        if (function_exists('is_cart') && is_cart() && function_exists('wc_get_cart_url')) {
+            wp_safe_redirect(wc_get_cart_url());
+            exit;
         }
 
-        return false;
+        if (function_exists('wc_get_checkout_url')) {
+            wp_safe_redirect(wc_get_checkout_url());
+            exit;
+        }
+
+        return;
+    }
+}
+add_action('template_redirect', 'thorius_checkout_redirect_if_already_in_cart', 5);
+
+/**
+ * Tekrar eklemede adeti 1'e sabitle.
+ */
+function thorius_checkout_force_single_quantity($quantity, int $product_id): int
+{
+    if (!function_exists('WC') || !WC()->cart) {
+        return $quantity;
     }
 
-    return $passed;
+    foreach (WC()->cart->get_cart() as $cart_item) {
+        if ((int) ($cart_item['product_id'] ?? 0) === $product_id) {
+            return 1;
+        }
+    }
+
+    $product = function_exists('wc_get_product') ? wc_get_product($product_id) : null;
+    if (is_a($product, 'WC_Product') && $product->is_virtual()) {
+        return 1;
+    }
+
+    return $quantity;
 }
-add_filter('woocommerce_add_to_cart_validation', 'thorius_checkout_prevent_duplicate_cart_items', 20, 3);
+add_filter('woocommerce_add_to_cart_quantity', 'thorius_checkout_force_single_quantity', 20, 2);
+
+/**
+ * Bos sepette kalan eski "zaten sepetinizde" uyarisini gizle.
+ */
+function thorius_checkout_filter_stale_duplicate_notices($notices): array
+{
+    if (!function_exists('WC') || !WC()->cart || !WC()->cart->is_empty()) {
+        return $notices;
+    }
+
+    if (!is_array($notices)) {
+        return $notices;
+    }
+
+    foreach ($notices as $type => $messages) {
+        if (!is_array($messages)) {
+            continue;
+        }
+
+        $notices[$type] = array_values(array_filter(
+            $messages,
+            static function ($message) {
+                if (!is_string($message)) {
+                    return true;
+                }
+
+                return stripos($message, 'zaten sepetinizde') === false;
+            }
+        ));
+    }
+
+    return $notices;
+}
+add_filter('woocommerce_get_notices', 'thorius_checkout_filter_stale_duplicate_notices', 20);
 
 /**
  * Odeme sayfasinda sepete donus linki.
