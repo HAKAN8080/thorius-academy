@@ -69,7 +69,6 @@ function buildSectionsFromLessons(
 
 async function buildSectionsFromSupabase(
   courseSlug: string,
-  courseId: number,
   lessons: Lesson[],
 ): Promise<CurriculumPreviewSection[]> {
   const admin = getSupabaseAdmin();
@@ -135,11 +134,7 @@ export async function getCourseCurriculumPreview(
   const lessons = await getLessonsForCourse(courseSlug, courseId);
 
   if (lessons.length > 0) {
-    const sections = await buildSectionsFromSupabase(
-      courseSlug,
-      courseId,
-      lessons,
-    );
+    const sections = await buildSectionsFromSupabase(courseSlug, lessons);
     const totalDurationSeconds = lessons.reduce(
       (sum, lesson) => sum + (lesson.duration_seconds ?? 0),
       0,
