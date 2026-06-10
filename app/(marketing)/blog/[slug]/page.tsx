@@ -18,8 +18,13 @@ function formatDate(iso: string): string {
 }
 
 export async function generateStaticParams() {
-  const posts = await getBlogPosts(50);
-  return posts.map((post) => ({ slug: post.slug }));
+  try {
+    const posts = await getBlogPosts(50);
+    return posts.map((post) => ({ slug: post.slug }));
+  } catch (error) {
+    console.warn("[Blog] generateStaticParams failed:", error);
+    return [];
+  }
 }
 
 export async function generateMetadata({

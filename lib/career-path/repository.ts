@@ -7,6 +7,7 @@ import {
 import type { CareerPathDefinition } from "@/lib/content/career-path-types";
 import type { DbCareerPath, DbCareerPathStep } from "@/lib/career-path/types";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { getSupabasePublicClient } from "@/lib/supabase/public";
 import { createClient } from "@/lib/supabase/server";
 
 const SHARED_MILESTONES = [
@@ -113,19 +114,19 @@ function isMissingTableError(message: string): boolean {
 async function getCareerPathReadClient(options?: {
   includeUnpublished?: boolean;
 }): Promise<ReturnType<typeof getSupabaseAdmin>> {
-  if (!options?.includeUnpublished) {
-    return (await createClient()) as ReturnType<typeof getSupabaseAdmin>;
+  if (options?.includeUnpublished) {
+    try {
+      return getSupabaseAdmin();
+    } catch (error) {
+      console.error(
+        "[Career Paths] Admin client unavailable, falling back to session client:",
+        error,
+      );
+      return (await createClient()) as ReturnType<typeof getSupabaseAdmin>;
+    }
   }
 
-  try {
-    return getSupabaseAdmin();
-  } catch (error) {
-    console.error(
-      "[Career Paths] Admin client unavailable, falling back to session client:",
-      error,
-    );
-    return (await createClient()) as ReturnType<typeof getSupabaseAdmin>;
-  }
+  return getSupabasePublicClient() as ReturnType<typeof getSupabaseAdmin>;
 }
 
 export async function listCareerPathsFromDb(options?: {
@@ -163,19 +164,23 @@ export async function listCareerPathsFromDb(options?: {
     }
 
     if (options?.includeUnpublished) {
-      const sessionClient = await createClient();
-      const { data: published, error: publishedError } = await sessionClient
-        .from("career_paths")
-        .select("*")
-        .eq("is_published", true)
-        .order("sort_order", { ascending: true });
+      try {
+        const sessionClient = await createClient();
+        const { data: published, error: publishedError } = await sessionClient
+          .from("career_paths")
+          .select("*")
+          .eq("is_published", true)
+          .order("sort_order", { ascending: true });
 
-      if (!publishedError && published?.length) {
-        return published.map((row) => ({
-          ...(row as DbCareerPath),
-          outcomes: parseOutcomes((row as DbCareerPath).outcomes),
-          milestones: parseMilestones((row as DbCareerPath).milestones),
-        }));
+        if (!publishedError && published?.length) {
+          return published.map((row) => ({
+            ...(row as DbCareerPath),
+            outcomes: parseOutcomes((row as DbCareerPath).outcomes),
+            milestones: parseMilestones((row as DbCareerPath).milestones),
+          }));
+        }
+      } catch (retryError) {
+        console.error("[Career Paths] Published retry failed:", retryError);
       }
     }
 
@@ -185,8 +190,8 @@ export async function listCareerPathsFromDb(options?: {
 
     if (options?.includeUnpublished) {
       try {
-        const sessionClient = await createClient();
-        const { data: published } = await sessionClient
+        const publicClient = getSupabasePublicClient();
+        const { data: published } = await publicClient
           .from("career_paths")
           .select("*")
           .eq("is_published", true)
@@ -226,7 +231,7 @@ export async function listCareerPathStepsFromDb(
   }
 
   try {
-    const client = await createClient();
+    const client = getSupabasePublicClient();
     const { data, error } = await client
       .from("career_path_steps")
       .select("*")
