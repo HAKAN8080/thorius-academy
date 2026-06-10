@@ -15,6 +15,8 @@ export interface SyncCourseToWpParams {
   price?: number;
   salePrice?: number | null;
   instructorWpUserId: number;
+  instructorName?: string | null;
+  instructorEmail?: string | null;
   published: boolean;
   wpCourseId?: number | null;
 }
@@ -45,6 +47,8 @@ function buildPayload(params: SyncCourseToWpParams): AcademySyncCourseToWpReques
     price: params.price ?? 0,
     sale_price: params.salePrice ?? null,
     instructor_wp_user_id: params.instructorWpUserId,
+    instructor_name: params.instructorName?.trim() || null,
+    instructor_email: params.instructorEmail?.trim() || null,
     published: params.published,
     wp_course_id: wpCourseId,
   };

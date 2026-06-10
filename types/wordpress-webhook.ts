@@ -32,6 +32,8 @@ export interface AcademySyncCourseToWpRequest {
   price?: number;
   sale_price?: number | null;
   instructor_wp_user_id: number;
+  instructor_name?: string | null;
+  instructor_email?: string | null;
   published: boolean;
   wp_course_id?: number | null;
 }

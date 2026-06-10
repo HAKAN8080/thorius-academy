@@ -32,6 +32,23 @@ function mapCourse(row: Record<string, unknown>): CoursesCache {
   return normalizeCoursesCacheRow(row);
 }
 
+async function getInstructorSyncProfile(wpInstructorId: number): Promise<{
+  name: string | null;
+  email: string | null;
+}> {
+  const admin = getSupabaseAdmin();
+  const { data } = await admin
+    .from("instructors")
+    .select("full_name, email")
+    .eq("wp_user_id", wpInstructorId)
+    .maybeSingle();
+
+  return {
+    name: data?.full_name?.trim() || null,
+    email: data?.email?.trim() || null,
+  };
+}
+
 async function nextSyntheticWpCourseId(): Promise<number> {
   const admin = getSupabaseAdmin();
   const { data } = await admin
@@ -424,6 +441,9 @@ export async function saveCourseBasics(
     let resolvedSlug = slug;
 
     if (shouldSyncToWp) {
+      const instructorProfile = await getInstructorSyncProfile(
+        existing.instructor_wp_user_id,
+      );
       const syncResult = await syncCourseToWp({
         academyCourseId: courseCacheId,
         title: input.title.trim(),
@@ -434,6 +454,8 @@ export async function saveCourseBasics(
         price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
         salePrice: input.sale_price,
         instructorWpUserId: existing.instructor_wp_user_id,
+        instructorName: instructorProfile.name,
+        instructorEmail: instructorProfile.email,
         published,
         wpCourseId:
           typeof existingWpCourseId === "number" && existingWpCourseId > 0
