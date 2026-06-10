@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "day1:check": "node scripts/day1-instructor-check.mjs"
+    "day1:check": "node scripts/day1-instructor-check.mjs",
+    "import:tutor": "node scripts/import-tutor-courses.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
