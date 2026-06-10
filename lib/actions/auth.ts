@@ -7,6 +7,7 @@ import { provisionLinkedAccounts } from "@/lib/auth/provision-linked-accounts";
 import {
   registerUser,
   resendSignupWelcomeEmail,
+  SignupError,
 } from "@/lib/auth/register-user";
 import { createClient } from "@/lib/supabase/server";
 
@@ -87,7 +88,11 @@ export async function signUp(
         fullName: fullName.trim(),
         redirectTo,
       });
-    } catch {
+    } catch (error) {
+      if (error instanceof SignupError) {
+        return { error: error.userMessage };
+      }
+      console.error("Signup failed:", error);
       return { error: "Kayıt oluşturulamadı. Lütfen tekrar deneyin." };
     }
 

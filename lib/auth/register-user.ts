@@ -4,6 +4,7 @@ import {
   sendSignupWelcomeEmail,
 } from "@/lib/email/send-signup-welcome";
 import { getSignupCouponCode } from "@/lib/constants/promo";
+import { getSupabaseServiceRoleKey } from "@/lib/supabase/env";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { createClient } from "@/lib/supabase/server";
 
@@ -17,6 +18,39 @@ export interface RegisterUserParams {
 export interface RegisterUserResult {
   couponCode: string;
   verificationEmailSent: boolean;
+}
+
+export class SignupError extends Error {
+  userMessage: string;
+
+  constructor(userMessage: string) {
+    super(userMessage);
+    this.name = "SignupError";
+    this.userMessage = userMessage;
+  }
+}
+
+export function mapSignupAuthError(message: string): string {
+  const lower = message.toLowerCase();
+
+  if (/already|registered|exists|duplicate/.test(lower)) {
+    return "Bu e-posta adresi zaten kayıtlı. Giriş yapmayı veya parola sıfırlamayı deneyin.";
+  }
+  if (/password/.test(lower) && /short|least|weak|characters|length/.test(lower)) {
+    return "Parola en az 8 karakter olmalıdır.";
+  }
+  if (/invalid email|valid email|email address/.test(lower)) {
+    return "Geçerli bir e-posta adresi girin.";
+  }
+  if (/rate limit|too many requests/.test(lower)) {
+    return "Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.";
+  }
+
+  return "Kayıt oluşturulamadı. Lütfen tekrar deneyin.";
+}
+
+function isDuplicateSignupError(message: string): boolean {
+  return /already|registered|exists|duplicate/i.test(message);
 }
 
 async function sendSupabaseVerificationFallback(
@@ -40,30 +74,33 @@ async function sendSupabaseVerificationFallback(
   return true;
 }
 
-export async function registerUser(
+async function signupViaPublicClient(
+  params: RegisterUserParams,
+): Promise<RegisterUserResult> {
+  const couponCode = getSignupCouponCode();
+  const supabase = await createClient();
+  const { error } = await supabase.auth.signUp({
+    email: params.email.trim(),
+    password: params.password,
+    options: {
+      emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
+      data: { full_name: params.fullName.trim() },
+    },
+  });
+
+  if (error) {
+    throw new SignupError(mapSignupAuthError(error.message));
+  }
+
+  return { couponCode, verificationEmailSent: true };
+}
+
+async function registerUserViaAdmin(
   params: RegisterUserParams,
 ): Promise<RegisterUserResult> {
   const couponCode = getSignupCouponCode();
   const email = params.email.trim();
   const fullName = params.fullName.trim();
-
-  if (!isSignupEmailConfigured()) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.signUp({
-      email,
-      password: params.password,
-      options: {
-        emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
-        data: { full_name: fullName },
-      },
-    });
-
-    if (error) {
-      throw new Error("SIGNUP_FAILED");
-    }
-
-    return { couponCode, verificationEmailSent: true };
-  }
 
   const admin = getSupabaseAdmin();
   const { error: createError } = await admin.auth.admin.createUser({
@@ -74,7 +111,12 @@ export async function registerUser(
   });
 
   if (createError) {
-    throw new Error("SIGNUP_FAILED");
+    if (isDuplicateSignupError(createError.message)) {
+      throw new SignupError(mapSignupAuthError(createError.message));
+    }
+
+    console.error("Admin createUser failed:", createError.message);
+    return signupViaPublicClient(params);
   }
 
   const { data: linkData, error: linkError } =
@@ -118,6 +160,31 @@ export async function registerUser(
   return { couponCode, verificationEmailSent: true };
 }
 
+export async function registerUser(
+  params: RegisterUserParams,
+): Promise<RegisterUserResult> {
+  const canUseAdmin =
+    isSignupEmailConfigured() && Boolean(getSupabaseServiceRoleKey());
+
+  if (!canUseAdmin) {
+    return signupViaPublicClient(params);
+  }
+
+  try {
+    return await registerUserViaAdmin(params);
+  } catch (error) {
+    if (error instanceof SignupError) {
+      throw error;
+    }
+
+    console.error(
+      "Admin signup path failed, falling back to public signup:",
+      error,
+    );
+    return signupViaPublicClient(params);
+  }
+}
+
 export async function resendSignupWelcomeEmail(
   email: string,
   redirectTo: string,
@@ -126,6 +193,24 @@ export async function resendSignupWelcomeEmail(
   const normalizedEmail = email.trim();
 
   if (!isSignupEmailConfigured()) {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email: normalizedEmail,
+      options: {
+        emailRedirectTo: getEmailRedirectUrl(redirectTo),
+      },
+    });
+
+    if (error) {
+      throw new Error("RESEND_FAILED");
+    }
+
+    return { couponCode, sent: true };
+  }
+
+  const serviceKey = getSupabaseServiceRoleKey();
+  if (!serviceKey) {
     const supabase = await createClient();
     const { error } = await supabase.auth.resend({
       type: "signup",

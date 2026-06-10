@@ -6,6 +6,7 @@ import {
   GraduationCap,
   HelpCircle,
   Heart,
+  Home,
   LayoutDashboard,
   Map,
   Megaphone,
@@ -30,6 +31,7 @@ export type PanelNavItem = {
 };
 
 export const studentPanelNav: PanelNavItem[] = [
+  { id: "home", label: "Ana Site", href: "/", icon: Home },
   { id: "dashboard", label: "Kontrol Paneli", href: "/panel", icon: LayoutDashboard },
   {
     id: "profile",
@@ -140,6 +142,9 @@ export const instructorPanelNav: PanelNavItem[] = [
 ];
 
 export function isPanelNavActive(pathname: string, href: string): boolean {
+  if (href === "/") {
+    return pathname === "/";
+  }
   if (href === "/panel") {
     return pathname === "/panel";
   }

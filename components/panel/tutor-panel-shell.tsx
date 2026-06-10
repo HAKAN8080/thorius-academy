@@ -4,6 +4,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { Bell, Plus, Star } from "lucide-react";
+import { Logo } from "@/components/layout/logo";
 import { NewCourseButton } from "@/components/instructor/course-builder/new-course-button";
 import { SignOutButton } from "@/components/panel/sign-out-button";
 import {
@@ -108,6 +109,7 @@ export function TutorPanelShell({
       <div className="border-b border-gray-200 bg-white">
         <div className="mx-auto flex max-w-[1440px] flex-wrap items-center justify-between gap-4 px-4 py-4 sm:px-6">
           <div className="flex min-w-0 flex-1 items-center justify-center gap-4 sm:justify-start">
+            <Logo variant="compact" className="hidden shrink-0 sm:flex" />
             <div className="relative h-14 w-14 overflow-hidden rounded-full bg-[#0B1E3F]">
               {avatarUrl ? (
                 <Image src={avatarUrl} alt={displayName} fill className="object-cover" />
