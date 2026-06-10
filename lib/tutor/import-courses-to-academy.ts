@@ -422,7 +422,11 @@ export async function importAllTutorCoursesToAcademy(
   let targets: number[] = wpCourseIds ?? [];
 
   if (targets.length === 0) {
-    const { courses } = await fetchAllTutorCourses();
+    const { courses, source, wpCoursesFetched, tutorCoursesFetched } =
+      await fetchAllTutorCourses();
+    console.log(
+      `[Import Tutor] Katalog: ${courses.length} kurs (kaynak=${source}, wp=${wpCoursesFetched}, tutor=${tutorCoursesFetched})`,
+    );
     targets = courses
       .map((course) => parseCourseId(course))
       .filter((id) => id > 0);
