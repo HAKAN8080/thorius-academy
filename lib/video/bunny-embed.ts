@@ -16,7 +16,7 @@ export function buildBunnyEmbedUrl(url: string | null | undefined): string | nul
   const trimmed = url.trim();
 
   const iframeMatch = trimmed.match(
-    /(?:https?:\/\/)?(?:iframe\.)?mediadelivery\.net\/embed\/(\d+)\/([a-f0-9-]+)/i,
+    /(?:https?:\/\/)?(?:iframe\.)?mediadelivery\.net\/(?:embed|play)\/(\d+)\/([a-f0-9-]+)/i,
   );
   if (iframeMatch) {
     return normalizeBunnyEmbedUrl(iframeMatch[1], iframeMatch[2]);

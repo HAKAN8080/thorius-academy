@@ -17,7 +17,7 @@ function extractBunnyStream(url: string): {
   videoId: string;
 } | null {
   const iframeMatch = url.match(
-    /(?:iframe\.)?mediadelivery\.net\/embed\/(\d+)\/([a-f0-9-]+)/i,
+    /(?:iframe\.)?mediadelivery\.net\/(?:embed|play)\/(\d+)\/([a-f0-9-]+)/i,
   );
   if (iframeMatch) {
     return { libraryId: iframeMatch[1], videoId: iframeMatch[2] };
