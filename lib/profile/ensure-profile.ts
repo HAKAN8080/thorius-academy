@@ -17,7 +17,7 @@ export async function ensureUserProfile(
     .maybeSingle();
 
   if (!existing) {
-    await admin.from("profiles").upsert(
+    const { error } = await admin.from("profiles").upsert(
       {
         id: userId,
         full_name: options?.fullName ?? null,
@@ -29,6 +29,10 @@ export async function ensureUserProfile(
       },
       { onConflict: "id" },
     );
+
+    if (error) {
+      console.error("[ensureUserProfile] upsert failed:", error.message);
+    }
     return;
   }
 

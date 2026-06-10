@@ -48,6 +48,9 @@ export function mapSignupAuthError(message: string): string {
   if (/rate limit|too many requests/.test(lower)) {
     return "Çok fazla deneme yapıldı. Lütfen bir süre sonra tekrar deneyin.";
   }
+  if (/signups? not allowed|signup disabled|email provider|smtp|mailer/.test(lower)) {
+    return "Kayıt e-postası şu an gönderilemiyor. Lütfen birkaç dakika sonra tekrar deneyin veya destek ile iletişime geçin.";
+  }
 
   return "Kayıt oluşturulamadı. Lütfen tekrar deneyin.";
 }
@@ -56,68 +59,133 @@ function isDuplicateSignupError(message: string): boolean {
   return /already|registered|exists|duplicate/i.test(message);
 }
 
+function isRecoverableSignupError(message: string): boolean {
+  const lower = message.toLowerCase();
+  return (
+    isDuplicateSignupError(message) ||
+    /confirmation email|error sending|email.*send|mailer|smtp|user already/i.test(
+      lower,
+    )
+  );
+}
+
 function normalizeEmail(email: string): string {
   return email.trim().toLowerCase();
+}
+
+async function safeEnsureUserProfile(
+  userId: string,
+  options?: {
+    email?: string | null;
+    fullName?: string | null;
+  },
+): Promise<void> {
+  try {
+    await ensureUserProfile(userId, options);
+  } catch (error) {
+    console.error("[Signup] ensureUserProfile failed:", error);
+  }
 }
 
 async function sendSupabaseVerificationFallback(
   email: string,
   redirectTo: string,
 ): Promise<boolean> {
-  const supabase = await createClient();
-  const { error } = await supabase.auth.resend({
-    type: "signup",
-    email,
-    options: {
-      emailRedirectTo: getEmailRedirectUrl(redirectTo),
-    },
-  });
+  try {
+    const supabase = await createClient();
+    const { error } = await supabase.auth.resend({
+      type: "signup",
+      email,
+      options: {
+        emailRedirectTo: getEmailRedirectUrl(redirectTo),
+      },
+    });
 
-  if (error) {
-    console.error("Supabase verification fallback failed:", error.message);
+    if (error) {
+      console.error("Supabase verification fallback failed:", error.message);
+      return false;
+    }
+
+    return true;
+  } catch (error) {
+    console.error("Supabase verification fallback threw:", error);
     return false;
   }
-
-  return true;
 }
 
-async function generateSignupVerificationLink(
+type VerificationLinkMode = "invite" | "signup";
+
+async function generateVerificationLink(
   email: string,
   redirectTo: string,
+  mode: VerificationLinkMode,
   password?: string,
 ): Promise<string | null> {
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin.auth.admin.generateLink({
-    type: "signup",
-    email: normalizeEmail(email),
-    password: password ?? "ThoriusTemp1!",
-    options: {
-      redirectTo: getEmailRedirectUrl(redirectTo),
-    },
-  });
+  try {
+    const admin = getSupabaseAdmin();
+    const normalizedEmail = normalizeEmail(email);
+    const redirect = getEmailRedirectUrl(redirectTo);
 
-  if (error) {
-    console.error("Signup link generation failed:", error.message);
+    if (mode === "invite") {
+      const { data, error } = await admin.auth.admin.generateLink({
+        type: "invite",
+        email: normalizedEmail,
+        options: { redirectTo: redirect },
+      });
+
+      if (error) {
+        console.error("Invite link generation failed:", error.message);
+        return null;
+      }
+
+      return data?.properties?.action_link ?? null;
+    }
+
+    const { data, error } = await admin.auth.admin.generateLink({
+      type: "signup",
+      email: normalizedEmail,
+      password: password ?? "ThoriusTemp1!",
+      options: { redirectTo: redirect },
+    });
+
+    if (error) {
+      console.error("Signup link generation failed:", error.message);
+      return null;
+    }
+
+    return data?.properties?.action_link ?? null;
+  } catch (error) {
+    console.error("Verification link generation threw:", error);
     return null;
   }
-
-  return data?.properties?.action_link ?? null;
 }
 
 async function deliverSignupEmail(
   params: RegisterUserParams,
-  options?: { recoveredPendingSignup?: boolean },
+  options?: {
+    recoveredPendingSignup?: boolean;
+    linkMode?: VerificationLinkMode;
+  },
 ): Promise<RegisterUserResult> {
   const couponCode = getSignupCouponCode();
   const email = normalizeEmail(params.email);
   const fullName = params.fullName.trim();
-  const verificationLink = params.password
-    ? await generateSignupVerificationLink(
-        email,
-        params.redirectTo,
-        params.password,
-      )
-    : null;
+  const linkMode = options?.linkMode ?? "invite";
+
+  let verificationLink = await generateVerificationLink(
+    email,
+    params.redirectTo,
+    linkMode,
+    params.password,
+  );
+
+  if (!verificationLink && linkMode === "signup") {
+    verificationLink = await generateVerificationLink(
+      email,
+      params.redirectTo,
+      "invite",
+    );
+  }
 
   if (!verificationLink) {
     const fallbackSent = await sendSupabaseVerificationFallback(
@@ -162,60 +230,85 @@ async function recoverPendingSignup(
   const email = normalizeEmail(params.email);
   const existing = await findAuthUserByEmail(email);
 
-  if (!existing) {
+  if (existing?.email_confirmed_at) {
     throw new SignupError(mapSignupAuthError("already registered"));
   }
 
-  if (existing.email_confirmed_at) {
-    throw new SignupError(mapSignupAuthError("already registered"));
+  if (existing) {
+    try {
+      const admin = getSupabaseAdmin();
+      const { error: updateError } = await admin.auth.admin.updateUserById(
+        existing.id,
+        {
+          password: params.password,
+          user_metadata: { full_name: params.fullName.trim() },
+        },
+      );
+
+      if (updateError) {
+        console.error(
+          "Pending signup password update failed:",
+          updateError.message,
+        );
+      }
+
+      await safeEnsureUserProfile(existing.id, {
+        email,
+        fullName: params.fullName.trim(),
+      });
+    } catch (error) {
+      console.error("[Signup] recoverPendingSignup user update failed:", error);
+    }
   }
 
-  const admin = getSupabaseAdmin();
-  const { error: updateError } = await admin.auth.admin.updateUserById(
-    existing.id,
-    {
-      password: params.password,
-      user_metadata: { full_name: params.fullName.trim() },
-    },
-  );
-
-  if (updateError) {
-    console.error("Pending signup password update failed:", updateError.message);
-  }
-
-  await ensureUserProfile(existing.id, {
-    email,
-    fullName: params.fullName.trim(),
+  return deliverSignupEmail(params, {
+    recoveredPendingSignup: true,
+    linkMode: "invite",
   });
-
-  return deliverSignupEmail(params, { recoveredPendingSignup: true });
 }
 
 async function signupViaPublicClient(
   params: RegisterUserParams,
 ): Promise<RegisterUserResult> {
   const couponCode = getSignupCouponCode();
-  const supabase = await createClient();
-  const { error } = await supabase.auth.signUp({
-    email: normalizeEmail(params.email),
-    password: params.password,
-    options: {
-      emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
-      data: { full_name: params.fullName.trim() },
-    },
-  });
 
-  if (error) {
-    if (isDuplicateSignupError(error.message)) {
-      const serviceKey = getSupabaseServiceRoleKey();
-      if (serviceKey && isSignupEmailConfigured()) {
+  try {
+    const supabase = await createClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizeEmail(params.email),
+      password: params.password,
+      options: {
+        emailRedirectTo: getEmailRedirectUrl(params.redirectTo),
+        data: { full_name: params.fullName.trim() },
+      },
+    });
+
+    if (error) {
+      if (
+        isRecoverableSignupError(error.message) &&
+        Boolean(getSupabaseServiceRoleKey()) &&
+        isSignupEmailConfigured()
+      ) {
         return recoverPendingSignup(params);
       }
+      throw new SignupError(mapSignupAuthError(error.message));
     }
-    throw new SignupError(mapSignupAuthError(error.message));
-  }
 
-  return { couponCode, verificationEmailSent: true };
+    if (data.user?.id) {
+      await safeEnsureUserProfile(data.user.id, {
+        email: params.email,
+        fullName: params.fullName.trim(),
+      });
+    }
+
+    return { couponCode, verificationEmailSent: true };
+  } catch (error) {
+    if (error instanceof SignupError) {
+      throw error;
+    }
+    console.error("[Signup] public client path failed:", error);
+    throw new SignupError("Kayıt oluşturulamadı. Lütfen tekrar deneyin.");
+  }
 }
 
 async function registerUserViaAdmin(
@@ -239,15 +332,20 @@ async function registerUserViaAdmin(
     }
 
     console.error("Admin createUser failed:", createError.message);
+
+    if (isRecoverableSignupError(createError.message)) {
+      return recoverPendingSignup(params);
+    }
+
     return signupViaPublicClient(params);
   }
 
   const userId = createData.user?.id;
   if (userId) {
-    await ensureUserProfile(userId, { email, fullName });
+    await safeEnsureUserProfile(userId, { email, fullName });
   }
 
-  return deliverSignupEmail(params);
+  return deliverSignupEmail(params, { linkMode: "invite" });
 }
 
 export async function registerUser(
@@ -268,7 +366,16 @@ export async function registerUser(
     }
 
     console.error("Admin signup path failed:", error);
-    throw new SignupError("Kayıt oluşturulamadı. Lütfen tekrar deneyin.");
+
+    try {
+      return await recoverPendingSignup(params);
+    } catch (recoverError) {
+      if (recoverError instanceof SignupError) {
+        throw recoverError;
+      }
+      console.error("Signup recovery failed:", recoverError);
+      throw new SignupError("Kayıt oluşturulamadı. Lütfen tekrar deneyin.");
+    }
   }
 }
 
@@ -280,37 +387,25 @@ export async function resendSignupWelcomeEmail(
   const normalizedEmail = normalizeEmail(email);
 
   if (!isSignupEmailConfigured()) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: normalizedEmail,
-      options: {
-        emailRedirectTo: getEmailRedirectUrl(redirectTo),
-      },
-    });
-
-    if (error) {
+    const fallbackSent = await sendSupabaseVerificationFallback(
+      normalizedEmail,
+      redirectTo,
+    );
+    if (!fallbackSent) {
       throw new Error("RESEND_FAILED");
     }
-
     return { couponCode, sent: true };
   }
 
   const serviceKey = getSupabaseServiceRoleKey();
   if (!serviceKey) {
-    const supabase = await createClient();
-    const { error } = await supabase.auth.resend({
-      type: "signup",
-      email: normalizedEmail,
-      options: {
-        emailRedirectTo: getEmailRedirectUrl(redirectTo),
-      },
-    });
-
-    if (error) {
+    const fallbackSent = await sendSupabaseVerificationFallback(
+      normalizedEmail,
+      redirectTo,
+    );
+    if (!fallbackSent) {
       throw new Error("RESEND_FAILED");
     }
-
     return { couponCode, sent: true };
   }
 
@@ -320,19 +415,13 @@ export async function resendSignupWelcomeEmail(
       ? existing.user_metadata.full_name
       : "";
 
-  const admin = getSupabaseAdmin();
-  const { data: linkData, error: linkError } =
-    await admin.auth.admin.generateLink({
-      type: "magiclink",
-      email: normalizedEmail,
-      options: {
-        redirectTo: getEmailRedirectUrl(redirectTo),
-      },
-    });
+  const verificationLink = await generateVerificationLink(
+    normalizedEmail,
+    redirectTo,
+    "invite",
+  );
 
-  const verificationLink = linkData?.properties?.action_link;
-
-  if (linkError || !verificationLink) {
+  if (!verificationLink) {
     const fallbackSent = await sendSupabaseVerificationFallback(
       normalizedEmail,
       redirectTo,
