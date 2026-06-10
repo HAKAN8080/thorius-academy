@@ -27,6 +27,8 @@ export interface AcademySyncCourseToWpRequest {
   title: string;
   slug: string;
   description?: string | null;
+  description_html?: string | null;
+  excerpt?: string | null;
   cover_image_url?: string | null;
   category?: string | null;
   price?: number;
@@ -34,6 +36,9 @@ export interface AcademySyncCourseToWpRequest {
   instructor_wp_user_id: number;
   instructor_name?: string | null;
   instructor_email?: string | null;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_focus_keyword?: string | null;
   published: boolean;
   wp_course_id?: number | null;
 }

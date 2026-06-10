@@ -14,20 +14,21 @@ interface CourseBuilderNavProps {
 
 export function CourseBuilderNav({ courseId, current }: CourseBuilderNavProps) {
   return (
-    <nav className="mb-8 flex flex-wrap gap-2 rounded-2xl border border-primary-100 bg-white p-2">
+    <nav className="grid gap-2 rounded-2xl border border-primary-100 bg-white p-2 shadow-sm sm:grid-cols-3">
       {steps.map((step, index) => {
         const active = step.id === current;
         return (
           <Link
             key={step.id}
             href={`/instructor/courses/${courseId}/${step.suffix}`}
-            className={`flex-1 rounded-xl px-4 py-3 text-center text-sm font-semibold transition ${
+            className={`rounded-xl px-4 py-3 text-center text-sm font-semibold transition ${
               active
-                ? "bg-[#0B1E3F] text-[#D4AF37]"
+                ? "bg-[#0B1E3F] text-[#D4AF37] shadow-sm"
                 : "text-[#0B1E3F] hover:bg-primary-50"
             }`}
           >
-            {index + 1}. {step.label}
+            <span className="mr-1 text-xs opacity-70">{index + 1}.</span>
+            {step.label}
           </Link>
         );
       })}

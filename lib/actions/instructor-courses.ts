@@ -448,6 +448,7 @@ export async function saveCourseBasics(
         academyCourseId: courseCacheId,
         title: input.title.trim(),
         slug,
+        subtitle: input.subtitle,
         description: input.description_md,
         coverImageUrl: input.cover_image_url,
         category: input.category,
@@ -456,6 +457,9 @@ export async function saveCourseBasics(
         instructorWpUserId: existing.instructor_wp_user_id,
         instructorName: instructorProfile.name,
         instructorEmail: instructorProfile.email,
+        seoTitle: input.seo_title,
+        seoDescription: input.seo_description,
+        seoFocusKeyword: input.seo_focus_keyword,
         published,
         wpCourseId:
           typeof existingWpCourseId === "number" && existingWpCourseId > 0
@@ -513,6 +517,9 @@ export async function saveCourseBasics(
       language: input.language ?? "Türkçe",
       category: input.category?.trim() || null,
       visibility: input.visibility,
+      seo_title: input.seo_title?.trim() || null,
+      seo_description: input.seo_description?.trim() || null,
+      seo_focus_keyword: input.seo_focus_keyword?.trim() || null,
       published,
       ...buildCoursesCacheSlugFields(resolvedSlug),
       updated_at: new Date().toISOString(),

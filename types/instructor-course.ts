@@ -21,6 +21,9 @@ export interface CoursesCache {
   visibility: CourseVisibility;
   what_will_learn: string | null;
   target_audience: string | null;
+  seo_title: string | null;
+  seo_description: string | null;
+  seo_focus_keyword: string | null;
   published: boolean;
   created_at: string;
   updated_at: string;
@@ -93,6 +96,9 @@ export interface CourseBasicsInput {
   language?: string;
   category?: string | null;
   visibility: CourseVisibility;
+  seo_title?: string | null;
+  seo_description?: string | null;
+  seo_focus_keyword?: string | null;
   published: boolean;
 }
 

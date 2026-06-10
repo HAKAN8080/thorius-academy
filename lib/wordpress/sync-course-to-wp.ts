@@ -1,3 +1,4 @@
+import { markdownToHtml, stripMarkdown } from "@/lib/markdown/to-html";
 import { signWebhookPayload } from "@/lib/webhooks/verify-signature";
 import { getWpSiteOrigin } from "@/lib/wordpress/wp-site-origin";
 import type {
@@ -9,6 +10,7 @@ export interface SyncCourseToWpParams {
   academyCourseId: string;
   title: string;
   slug: string;
+  subtitle?: string | null;
   description?: string | null;
   coverImageUrl?: string | null;
   category?: string | null;
@@ -17,6 +19,9 @@ export interface SyncCourseToWpParams {
   instructorWpUserId: number;
   instructorName?: string | null;
   instructorEmail?: string | null;
+  seoTitle?: string | null;
+  seoDescription?: string | null;
+  seoFocusKeyword?: string | null;
   published: boolean;
   wpCourseId?: number | null;
 }
@@ -37,11 +42,20 @@ function buildPayload(params: SyncCourseToWpParams): AcademySyncCourseToWpReques
       ? params.wpCourseId
       : undefined;
 
+  const descriptionMd = params.description?.trim() || "";
+  const descriptionHtml = markdownToHtml(descriptionMd);
+  const excerpt =
+    params.subtitle?.trim() ||
+    stripMarkdown(descriptionMd).slice(0, 160) ||
+    null;
+
   return {
     academy_course_id: params.academyCourseId,
     title: params.title.trim(),
     slug: params.slug.trim(),
-    description: params.description?.trim() || null,
+    description: descriptionMd || null,
+    description_html: descriptionHtml || null,
+    excerpt,
     cover_image_url: params.coverImageUrl?.trim() || null,
     category: params.category?.trim() || null,
     price: params.price ?? 0,
@@ -49,6 +63,9 @@ function buildPayload(params: SyncCourseToWpParams): AcademySyncCourseToWpReques
     instructor_wp_user_id: params.instructorWpUserId,
     instructor_name: params.instructorName?.trim() || null,
     instructor_email: params.instructorEmail?.trim() || null,
+    seo_title: params.seoTitle?.trim() || null,
+    seo_description: params.seoDescription?.trim() || null,
+    seo_focus_keyword: params.seoFocusKeyword?.trim() || null,
     published: params.published,
     wp_course_id: wpCourseId,
   };
