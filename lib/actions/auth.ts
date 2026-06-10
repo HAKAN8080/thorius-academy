@@ -89,14 +89,14 @@ export async function signUp(
         redirectTo,
       });
     } catch (error) {
-    if (error instanceof SignupError) {
-      return { error: error.userMessage };
-    }
-    console.error("Signup failed:", error);
-    return {
-      error:
-        "Kayıt oluşturulamadı. Lütfen tekrar deneyin veya farklı bir e-posta ile deneyin.",
-    };
+      if (error instanceof SignupError) {
+        return { error: error.userMessage };
+      }
+      console.error("Signup failed:", error);
+      return {
+        error:
+          "Kayıt oluşturulamadı. Lütfen tekrar deneyin veya farklı bir e-posta ile deneyin.",
+      };
     }
 
     try {
