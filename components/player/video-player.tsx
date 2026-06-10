@@ -4,6 +4,11 @@ import { useRef, useEffect, useMemo } from "react";
 import { useVideoProgress } from "@/hooks/use-video-progress";
 import { useEmbedVideoProgress } from "@/hooks/use-embed-video-progress";
 import {
+  ProtectedHtml5Video,
+  ProtectedVideoIframe,
+} from "@/components/player/protected-video-shell";
+import { buildBunnyEmbedUrl } from "@/lib/video/bunny-embed";
+import {
   buildVimeoEmbedUrl,
   buildYouTubeEmbedUrl,
 } from "@/lib/video/embed";
@@ -29,6 +34,11 @@ export function VideoPlayer({
 }: Props) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const iframeRef = useRef<HTMLIFrameElement>(null);
+
+  const bunnyEmbedUrl = useMemo(
+    () => buildBunnyEmbedUrl(embedUrl) ?? buildBunnyEmbedUrl(videoUrl),
+    [embedUrl, videoUrl],
+  );
 
   const youtubeEmbedUrl = useMemo(() => {
     if (videoType !== "youtube") {
@@ -56,7 +66,9 @@ export function VideoPlayer({
     courseId,
     videoRef,
     initialWatchedSeconds,
-    enabled: videoType === "html5" || videoType === null,
+    enabled:
+      !bunnyEmbedUrl &&
+      (videoType === "html5" || videoType === null || videoType === "external_url"),
     onComplete,
   });
 
@@ -78,7 +90,7 @@ export function VideoPlayer({
     onComplete,
   });
 
-  if (!videoUrl) {
+  if (!videoUrl && !embedUrl) {
     return (
       <div className="flex aspect-video items-center justify-center rounded-2xl bg-primary-900 text-white">
         <p>Video bulunamadı</p>
@@ -86,49 +98,45 @@ export function VideoPlayer({
     );
   }
 
+  if (bunnyEmbedUrl) {
+    return (
+      <ProtectedVideoIframe
+        src={bunnyEmbedUrl}
+        title="Ders videosu"
+        iframeRef={iframeRef}
+      />
+    );
+  }
+
   if (videoType === "youtube" && youtubeEmbedUrl) {
     return (
-      <div className="aspect-video overflow-hidden rounded-2xl bg-black">
-        <iframe
-          ref={iframeRef}
-          src={youtubeEmbedUrl}
-          className="h-full w-full"
-          allowFullScreen
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          title="Ders videosu"
-        />
-      </div>
+      <ProtectedVideoIframe
+        src={youtubeEmbedUrl}
+        title="Ders videosu"
+        iframeRef={iframeRef}
+      />
     );
   }
 
   if (videoType === "vimeo" && vimeoEmbedUrl) {
     return (
-      <div className="aspect-video overflow-hidden rounded-2xl bg-black">
-        <iframe
-          ref={iframeRef}
-          src={vimeoEmbedUrl}
-          className="h-full w-full"
-          allowFullScreen
-          allow="autoplay; fullscreen; picture-in-picture"
-          title="Ders videosu"
-        />
+      <ProtectedVideoIframe
+        src={vimeoEmbedUrl}
+        title="Ders videosu"
+        allow="autoplay; fullscreen; picture-in-picture"
+        iframeRef={iframeRef}
+      />
+    );
+  }
+
+  const html5Source = videoUrl ?? embedUrl;
+  if (!html5Source) {
+    return (
+      <div className="flex aspect-video items-center justify-center rounded-2xl bg-primary-900 text-white">
+        <p>Video bulunamadı</p>
       </div>
     );
   }
 
-  return (
-    <div className="aspect-video overflow-hidden rounded-2xl bg-black">
-      <video
-        ref={videoRef}
-        src={videoUrl}
-        controls
-        controlsList="nodownload"
-        crossOrigin="anonymous"
-        className="h-full w-full"
-        playsInline
-      >
-        Tarayıcınız video oynatmayı desteklemiyor.
-      </video>
-    </div>
-  );
+  return <ProtectedHtml5Video src={html5Source} videoRef={videoRef} />;
 }

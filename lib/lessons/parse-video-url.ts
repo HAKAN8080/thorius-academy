@@ -12,6 +12,27 @@ function extractVimeoId(url: string): string | null {
   return match?.[1] ?? null;
 }
 
+function extractBunnyStream(url: string): {
+  libraryId: string;
+  videoId: string;
+} | null {
+  const iframeMatch = url.match(
+    /(?:iframe\.)?mediadelivery\.net\/embed\/(\d+)\/([a-f0-9-]+)/i,
+  );
+  if (iframeMatch) {
+    return { libraryId: iframeMatch[1], videoId: iframeMatch[2] };
+  }
+
+  const playMatch = url.match(
+    /video\.bunnycdn\.com\/play\/(\d+)\/([a-f0-9-]+)/i,
+  );
+  if (playMatch) {
+    return { libraryId: playMatch[1], videoId: playMatch[2] };
+  }
+
+  return null;
+}
+
 export function parseVideoUrl(url: string): {
   video_type: Lesson["video_type"];
   video_url: string;
@@ -37,6 +58,15 @@ export function parseVideoUrl(url: string): {
       video_type: "vimeo",
       video_url: trimmed,
       video_embed_url: `https://player.vimeo.com/video/${vimeoId}`,
+    };
+  }
+
+  const bunnyStream = extractBunnyStream(trimmed);
+  if (bunnyStream) {
+    return {
+      video_type: "external_url",
+      video_url: trimmed,
+      video_embed_url: `https://iframe.mediadelivery.net/embed/${bunnyStream.libraryId}/${bunnyStream.videoId}`,
     };
   }
 

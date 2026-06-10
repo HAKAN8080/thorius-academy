@@ -161,7 +161,7 @@ export function BuilderLessonForm({
                 id="video-url"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="YouTube, Vimeo veya Bunny CDN URL"
+                placeholder="YouTube, Vimeo veya Bunny Stream embed URL (doğrudan .mp4 değil)"
               />
               <p className="text-xs text-primary-500">
                 Süre kayıt sırasında video kaynağından otomatik hesaplanır.

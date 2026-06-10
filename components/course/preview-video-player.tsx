@@ -1,6 +1,11 @@
 "use client";
 
 import {
+  ProtectedHtml5Video,
+  ProtectedVideoIframe,
+} from "@/components/player/protected-video-shell";
+import { buildBunnyEmbedUrl } from "@/lib/video/bunny-embed";
+import {
   buildVimeoEmbedUrl,
   buildYouTubeEmbedUrl,
 } from "@/lib/video/embed";
@@ -16,6 +21,18 @@ export function PreviewVideoPlayer({
   videoUrl,
   embedUrl,
 }: PreviewVideoPlayerProps) {
+  const bunnyEmbedUrl =
+    buildBunnyEmbedUrl(embedUrl) ?? buildBunnyEmbedUrl(videoUrl);
+
+  if (bunnyEmbedUrl) {
+    return (
+      <ProtectedVideoIframe
+        src={bunnyEmbedUrl}
+        title="Ders önizlemesi"
+      />
+    );
+  }
+
   if (videoType === "youtube") {
     const source = embedUrl || videoUrl;
     const youtubeEmbedUrl = source ? buildYouTubeEmbedUrl(source) : null;
@@ -24,15 +41,7 @@ export function PreviewVideoPlayer({
     }
 
     return (
-      <div className="aspect-video overflow-hidden rounded-2xl border border-primary-100 bg-black shadow-lg">
-        <iframe
-          src={youtubeEmbedUrl}
-          title="Ders önizlemesi"
-          className="h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
+      <ProtectedVideoIframe src={youtubeEmbedUrl} title="Ders önizlemesi" />
     );
   }
 
@@ -43,15 +52,11 @@ export function PreviewVideoPlayer({
     }
 
     return (
-      <div className="aspect-video overflow-hidden rounded-2xl border border-primary-100 bg-black shadow-lg">
-        <iframe
-          src={vimeoEmbedUrl}
-          title="Ders önizlemesi"
-          className="h-full w-full"
-          allow="autoplay; fullscreen; picture-in-picture"
-          allowFullScreen
-        />
-      </div>
+      <ProtectedVideoIframe
+        src={vimeoEmbedUrl}
+        title="Ders önizlemesi"
+        allow="autoplay; fullscreen; picture-in-picture"
+      />
     );
   }
 
@@ -60,25 +65,12 @@ export function PreviewVideoPlayer({
     return <MissingVideoMessage />;
   }
 
+  if (videoType === "html5" || videoType === "external_url" || !videoType) {
+    return <ProtectedHtml5Video src={source} />;
+  }
+
   return (
-    <div className="aspect-video overflow-hidden rounded-2xl border border-primary-100 bg-black shadow-lg">
-      {videoType === "html5" || !videoType ? (
-        <video
-          src={source}
-          controls
-          playsInline
-          className="h-full w-full bg-black"
-        />
-      ) : (
-        <iframe
-          src={source}
-          title="Ders önizlemesi"
-          className="h-full w-full"
-          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-          allowFullScreen
-        />
-      )}
-    </div>
+    <ProtectedVideoIframe src={source} title="Ders önizlemesi" />
   );
 }
 
