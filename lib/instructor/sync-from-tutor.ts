@@ -1,11 +1,13 @@
 import { decodeHtmlEntities } from "@/lib/utils/decode-html-entities";
 import {
   fetchAllTutorCourses,
+  fetchAllWpCourseCategories,
   fetchTutorAuthorInfo,
   fetchTutorCourseDetail,
   fetchTutorCourseRating,
   fetchTutorCourseReviews,
   fetchTutorEnrollmentCount,
+  fetchWpCoursePrimaryCategoryName,
   mapReviewToRow,
   parseAuthorId,
   parseCourseId,
@@ -114,6 +116,10 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
     }
 
     let reviewsSynced = 0;
+    const wpCategories = await fetchAllWpCourseCategories();
+    const categoryById = new Map(
+      wpCategories.map((category) => [category.id, category]),
+    );
 
     for (const course of courses) {
       const courseId = parseCourseId(course);
@@ -165,6 +171,11 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
 
       statsCoursesUpserted += 1;
 
+      const category = await fetchWpCoursePrimaryCategoryName(
+        courseId,
+        categoryById,
+      );
+
       await supabase.from("courses_cache").upsert(
         buildCoursesCacheDraftPayload(
           {
@@ -173,6 +184,7 @@ export async function syncInstructorStatsFromTutor(): Promise<SyncInstructorStat
             title: decodeHtmlEntities(course.post_title),
             cover_image_url:
               resolveCourseImage(course) ?? resolveCourseImage(detail ?? course),
+            category,
             published: course.post_status === "publish",
             updated_at: syncedAt,
           },

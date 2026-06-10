@@ -1,3 +1,7 @@
+import {
+  buildCoursesCacheDraftPayload,
+  buildCoursesCacheSlugFields,
+} from "@/lib/instructor/courses-cache-write";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   extractVideoUrl,
@@ -5,44 +9,13 @@ import {
 } from "@/lib/tutor/api";
 import {
   fetchAllTutorCourses,
+  fetchWpCourseMetaById,
+  fetchWpCoursePrimaryCategoryName,
   parseAuthorId,
   parseCourseId,
   resolveCourseImage,
 } from "@/lib/tutor/instructor-api";
 import { decodeHtmlEntities } from "@/lib/utils/decode-html-entities";
-
-function buildCoursesCacheSlugFields(slug: string): {
-  course_slug: string;
-  slug: string;
-} {
-  const normalized = slug.trim();
-  return {
-    course_slug: normalized,
-    slug: normalized,
-  };
-}
-
-function buildCoursesCacheDraftPayload(
-  base: {
-    wp_course_id: number;
-    instructor_wp_user_id: number;
-    title: string;
-    published?: boolean;
-    cover_image_url?: string | null;
-    updated_at?: string;
-  },
-  slug: string,
-) {
-  return {
-    ...base,
-    ...buildCoursesCacheSlugFields(slug),
-    pricing_model: "free",
-    price: 0,
-    level: "beginner",
-    language: "turkish",
-    visibility: "public",
-  };
-}
 
 export interface ImportTutorCourseResult {
   wpCourseId: number;
@@ -99,6 +72,7 @@ async function ensureInstructor(wpUserId: number): Promise<void> {
 
 async function resolveCourseMeta(wpCourseId: number) {
   const admin = getSupabaseAdmin();
+  const category = await fetchWpCoursePrimaryCategoryName(wpCourseId);
 
   const { data: stats } = await admin
     .from("instructor_course_stats")
@@ -116,23 +90,41 @@ async function resolveCourseMeta(wpCourseId: number) {
       instructorWpUserId: Number(stats.instructor_wp_user_id),
       coverImageUrl: (stats.image_url as string | null) ?? null,
       published: stats.status === "publish",
+      category,
     };
   }
 
   const { courses } = await fetchAllTutorCourses();
   const course = courses.find((row) => parseCourseId(row) === wpCourseId);
-  if (!course) {
+  if (course) {
+    const authorId = parseAuthorId(course);
+    return {
+      wpCourseId,
+      slug: course.post_name,
+      title: decodeHtmlEntities(course.post_title),
+      instructorWpUserId: authorId > 0 ? authorId : getDefaultInstructorWpId(),
+      coverImageUrl: resolveCourseImage(course),
+      published: course.post_status === "publish",
+      category,
+    };
+  }
+
+  const wpCourse = await fetchWpCourseMetaById(wpCourseId);
+  if (!wpCourse) {
     return null;
   }
 
-  const authorId = parseAuthorId(course);
   return {
     wpCourseId,
-    slug: course.post_name,
-    title: decodeHtmlEntities(course.post_title),
-    instructorWpUserId: authorId > 0 ? authorId : getDefaultInstructorWpId(),
-    coverImageUrl: resolveCourseImage(course),
-    published: course.post_status === "publish",
+    slug: wpCourse.slug,
+    title: decodeHtmlEntities(wpCourse.title),
+    instructorWpUserId:
+      wpCourse.instructorWpUserId > 0
+        ? wpCourse.instructorWpUserId
+        : getDefaultInstructorWpId(),
+    coverImageUrl: null,
+    published: wpCourse.published,
+    category,
   };
 }
 
@@ -149,23 +141,15 @@ async function ensureCourseCache(
 
   const { data: existing } = await admin
     .from("courses_cache")
-    .select("id, course_slug, title")
+    .select("id, course_slug, title, category")
     .eq("wp_course_id", wpCourseId)
     .maybeSingle();
 
-  if (existing) {
-    return {
-      id: String(existing.id),
-      slug: (existing.course_slug as string) || meta.slug,
-      title: (existing.title as string) || meta.title,
-    };
-  }
-
   if (dryRun) {
     return {
-      id: "dry-run",
-      slug: meta.slug,
-      title: meta.title,
+      id: existing ? String(existing.id) : "dry-run",
+      slug: (existing?.course_slug as string) || meta.slug,
+      title: (existing?.title as string) || meta.title,
     };
   }
 
@@ -180,6 +164,7 @@ async function ensureCourseCache(
           instructor_wp_user_id: meta.instructorWpUserId,
           title: meta.title,
           cover_image_url: meta.coverImageUrl,
+          category: meta.category,
           published: meta.published,
           updated_at: new Date().toISOString(),
         },
@@ -187,7 +172,7 @@ async function ensureCourseCache(
       ),
       { onConflict: "wp_course_id" },
     )
-    .select("id, course_slug, title")
+    .select("id, course_slug, title, category")
     .single();
 
   if (error || !data) {

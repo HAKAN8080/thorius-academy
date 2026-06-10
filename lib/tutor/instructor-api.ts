@@ -600,4 +600,122 @@ export function mapReviewToRow(
   };
 }
 
+interface WpCourseCategoryRef {
+  id: number;
+  name: string;
+  slug: string;
+}
+
+interface WpCourseMetaRef {
+  id: number;
+  slug: string;
+  title: { rendered?: string };
+  status?: string;
+  author?: number;
+}
+
+async function fetchWpJson<T>(
+  url: string,
+): Promise<T | null> {
+  try {
+    const response = await fetch(url, {
+      cache: "no-store",
+      headers: { Accept: "application/json" },
+    });
+    if (!response.ok) {
+      return null;
+    }
+    return (await response.json()) as T;
+  } catch {
+    return null;
+  }
+}
+
+async function fetchWpCourseCategoryIds(
+  wpCourseId: number,
+): Promise<number[]> {
+  for (const base of getWpRestBaseCandidates()) {
+    const course = await fetchWpJson<Record<string, unknown>>(
+      `${base}/courses/${wpCourseId}?_fields=course-category`,
+    );
+    const categoryIds = course?.["course-category"];
+    if (Array.isArray(categoryIds) && categoryIds.length > 0) {
+      return categoryIds
+        .map((value) => parseNumber(value))
+        .filter((value) => value > 0);
+    }
+  }
+
+  return [];
+}
+
+export async function fetchAllWpCourseCategories(): Promise<
+  WpCourseCategoryRef[]
+> {
+  for (const base of getWpRestBaseCandidates()) {
+    const categories = await fetchWpJson<WpCourseCategoryRef[]>(
+      `${base}/course-category?per_page=100&hide_empty=false&_fields=id,name,slug`,
+    );
+    if (categories?.length) {
+      return categories;
+    }
+  }
+
+  return [];
+}
+
+export async function fetchWpCoursePrimaryCategoryName(
+  wpCourseId: number,
+  categoryById?: Map<number, WpCourseCategoryRef>,
+): Promise<string | null> {
+  const categoryIds = await fetchWpCourseCategoryIds(wpCourseId);
+  if (categoryIds.length === 0) {
+    return null;
+  }
+
+  const primaryCategoryId = categoryIds[0];
+  const cached = categoryById?.get(primaryCategoryId);
+  if (cached?.name) {
+    return cached.name;
+  }
+
+  for (const base of getWpRestBaseCandidates()) {
+    const category = await fetchWpJson<WpCourseCategoryRef>(
+      `${base}/course-category/${primaryCategoryId}?_fields=id,name,slug`,
+    );
+    if (category?.name) {
+      return category.name;
+    }
+  }
+
+  return null;
+}
+
+export async function fetchWpCourseMetaById(
+  wpCourseId: number,
+): Promise<{
+  slug: string;
+  title: string;
+  instructorWpUserId: number;
+  published: boolean;
+} | null> {
+  for (const base of getWpRestBaseCandidates()) {
+    const course = await fetchWpJson<WpCourseMetaRef>(
+      `${base}/courses/${wpCourseId}?_fields=id,slug,title,status,author`,
+    );
+    if (!course?.id) {
+      continue;
+    }
+
+    return {
+      slug: course.slug,
+      title: course.title?.rendered ?? "",
+      instructorWpUserId: parseNumber(course.author),
+      published: course.status === "publish",
+    };
+  }
+
+  return null;
+}
+
 export { parseCourseId, parseAuthorId, parseNumber, TUTOR_API_BASE };

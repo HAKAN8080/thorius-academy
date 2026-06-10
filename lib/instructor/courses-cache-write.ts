@@ -76,3 +76,44 @@ export function normalizeCoursesCacheWritePayload(
 
   return next;
 }
+
+/** Production tablosunda legacy `slug` kolonu da zorunlu olabilir. */
+export function buildCoursesCacheSlugFields(slug: string): {
+  course_slug: string;
+  slug: string;
+} {
+  const normalized = slug.trim();
+  return {
+    course_slug: normalized,
+    slug: normalized,
+  };
+}
+
+export function buildCoursesCacheDraftPayload(
+  base: {
+    wp_course_id: number;
+    instructor_wp_user_id: number;
+    title: string;
+    published?: boolean;
+    cover_image_url?: string | null;
+    category?: string | null;
+    updated_at?: string;
+  },
+  slug: string,
+) {
+  return {
+    ...buildCoursesCacheSlugFields(slug),
+    wp_course_id: base.wp_course_id,
+    instructor_wp_user_id: base.instructor_wp_user_id,
+    title: base.title,
+    published: base.published ?? false,
+    cover_image_url: base.cover_image_url ?? null,
+    category: base.category?.trim() || null,
+    updated_at: base.updated_at,
+    pricing_model: "free",
+    price: 0,
+    level: "beginner",
+    language: "turkish",
+    visibility: "public",
+  };
+}

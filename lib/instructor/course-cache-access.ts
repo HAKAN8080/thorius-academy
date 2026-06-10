@@ -7,31 +7,12 @@ import type { CoursesCache } from "@/types/instructor-course";
 import {
   fromCoursesCacheLanguageLabel,
   fromCoursesCacheLevelLabel,
+  buildCoursesCacheDraftPayload,
+  buildCoursesCacheSlugFields,
 } from "@/lib/instructor/courses-cache-write";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 
-export { slugifyCourseTitle };
-
-export function normalizeCourseCacheId(
-  id: string | number | bigint | null | undefined,
-): string {
-  if (id == null) {
-    return "";
-  }
-  return String(id);
-}
-
-/** Production tablosunda legacy `slug` kolonu da zorunlu olabilir. */
-export function buildCoursesCacheSlugFields(slug: string): {
-  course_slug: string;
-  slug: string;
-} {
-  const normalized = slug.trim();
-  return {
-    course_slug: normalized,
-    slug: normalized,
-  };
-}
+export { slugifyCourseTitle, buildCoursesCacheDraftPayload, buildCoursesCacheSlugFields };
 
 export function withCoursesCacheSlug<T extends Record<string, unknown>>(
   payload: T,
@@ -43,33 +24,13 @@ export function withCoursesCacheSlug<T extends Record<string, unknown>>(
   };
 }
 
-export function buildCoursesCacheDraftPayload(
-  base: {
-    wp_course_id: number;
-    instructor_wp_user_id: number;
-    title: string;
-    published?: boolean;
-    cover_image_url?: string | null;
-    updated_at?: string;
-  },
-  slug: string,
-) {
-  return withCoursesCacheSlug(
-    {
-      wp_course_id: base.wp_course_id,
-      instructor_wp_user_id: base.instructor_wp_user_id,
-      title: base.title,
-      published: base.published ?? false,
-      cover_image_url: base.cover_image_url ?? null,
-      updated_at: base.updated_at,
-      pricing_model: "free",
-      price: 0,
-      level: "beginner",
-      language: "turkish",
-      visibility: "public",
-    },
-    slug,
-  );
+export function normalizeCourseCacheId(
+  id: string | number | bigint | null | undefined,
+): string {
+  if (id == null) {
+    return "";
+  }
+  return String(id);
 }
 
 export function normalizeCoursesCacheRow(
