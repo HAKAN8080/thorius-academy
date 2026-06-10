@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getInstructorAccess } from "@/lib/instructor/access";
@@ -13,7 +14,7 @@ export interface CurriculumAccess {
   canManage: boolean;
 }
 
-export async function getCurriculumAccess(): Promise<CurriculumAccess> {
+export const getCurriculumAccess = cache(async (): Promise<CurriculumAccess> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -53,7 +54,7 @@ export async function getCurriculumAccess(): Promise<CurriculumAccess> {
     isAdmin,
     canManage,
   };
-}
+});
 
 export async function requireCurriculumAccess(): Promise<CurriculumAccess> {
   const access = await getCurriculumAccess();

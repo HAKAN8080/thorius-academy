@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { usePathname } from "next/navigation";
+import { usePathname, useSearchParams } from "next/navigation";
 
 function isInternalNavigation(href: string, pathname: string): boolean {
   if (!href || href.startsWith("#")) {
@@ -25,6 +25,8 @@ function isInternalNavigation(href: string, pathname: string): boolean {
 
 export function NavigationPending() {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
+  const searchKey = searchParams.toString();
   const [pending, setPending] = useState(false);
   const timeoutRef = useRef<ReturnType<typeof setTimeout>>();
 
@@ -46,7 +48,7 @@ export function NavigationPending() {
 
   useEffect(() => {
     clearPending();
-  }, [pathname]);
+  }, [pathname, searchKey]);
 
   useEffect(() => {
     function handleClick(event: MouseEvent) {

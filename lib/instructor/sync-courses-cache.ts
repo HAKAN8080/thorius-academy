@@ -26,7 +26,25 @@ export async function ensureCoursesCacheForInstructor(
     return 0;
   }
 
-  const payloads = (stats as StatsRow[]).map((row) => {
+  const wpIds = (stats as StatsRow[]).map((row) => row.wp_course_id);
+  const { data: existingRows } = await admin
+    .from("courses_cache")
+    .select("wp_course_id")
+    .in("wp_course_id", wpIds);
+
+  const existingWpIds = new Set(
+    (existingRows ?? []).map((row) => row.wp_course_id as number),
+  );
+
+  const missingStats = (stats as StatsRow[]).filter(
+    (row) => !existingWpIds.has(row.wp_course_id),
+  );
+
+  if (missingStats.length === 0) {
+    return 0;
+  }
+
+  const payloads = missingStats.map((row) => {
     const published = row.status === "publish";
     return buildCoursesCacheDraftPayload(
       {

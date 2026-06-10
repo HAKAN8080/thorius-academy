@@ -29,14 +29,7 @@ export interface SyncLegacyUserDataResult {
   updatedProgress: number;
 }
 
-function shouldRunLegacySync(
-  enrollmentsCount: number,
-  lastSyncedAt: string | undefined,
-): boolean {
-  if (enrollmentsCount === 0) {
-    return true;
-  }
-
+function shouldRunLegacySync(lastSyncedAt: string | undefined): boolean {
   if (!lastSyncedAt) {
     return true;
   }
@@ -227,27 +220,6 @@ export async function syncLegacyUserData(
 ): Promise<SyncLegacyUserDataResult> {
   const admin = getSupabaseAdmin();
 
-  const { count: enrollmentsCount, error: countError } = await admin
-    .from("enrollments")
-    .select("*", { count: "exact", head: true })
-    .eq("user_id", userId)
-    .neq("status", "cancelled");
-
-  if (countError) {
-    console.warn("[Legacy Sync] Enrollment count failed:", countError.message);
-  }
-
-  const lastSyncedAt = options.lastSyncedAt;
-
-  if (!shouldRunLegacySync(enrollmentsCount ?? 0, lastSyncedAt)) {
-    return {
-      skipped: true,
-      reason: "recently_synced",
-      importedEnrollments: 0,
-      updatedProgress: 0,
-    };
-  }
-
   const { data: authUser, error: authError } =
     await admin.auth.admin.getUserById(userId);
 
@@ -255,6 +227,20 @@ export async function syncLegacyUserData(
     return {
       skipped: true,
       reason: "user_not_found",
+      importedEnrollments: 0,
+      updatedProgress: 0,
+    };
+  }
+
+  const lastSyncedAt =
+    (typeof authUser.user.user_metadata?.tutor_legacy_synced_at === "string"
+      ? authUser.user.user_metadata.tutor_legacy_synced_at
+      : undefined) ?? options.lastSyncedAt;
+
+  if (!shouldRunLegacySync(lastSyncedAt)) {
+    return {
+      skipped: true,
+      reason: "recently_synced",
       importedEnrollments: 0,
       updatedProgress: 0,
     };

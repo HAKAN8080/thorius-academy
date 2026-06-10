@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -442,7 +443,7 @@ export async function linkInstructorProfileFromWpUserId(
   return true;
 }
 
-export async function getInstructorAccess(): Promise<InstructorAccess> {
+export const getInstructorAccess = cache(async (): Promise<InstructorAccess> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -496,7 +497,7 @@ export async function getInstructorAccess(): Promise<InstructorAccess> {
     profile,
     resolved.instructor,
   );
-}
+});
 
 export async function requireInstructorAccess(): Promise<{
   wpInstructorId: number;
