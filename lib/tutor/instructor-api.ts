@@ -185,8 +185,9 @@ async function fetchCoursesFromWpRestBase(
   let page = 1;
 
   while (page <= 20) {
+    // Anonymous WP REST rejects status=any (400); published courses are returned by default.
     const response = await fetch(
-      `${base}/courses?per_page=100&page=${page}&status=any`,
+      `${base}/courses?per_page=100&page=${page}`,
       {
         cache: "no-store",
         headers: { Accept: "application/json" },
