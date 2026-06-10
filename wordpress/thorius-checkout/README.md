@@ -13,6 +13,12 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.5.0 — Sepet erişimi
+- `/sepet/` artık engellenmiyor; adet düzenleyebilir / ürün silebilirsiniz
+- Ödeme sayfasında **Sepeti düzenle** linki
+- Aynı kurs tekrar eklenince x2 olmaz (adet 1'de kalır)
+- Dijital ürünlerde max adet = 1
+
 ### v1.4.0 — Checkout validation fix
 - Gizli zorunlu fatura alanlari (telefon, adres, ulke) otomatik doldurulur
 - PayTR icin varsayilan telefon numarasi eklenir

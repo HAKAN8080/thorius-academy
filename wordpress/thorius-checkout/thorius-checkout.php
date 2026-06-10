@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.4.0
+ * Version: 1.5.0
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.4.0');
+define('THORIUS_CHECKOUT_VERSION', '1.5.0');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -278,6 +278,76 @@ function thorius_checkout_admin_order_meta($order): void
 add_action('woocommerce_admin_order_data_after_billing_address', 'thorius_checkout_admin_order_meta');
 
 /**
+ * Dijital kurslarda adet her zaman 1.
+ */
+function thorius_checkout_limit_virtual_quantity($max, $product): int
+{
+    if (is_a($product, 'WC_Product') && $product->is_virtual()) {
+        return 1;
+    }
+
+    return (int) $max;
+}
+add_filter('woocommerce_quantity_input_max', 'thorius_checkout_limit_virtual_quantity', 20, 2);
+add_filter('woocommerce_quantity_input_min', static function ($min, $product) {
+    if (is_a($product, 'WC_Product') && $product->is_virtual()) {
+        return 1;
+    }
+
+    return $min;
+}, 20, 2);
+
+/**
+ * Ayni kurs tekrar sepete eklenmesin (x2 sorunu).
+ */
+function thorius_checkout_prevent_duplicate_cart_items(
+    bool $passed,
+    int $product_id,
+    int $quantity
+): bool {
+    if (!$passed || !function_exists('WC') || !WC()->cart) {
+        return $passed;
+    }
+
+    foreach (WC()->cart->get_cart() as $cart_item_key => $cart_item) {
+        $cart_product_id = (int) ($cart_item['product_id'] ?? 0);
+        if ($cart_product_id !== $product_id) {
+            continue;
+        }
+
+        WC()->cart->set_quantity($cart_item_key, 1, true);
+
+        if (function_exists('wc_add_notice')) {
+            wc_add_notice(
+                __('Bu kurs zaten sepetinizde. Adet 1 olarak bırakıldı.', 'thorius-checkout'),
+                'notice'
+            );
+        }
+
+        return false;
+    }
+
+    return $passed;
+}
+add_filter('woocommerce_add_to_cart_validation', 'thorius_checkout_prevent_duplicate_cart_items', 20, 3);
+
+/**
+ * Odeme sayfasinda sepete donus linki.
+ */
+function thorius_checkout_edit_cart_link(): void
+{
+    if (!function_exists('wc_get_cart_url') || !function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
+        return;
+    }
+
+    echo '<p class="thorius-edit-cart-link">' .
+        '<a href="' . esc_url(wc_get_cart_url()) . '">' .
+        esc_html__('Sepeti düzenle', 'thorius-checkout') .
+        '</a></p>';
+}
+add_action('woocommerce_checkout_before_order_review_heading', 'thorius_checkout_edit_cart_link', 5);
+
+/**
  * Sepeti atla — urun eklendikten sonra dogrudan odeme sayfasina yonlendir.
  */
 function thorius_checkout_add_to_cart_redirect(string $url): string
@@ -291,29 +361,14 @@ function thorius_checkout_add_to_cart_redirect(string $url): string
 add_filter('woocommerce_add_to_cart_redirect', 'thorius_checkout_add_to_cart_redirect');
 
 /**
- * Sepet sayfasini atla — dolu sepet varsa odeme sayfasina yonlendir.
- */
-function thorius_checkout_skip_cart_page(): void
-{
-    if (!function_exists('is_cart') || !is_cart()) {
-        return;
-    }
-
-    if (!function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
-        return;
-    }
-
-    wp_safe_redirect(wc_get_checkout_url());
-    exit;
-}
-add_action('template_redirect', 'thorius_checkout_skip_cart_page', 20);
-
-/**
  * Checkout CSS — kupon ikonu, PayTR metni, kompakt layout.
  */
 function thorius_checkout_enqueue_assets(): void
 {
-    if (!function_exists('is_checkout') || !is_checkout()) {
+    $is_checkout = function_exists('is_checkout') && is_checkout();
+    $is_cart = function_exists('is_cart') && is_cart();
+
+    if (!$is_checkout && !$is_cart) {
         return;
     }
 
@@ -324,12 +379,14 @@ function thorius_checkout_enqueue_assets(): void
         THORIUS_CHECKOUT_VERSION
     );
 
-    wp_enqueue_script(
-        'thorius-checkout',
-        THORIUS_CHECKOUT_URL . 'assets/checkout.js',
-        array(),
-        THORIUS_CHECKOUT_VERSION,
-        true
-    );
+    if ($is_checkout) {
+        wp_enqueue_script(
+            'thorius-checkout',
+            THORIUS_CHECKOUT_URL . 'assets/checkout.js',
+            array(),
+            THORIUS_CHECKOUT_VERSION,
+            true
+        );
+    }
 }
 add_action('wp_enqueue_scripts', 'thorius_checkout_enqueue_assets', 99);

@@ -255,6 +255,31 @@ body.woocommerce-checkout #payment .payment_box p {
   color: #334155 !important;
 }
 
+/* Sepeti düzenle linki (ödeme sayfası) */
+.thorius-edit-cart-link {
+  margin: 0 0 12px !important;
+}
+
+.thorius-edit-cart-link a {
+  color: #0b1e3f !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+  text-decoration: underline !important;
+  text-underline-offset: 3px !important;
+}
+
+body.woocommerce-cart .woocommerce {
+  max-width: 720px;
+  margin: 0 auto;
+  padding: 24px 16px 48px;
+}
+
+body.woocommerce-cart .cart-collaterals .checkout-button {
+  background: #d4af37 !important;
+  color: #0b1e3f !important;
+  font-weight: 700 !important;
+}
+
 /* ── Mobil ── */
 @media (max-width: 992px) {
   form.checkout {
