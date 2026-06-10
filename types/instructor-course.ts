@@ -81,6 +81,7 @@ export interface InstructorCourseListItem {
 
 export interface CourseBasicsInput {
   title: string;
+  course_slug?: string | null;
   subtitle?: string | null;
   description_md?: string | null;
   cover_image_url?: string | null;

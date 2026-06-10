@@ -10,11 +10,16 @@ import {
   normalizeCourseCacheId,
   normalizeCoursesCacheRow,
   requireCourseCacheAccess,
-  slugifyCourseTitle,
   verifyCourseCacheAccess,
 } from "@/lib/instructor/course-cache-access";
+import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 import { normalizeCoursesCacheWritePayload } from "@/lib/instructor/courses-cache-write";
+import {
+  formatPublishReadinessError,
+  getCoursePublishReadiness,
+} from "@/lib/instructor/course-publish-readiness";
 import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
+import { syncCourseToWp } from "@/lib/wordpress/sync-course-to-wp";
 import type {
   CourseAdditionalInput,
   CourseBasicsInput,
@@ -57,6 +62,67 @@ async function nextSyntheticWpCourseId(): Promise<number> {
   }
 
   return candidate;
+}
+
+async function replaceSyntheticWpCourseId(
+  courseCacheId: string,
+  oldWpCourseId: number,
+  newWpCourseId: number,
+  stats: {
+    slug: string;
+    title: string;
+    published: boolean;
+    coverImageUrl: string | null;
+    instructorWpUserId: number;
+  },
+): Promise<void> {
+  const admin = getSupabaseAdmin();
+
+  const { data: oldStats } = await admin
+    .from("instructor_course_stats")
+    .select("enrollment_count, rating_avg, rating_count, published_at")
+    .eq("wp_course_id", oldWpCourseId)
+    .maybeSingle();
+
+  await admin
+    .from("lessons")
+    .update({ course_id: newWpCourseId })
+    .eq("course_id", oldWpCourseId);
+
+  await admin
+    .from("instructor_course_stats")
+    .delete()
+    .eq("wp_course_id", oldWpCourseId);
+
+  const { error: statsError } = await admin.from("instructor_course_stats").upsert(
+    {
+      wp_course_id: newWpCourseId,
+      course_slug: stats.slug,
+      instructor_wp_user_id: stats.instructorWpUserId,
+      title: stats.title,
+      image_url: stats.coverImageUrl,
+      status: stats.published ? "publish" : "draft",
+      enrollment_count: Number(oldStats?.enrollment_count ?? 0),
+      rating_avg: Number(oldStats?.rating_avg ?? 0),
+      rating_count: Number(oldStats?.rating_count ?? 0),
+      published_at: stats.published
+        ? (oldStats?.published_at as string | null) ?? new Date().toISOString()
+        : null,
+    },
+    { onConflict: "wp_course_id" },
+  );
+
+  if (statsError) {
+    throw new Error(`Kurs istatistiği güncellenemedi: ${statsError.message}`);
+  }
+
+  await admin
+    .from("courses_cache")
+    .update({
+      wp_course_id: newWpCourseId,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", courseCacheId);
 }
 
 export async function getInstructorDashboardStats(): Promise<InstructorDashboardStats> {
@@ -332,31 +398,115 @@ export async function saveCourseBasics(
     const existing = await requireCourseCacheAccess(courseCacheId);
     const admin = getSupabaseAdmin();
     const slug =
+      input.course_slug?.trim() ||
       existing.course_slug ||
       slugifyCourseTitle(input.title) ||
       `kurs-${Math.abs(existing.wp_course_id ?? 0)}`;
 
+    const published = input.published;
+    if (published) {
+      const readiness = await getCoursePublishReadiness(
+        courseCacheId,
+        { ...input, course_slug: slug },
+        existing.course_slug,
+      );
+      if (!readiness.ready) {
+        return { error: formatPublishReadinessError(readiness.missing) };
+      }
+    }
+
+    const existingWpCourseId = existing.wp_course_id;
+    const shouldSyncToWp =
+      published ||
+      (typeof existingWpCourseId === "number" && existingWpCourseId > 0);
+
+    let resolvedWpCourseId = existingWpCourseId;
+    let resolvedSlug = slug;
+
+    if (shouldSyncToWp) {
+      const syncResult = await syncCourseToWp({
+        academyCourseId: courseCacheId,
+        title: input.title.trim(),
+        slug,
+        description: input.description_md,
+        coverImageUrl: input.cover_image_url,
+        category: input.category,
+        price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
+        salePrice: input.sale_price,
+        instructorWpUserId: existing.instructor_wp_user_id,
+        published,
+        wpCourseId:
+          typeof existingWpCourseId === "number" && existingWpCourseId > 0
+            ? existingWpCourseId
+            : null,
+      });
+
+      if (!syncResult.success) {
+        if (published) {
+          const detail = syncResult.error?.trim();
+          return {
+            error: detail
+              ? `Kurs yayına alınamadı: ${detail}`
+              : "Kurs yayına alınamadı: WordPress senkronizasyonu başarısız.",
+          };
+        }
+        console.warn("[saveCourseBasics] WP sync skipped or failed:", syncResult.error);
+      } else if (typeof syncResult.wpCourseId === "number") {
+        if (
+          typeof existingWpCourseId === "number" &&
+          existingWpCourseId < 0 &&
+          syncResult.wpCourseId > 0
+        ) {
+          await replaceSyntheticWpCourseId(
+            courseCacheId,
+            existingWpCourseId,
+            syncResult.wpCourseId,
+            {
+              slug: syncResult.slug ?? slug,
+              title: input.title.trim(),
+              published,
+              coverImageUrl: input.cover_image_url?.trim() || null,
+              instructorWpUserId: existing.instructor_wp_user_id,
+            },
+          );
+        }
+
+        resolvedWpCourseId = syncResult.wpCourseId;
+        if (syncResult.slug) {
+          resolvedSlug = syncResult.slug;
+        }
+      }
+    }
+
+    const cacheUpdatePayload = normalizeCoursesCacheWritePayload({
+      title: input.title.trim(),
+      subtitle: input.subtitle?.trim() || null,
+      description_md: input.description_md ?? null,
+      cover_image_url: input.cover_image_url?.trim() || null,
+      intro_video_url: input.intro_video_url?.trim() || null,
+      pricing_model: input.pricing_model,
+      price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
+      sale_price: input.sale_price ?? null,
+      level: input.level ?? "Başlangıç",
+      language: input.language ?? "Türkçe",
+      category: input.category?.trim() || null,
+      visibility: input.visibility,
+      published,
+      ...buildCoursesCacheSlugFields(resolvedSlug),
+      updated_at: new Date().toISOString(),
+    });
+
+    if (
+      typeof resolvedWpCourseId === "number" &&
+      resolvedWpCourseId > 0 &&
+      resolvedWpCourseId !== existingWpCourseId
+    ) {
+      cacheUpdatePayload.wp_course_id = resolvedWpCourseId;
+    }
+
     const { data, error } = await admin
       .from("courses_cache")
-      .update(
-        normalizeCoursesCacheWritePayload({
-          title: input.title.trim(),
-          subtitle: input.subtitle?.trim() || null,
-          description_md: input.description_md ?? null,
-          cover_image_url: input.cover_image_url?.trim() || null,
-          intro_video_url: input.intro_video_url?.trim() || null,
-          pricing_model: input.pricing_model,
-          price: input.pricing_model === "paid" ? (input.price ?? 0) : 0,
-          sale_price: input.sale_price ?? null,
-          level: input.level ?? "Başlangıç",
-          language: input.language ?? "Türkçe",
-          category: input.category?.trim() || null,
-          visibility: input.visibility,
-          published: input.published,
-          ...buildCoursesCacheSlugFields(slug),
-          updated_at: new Date().toISOString(),
-        }),
-      )
+      .update(cacheUpdatePayload)
       .eq("id", courseCacheId)
       .select("*")
       .single();
@@ -365,16 +515,21 @@ export async function saveCourseBasics(
       return { error: error?.message ?? "Kaydedilemedi" };
     }
 
-    if (existing.wp_course_id) {
+    const statsWpCourseId =
+      typeof resolvedWpCourseId === "number" && resolvedWpCourseId > 0
+        ? resolvedWpCourseId
+        : existingWpCourseId;
+
+    if (statsWpCourseId) {
       await admin
         .from("instructor_course_stats")
         .update({
           title: input.title.trim(),
-          course_slug: slug,
+          course_slug: resolvedSlug,
           image_url: input.cover_image_url?.trim() || null,
-          status: input.published ? "publish" : "draft",
+          status: published ? "publish" : "draft",
         })
-        .eq("wp_course_id", existing.wp_course_id);
+        .eq("wp_course_id", statsWpCourseId);
     }
 
     revalidatePath(`/instructor/courses/${courseCacheId}/basics`);

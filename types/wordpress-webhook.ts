@@ -21,3 +21,25 @@ export interface WordPressCourseWebhookPayload {
   course: WordPressCourseWebhookCourse;
   timestamp: string;
 }
+
+export interface AcademySyncCourseToWpRequest {
+  academy_course_id: string;
+  title: string;
+  slug: string;
+  description?: string | null;
+  cover_image_url?: string | null;
+  category?: string | null;
+  price?: number;
+  sale_price?: number | null;
+  instructor_wp_user_id: number;
+  published: boolean;
+  wp_course_id?: number | null;
+}
+
+export interface AcademySyncCourseToWpResponse {
+  success: true;
+  wp_course_id: number;
+  wc_product_id: number | null;
+  slug: string;
+  status: string;
+}

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.7.0
+ * Version: 1.8.0
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.7.0');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.8.0');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -343,10 +343,18 @@ function thorius_academy_sync_resolve_event(string $post_status, bool $is_update
 
 function thorius_academy_sync_get_wc_product_id(int $post_id): int
 {
-    $product_id = get_post_meta($post_id, '_tutor_course_product_id', true);
+    $product_id = get_post_meta($post_id, '_thorius_wc_product_id', true);
 
     if (is_array($product_id)) {
         $product_id = $product_id[0] ?? 0;
+    }
+
+    if ((int) $product_id <= 0) {
+        $product_id = get_post_meta($post_id, '_tutor_course_product_id', true);
+
+        if (is_array($product_id)) {
+            $product_id = $product_id[0] ?? 0;
+        }
     }
 
     return (int) $product_id;
@@ -362,30 +370,37 @@ function thorius_academy_sync_find_course_ids_by_product_id(int $product_id): ar
     }
 
     $course_types = post_type_exists('courses') ? array('courses') : array('tutor_course');
-    $course_ids = get_posts(array(
-        'post_type' => $course_types,
-        'post_status' => 'any',
-        'fields' => 'ids',
-        'posts_per_page' => -1,
-        'meta_key' => '_tutor_course_product_id',
-        'meta_value' => (string) $product_id,
-    ));
+    $course_ids = array();
 
-    if ($course_ids !== array()) {
-        return array_map('intval', $course_ids);
-    }
-
-    return array_map(
-        'intval',
-        get_posts(array(
+    foreach (array('_thorius_wc_product_id', '_tutor_course_product_id') as $meta_key) {
+        $found = get_posts(array(
             'post_type' => $course_types,
             'post_status' => 'any',
             'fields' => 'ids',
             'posts_per_page' => -1,
-            'meta_key' => '_tutor_course_product_id',
+            'meta_key' => $meta_key,
+            'meta_value' => (string) $product_id,
+        ));
+
+        if ($found !== array()) {
+            $course_ids = array_merge($course_ids, array_map('intval', $found));
+        }
+
+        $found_numeric = get_posts(array(
+            'post_type' => $course_types,
+            'post_status' => 'any',
+            'fields' => 'ids',
+            'posts_per_page' => -1,
+            'meta_key' => $meta_key,
             'meta_value' => $product_id,
-        ))
-    );
+        ));
+
+        if ($found_numeric !== array()) {
+            $course_ids = array_merge($course_ids, array_map('intval', $found_numeric));
+        }
+    }
+
+    return array_values(array_unique($course_ids));
 }
 
 function thorius_academy_sync_on_wc_product_saved(int $product_id): void
@@ -1283,6 +1298,264 @@ function thorius_academy_sync_handle_academy_update_user(WP_REST_Request $reques
     );
 }
 
+function thorius_academy_sync_find_course_by_academy_id(string $academy_id): int
+{
+    $academy_id = sanitize_text_field($academy_id);
+    if ($academy_id === '') {
+        return 0;
+    }
+
+    $ids = get_posts(array(
+        'post_type' => 'courses',
+        'post_status' => 'any',
+        'fields' => 'ids',
+        'posts_per_page' => 1,
+        'meta_key' => '_thorius_academy_id',
+        'meta_value' => $academy_id,
+    ));
+
+    return isset($ids[0]) ? (int) $ids[0] : 0;
+}
+
+function thorius_academy_sync_resolve_course_category_term(string $category): int
+{
+    $category = trim($category);
+    if ($category === '') {
+        return 0;
+    }
+
+    $term = get_term_by('slug', sanitize_title($category), 'course-category');
+    if ($term && !is_wp_error($term)) {
+        return (int) $term->term_id;
+    }
+
+    $term = get_term_by('name', $category, 'course-category');
+    if ($term && !is_wp_error($term)) {
+        return (int) $term->term_id;
+    }
+
+    return 0;
+}
+
+function thorius_academy_sync_set_course_featured_image_from_url(int $post_id, string $image_url): void
+{
+    $image_url = esc_url_raw(trim($image_url));
+    if ($post_id <= 0 || $image_url === '') {
+        return;
+    }
+
+    if (!function_exists('media_sideload_image')) {
+        require_once ABSPATH . 'wp-admin/includes/media.php';
+        require_once ABSPATH . 'wp-admin/includes/file.php';
+        require_once ABSPATH . 'wp-admin/includes/image.php';
+    }
+
+    $attachment_id = media_sideload_image($image_url, $post_id, null, 'id');
+    if (is_wp_error($attachment_id)) {
+        error_log('[Thorius Academy Sync] Featured image sideload failed: ' . $attachment_id->get_error_message());
+        return;
+    }
+
+    if (is_numeric($attachment_id) && (int) $attachment_id > 0) {
+        set_post_thumbnail((int) $post_id, (int) $attachment_id);
+    }
+}
+
+/**
+ * @return int|WP_Error
+ */
+function thorius_academy_sync_create_or_update_wc_product(
+    int $product_id,
+    string $title,
+    float $price,
+    ?float $sale_price,
+    bool $published
+)
+{
+    if (!function_exists('wc_get_product')) {
+        return new WP_Error('woocommerce_missing', 'WooCommerce etkin değil.');
+    }
+
+    $product = $product_id > 0 ? wc_get_product($product_id) : null;
+    if ($product_id > 0 && !$product) {
+        $product_id = 0;
+        $product = null;
+    }
+
+    if (!$product) {
+        $product = new WC_Product_Simple();
+    }
+
+    $product->set_name($title);
+    $product->set_status($published ? 'publish' : 'draft');
+    $product->set_virtual(true);
+    $product->set_regular_price((string) $price);
+
+    if ($sale_price !== null && $sale_price > 0 && $sale_price < $price) {
+        $product->set_sale_price((string) $sale_price);
+    } else {
+        $product->set_sale_price('');
+    }
+
+    $saved_id = $product->save();
+    if (!$saved_id) {
+        return new WP_Error('wc_product_save_failed', 'WooCommerce ürünü kaydedilemedi.');
+    }
+
+    return (int) $saved_id;
+}
+
+function thorius_academy_sync_handle_academy_sync_course(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    $academy_id = isset($payload['academy_course_id'])
+        ? sanitize_text_field((string) $payload['academy_course_id'])
+        : '';
+    $title = isset($payload['title']) ? sanitize_text_field((string) $payload['title']) : '';
+    $slug = isset($payload['slug']) ? sanitize_title((string) $payload['slug']) : '';
+    $description = isset($payload['description']) ? (string) $payload['description'] : '';
+    $cover_image_url = isset($payload['cover_image_url'])
+        ? esc_url_raw((string) $payload['cover_image_url'])
+        : '';
+    $category = isset($payload['category']) ? sanitize_text_field((string) $payload['category']) : '';
+    $price = isset($payload['price']) ? (float) $payload['price'] : 0.0;
+    $sale_price = isset($payload['sale_price']) && $payload['sale_price'] !== null
+        ? (float) $payload['sale_price']
+        : null;
+    $instructor_id = isset($payload['instructor_wp_user_id'])
+        ? absint($payload['instructor_wp_user_id'])
+        : 0;
+    $published = !empty($payload['published']);
+    $wp_course_id = isset($payload['wp_course_id']) ? absint($payload['wp_course_id']) : 0;
+
+    if ($academy_id === '' || $title === '' || $slug === '') {
+        return new WP_REST_Response(array('error' => 'Missing academy_course_id, title, or slug'), 400);
+    }
+
+    if (!post_type_exists('courses')) {
+        return new WP_REST_Response(array('error' => 'courses post type not found'), 500);
+    }
+
+    $course_id = 0;
+    if ($wp_course_id > 0) {
+        $existing_post = get_post($wp_course_id);
+        if ($existing_post && thorius_academy_sync_is_course_post($existing_post)) {
+            $course_id = $wp_course_id;
+        }
+    }
+
+    if ($course_id <= 0) {
+        $course_id = thorius_academy_sync_find_course_by_academy_id($academy_id);
+    }
+
+    $post_status = $published ? 'publish' : 'draft';
+    $post_content = $description !== '' ? wp_kses_post(wpautop($description)) : '';
+    $author_id = $instructor_id > 0 ? $instructor_id : get_current_user_id();
+
+    $post_data = array(
+        'post_type' => 'courses',
+        'post_title' => $title,
+        'post_name' => $slug,
+        'post_content' => $post_content,
+        'post_status' => $post_status,
+        'post_author' => $author_id > 0 ? $author_id : 1,
+    );
+
+    $is_update = $course_id > 0;
+    if ($is_update) {
+        $post_data['ID'] = $course_id;
+        $result = wp_update_post($post_data, true);
+    } else {
+        $result = wp_insert_post($post_data, true);
+    }
+
+    if (is_wp_error($result)) {
+        return new WP_REST_Response(
+            array('error' => $result->get_error_message()),
+            500
+        );
+    }
+
+    $course_id = (int) $result;
+    update_post_meta($course_id, '_thorius_academy_id', $academy_id);
+
+    $category_term_id = thorius_academy_sync_resolve_course_category_term($category);
+    if ($category_term_id > 0) {
+        wp_set_object_terms($course_id, array($category_term_id), 'course-category', false);
+    }
+
+    if ($cover_image_url !== '') {
+        thorius_academy_sync_set_course_featured_image_from_url($course_id, $cover_image_url);
+    }
+
+    $wc_product_id = null;
+    $existing_product_id = thorius_academy_sync_get_wc_product_id($course_id);
+
+    if ($price > 0) {
+        $product_result = thorius_academy_sync_create_or_update_wc_product(
+            $existing_product_id,
+            $title,
+            $price,
+            $sale_price,
+            $published
+        );
+
+        if (is_wp_error($product_result)) {
+            return new WP_REST_Response(
+                array('error' => $product_result->get_error_message()),
+                500
+            );
+        }
+
+        $wc_product_id = (int) $product_result;
+        update_post_meta($course_id, '_thorius_wc_product_id', $wc_product_id);
+    } else {
+        delete_post_meta($course_id, '_thorius_wc_product_id');
+        $wc_product_id = null;
+    }
+
+    $post = get_post($course_id);
+    if (!$post) {
+        return new WP_REST_Response(array('error' => 'Course post missing after save'), 500);
+    }
+
+    $event = thorius_academy_sync_resolve_event($post->post_status, $is_update, 'save');
+    thorius_academy_sync_queue_webhook($course_id, $event);
+
+    return new WP_REST_Response(
+        array(
+            'success' => true,
+            'wp_course_id' => $course_id,
+            'wc_product_id' => $wc_product_id,
+            'slug' => (string) $post->post_name,
+            'status' => (string) $post->post_status,
+        ),
+        200
+    );
+}
+
 function thorius_academy_sync_register_rest_routes(): void
 {
     register_rest_route(
@@ -1331,6 +1604,16 @@ function thorius_academy_sync_register_rest_routes(): void
         array(
             'methods' => 'POST',
             'callback' => 'thorius_academy_sync_handle_academy_update_user',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-sync-course',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_sync_course',
             'permission_callback' => '__return_true',
         )
     );

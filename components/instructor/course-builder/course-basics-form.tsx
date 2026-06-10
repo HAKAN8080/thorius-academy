@@ -6,6 +6,8 @@ import Image from "next/image";
 import { toast } from "sonner";
 import { saveCourseBasics } from "@/lib/actions/instructor-courses";
 import type { CourseBasicsInput, CoursesCache } from "@/types/instructor-course";
+import type { WPCategory } from "@/types/wordpress";
+import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import "@uiw/react-md-editor/markdown-editor.css";
@@ -21,11 +23,13 @@ const MarkdownEditor = dynamic(
 
 interface CourseBasicsFormProps {
   course: CoursesCache;
+  categories: WPCategory[];
 }
 
-export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
+export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) {
   const [form, setForm] = useState<CourseBasicsInput>({
     title: course.title,
+    course_slug: course.course_slug ?? "",
     subtitle: course.subtitle ?? "",
     description_md: course.description_md ?? "",
     cover_image_url: course.cover_image_url ?? "",
@@ -76,6 +80,38 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
               onChange={(e) => update("title", e.target.value)}
               required
             />
+          </div>
+
+          <div className="space-y-2">
+            <div className="flex items-center justify-between gap-3">
+              <Label htmlFor="course_slug">Kurs URL Adresi</Label>
+              <button
+                type="button"
+                className="text-xs font-medium text-[#D4AF37] hover:underline"
+                onClick={() =>
+                  update("course_slug", slugifyCourseTitle(form.title))
+                }
+              >
+                Başlıktan oluştur
+              </button>
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="shrink-0 text-sm text-primary-500">/kurslar/</span>
+              <Input
+                id="course_slug"
+                value={form.course_slug ?? ""}
+                onChange={(e) =>
+                  update(
+                    "course_slug",
+                    e.target.value
+                      .toLowerCase()
+                      .replace(/[^a-z0-9-]+/g, "-")
+                      .replace(/^-+|-+$/g, ""),
+                  )
+                }
+                placeholder="ornek-kurs-adi"
+              />
+            </div>
           </div>
 
           <div className="space-y-2">
@@ -205,11 +241,26 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
 
           <div className="space-y-2">
             <Label htmlFor="category">Kategori</Label>
-            <Input
+            <select
               id="category"
               value={form.category ?? ""}
               onChange={(e) => update("category", e.target.value)}
-            />
+              className="h-10 w-full rounded-md border border-primary-200 px-3 text-sm"
+              required
+            >
+              <option value="">Kategori seçin</option>
+              {categories.map((category) => (
+                <option key={category.id} value={category.name}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
+            {categories.length === 0 ? (
+              <p className="text-xs text-amber-700">
+                Kategori listesi yüklenemedi. Sayfayı yenileyin veya destek ekibiyle
+                iletişime geçin.
+              </p>
+            ) : null}
           </div>
 
           <div className="grid gap-3 sm:grid-cols-2">
@@ -234,6 +285,18 @@ export function CourseBasicsForm({ course }: CourseBasicsFormProps) {
               />
             </label>
           </div>
+
+          {form.published ? (
+            <p className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900">
+              Yayına almak için başlık, URL, kategori, açıklama, kapak görseli ve
+              müfredatta en az bir bölüm + ders gerekir. Eksik alan varsa kayıt
+              reddedilir.
+            </p>
+          ) : (
+            <p className="text-sm text-primary-600">
+              Kurs taslak olarak kalır; müfredat tamamlanana kadar yayına almayın.
+            </p>
+          )}
         </div>
 
         <StepNavButtons
