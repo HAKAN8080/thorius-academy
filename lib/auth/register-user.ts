@@ -1,4 +1,5 @@
 import { getEmailRedirectUrl } from "@/lib/auth/app-url";
+import { findAuthUserByEmail } from "@/lib/auth/find-user-by-email";
 import {
   isSignupEmailConfigured,
   sendSignupWelcomeEmail,
@@ -57,14 +58,10 @@ export function mapSignupAuthError(message: string): string {
   return "Kayıt oluşturulamadı. Lütfen tekrar deneyin.";
 }
 
-function isDuplicateSignupError(message: string): boolean {
-  return /already|registered|exists|duplicate/i.test(message);
-}
-
 function isRecoverableSignupError(message: string): boolean {
   const lower = message.toLowerCase();
   return (
-    isDuplicateSignupError(message) ||
+    /already|registered|exists|duplicate/i.test(message) ||
     /confirmation email|error sending|email.*send|mailer|smtp|user already/i.test(
       lower,
     )
@@ -125,19 +122,19 @@ async function sendSupabaseVerificationFallback(
   }
 }
 
-async function generateInviteLink(
+async function generateMagicLink(
   email: string,
   redirectTo: string,
 ): Promise<string | null> {
   const serviceKey = getSupabaseServiceRoleKey();
-  if (!serviceKey || !isSignupEmailConfigured()) {
+  if (!serviceKey) {
     return null;
   }
 
   try {
     const admin = getSupabaseAdmin();
     const { data, error } = await admin.auth.admin.generateLink({
-      type: "invite",
+      type: "magiclink",
       email: normalizeEmail(email),
       options: {
         redirectTo: getEmailRedirectUrl(redirectTo),
@@ -145,13 +142,13 @@ async function generateInviteLink(
     });
 
     if (error) {
-      logSignupFailure("generateLink.invite", error.message);
+      logSignupFailure("generateLink.magiclink", error.message);
       return null;
     }
 
     return data?.properties?.action_link ?? null;
   } catch (error) {
-    logSignupFailure("generateLink.invite.throw", error);
+    logSignupFailure("generateLink.magiclink.throw", error);
     return null;
   }
 }
@@ -163,7 +160,20 @@ async function deliverSignupEmail(
   const couponCode = getSignupCouponCode();
   const email = normalizeEmail(params.email);
   const fullName = params.fullName.trim();
-  const verificationLink = await generateInviteLink(email, params.redirectTo);
+
+  if (!isSignupEmailConfigured()) {
+    const fallbackSent = await sendSupabaseVerificationFallback(
+      email,
+      params.redirectTo,
+    );
+    return {
+      couponCode,
+      verificationEmailSent: fallbackSent,
+      recoveredPendingSignup: options?.recoveredPendingSignup,
+    };
+  }
+
+  const verificationLink = await generateMagicLink(email, params.redirectTo);
 
   if (!verificationLink) {
     const fallbackSent = await sendSupabaseVerificationFallback(
@@ -202,47 +212,44 @@ async function deliverSignupEmail(
   };
 }
 
-async function isExistingConfirmedAccount(
-  email: string,
-  password: string,
-): Promise<boolean> {
-  try {
-    const supabase = await createClient();
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email: normalizeEmail(email),
-      password,
-    });
-
-    if (error || !data.user) {
-      return false;
-    }
-
-    await supabase.auth.signOut();
-    return true;
-  } catch {
-    return false;
-  }
+async function finishSignup(
+  params: RegisterUserParams,
+  options?: { recoveredPendingSignup?: boolean },
+): Promise<RegisterUserResult> {
+  const emailResult = await deliverSignupEmail(params, options);
+  return {
+    ...emailResult,
+    couponCode: getSignupCouponCode(),
+  };
 }
 
-async function handleExistingOrPendingSignup(
+async function resolveExistingSignup(
   params: RegisterUserParams,
-): Promise<RegisterUserResult> {
-  const confirmed = await isExistingConfirmedAccount(
-    params.email,
-    params.password,
-  );
+): Promise<RegisterUserResult | null> {
+  if (!getSupabaseServiceRoleKey()) {
+    return null;
+  }
 
-  if (confirmed) {
+  const existing = await findAuthUserByEmail(params.email);
+  if (!existing) {
+    return null;
+  }
+
+  if (existing.email_confirmed_at) {
     throw new SignupError(mapSignupAuthError("already registered"));
   }
 
-  return deliverSignupEmail(params, { recoveredPendingSignup: true });
+  await safeEnsureUserProfile(existing.id, {
+    email: params.email,
+    fullName: params.fullName.trim(),
+  });
+
+  return finishSignup(params, { recoveredPendingSignup: true });
 }
 
 export async function registerUser(
   params: RegisterUserParams,
 ): Promise<RegisterUserResult> {
-  const couponCode = getSignupCouponCode();
   const email = normalizeEmail(params.email);
   const fullName = params.fullName.trim();
 
@@ -265,46 +272,46 @@ export async function registerUser(
     },
   });
 
+  const userId = data.user?.id ?? null;
+
+  if (userId) {
+    await safeEnsureUserProfile(userId, { email, fullName });
+  }
+
+  if (!error && userId) {
+    return finishSignup(params);
+  }
+
   if (error) {
     logSignupFailure("auth.signUp", error.message);
 
-    if (isRecoverableSignupError(error.message)) {
-      return handleExistingOrPendingSignup(params);
+    if (userId || isRecoverableSignupError(error.message)) {
+      return finishSignup(params, { recoveredPendingSignup: true });
+    }
+
+    const existingResult = await resolveExistingSignup(params);
+    if (existingResult) {
+      return existingResult;
     }
 
     throw new SignupError(mapSignupAuthError(error.message));
   }
 
-  if (data.user?.id) {
-    await safeEnsureUserProfile(data.user.id, { email, fullName });
+  const existingResult = await resolveExistingSignup(params);
+  if (existingResult) {
+    return existingResult;
   }
 
-  // Supabase e-posta gizleme: kayitli e-postada bos identities doner.
-  if (data.user && Array.isArray(data.user.identities) && data.user.identities.length === 0) {
-    return handleExistingOrPendingSignup(params);
-  }
-
-  if (isSignupEmailConfigured() && getSupabaseServiceRoleKey()) {
-    return deliverSignupEmail(params);
-  }
-
-  return {
-    couponCode,
-    verificationEmailSent: true,
-    recoveredPendingSignup: false,
-  };
+  throw new SignupError("Kayıt oluşturulamadı. Lütfen tekrar deneyin.");
 }
 
 export async function resendSignupWelcomeEmail(
   email: string,
   redirectTo: string,
 ): Promise<{ couponCode: string; sent: boolean }> {
-  const couponCode = getSignupCouponCode();
-  const normalizedEmail = normalizeEmail(email);
-
-  const result = await deliverSignupEmail(
+  const result = await finishSignup(
     {
-      email: normalizedEmail,
+      email,
       password: "unused-resend",
       fullName: "",
       redirectTo,
@@ -316,5 +323,5 @@ export async function resendSignupWelcomeEmail(
     throw new Error("RESEND_FAILED");
   }
 
-  return { couponCode, sent: true };
+  return { couponCode: result.couponCode, sent: true };
 }

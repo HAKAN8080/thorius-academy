@@ -46,6 +46,22 @@ export async function signIn(
     });
 
     if (error) {
+      const message = error.message.toLowerCase();
+      if (message.includes("email not confirmed")) {
+        return {
+          error:
+            "E-posta adresinizi henüz doğrulamadınız. Gelen kutunuzdaki bağlantıya tıklayın.",
+        };
+      }
+      if (
+        message.includes("invalid login credentials") ||
+        message.includes("invalid credentials")
+      ) {
+        return {
+          error:
+            "E-posta veya parola hatalı. Kayıt sonrası doğrulama mailine tıkladıysanız aynı parolayı kullanın; gerekirse parola sıfırlayın.",
+        };
+      }
       return { error: "Giriş başarısız. Bilgilerinizi kontrol edin." };
     }
 
@@ -116,8 +132,8 @@ export async function signUp(
       successMessage: registration.verificationEmailSent
         ? registration.recoveredPendingSignup
           ? "Bu e-posta için bekleyen kayıt bulundu. Doğrulama linki ve %20 indirim kuponunuz tekrar gönderildi."
-          : "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz tek e-postada gönderildi."
-        : "Hesabınız oluşturuldu. Kupon kodunuz aşağıda; doğrulama e-postası için tekrar gönderi deneyin.",
+          : "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz e-postada — gelmezse aşağıdaki kuponu kullanın."
+        : "Hesabınız oluşturuldu. Kupon kodunuz aşağıda. Doğrulama e-postası gelmediyse Tekrar gönder'e basın.",
     };
   } catch {
     return { error: "Kayıt sırasında beklenmeyen bir hata oluştu." };
