@@ -13,6 +13,10 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.6.2 — Odeme sonrasi yonlendirme
+- PayTR / WooCommerce teşekkür sayfasindan otomatik **academy.thorius.com.tr/kurslar** yonlendirmesi
+- Dis domain icin `allowed_redirect_hosts`; JS + link yedegi
+
 ### v1.6.1 — PayTR aciklama
 - Taksit aciklama metni kaldirildi; yalnizca **Kredi/Banka Karti (PayTR)** etiketi
 
@@ -76,6 +80,7 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 - Academy'den `Hemen Satın Al` → `?add-to-cart=...&billing_email=...`
 - Sepet atlanır → doğrudan `/odeme/`
 - Ödeme sonrası webhook ile Academy kaydı açılır
+- Teşekkür sayfasından **academy.thorius.com.tr/kurslar** adresine yönlendirilir
 
 ### UI
 - Kupon kutusu ikon düzeltmesi

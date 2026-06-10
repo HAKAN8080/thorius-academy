@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.6.1
+ * Version: 1.6.2
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.6.1');
+define('THORIUS_CHECKOUT_VERSION', '1.6.2');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -384,6 +384,101 @@ function thorius_checkout_catalog_url(): string
 }
 add_filter('woocommerce_return_to_shop_redirect', 'thorius_checkout_catalog_url');
 add_filter('woocommerce_continue_shopping_redirect', 'thorius_checkout_catalog_url');
+
+/**
+ * Academy disi yonlendirmeler icin guvenli host listesi.
+ *
+ * @param list<string> $hosts
+ * @return list<string>
+ */
+function thorius_checkout_allowed_redirect_hosts(array $hosts): array
+{
+    $hosts[] = 'academy.thorius.com.tr';
+
+    return $hosts;
+}
+add_filter('allowed_redirect_hosts', 'thorius_checkout_allowed_redirect_hosts');
+
+/**
+ * PayTR / odeme sonrasi teşekkür sayfasinda Academy'ye yonlendir.
+ */
+function thorius_checkout_get_order_received_order(): ?WC_Order
+{
+    if (!function_exists('is_order_received_page') || !is_order_received_page()) {
+        return null;
+    }
+
+    global $wp;
+    $order_id = absint($wp->query_vars['order-received'] ?? 0);
+    if ($order_id <= 0) {
+        $order_id = absint(get_query_var('order-received'));
+    }
+    if ($order_id <= 0) {
+        return null;
+    }
+
+    $order = wc_get_order($order_id);
+    if (!$order instanceof WC_Order) {
+        return null;
+    }
+
+    $order_key = isset($_GET['key']) ? wc_clean(wp_unslash($_GET['key'])) : '';
+    if ($order_key === '' || !$order->key_is_valid($order_key)) {
+        return null;
+    }
+
+    return $order;
+}
+
+function thorius_checkout_should_redirect_after_payment(WC_Order $order): bool
+{
+    return !$order->has_status(array('failed', 'cancelled', 'refunded'));
+}
+
+function thorius_checkout_redirect_order_received(): void
+{
+    if (is_admin() || wp_doing_ajax() || wp_doing_cron()) {
+        return;
+    }
+
+    $order = thorius_checkout_get_order_received_order();
+    if (!$order || !thorius_checkout_should_redirect_after_payment($order)) {
+        return;
+    }
+
+    wp_safe_redirect(thorius_checkout_catalog_url());
+    exit;
+}
+add_action('template_redirect', 'thorius_checkout_redirect_order_received', 15);
+
+/**
+ * Sunucu yonlendirmesi calismazsa (onbellek vb.) teşekkür sayfasinda yedek link + JS.
+ */
+function thorius_checkout_thankyou_redirect_fallback(int $order_id): void
+{
+    $order = wc_get_order($order_id);
+    if (!$order instanceof WC_Order || !thorius_checkout_should_redirect_after_payment($order)) {
+        return;
+    }
+
+    $catalog_url = thorius_checkout_catalog_url();
+    $link = '<a href="' . esc_url($catalog_url) . '">' .
+        esc_html__('Kurslara dön', 'thorius-checkout') .
+        '</a>';
+
+    echo '<p class="thorius-thankyou-redirect">' .
+        sprintf(
+            /* translators: %s: link to Academy course catalog */
+            esc_html__('Ödemeniz alındı. Kurslarınıza yönlendiriliyorsunuz… %s', 'thorius-checkout'),
+            $link
+        ) .
+        '</p>';
+
+    echo '<script>window.setTimeout(function(){ window.location.href=' .
+        wp_json_encode($catalog_url) .
+        '; }, 1500);</script>';
+}
+add_action('woocommerce_thankyou', 'thorius_checkout_thankyou_redirect_fallback', 5);
 
 /**
  * add-to-cart istegi magaza/urun sayfasina dusmesin; dogrudan odemeye git.
