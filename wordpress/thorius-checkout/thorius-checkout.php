@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.5.2
+ * Version: 1.5.3
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.5.2');
+define('THORIUS_CHECKOUT_VERSION', '1.5.3');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
@@ -341,14 +341,10 @@ function thorius_checkout_redirect_add_to_cart_to_checkout(): void
 add_action('template_redirect', 'thorius_checkout_redirect_add_to_cart_to_checkout', 4);
 
 /**
- * Sepete ekleme hatasinda magaza yerine odeme veya kurs listesi.
+ * Sepete ekleme hatasinda Academy kurs listesine don.
  */
 function thorius_checkout_cart_redirect_after_error(string $url): string
 {
-    if (function_exists('wc_get_checkout_url')) {
-        return wc_get_checkout_url();
-    }
-
     return thorius_checkout_catalog_url();
 }
 add_filter('woocommerce_cart_redirect_after_error', 'thorius_checkout_cart_redirect_after_error', 20);

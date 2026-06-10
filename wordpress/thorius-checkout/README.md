@@ -13,6 +13,9 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.5.3 — Academy /kurslar
+- Tum "magazaya don" ve hata yonlendirmeleri: **https://academy.thorius.com.tr/kurslar**
+
 ### v1.5.2 — Magaza yonlendirmesi kaldirildi
 - Bos sepet / hata sonrasi magaza yerine **academy.thorius.com.tr/kurslar**
 - `?add-to-cart=` magaza sayfasina duserse otomatik `/odeme/` ye yonlenir
