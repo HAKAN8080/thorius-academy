@@ -5,6 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { requireCourseCacheAccess } from "@/lib/instructor/course-cache-access";
 import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
+import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
   BuilderLesson,
   BuilderLessonInput,
@@ -330,11 +331,6 @@ export async function saveBuilderLesson(
     }
 
     const admin = getSupabaseAdmin();
-    const totalSeconds = combineDuration(
-      input.duration_hours ?? 0,
-      input.duration_minutes ?? 0,
-      input.duration_seconds ?? 0,
-    );
 
     const payload: Record<string, unknown> = {
       title: input.title.trim(),
@@ -363,10 +359,21 @@ export async function saveBuilderLesson(
       payload.video_type = parsed.video_type;
       payload.content_md = null;
       payload.description = null;
-      payload.duration_seconds = totalSeconds || null;
-      payload.duration_minutes = totalSeconds
-        ? Math.max(1, Math.round(totalSeconds / 60))
+
+      const detectedSeconds = parsed.video_url
+        ? await resolveVideoDurationSeconds(parsed)
         : null;
+      const manualSeconds = combineDuration(
+        input.duration_hours ?? 0,
+        input.duration_minutes ?? 0,
+        input.duration_seconds ?? 0,
+      );
+      const totalSeconds = detectedSeconds ?? (manualSeconds > 0 ? manualSeconds : null);
+
+      if (totalSeconds != null) {
+        payload.duration_seconds = totalSeconds;
+        payload.duration_minutes = Math.max(1, Math.round(totalSeconds / 60));
+      }
     }
 
     const { data, error } = await admin

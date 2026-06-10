@@ -67,7 +67,6 @@ export function LessonEditForm({
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "text">("video");
   const [videoUrl, setVideoUrl] = useState("");
-  const [durationMinutes, setDurationMinutes] = useState("");
   const [contentMd, setContentMd] = useState("");
   const [isFreePreview, setIsFreePreview] = useState(false);
   const [published, setPublished] = useState(true);
@@ -80,9 +79,6 @@ export function LessonEditForm({
     setTitle(lesson.title);
     setType(lesson.type);
     setVideoUrl(lesson.video_url ?? "");
-    setDurationMinutes(
-      lesson.duration_minutes ? String(lesson.duration_minutes) : "",
-    );
     setContentMd(lesson.content_md ?? "");
     setIsFreePreview(lesson.is_free_preview);
     setPublished(lesson.published);
@@ -110,10 +106,6 @@ export function LessonEditForm({
       title,
       type,
       video_url: type === "video" ? videoUrl : null,
-      duration_minutes:
-        type === "video" && durationMinutes
-          ? Number(durationMinutes)
-          : null,
       content_md: type === "text" ? contentMd : null,
       is_free_preview: isFreePreview,
       published,
@@ -173,19 +165,9 @@ export function LessonEditForm({
                 placeholder="YouTube, Vimeo veya MP4 bağlantısı"
                 className="border-primary-200"
               />
-            </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="duration-minutes">Süre (dakika)</Label>
-              <Input
-                id="duration-minutes"
-                type="number"
-                min={1}
-                value={durationMinutes}
-                onChange={(event) => setDurationMinutes(event.target.value)}
-                placeholder="Örn. 12"
-                className="border-primary-200"
-              />
+              <p className="text-xs text-primary-500">
+                Süre kayıt sırasında video kaynağından otomatik hesaplanır.
+              </p>
             </div>
           </>
         ) : (

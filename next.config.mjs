@@ -1,4 +1,17 @@
 /** @type {import('next').NextConfig} */
+const supabaseHostname = (() => {
+  const raw = process.env.NEXT_PUBLIC_SUPABASE_URL?.trim();
+  if (!raw) {
+    return null;
+  }
+
+  try {
+    return new URL(raw).hostname;
+  } catch {
+    return null;
+  }
+})();
+
 const nextConfig = {
   experimental: {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
@@ -25,6 +38,15 @@ const nextConfig = {
         hostname: "avrupa-thorius.b-cdn.net",
         pathname: "/**",
       },
+      ...(supabaseHostname
+        ? [
+            {
+              protocol: "https",
+              hostname: supabaseHostname,
+              pathname: "/storage/v1/object/public/**",
+            },
+          ]
+        : []),
     ],
   },
 };

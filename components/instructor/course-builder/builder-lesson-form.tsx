@@ -2,12 +2,13 @@
 
 import { useEffect, useState } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { Trash2 } from "lucide-react";
 import type { BuilderLesson, BuilderLessonInput } from "@/types/instructor-course";
+import { uploadLessonFeaturedImage } from "@/lib/actions/instructor-media";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/instructor/image-upload-field";
 import "@uiw/react-md-editor/markdown-editor.css";
 
 const MarkdownEditor = dynamic(
@@ -50,9 +51,6 @@ export function BuilderLessonForm({
   const [title, setTitle] = useState("");
   const [type, setType] = useState<"video" | "text">("video");
   const [videoUrl, setVideoUrl] = useState("");
-  const [hours, setHours] = useState("0");
-  const [minutes, setMinutes] = useState("0");
-  const [seconds, setSeconds] = useState("0");
   const [contentMd, setContentMd] = useState("");
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
@@ -65,9 +63,6 @@ export function BuilderLessonForm({
     setTitle(lesson.title);
     setType(lesson.type);
     setVideoUrl(lesson.video_url ?? "");
-    setHours(String(lesson.duration_hours));
-    setMinutes(String(lesson.duration_minutes));
-    setSeconds(String(lesson.duration_seconds));
     setContentMd(lesson.content_md ?? "");
     setFeaturedImageUrl(lesson.featured_image_url ?? "");
     setAttachmentUrl(lesson.attachment_url ?? "");
@@ -103,9 +98,6 @@ export function BuilderLessonForm({
       featured_image_url: featuredImageUrl || null,
       attachment_url: attachmentUrl || null,
       attachment_name: attachmentName || null,
-      duration_hours: Number(hours) || 0,
-      duration_minutes: Number(minutes) || 0,
-      duration_seconds: Number(seconds) || 0,
       is_free_preview: isFreePreview,
       published,
     });
@@ -169,36 +161,11 @@ export function BuilderLessonForm({
                 id="video-url"
                 value={videoUrl}
                 onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="Bunny CDN URL"
+                placeholder="YouTube, Vimeo veya Bunny CDN URL"
               />
-            </div>
-            <div className="space-y-2">
-              <Label>Süre</Label>
-              <div className="grid grid-cols-3 gap-3">
-                <Input
-                  type="number"
-                  min={0}
-                  value={hours}
-                  onChange={(e) => setHours(e.target.value)}
-                  placeholder="Saat"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  max={59}
-                  value={minutes}
-                  onChange={(e) => setMinutes(e.target.value)}
-                  placeholder="Dakika"
-                />
-                <Input
-                  type="number"
-                  min={0}
-                  max={59}
-                  value={seconds}
-                  onChange={(e) => setSeconds(e.target.value)}
-                  placeholder="Saniye"
-                />
-              </div>
+              <p className="text-xs text-primary-500">
+                Süre kayıt sırasında video kaynağından otomatik hesaplanır.
+              </p>
             </div>
           </>
         ) : (
@@ -213,24 +180,16 @@ export function BuilderLessonForm({
           </div>
         )}
 
-        <div className="space-y-2">
-          <Label htmlFor="featured">Kapak Görseli URL</Label>
-          <Input
-            id="featured"
-            value={featuredImageUrl}
-            onChange={(e) => setFeaturedImageUrl(e.target.value)}
-          />
-          {featuredImageUrl ? (
-            <div className="relative mt-2 h-24 w-40 overflow-hidden rounded-lg border border-primary-100">
-              <Image
-                src={featuredImageUrl}
-                alt="Kapak önizleme"
-                fill
-                className="object-cover"
-              />
-            </div>
-          ) : null}
-        </div>
+        <ImageUploadField
+          label="Kapak Görseli"
+          value={featuredImageUrl || null}
+          onChange={(url) => setFeaturedImageUrl(url ?? "")}
+          onUpload={(uploadFormData) =>
+            uploadLessonFeaturedImage(courseCacheId, lesson.id, uploadFormData)
+          }
+          disabled={isPending}
+          previewAlt="Ders kapak önizleme"
+        />
 
         <div className="space-y-2">
           <Label htmlFor="attachment">Ek Dosya URL</Label>

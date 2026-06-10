@@ -2,14 +2,15 @@
 
 import { useState, useTransition } from "react";
 import dynamic from "next/dynamic";
-import Image from "next/image";
 import { toast } from "sonner";
 import { saveCourseBasics } from "@/lib/actions/instructor-courses";
+import { uploadCourseCoverImage } from "@/lib/actions/instructor-media";
 import type { CourseBasicsInput, CoursesCache } from "@/types/instructor-course";
 import type { WPCategory } from "@/types/wordpress";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { ImageUploadField } from "@/components/instructor/image-upload-field";
 import "@uiw/react-md-editor/markdown-editor.css";
 import {
   CourseBuilderNav,
@@ -132,24 +133,16 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
             />
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="cover">Kapak Görseli URL</Label>
-            <Input
-              id="cover"
-              value={form.cover_image_url ?? ""}
-              onChange={(e) => update("cover_image_url", e.target.value)}
-            />
-            {form.cover_image_url ? (
-              <div className="relative mt-2 h-40 w-full max-w-md overflow-hidden rounded-xl border border-primary-100">
-                <Image
-                  src={form.cover_image_url}
-                  alt="Kapak önizleme"
-                  fill
-                  className="object-cover"
-                />
-              </div>
-            ) : null}
-          </div>
+          <ImageUploadField
+            label="Kapak Görseli"
+            value={form.cover_image_url ?? null}
+            onChange={(url) => update("cover_image_url", url ?? "")}
+            onUpload={(uploadFormData) =>
+              uploadCourseCoverImage(course.id, uploadFormData)
+            }
+            disabled={isPending}
+            previewAlt="Kapak önizleme"
+          />
 
           <div className="space-y-2">
             <Label htmlFor="intro">Tanıtım Videosu URL</Label>

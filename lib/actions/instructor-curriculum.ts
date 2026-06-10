@@ -8,6 +8,7 @@ import {
   verifyInstructorCourseAccess,
 } from "@/lib/instructor/curriculum-access";
 import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
+import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
   CurriculumCourse,
   CurriculumLesson,
@@ -199,12 +200,20 @@ export async function saveCurriculumLesson(
     payload.content_md = null;
     payload.description = null;
 
-    const minutes =
+    const detectedSeconds = videoUrl
+      ? await resolveVideoDurationSeconds(parsed)
+      : null;
+    const manualMinutes =
       typeof input.duration_minutes === "number" && input.duration_minutes > 0
         ? Math.floor(input.duration_minutes)
         : null;
-    payload.duration_minutes = minutes;
-    payload.duration_seconds = minutes ? minutes * 60 : null;
+    const totalSeconds =
+      detectedSeconds ?? (manualMinutes ? manualMinutes * 60 : null);
+
+    if (totalSeconds != null) {
+      payload.duration_seconds = totalSeconds;
+      payload.duration_minutes = Math.max(1, Math.round(totalSeconds / 60));
+    }
   }
 
   let query = admin.from("lessons").update(payload).eq("course_id", input.course_id);
