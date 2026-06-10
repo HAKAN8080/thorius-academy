@@ -4,6 +4,7 @@ export interface CheckoutCustomer {
   email: string;
   firstName?: string | null;
   lastName?: string | null;
+  phone?: string | null;
 }
 
 export function splitFullName(fullName: string): {
@@ -42,6 +43,9 @@ export function buildWooCommerceCheckoutUrl(
   }
   if (customer?.lastName) {
     url.searchParams.set("billing_last_name", customer.lastName);
+  }
+  if (customer?.phone) {
+    url.searchParams.set("billing_phone", customer.phone);
   }
 
   return url.toString();

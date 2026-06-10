@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.5.3
+ * Version: 1.6.1
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,9 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.5.3');
+define('THORIUS_CHECKOUT_VERSION', '1.6.1');
+define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
+define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
@@ -25,6 +27,7 @@ function thorius_checkout_visible_billing_fields(): array
         'billing_first_name',
         'billing_last_name',
         'billing_email',
+        'billing_phone',
     );
 }
 
@@ -41,12 +44,11 @@ function thorius_checkout_hidden_billing_defaults(): array
         'billing_address_1' => 'Dijital urun',
         'billing_postcode' => '34000',
         'billing_state' => 'TR34',
-        'billing_phone' => '5000000000',
     );
 }
 
 /**
- * Yalnizca ad, soyad ve e-posta alanlarini goster.
+ * Ad, soyad, e-posta ve telefon alanlarini goster.
  */
 function thorius_checkout_billing_fields(array $fields): array
 {
@@ -76,6 +78,14 @@ function thorius_checkout_billing_fields(array $fields): array
     $fields['billing']['billing_email']['required'] = true;
     $fields['billing']['billing_email']['class'] = array('form-row-wide');
     $fields['billing']['billing_email']['label'] = __('E-posta adresi', 'thorius-checkout');
+
+    $fields['billing']['billing_phone']['priority'] = 40;
+    $fields['billing']['billing_phone']['required'] = true;
+    $fields['billing']['billing_phone']['class'] = array('form-row-wide');
+    $fields['billing']['billing_phone']['label'] = __('Telefon', 'thorius-checkout');
+    $fields['billing']['billing_phone']['type'] = 'tel';
+    $fields['billing']['billing_phone']['placeholder'] = '05XX XXX XX XX';
+    $fields['billing']['billing_phone']['autocomplete'] = 'tel';
 
     return $fields;
 }
@@ -204,13 +214,12 @@ function thorius_checkout_clear_hidden_billing_errors($data, $errors): void
             (
                 stripos($message, 'fatura') !== false ||
                 stripos($message, 'billing') !== false ||
-                stripos($message, 'telefon') !== false ||
                 stripos($message, 'adres') !== false ||
                 stripos($message, 'vergi') !== false ||
                 stripos($message, 'sirket') !== false ||
                 stripos($message, 'company') !== false
             ) &&
-            !preg_match('/(ad|soyad|e-posta|email|first name|last name)/iu', $message)
+            !preg_match('/(ad|soyad|e-posta|email|telefon|phone|first name|last name)/iu', $message)
         ) {
             $errors->remove($code);
         }
@@ -255,10 +264,78 @@ add_filter('woocommerce_ship_to_different_address_checked', '__return_false');
 function thorius_checkout_billing_required_note(): void
 {
     echo '<p class="thorius-checkout-required-note">' .
-        esc_html__('Sadece ad, soyad ve e-posta yeterlidir. Zorunlu alanlar * ile isaretlenmistir.', 'thorius-checkout') .
+        esc_html__('Sadece ad, soyad, e-posta ve telefon yeterlidir. Zorunlu alanlar * ile isaretlenmistir.', 'thorius-checkout') .
         '</p>';
 }
 add_action('woocommerce_before_checkout_billing_form', 'thorius_checkout_billing_required_note', 5);
+
+/**
+ * @param 'terms'|'privacy' $type
+ */
+function thorius_checkout_policy_url(string $type): string
+{
+    if ($type === 'terms') {
+        $page_id = function_exists('wc_terms_and_conditions_page_id') ? (int) wc_terms_and_conditions_page_id() : 0;
+        $fallback = THORIUS_CHECKOUT_TERMS_FALLBACK_URL;
+    } else {
+        $page_id = function_exists('wc_privacy_policy_page_id') ? (int) wc_privacy_policy_page_id() : 0;
+        $fallback = THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL;
+    }
+
+    if ($page_id > 0) {
+        $url = get_permalink($page_id);
+        if (is_string($url) && $url !== '') {
+            return $url;
+        }
+    }
+
+    return $fallback;
+}
+
+/**
+ * Ayri gizlilik paragrafi yerine sartlar onay kutusunda birlestir.
+ */
+function thorius_checkout_remove_privacy_policy_text(): void
+{
+    remove_action('woocommerce_checkout_terms_and_conditions', 'wc_checkout_privacy_policy_text', 20);
+}
+add_action('woocommerce_init', 'thorius_checkout_remove_privacy_policy_text');
+
+/**
+ * Sartlar onay metni — cumle basi buyuk, geri kalan kucuk harf.
+ */
+function thorius_checkout_terms_checkbox_text(): string
+{
+    $terms_link = '<a href="' . esc_url(thorius_checkout_policy_url('terms')) .
+        '" class="thorius-policy-link" target="_blank" rel="noopener noreferrer">şartlar ve koşullar</a>';
+    $privacy_link = '<a href="' . esc_url(thorius_checkout_policy_url('privacy')) .
+        '" class="thorius-policy-link" target="_blank" rel="noopener noreferrer">gizlilik ilkesi</a>';
+
+    return sprintf(
+        'Web sitesinin %1$s sayfasını okudum ve kabul ediyorum; kişisel verilerim sipariş işleme ve %2$s kapsamında kullanılacaktır.',
+        $terms_link,
+        $privacy_link
+    );
+}
+add_filter('woocommerce_get_terms_and_conditions_checkbox_text', 'thorius_checkout_terms_checkbox_text');
+
+/**
+ * Fatura kutusunun altinda PayTR guven rozetı.
+ */
+function thorius_checkout_paytr_trust_badge(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return;
+    }
+
+    $logo_url = THORIUS_CHECKOUT_URL . 'assets/paytr-logo.png';
+
+    echo '<div class="thorius-paytr-trust">' .
+        '<img src="' . esc_url($logo_url) . '" alt="PayTR" width="140" height="36" loading="lazy" decoding="async" />' .
+        '<p>' . esc_html__('256-bit SSL ile güvenli ödeme · PayTR altyapısı', 'thorius-checkout') . '</p>' .
+        '</div>';
+}
+add_action('woocommerce_after_checkout_billing_form', 'thorius_checkout_paytr_trust_badge', 18);
 
 /**
  * Eski siparislerdeki vergi numarasini admin ekraninda goster.
@@ -362,6 +439,10 @@ function thorius_checkout_translate_shop_strings(string $translated, string $tex
         return __('Kurslara dön', 'thorius-checkout');
     }
 
+    if ($text === 'Proceed to checkout' || $translated === 'Ödeme sayfasına git') {
+        return __('ÖDEME', 'thorius-checkout');
+    }
+
     return $translated;
 }
 add_filter('gettext', 'thorius_checkout_translate_shop_strings', 20, 3);
@@ -435,6 +516,48 @@ function thorius_checkout_force_single_quantity($quantity, int $product_id): int
 add_filter('woocommerce_add_to_cart_quantity', 'thorius_checkout_force_single_quantity', 20, 2);
 
 /**
+ * Sepette dijital urun adedi duzenlenemez — her zaman 1.
+ *
+ * @param string $product_quantity
+ * @param string $cart_item_key
+ * @param array<string, mixed> $cart_item
+ */
+function thorius_checkout_cart_item_quantity(string $product_quantity, string $cart_item_key, array $cart_item): string
+{
+    $product = $cart_item['data'] ?? null;
+    if (!is_a($product, 'WC_Product') || !$product->is_virtual()) {
+        return $product_quantity;
+    }
+
+    return '<span class="thorius-cart-qty-fixed" aria-label="' .
+        esc_attr__('Adet: 1', 'thorius-checkout') .
+        '">1</span>';
+}
+add_filter('woocommerce_cart_item_quantity', 'thorius_checkout_cart_item_quantity', 20, 3);
+
+/**
+ * Form gonderiminde veya hesaplamada adeti 1'e sabitle.
+ */
+function thorius_checkout_normalize_cart_quantities($cart): void
+{
+    if (!is_a($cart, 'WC_Cart')) {
+        return;
+    }
+
+    foreach ($cart->get_cart() as $cart_item_key => $cart_item) {
+        $product = $cart_item['data'] ?? null;
+        if (!is_a($product, 'WC_Product') || !$product->is_virtual()) {
+            continue;
+        }
+
+        if ((int) ($cart_item['quantity'] ?? 0) !== 1) {
+            $cart->set_quantity($cart_item_key, 1, false);
+        }
+    }
+}
+add_action('woocommerce_before_calculate_totals', 'thorius_checkout_normalize_cart_quantities', 1);
+
+/**
  * Bos sepette kalan eski "zaten sepetinizde" uyarisini gizle.
  */
 function thorius_checkout_filter_stale_duplicate_notices($notices): array
@@ -469,20 +592,29 @@ function thorius_checkout_filter_stale_duplicate_notices($notices): array
 add_filter('woocommerce_get_notices', 'thorius_checkout_filter_stale_duplicate_notices', 20);
 
 /**
- * Odeme sayfasinda sepete donus linki.
+ * Sepet sayfasindaki odeme butonu metni.
  */
-function thorius_checkout_edit_cart_link(): void
+function thorius_checkout_proceed_button_text(): string
+{
+    return __('ÖDEME', 'thorius-checkout');
+}
+add_filter('woocommerce_proceed_to_checkout_button_text', 'thorius_checkout_proceed_button_text');
+
+/**
+ * Fatura detaylari kutusunun altinda sepete donus butonu.
+ */
+function thorius_checkout_edit_cart_button(): void
 {
     if (!function_exists('wc_get_cart_url') || !function_exists('WC') || !WC()->cart || WC()->cart->is_empty()) {
         return;
     }
 
-    echo '<p class="thorius-edit-cart-link">' .
-        '<a href="' . esc_url(wc_get_cart_url()) . '">' .
-        esc_html__('Sepeti düzenle', 'thorius-checkout') .
-        '</a></p>';
+    echo '<div class="thorius-edit-cart-wrap">' .
+        '<a href="' . esc_url(wc_get_cart_url()) . '" class="thorius-edit-cart-btn">' .
+        esc_html__('Sepeti güncelle', 'thorius-checkout') .
+        '</a></div>';
 }
-add_action('woocommerce_checkout_before_order_review_heading', 'thorius_checkout_edit_cart_link', 5);
+add_action('woocommerce_after_checkout_billing_form', 'thorius_checkout_edit_cart_button', 15);
 
 /**
  * Sepeti atla — urun eklendikten sonra dogrudan odeme sayfasina yonlendir.
@@ -496,6 +628,28 @@ function thorius_checkout_add_to_cart_redirect(string $url): string
     return wc_get_checkout_url();
 }
 add_filter('woocommerce_add_to_cart_redirect', 'thorius_checkout_add_to_cart_redirect');
+
+/**
+ * PayTR taksit aciklama metnini gosterme — yalnizca odeme yontemi etiketi kalsin.
+ *
+ * @param array<string, WC_Payment_Gateway> $gateways
+ * @return array<string, WC_Payment_Gateway>
+ */
+function thorius_checkout_clear_paytr_description(array $gateways): array
+{
+    foreach ($gateways as $gateway_id => $gateway) {
+        if (stripos((string) $gateway_id, 'paytr') === false) {
+            continue;
+        }
+
+        if (is_object($gateway) && property_exists($gateway, 'description')) {
+            $gateway->description = '';
+        }
+    }
+
+    return $gateways;
+}
+add_filter('woocommerce_available_payment_gateways', 'thorius_checkout_clear_paytr_description', 20);
 
 /**
  * Checkout CSS — kupon ikonu, PayTR metni, kompakt layout.

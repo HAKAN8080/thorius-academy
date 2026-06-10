@@ -111,7 +111,9 @@ export async function signUp(
       registeredEmail: email,
       couponCode: registration.couponCode,
       successMessage: registration.verificationEmailSent
-        ? "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz tek e-postada gönderildi."
+        ? registration.recoveredPendingSignup
+          ? "Bu e-posta için bekleyen kayıt bulundu. Doğrulama linki ve %20 indirim kuponunuz tekrar gönderildi."
+          : "Hesabınız oluşturuldu. Doğrulama linki ve %20 indirim kuponunuz tek e-postada gönderildi."
         : "Hesabınız oluşturuldu. Kupon kodunuz aşağıda; doğrulama e-postası için tekrar gönderi deneyin.",
     };
   } catch {

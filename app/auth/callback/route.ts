@@ -2,6 +2,10 @@ import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
 import { safeNextPath } from "@/lib/auth/app-url";
+import {
+  getSupabasePublishableKey,
+  getSupabaseUrl,
+} from "@/lib/supabase/env";
 
 const VERIFICATION_ERROR =
   "Doğrulama başarısız, lütfen tekrar deneyin.";
@@ -18,23 +22,28 @@ export async function GET(request: Request) {
       );
     }
 
+    const supabaseUrl = getSupabaseUrl();
+    const publishableKey = getSupabasePublishableKey();
+
+    if (!supabaseUrl || !publishableKey) {
+      return NextResponse.redirect(
+        `${requestUrl.origin}/giris?error=${encodeURIComponent(VERIFICATION_ERROR)}`
+      );
+    }
+
     const cookieStore = await cookies();
-    const supabase = createServerClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
-      {
-        cookies: {
-          getAll() {
-            return cookieStore.getAll();
-          },
-          setAll(cookiesToSet) {
-            cookiesToSet.forEach(({ name, value, options }) => {
-              cookieStore.set(name, value, options);
-            });
-          },
+    const supabase = createServerClient(supabaseUrl, publishableKey, {
+      cookies: {
+        getAll() {
+          return cookieStore.getAll();
         },
-      }
-    );
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            cookieStore.set(name, value, options);
+          });
+        },
+      },
+    });
 
     const { error } = await supabase.auth.exchangeCodeForSession(code);
 

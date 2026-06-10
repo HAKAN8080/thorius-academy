@@ -33,7 +33,7 @@ export const getCoursePurchaseState = cache(
     if (user?.email) {
       const { data: profile } = await supabase
         .from("profiles")
-        .select("full_name")
+        .select("full_name, phone")
         .eq("id", user.id)
         .maybeSingle();
 
@@ -49,6 +49,7 @@ export const getCoursePurchaseState = cache(
         email: user.email,
         firstName,
         lastName,
+        phone: profile?.phone ?? null,
       };
     }
 
