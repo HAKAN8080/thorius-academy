@@ -569,3 +569,68 @@ export async function saveCourseAdditional(
 export async function getCourseForBuilder(courseCacheId: string) {
   return verifyCourseCacheAccess(courseCacheId);
 }
+
+export async function deleteInstructorDraftCourse(
+  courseCacheId: string,
+): Promise<{ success: true } | { error: string }> {
+  try {
+    const course = await requireCourseCacheAccess(courseCacheId);
+    const admin = getSupabaseAdmin();
+
+    if (course.published) {
+      return { error: "Yayında olan kurslar silinemez." };
+    }
+
+    if (course.wp_course_id) {
+      const { data: stats } = await admin
+        .from("instructor_course_stats")
+        .select("status, enrollment_count")
+        .eq("wp_course_id", course.wp_course_id)
+        .maybeSingle();
+
+      if (stats?.status === "publish") {
+        return { error: "Yayında olan kurslar silinemez." };
+      }
+
+      if (Number(stats?.enrollment_count ?? 0) > 0) {
+        return { error: "Kayıtlı öğrencisi olan kurslar silinemez." };
+      }
+
+      const { data: lessons } = await admin
+        .from("lessons")
+        .select("id")
+        .eq("course_id", course.wp_course_id);
+
+      const lessonIds = (lessons ?? []).map((row) => row.id as string);
+      if (lessonIds.length > 0) {
+        await admin.from("lesson_progress").delete().in("lesson_id", lessonIds);
+        await admin
+          .from("lessons")
+          .delete()
+          .eq("course_id", course.wp_course_id);
+      }
+
+      await admin
+        .from("instructor_course_stats")
+        .delete()
+        .eq("wp_course_id", course.wp_course_id);
+    }
+
+    const { error } = await admin
+      .from("courses_cache")
+      .delete()
+      .eq("id", courseCacheId);
+
+    if (error) {
+      return { error: error.message };
+    }
+
+    revalidatePath("/instructor/courses");
+    revalidatePath("/instructor/dashboard");
+    revalidatePath("/panel");
+    revalidatePath("/panel/egitmen");
+    return { success: true };
+  } catch {
+    return { error: "Kurs silinemedi." };
+  }
+}

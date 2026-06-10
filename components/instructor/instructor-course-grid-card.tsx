@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { Clock, Star, Users } from "lucide-react";
 import type { InstructorCourseListItem } from "@/types/instructor-course";
+import { InstructorCourseDeleteButton } from "@/components/instructor/instructor-course-delete-button";
 
 interface InstructorCourseGridCardProps {
   course: InstructorCourseListItem;
@@ -72,20 +73,26 @@ export function InstructorCourseGridCard({ course }: InstructorCourseGridCardPro
           </span>
         </div>
 
-        <div className="flex gap-2 border-t border-primary-50 pt-3">
+        <div className="flex flex-wrap gap-2 border-t border-primary-50 pt-3">
           <Link
             href={`/instructor/courses/${course.id}/basics`}
             className="flex-1 rounded-lg bg-[#D4AF37] px-3 py-2 text-center text-sm font-semibold text-[#0B1E3F] hover:bg-[#D4AF37]/90"
           >
             Düzenle
           </Link>
-          {course.course_slug ? (
+          {course.status === "publish" && course.course_slug ? (
             <Link
               href={`/panel/egitmen/${course.course_slug}`}
               className="rounded-lg border border-[#0B1E3F]/20 px-3 py-2 text-sm font-medium text-[#0B1E3F] hover:border-[#D4AF37]"
             >
               Yorumlar
             </Link>
+          ) : null}
+          {course.status !== "publish" ? (
+            <InstructorCourseDeleteButton
+              courseId={course.id}
+              courseTitle={course.title}
+            />
           ) : null}
         </div>
       </div>

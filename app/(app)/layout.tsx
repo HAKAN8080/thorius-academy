@@ -26,28 +26,34 @@ export default async function AppLayout({
       ? user.user_metadata.full_name.trim()
       : null;
 
-  try {
-    await ensureUserProfile(user.id, {
+  if (user.email) {
+    void syncLegacyUserData(user.id, user.email, {
+      lastSyncedAt:
+        typeof user.user_metadata?.tutor_legacy_synced_at === "string"
+          ? user.user_metadata.tutor_legacy_synced_at
+          : undefined,
+      wpUserId:
+        typeof user.user_metadata?.wp_user_id === "number"
+          ? user.user_metadata.wp_user_id
+          : undefined,
+    }).catch((error) => {
+      console.error("[Legacy Sync] Panel sync failed:", error);
+    });
+  }
+
+  const [, shell] = await Promise.all([
+    ensureUserProfile(user.id, {
       email: user.email,
       fullName: metadataName,
       wpUserId:
         typeof user.user_metadata?.wp_user_id === "number"
           ? user.user_metadata.wp_user_id
           : null,
-    });
-  } catch (error) {
-    console.error("[Profile] ensure failed:", error);
-  }
-
-  if (user.email) {
-    try {
-      await syncLegacyUserData(user.id, user.email);
-    } catch (error) {
-      console.error("[Legacy Sync] Panel sync failed:", error);
-    }
-  }
-
-  const shell = await getPanelShellContext();
+    }).catch((error) => {
+      console.error("[Profile] ensure failed:", error);
+    }),
+    getPanelShellContext(),
+  ]);
 
   return (
     <TutorPanelShell

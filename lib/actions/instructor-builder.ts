@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { requireCourseCacheAccess } from "@/lib/instructor/course-cache-access";
+import { nextSyntheticWpLessonId } from "@/lib/instructor/next-synthetic-wp-lesson-id";
 import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
 import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
@@ -80,20 +81,6 @@ function revalidateBuilderPaths(courseCacheId: string, courseSlug: string | null
       revalidatePath(`/panel/kurslarim/${slug}`);
     }
   }
-}
-
-async function nextSyntheticWpLessonId(courseId: number): Promise<number> {
-  const admin = getSupabaseAdmin();
-  const { data } = await admin
-    .from("lessons")
-    .select("wp_lesson_id")
-    .eq("course_id", courseId)
-    .lt("wp_lesson_id", 0)
-    .order("wp_lesson_id", { ascending: true })
-    .limit(1);
-
-  const currentMin = data?.[0]?.wp_lesson_id;
-  return typeof currentMin === "number" ? currentMin - 1 : -1;
 }
 
 export async function getBuilderCurriculum(courseCacheId: string): Promise<
@@ -284,7 +271,7 @@ export async function createBuilderLesson(
       .limit(1)
       .maybeSingle();
 
-    const wpLessonId = await nextSyntheticWpLessonId(course.wp_course_id);
+    const wpLessonId = await nextSyntheticWpLessonId();
     const slug = course.course_slug ?? `kurs-${Math.abs(course.wp_course_id)}`;
 
     const { data, error } = await admin

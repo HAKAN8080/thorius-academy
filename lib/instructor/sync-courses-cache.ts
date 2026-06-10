@@ -26,11 +26,9 @@ export async function ensureCoursesCacheForInstructor(
     return 0;
   }
 
-  let synced = 0;
-
-  for (const row of stats as StatsRow[]) {
+  const payloads = (stats as StatsRow[]).map((row) => {
     const published = row.status === "publish";
-    const payload = buildCoursesCacheDraftPayload(
+    return buildCoursesCacheDraftPayload(
       {
         wp_course_id: row.wp_course_id,
         instructor_wp_user_id: wpInstructorId,
@@ -41,32 +39,19 @@ export async function ensureCoursesCacheForInstructor(
       },
       row.course_slug,
     );
+  });
 
-    const { data: existing } = await admin
-      .from("courses_cache")
-      .select("id")
-      .eq("wp_course_id", row.wp_course_id)
-      .maybeSingle();
+  const { error: upsertError } = await admin
+    .from("courses_cache")
+    .upsert(payloads, { onConflict: "wp_course_id" });
 
-    if (existing) {
-      const { error: updateError } = await admin
-        .from("courses_cache")
-        .update(payload)
-        .eq("wp_course_id", row.wp_course_id);
-
-      if (!updateError) {
-        synced += 1;
-      }
-    } else {
-      const { error: insertError } = await admin
-        .from("courses_cache")
-        .insert(payload);
-
-      if (!insertError) {
-        synced += 1;
-      }
-    }
+  if (upsertError) {
+    console.warn(
+      "[courses_cache] Instructor sync failed:",
+      upsertError.message,
+    );
+    return 0;
   }
 
-  return synced;
+  return payloads.length;
 }

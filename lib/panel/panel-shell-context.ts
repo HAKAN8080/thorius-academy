@@ -1,3 +1,4 @@
+import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getInstructorAccess } from "@/lib/instructor/access";
@@ -10,7 +11,7 @@ export interface PanelShellContext {
   isInstructor: boolean;
 }
 
-export async function getPanelShellContext(): Promise<PanelShellContext> {
+export const getPanelShellContext = cache(async (): Promise<PanelShellContext> => {
   const supabase = await createClient();
   const {
     data: { user },
@@ -77,4 +78,4 @@ export async function getPanelShellContext(): Promise<PanelShellContext> {
     avatarUrl: profile?.avatar_url ?? avatarUrl,
     isInstructor: access.isInstructor,
   };
-}
+});

@@ -215,9 +215,15 @@ async function importLessonProgress(
   return imported;
 }
 
+export interface SyncLegacyUserDataOptions {
+  lastSyncedAt?: string;
+  wpUserId?: number;
+}
+
 export async function syncLegacyUserData(
   userId: string,
   email: string,
+  options: SyncLegacyUserDataOptions = {},
 ): Promise<SyncLegacyUserDataResult> {
   const admin = getSupabaseAdmin();
 
@@ -231,6 +237,17 @@ export async function syncLegacyUserData(
     console.warn("[Legacy Sync] Enrollment count failed:", countError.message);
   }
 
+  const lastSyncedAt = options.lastSyncedAt;
+
+  if (!shouldRunLegacySync(enrollmentsCount ?? 0, lastSyncedAt)) {
+    return {
+      skipped: true,
+      reason: "recently_synced",
+      importedEnrollments: 0,
+      updatedProgress: 0,
+    };
+  }
+
   const { data: authUser, error: authError } =
     await admin.auth.admin.getUserById(userId);
 
@@ -238,20 +255,6 @@ export async function syncLegacyUserData(
     return {
       skipped: true,
       reason: "user_not_found",
-      importedEnrollments: 0,
-      updatedProgress: 0,
-    };
-  }
-
-  const lastSyncedAt =
-    typeof authUser.user.user_metadata?.tutor_legacy_synced_at === "string"
-      ? authUser.user.user_metadata.tutor_legacy_synced_at
-      : undefined;
-
-  if (!shouldRunLegacySync(enrollmentsCount ?? 0, lastSyncedAt)) {
-    return {
-      skipped: true,
-      reason: "recently_synced",
       importedEnrollments: 0,
       updatedProgress: 0,
     };
@@ -277,6 +280,7 @@ export async function syncLegacyUserData(
   const wpUserId =
     legacyData.wp_user_id ??
     getKnownInstructorWpUserId(email) ??
+    options.wpUserId ??
     authUser.user.user_metadata?.wp_user_id;
 
   await admin.auth.admin.updateUserById(userId, {

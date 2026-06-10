@@ -13,15 +13,14 @@ export const dynamic = "force-dynamic";
 
 export default async function PanelDashboardPage() {
   const shell = await getPanelShellContext();
-  const enrollments = await getUserEnrollments();
-  const activeEnrollments = enrollments.filter((e) => e.status !== "cancelled");
 
-  const instructorStats = shell.isInstructor
-    ? await getInstructorDashboardStats()
-    : null;
-  const instructorCourses = shell.isInstructor
-    ? await getInstructorCourseList()
-    : [];
+  const [enrollments, instructorStats, instructorCourses] = await Promise.all([
+    getUserEnrollments(),
+    shell.isInstructor ? getInstructorDashboardStats() : Promise.resolve(null),
+    shell.isInstructor ? getInstructorCourseList() : Promise.resolve([]),
+  ]);
+
+  const activeEnrollments = enrollments.filter((e) => e.status !== "cancelled");
 
   return (
     <div>

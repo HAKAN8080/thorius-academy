@@ -7,6 +7,7 @@ import {
   requireCurriculumAccess,
   verifyInstructorCourseAccess,
 } from "@/lib/instructor/curriculum-access";
+import { nextSyntheticWpLessonId } from "@/lib/instructor/next-synthetic-wp-lesson-id";
 import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
 import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
@@ -79,20 +80,6 @@ function revalidateCurriculumPaths(courseId: number, courseSlug: string) {
   }
 }
 
-async function nextSyntheticWpLessonId(courseId: number): Promise<number> {
-  const admin = getSupabaseAdmin();
-  const { data } = await admin
-    .from("lessons")
-    .select("wp_lesson_id")
-    .eq("course_id", courseId)
-    .lt("wp_lesson_id", 0)
-    .order("wp_lesson_id", { ascending: true })
-    .limit(1);
-
-  const currentMin = data?.[0]?.wp_lesson_id;
-  return typeof currentMin === "number" ? currentMin - 1 : -1;
-}
-
 export async function getCurriculumLessons(
   courseId: number,
 ): Promise<{ lessons: CurriculumLesson[] } | { error: string }> {
@@ -135,7 +122,7 @@ export async function createCurriculumLesson(
     .maybeSingle();
 
   const nextOrder = (lastLesson?.lesson_order ?? 0) + 1;
-  const wpLessonId = await nextSyntheticWpLessonId(courseId);
+  const wpLessonId = await nextSyntheticWpLessonId();
 
   const { data, error } = await admin
     .from("lessons")
