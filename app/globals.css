@@ -259,3 +259,35 @@ body {
 .promo-marquee-track {
   animation: promoMarquee 28s linear infinite;
 }
+
+html.navigation-pending,
+html.navigation-pending * {
+  cursor: wait !important;
+}
+
+html.navigation-pending::before {
+  content: "";
+  position: fixed;
+  inset: 0 auto auto 0;
+  z-index: 9999;
+  height: 3px;
+  width: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    #d4af37 35%,
+    #d4af37 65%,
+    transparent
+  );
+  animation: navigationPendingBar 1.1s ease-in-out infinite;
+  pointer-events: none;
+}
+
+@keyframes navigationPendingBar {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(100%);
+  }
+}
