@@ -75,51 +75,57 @@ export async function prepareLessonVideoUpload(input: {
     }
   | { error: string }
 > {
-  const courseResult = await resolveCourseCacheId(
-    input.courseCacheId,
-    input.wpCourseId,
-  );
-  if ("error" in courseResult) {
-    return courseResult;
-  }
+  try {
+    const courseResult = await resolveCourseCacheId(
+      input.courseCacheId,
+      input.wpCourseId,
+    );
+    if ("error" in courseResult) {
+      return courseResult;
+    }
 
-  const metaError = validateLessonVideoMeta({
-    name: input.fileName,
-    size: input.fileSize,
-    type: input.mimeType,
-  });
-  if (metaError) {
-    return { error: metaError };
-  }
+    const metaError = validateLessonVideoMeta({
+      name: input.fileName,
+      size: input.fileSize,
+      type: input.mimeType,
+    });
+    if (metaError) {
+      return { error: metaError };
+    }
 
-  const rateError = await assertInstructorUploadRateLimit(
-    courseResult.instructor_wp_user_id,
-  );
-  if (rateError) {
-    return { error: rateError };
-  }
+    const rateError = await assertInstructorUploadRateLimit(
+      courseResult.instructor_wp_user_id,
+    );
+    if (rateError) {
+      return { error: rateError };
+    }
 
-  const uploadTarget = await resolveBunnyCourseUploadTarget(
-    {
-      courseTitle: courseResult.title,
-      courseSlug: courseResult.course_slug,
-      wpCourseId: courseResult.wp_course_id,
-    },
-    input.lessonTitle,
-  );
-  if ("error" in uploadTarget) {
-    return uploadTarget;
-  }
+    const uploadTarget = await resolveBunnyCourseUploadTarget(
+      {
+        courseTitle: courseResult.title,
+        courseSlug: courseResult.course_slug,
+        wpCourseId: courseResult.wp_course_id,
+      },
+      input.lessonTitle,
+    );
+    if ("error" in uploadTarget) {
+      return uploadTarget;
+    }
 
-  const session = await createBunnyVideoUploadSession(uploadTarget.videoTitle, {
-    collectionId: uploadTarget.collectionId,
-  });
-  if ("error" in session) {
+    const session = await createBunnyVideoUploadSession(uploadTarget.videoTitle, {
+      collectionId: uploadTarget.collectionId,
+    });
+    if ("error" in session) {
+      return session;
+    }
+
+    await recordInstructorUploadEvent(courseResult.instructor_wp_user_id);
     return session;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[prepareLessonVideoUpload]", message);
+    return { error: "Video yükleme oturumu açılamadı. Lütfen tekrar deneyin." };
   }
-
-  await recordInstructorUploadEvent(courseResult.instructor_wp_user_id);
-  return session;
 }
 
 export async function uploadLessonPdfAttachment(
