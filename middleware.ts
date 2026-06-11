@@ -3,8 +3,10 @@ import { updateSession } from "@/lib/supabase/middleware";
 import {
   getAcademyOrigin,
   getCompanyOrigin,
+  getWordPressOrigin,
   isCompanyAllowedPath,
   isCompanyRedirectToAcademyPath,
+  isCompanyRedirectToWordPressPath,
   isCompanySiteHost,
 } from "@/lib/site/site-mode";
 
@@ -12,6 +14,14 @@ function redirectToAcademy(request: NextRequest) {
   const destination = new URL(
     `${request.nextUrl.pathname}${request.nextUrl.search}`,
     getAcademyOrigin(),
+  );
+  return NextResponse.redirect(destination);
+}
+
+function redirectToWordPress(request: NextRequest) {
+  const destination = new URL(
+    `${request.nextUrl.pathname}${request.nextUrl.search}`,
+    getWordPressOrigin(),
   );
   return NextResponse.redirect(destination);
 }
@@ -25,6 +35,10 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   if (isCompanySiteHost(host)) {
+    if (isCompanyRedirectToWordPressPath(pathname)) {
+      return redirectToWordPress(request);
+    }
+
     if (isCompanyRedirectToAcademyPath(pathname)) {
       return redirectToAcademy(request);
     }

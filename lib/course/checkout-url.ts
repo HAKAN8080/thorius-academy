@@ -1,4 +1,4 @@
-const CHECKOUT_BASE_URL = "https://thorius.com.tr/odeme/";
+import { getWpSiteUrl } from "@/lib/config/portal-urls";
 
 export interface CheckoutCustomer {
   email: string;
@@ -31,7 +31,8 @@ export function buildWooCommerceCheckoutUrl(
   wcProductId: number,
   customer?: CheckoutCustomer | null,
 ): string {
-  const url = new URL(CHECKOUT_BASE_URL);
+  const checkoutBase = `${getWpSiteUrl()}/odeme/`;
+  const url = new URL(checkoutBase);
   url.searchParams.set("add-to-cart", String(wcProductId));
   url.searchParams.set("quantity", "1");
 

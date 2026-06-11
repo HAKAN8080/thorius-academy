@@ -80,6 +80,33 @@ export function resolveAcademyHref(
   return academyPath(href);
 }
 
+/** WordPress (WooCommerce checkout, REST API) — apex taşındıktan sonra alt domain. */
+export function getWordPressOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_WP_SITE_URL?.replace(/\/$/, "");
+  return configured || "https://wp.thorius.com.tr";
+}
+
+export function wordPressPath(path: string): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${getWordPressOrigin()}${normalized}`;
+}
+
+/** thorius.com.tr → WordPress alt domain (ödeme, wp-json, admin). */
+export const COMPANY_REDIRECT_TO_WORDPRESS_PREFIXES = [
+  "/odeme",
+  "/wp-json",
+  "/wp-admin",
+  "/wp-content",
+  "/wp-includes",
+  "/wp-login.php",
+] as const;
+
+export function isCompanyRedirectToWordPressPath(pathname: string): boolean {
+  return COMPANY_REDIRECT_TO_WORDPRESS_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
 /** thorius.com.tr üzerinde açık kalacak sayfalar. */
 export const COMPANY_ALLOWED_PATH_PREFIXES = [
   "/hakkimizda",
