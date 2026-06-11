@@ -8,7 +8,7 @@ import {
   verifyInstructorCourseAccess,
 } from "@/lib/instructor/curriculum-access";
 import { nextSyntheticWpLessonId } from "@/lib/instructor/next-synthetic-wp-lesson-id";
-import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
+import { resolveLessonVideoForSave } from "@/lib/video/resolve-lesson-video";
 import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
   CurriculumCourse,
@@ -179,15 +179,31 @@ export async function saveCurriculumLesson(
     payload.duration_minutes = null;
     payload.duration_seconds = null;
   } else {
-    const videoUrl = input.video_url?.trim() ?? "";
-    const parsed = parseVideoUrl(videoUrl);
+    const resolved = await resolveLessonVideoForSave(
+      input.video_url?.trim() ?? "",
+      input.title.trim(),
+      {
+        courseTitle: courseResult.course_title,
+        courseSlug: courseResult.course_slug,
+        wpCourseId: courseResult.course_id,
+      },
+    );
+    if ("error" in resolved) {
+      return resolved;
+    }
+
+    const parsed = {
+      video_url: resolved.video_url,
+      video_embed_url: resolved.video_embed_url,
+      video_type: resolved.video_type,
+    };
     payload.video_url = parsed.video_url || null;
     payload.video_embed_url = parsed.video_embed_url;
     payload.video_type = parsed.video_type;
     payload.content_md = null;
     payload.description = null;
 
-    const detectedSeconds = videoUrl
+    const detectedSeconds = parsed.video_url
       ? await resolveVideoDurationSeconds(parsed)
       : null;
     const manualMinutes =

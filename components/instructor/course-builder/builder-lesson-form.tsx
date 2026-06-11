@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { ImageUploadField } from "@/components/instructor/image-upload-field";
+import { LessonVideoSourceField } from "@/components/instructor/lesson-video-source-field";
+import { LessonPdfUploadField } from "@/components/instructor/lesson-pdf-upload-field";
 import "@uiw/react-md-editor/markdown-editor.css";
 
 const MarkdownEditor = dynamic(
@@ -154,20 +156,14 @@ export function BuilderLessonForm({
         </div>
 
         {type === "video" ? (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="video-url">Video URL</Label>
-              <Input
-                id="video-url"
-                value={videoUrl}
-                onChange={(e) => setVideoUrl(e.target.value)}
-                placeholder="YouTube, Vimeo veya Bunny Stream embed URL (doğrudan .mp4 değil)"
-              />
-              <p className="text-xs text-primary-500">
-                Süre kayıt sırasında video kaynağından otomatik hesaplanır.
-              </p>
-            </div>
-          </>
+          <LessonVideoSourceField
+            videoUrl={videoUrl}
+            onVideoUrlChange={setVideoUrl}
+            courseCacheId={courseCacheId}
+            lessonId={lesson.id}
+            lessonTitle={title}
+            disabled={isPending}
+          />
         ) : (
           <div className="space-y-2" data-color-mode="light">
             <Label>İçerik</Label>
@@ -191,20 +187,17 @@ export function BuilderLessonForm({
           previewAlt="Ders kapak önizleme"
         />
 
-        <div className="space-y-2">
-          <Label htmlFor="attachment">Ek Dosya URL</Label>
-          <Input
-            id="attachment"
-            value={attachmentUrl}
-            onChange={(e) => setAttachmentUrl(e.target.value)}
-            placeholder="Dosya URL"
-          />
-          <Input
-            value={attachmentName}
-            onChange={(e) => setAttachmentName(e.target.value)}
-            placeholder="Dosya adı (opsiyonel)"
-          />
-        </div>
+        <LessonPdfUploadField
+          attachmentUrl={attachmentUrl}
+          attachmentName={attachmentName}
+          onChange={(next) => {
+            setAttachmentUrl(next?.url ?? "");
+            setAttachmentName(next?.name ?? "");
+          }}
+          courseCacheId={courseCacheId}
+          lessonId={lesson.id}
+          disabled={isPending}
+        />
 
         <ToggleField
           label="Ücretsiz önizleme"

@@ -46,6 +46,16 @@ export function buildLessonFeaturedStoragePath(
   return `${instructorWpUserId}/courses/${courseCacheId}/lessons/${lessonId}/featured.${ext}`;
 }
 
+export function buildLessonPdfStoragePath(
+  instructorWpUserId: number,
+  courseCacheId: string,
+  lessonId: string,
+  safeBaseName: string,
+): string {
+  const stamp = Date.now();
+  return `${instructorWpUserId}/courses/${courseCacheId}/lessons/${lessonId}/attachments/${stamp}-${safeBaseName}.pdf`;
+}
+
 export function getCourseMediaPublicUrl(path: string): string {
   const admin = getSupabaseAdmin();
   const { data } = admin.storage.from(COURSE_MEDIA_BUCKET).getPublicUrl(path);

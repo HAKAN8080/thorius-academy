@@ -5,7 +5,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
 import { requireCourseCacheAccess } from "@/lib/instructor/course-cache-access";
 import { nextSyntheticWpLessonId } from "@/lib/instructor/next-synthetic-wp-lesson-id";
-import { parseVideoUrl } from "@/lib/lessons/parse-video-url";
+import { resolveLessonVideoForSave } from "@/lib/video/resolve-lesson-video";
 import { resolveVideoDurationSeconds } from "@/lib/lessons/video-duration";
 import type {
   BuilderLesson,
@@ -357,7 +357,24 @@ export async function saveBuilderLesson(
       payload.duration_seconds = null;
       payload.duration_minutes = null;
     } else {
-      const parsed = parseVideoUrl(input.video_url?.trim() ?? "");
+      const resolved = await resolveLessonVideoForSave(
+        input.video_url?.trim() ?? "",
+        input.title.trim(),
+        {
+          courseTitle: course.title,
+          courseSlug: course.course_slug,
+          wpCourseId: course.wp_course_id,
+        },
+      );
+      if ("error" in resolved) {
+        return { error: resolved.error };
+      }
+
+      const parsed = {
+        video_url: resolved.video_url,
+        video_embed_url: resolved.video_embed_url,
+        video_type: resolved.video_type,
+      };
       payload.video_url = parsed.video_url || null;
       payload.video_embed_url = parsed.video_embed_url;
       payload.video_type = parsed.video_type;

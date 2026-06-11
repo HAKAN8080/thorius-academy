@@ -6,6 +6,7 @@ import type { CurriculumLesson, CurriculumLessonInput } from "@/types/curriculum
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LessonVideoSourceField } from "@/components/instructor/lesson-video-source-field";
 import "@uiw/react-md-editor/markdown-editor.css";
 
 const MarkdownEditor = dynamic(
@@ -155,21 +156,14 @@ export function LessonEditForm({
         </div>
 
         {type === "video" ? (
-          <>
-            <div className="space-y-2">
-              <Label htmlFor="video-url">Video URL</Label>
-              <Input
-                id="video-url"
-                value={videoUrl}
-                onChange={(event) => setVideoUrl(event.target.value)}
-                placeholder="YouTube, Vimeo veya MP4 bağlantısı"
-                className="border-primary-200"
-              />
-              <p className="text-xs text-primary-500">
-                Süre kayıt sırasında video kaynağından otomatik hesaplanır.
-              </p>
-            </div>
-          </>
+          <LessonVideoSourceField
+            videoUrl={videoUrl}
+            onVideoUrlChange={setVideoUrl}
+            wpCourseId={courseId}
+            lessonId={lesson.id}
+            lessonTitle={title}
+            disabled={isPending}
+          />
         ) : (
           <div className="space-y-2" data-color-mode="light">
             <Label>Metin İçeriği</Label>
