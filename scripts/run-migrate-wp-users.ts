@@ -116,6 +116,7 @@ async function runPage(
         invitesSent: result.invitesSent,
         failed: result.failed,
         success: result.success,
+        error: result.error,
       },
       null,
       2,
@@ -123,7 +124,10 @@ async function runPage(
   );
 
   if (!result.success) {
-    console.error("Batch başarısız — WP_WEBHOOK_SECRET ve plugin kontrol edin.");
+    console.error(
+      result.error ??
+        "Batch başarısız — WP_WEBHOOK_SECRET ve plugin kontrol edin.",
+    );
     process.exit(1);
   }
 
@@ -133,9 +137,15 @@ async function runPage(
 async function main() {
   const options = parseArgs(process.argv.slice(2));
 
-  if (!options.dryRun && !process.env.WP_WEBHOOK_SECRET) {
+  if (!options.dryRun && !process.env.WP_WEBHOOK_SECRET?.trim()) {
     console.error("WP_WEBHOOK_SECRET gerekli (.env.local)");
     process.exit(1);
+  }
+
+  if (!process.env.WP_WEBHOOK_SECRET?.trim()) {
+    console.warn(
+      "UYARI: WP_WEBHOOK_SECRET tanımlı değil — dry-run WP'ye bağlanamaz.",
+    );
   }
 
   if (!options.all) {

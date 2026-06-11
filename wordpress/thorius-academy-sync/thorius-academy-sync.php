@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Academy Sync
  * Description: Kurs yayınlandığında veya güncellendiğinde academy.thorius.com.tr önbelleğini anında yeniler.
- * Version: 1.8.2
+ * Version: 1.8.3
  * Author: Thorius
  * Text Domain: thorius-academy-sync
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_ACADEMY_SYNC_VERSION', '1.8.2');
+define('THORIUS_ACADEMY_SYNC_VERSION', '1.8.3');
 define('THORIUS_ACADEMY_SYNC_OPTION', 'thorius_academy_sync_settings');
 
 /**
@@ -1179,6 +1179,181 @@ function thorius_academy_sync_list_members(int $offset = 0, int $limit = 100): a
     );
 }
 
+function thorius_academy_sync_is_user_enrolled_in_course(int $user_id, string $email, int $course_id): bool
+{
+    if (!function_exists('tutor_utils') || $course_id <= 0) {
+        return false;
+    }
+
+    if ($user_id > 0 && tutor_utils()->is_enrolled($course_id, $user_id)) {
+        return true;
+    }
+
+    $email = sanitize_email($email);
+    if ($email === '') {
+        return false;
+    }
+
+    $user = get_user_by('email', $email);
+    if (!$user) {
+        return false;
+    }
+
+    return (bool) tutor_utils()->is_enrolled($course_id, (int) $user->ID);
+}
+
+/**
+ * @return array{
+ *     total_orders_scanned: int,
+ *     total_course_purchases: int,
+ *     gap_count: int,
+ *     unique_customers_with_gaps: int,
+ *     gaps: list<array<string, mixed>>
+ * }
+ */
+function thorius_academy_sync_audit_wc_tutor_gaps(): array
+{
+    if (!function_exists('wc_get_orders')) {
+        return array(
+            'total_orders_scanned' => 0,
+            'total_course_purchases' => 0,
+            'gap_count' => 0,
+            'unique_customers_with_gaps' => 0,
+            'gaps' => array(),
+            'error' => __('WooCommerce etkin değil.', 'thorius-academy-sync'),
+        );
+    }
+
+    $order_ids = wc_get_orders(array(
+        'status' => array('completed', 'processing'),
+        'limit' => -1,
+        'return' => 'ids',
+        'orderby' => 'date',
+        'order' => 'DESC',
+    ));
+
+    if (!is_array($order_ids)) {
+        $order_ids = array();
+    }
+
+    $gaps = array();
+    $total_course_purchases = 0;
+    $unique_customers = array();
+
+    foreach ($order_ids as $order_id) {
+        $order = wc_get_order($order_id);
+        if (!$order) {
+            continue;
+        }
+
+        $wp_user_id = (int) $order->get_user_id();
+        $email = sanitize_email((string) $order->get_billing_email());
+        $customer_name = trim(
+            (string) $order->get_billing_first_name() . ' ' . (string) $order->get_billing_last_name()
+        );
+        if ($customer_name === '') {
+            $customer_name = (string) $order->get_formatted_billing_full_name();
+        }
+
+        $order_date = null;
+        $date_created = $order->get_date_created();
+        if ($date_created) {
+            $order_date = $date_created->date('c');
+        }
+
+        foreach ($order->get_items() as $item) {
+            if (!($item instanceof WC_Order_Item_Product)) {
+                continue;
+            }
+
+            $product_id = (int) $item->get_product_id();
+            if ($product_id <= 0) {
+                continue;
+            }
+
+            $course_ids = thorius_academy_sync_find_course_ids_by_product_id($product_id);
+            if ($course_ids === array()) {
+                continue;
+            }
+
+            foreach ($course_ids as $course_id) {
+                $course_id = (int) $course_id;
+                if ($course_id <= 0) {
+                    continue;
+                }
+
+                $total_course_purchases++;
+
+                if (thorius_academy_sync_is_user_enrolled_in_course($wp_user_id, $email, $course_id)) {
+                    continue;
+                }
+
+                $course = get_post($course_id);
+                if (!$course || !thorius_academy_sync_is_course_post($course)) {
+                    continue;
+                }
+
+                if ($email !== '') {
+                    $unique_customers[strtolower($email)] = true;
+                } elseif ($wp_user_id > 0) {
+                    $unique_customers['user_' . $wp_user_id] = true;
+                }
+
+                $gaps[] = array(
+                    'order_id' => (int) $order_id,
+                    'order_date' => $order_date,
+                    'email' => $email,
+                    'customer_name' => sanitize_text_field($customer_name),
+                    'wp_user_id' => $wp_user_id,
+                    'product_id' => $product_id,
+                    'course_id' => $course_id,
+                    'course_title' => (string) get_the_title($course_id),
+                    'course_slug' => (string) $course->post_name,
+                );
+            }
+        }
+    }
+
+    return array(
+        'total_orders_scanned' => count($order_ids),
+        'total_course_purchases' => $total_course_purchases,
+        'gap_count' => count($gaps),
+        'unique_customers_with_gaps' => count($unique_customers),
+        'gaps' => $gaps,
+    );
+}
+
+function thorius_academy_sync_handle_academy_wc_tutor_gap(WP_REST_Request $request)
+{
+    $settings = thorius_academy_sync_get_settings();
+
+    if (empty($settings['enabled']) || empty($settings['webhook_secret'])) {
+        return new WP_REST_Response(
+            array('error' => __('Academy sync etkin değil.', 'thorius-academy-sync')),
+            503
+        );
+    }
+
+    $raw_body = $request->get_body();
+    if (!is_string($raw_body) || $raw_body === '') {
+        return new WP_REST_Response(array('error' => 'Empty body'), 400);
+    }
+
+    if (!thorius_academy_sync_verify_request_signature($raw_body)) {
+        return new WP_REST_Response(array('error' => 'Invalid signature'), 401);
+    }
+
+    $payload = json_decode($raw_body, true);
+    if (!is_array($payload)) {
+        return new WP_REST_Response(array('error' => 'Invalid JSON'), 400);
+    }
+
+    return new WP_REST_Response(
+        thorius_academy_sync_audit_wc_tutor_gaps(),
+        200
+    );
+}
+
 function thorius_academy_sync_handle_academy_member_list(WP_REST_Request $request)
 {
     $settings = thorius_academy_sync_get_settings();
@@ -1958,6 +2133,16 @@ function thorius_academy_sync_register_rest_routes(): void
         array(
             'methods' => 'POST',
             'callback' => 'thorius_academy_sync_handle_academy_member_list',
+            'permission_callback' => '__return_true',
+        )
+    );
+
+    register_rest_route(
+        'thorius/v1',
+        '/academy-wc-tutor-gap',
+        array(
+            'methods' => 'POST',
+            'callback' => 'thorius_academy_sync_handle_academy_wc_tutor_gap',
             'permission_callback' => '__return_true',
         )
     );

@@ -1,25 +1,24 @@
 import * as React from "react";
-import type { PromoCourse } from "@/lib/campaign/pick-promo-courses";
+import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
 import { getSiteUrl } from "@/lib/seo/site-url";
 
 export interface MembershipRenewalEmailProps {
   customerName: string;
   passwordRenewalLink: string;
-  promoCourses: PromoCourse[];
 }
 
 export function MembershipRenewalEmail({
   customerName,
   passwordRenewalLink,
-  promoCourses,
 }: MembershipRenewalEmailProps): React.ReactElement {
   const siteUrl = getSiteUrl();
+  const retailPathHref = `${siteUrl}/kariyer-yolu/${RETAIL_PLANNING_PATH.slug}`;
 
   return (
     <html lang="tr">
       <head>
         <meta charSet="utf-8" />
-        <title>Thorius Academy - Üyelik Şifrenizi Yenileyin</title>
+        <title>Thorius Academy - Şifrenizi Yenileyin</title>
       </head>
       <body
         style={{
@@ -69,43 +68,25 @@ export function MembershipRenewalEmail({
             </h2>
 
             <p style={{ color: "#475569", fontSize: "16px", lineHeight: 1.6 }}>
-              Thorius Academy yeni platformuna geçiş sürecinde üyelik
-              güvenliğiniz için şifrenizin yenilenmesi gerekiyor. Mevcut
-              kurslarınız ve izleme ilerlemeniz korunuyor; yalnızca yeni
-              panele giriş için şifrenizi güncellemeniz yeterli.
+              <strong style={{ color: "#0B1E3F" }}>
+                Güvenliğiniz bizim için önemli.
+              </strong>{" "}
+              <strong style={{ color: "#991b1b" }}>
+                Şifrenizin süresi doldu.
+              </strong>{" "}
+              Lütfen aşağıdaki bağlantıyla giriş yaparak yeni şifrenizi
+              belirleyin.
             </p>
 
-            <div
-              style={{
-                backgroundColor: "#fef2f2",
-                border: "1px solid #fecaca",
-                borderRadius: "12px",
-                padding: "16px 20px",
-                margin: "24px 0",
-              }}
-            >
-              <p
-                style={{
-                  margin: 0,
-                  color: "#991b1b",
-                  fontSize: "15px",
-                  fontWeight: 600,
-                }}
-              >
-                Üyelik şifrenizin süresi doldu
-              </p>
-              <p
-                style={{
-                  margin: "8px 0 0",
-                  color: "#7f1d1d",
-                  fontSize: "14px",
-                  lineHeight: 1.5,
-                }}
-              >
-                Aşağıdaki bağlantıyla yeni şifrenizi belirleyin ve kaldığınız
-                yerden devam edin.
-              </p>
-            </div>
+            <p style={{ color: "#475569", fontSize: "16px", lineHeight: 1.6 }}>
+              <strong style={{ color: "#0B1E3F" }}>Not:</strong> Artık
+              platformumuz kendi yazılımımız{" "}
+              <strong style={{ color: "#0B1E3F" }}>Thorius-LMS</strong> üzerinde
+              çalışıyor.{" "}
+              <strong style={{ color: "#0B1E3F" }}>Thorius Academy</strong>{" "}
+              eğitimlerimiz yenilendi. Retail Planner kariyer yolu ile 5 farklı
+              alandaki eğitim ile kariyerinize yön verin.
+            </p>
 
             <div style={{ textAlign: "center", margin: "28px 0" }}>
               <a
@@ -121,100 +102,81 @@ export function MembershipRenewalEmail({
                   textDecoration: "none",
                 }}
               >
-                YENİ ŞİFRE BELİRLE →
+                GİRİŞ YAP VE ŞİFREMİ YENİLE →
               </a>
             </div>
 
-            {promoCourses.length > 0 && (
-              <>
-                <h3
+            <h3
+              style={{
+                color: "#0B1E3F",
+                marginTop: "36px",
+                marginBottom: "8px",
+                fontSize: "20px",
+              }}
+            >
+              Retail Planner Kariyer Yolu
+            </h3>
+
+            <p
+              style={{
+                color: "#64748b",
+                fontSize: "15px",
+                lineHeight: 1.6,
+                marginTop: 0,
+                marginBottom: "20px",
+              }}
+            >
+              Perakende planlamada adım adım ilerleyin —{" "}
+              <a
+                href={retailPathHref}
+                style={{ color: "#0B1E3F", fontWeight: 600, textDecoration: "none" }}
+              >
+                tüm yolu inceleyin →
+              </a>
+            </p>
+
+            <ol
+              style={{
+                margin: 0,
+                paddingLeft: "20px",
+                color: "#475569",
+                fontSize: "15px",
+                lineHeight: 1.7,
+              }}
+            >
+              {RETAIL_PLANNING_PATH.steps.map((step, index) => (
+                <li
+                  key={step.slug}
                   style={{
-                    color: "#0B1E3F",
-                    marginTop: "36px",
-                    marginBottom: "16px",
-                    fontSize: "20px",
+                    marginBottom: index < RETAIL_PLANNING_PATH.steps.length - 1 ? "16px" : 0,
+                    paddingLeft: "4px",
                   }}
                 >
-                  Yeni Eklenen Kurslar
-                </h3>
-
-                {promoCourses.map((course) => (
-                  <div
-                    key={course.slug}
+                  <a
+                    href={`${siteUrl}/kurslar/${step.slug}`}
                     style={{
-                      border: "1px solid #dce5f1",
-                      borderRadius: "12px",
-                      padding: "16px 18px",
-                      marginBottom: "12px",
+                      color: "#0B1E3F",
+                      fontWeight: 700,
+                      fontSize: "16px",
+                      textDecoration: "none",
                     }}
                   >
-                    {course.category && (
-                      <p
-                        style={{
-                          margin: "0 0 6px",
-                          color: "#9c7d20",
-                          fontSize: "12px",
-                          fontWeight: 700,
-                          letterSpacing: "0.06em",
-                          textTransform: "uppercase",
-                        }}
-                      >
-                        {course.category}
-                      </p>
-                    )}
-                    <p
-                      style={{
-                        margin: "0 0 6px",
-                        color: "#060f24",
-                        fontSize: "16px",
-                        fontWeight: 700,
-                      }}
-                    >
-                      {course.title}
-                    </p>
-                    <p
-                      style={{
-                        margin: "0 0 12px",
-                        color: "#64748b",
-                        fontSize: "14px",
-                        lineHeight: 1.5,
-                      }}
-                    >
-                      {course.excerpt}
-                    </p>
-                    <a
-                      href={`${siteUrl}/kurslar/${course.slug}`}
-                      style={{
-                        color: "#0B1E3F",
-                        fontSize: "14px",
-                        fontWeight: 600,
-                        textDecoration: "none",
-                      }}
-                    >
-                      Kursu incele →
-                    </a>
-                  </div>
-                ))}
-              </>
-            )}
-
-            <div style={{ textAlign: "center", marginTop: "28px" }}>
-              <a
-                href={`${siteUrl}/kurslar`}
-                style={{
-                  display: "inline-block",
-                  backgroundColor: "#D4AF37",
-                  color: "#0B1E3F",
-                  padding: "14px 32px",
-                  borderRadius: "12px",
-                  fontSize: "15px",
-                  fontWeight: 700,
-                  textDecoration: "none",
-                }}
-              >
-                TÜM KURSLARI GÖR →
-              </a>
-            </div>
+                    {step.label}
+                  </a>
+                  <span
+                    style={{
+                      display: "block",
+                      marginTop: "4px",
+                      color: "#64748b",
+                      fontSize: "14px",
+                      lineHeight: 1.5,
+                    }}
+                  >
+                    {step.description}
+                  </span>
+                </li>
+              ))}
+            </ol>
 
             <p
               style={{

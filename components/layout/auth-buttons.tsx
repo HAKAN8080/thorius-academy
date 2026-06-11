@@ -9,9 +9,21 @@ import { Button } from "@/components/ui/button";
 interface AuthButtonsProps {
   onNavigate?: () => void;
   className?: string;
+  authUrls?: {
+    loginHref: string;
+    registerHref: string;
+    panelHref: string;
+  };
 }
 
-export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
+export function AuthButtons({
+  onNavigate,
+  className,
+  authUrls,
+}: AuthButtonsProps) {
+  const loginHref = authUrls?.loginHref ?? "/giris";
+  const registerHref = authUrls?.registerHref ?? "/kayit";
+  const panelHref = authUrls?.panelHref ?? "/panel";
   const supabase = useMemo(() => createClient(), []);
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
@@ -44,7 +56,7 @@ export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
     return (
       <div className={className}>
         <Button variant="gold" asChild>
-          <Link href="/panel" onClick={onNavigate}>
+          <Link href={panelHref} onClick={onNavigate}>
             Panelim
           </Link>
         </Button>
@@ -55,12 +67,12 @@ export function AuthButtons({ onNavigate, className }: AuthButtonsProps) {
   return (
     <div className={className}>
       <Button variant="ghost" asChild>
-        <Link href="/giris" onClick={onNavigate}>
+        <Link href={loginHref} onClick={onNavigate}>
           Giriş Yap
         </Link>
       </Button>
       <Button variant="gold" asChild>
-        <Link href="/kayit" onClick={onNavigate}>
+        <Link href={registerHref} onClick={onNavigate}>
           Üye Ol
         </Link>
       </Button>

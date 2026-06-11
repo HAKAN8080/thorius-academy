@@ -80,6 +80,12 @@ export function InstructorCourseGridCard({ course }: InstructorCourseGridCardPro
           >
             Düzenle
           </Link>
+          <Link
+            href={`/instructor/courses/${course.id}/ogrenciler`}
+            className="rounded-lg border border-[#0B1E3F]/20 px-3 py-2 text-sm font-medium text-[#0B1E3F] hover:border-[#D4AF37]"
+          >
+            Öğrenciler ({course.enrollment_count})
+          </Link>
           {course.status === "publish" && course.course_slug ? (
             <Link
               href={`/panel/egitmen/${course.course_slug}`}

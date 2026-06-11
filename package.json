@@ -9,7 +9,10 @@
     "lint": "next lint",
     "day1:check": "node scripts/day1-instructor-check.mjs",
     "import:tutor": "node scripts/import-tutor-courses.mjs",
-    "migrate:wp-users": "node scripts/migrate-wp-users.mjs"
+    "migrate:wp-users": "node scripts/migrate-wp-users.mjs",
+    "audit:wc-tutor-gap": "node scripts/audit-wc-tutor-gap.mjs",
+    "audit:tutor-no-purchase": "node scripts/audit-tutor-no-purchase-segment.mjs",
+    "campaign:test-email": "node scripts/send-membership-renewal-test.mjs"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",
@@ -21,6 +24,7 @@
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-navigation-menu": "^1.2.14",
     "@radix-ui/react-slot": "^1.2.4",
+    "@react-email/render": "^1.4.0",
     "@react-pdf/renderer": "^4.5.1",
     "@supabase/ssr": "^0.10.3",
     "@supabase/supabase-js": "^2.106.1",

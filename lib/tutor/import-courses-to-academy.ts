@@ -427,6 +427,12 @@ export async function importAllTutorCoursesToAcademy(
     console.log(
       `[Import Tutor] Katalog: ${courses.length} kurs (kaynak=${source}, wp=${wpCoursesFetched}, tutor=${tutorCoursesFetched})`,
     );
+    if (wpCoursesFetched === 0 && courses.length <= 20) {
+      console.warn(
+        "[Import Tutor] UYARI: WP REST katalogu yüklenemedi; yalnızca Tutor API kursları hedefleniyor. " +
+          "İnternet/VPN veya .env NEXT_PUBLIC_WP_API_URL değerini kontrol edin.",
+      );
+    }
     targets = courses
       .map((course) => parseCourseId(course))
       .filter((id) => id > 0);

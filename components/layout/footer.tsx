@@ -1,7 +1,12 @@
 import Link from "next/link";
+import { headers } from "next/headers";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import {
+  isCompanySiteHost,
+  resolveAcademyHref,
+} from "@/lib/site/site-mode";
 import { fetchCategoryList } from "@/lib/wordpress/api";
 
 const staticColumns = [
@@ -85,6 +90,10 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 }
 
 export async function Footer() {
+  const host = headers().get("host");
+  const isCompany = isCompanySiteHost(host);
+  const resolveHref = (href: string) => resolveAcademyHref(href, isCompany);
+
   const categories = await fetchCategoryList();
   const topCategories = categories
     .filter((category) => category.count > 0)
@@ -94,18 +103,26 @@ export async function Footer() {
   const courseColumn = {
     title: "Kurslar",
     links: [
-      { href: "/kurslar", label: "Tüm Kurslar" },
+      { href: resolveHref("/kurslar"), label: "Tüm Kurslar" },
       ...topCategories.map((category) => ({
-        href: buildKurslarUrl({ categorySlug: category.slug }),
+        href: resolveHref(buildKurslarUrl({ categorySlug: category.slug })),
         label: category.name,
       })),
     ],
   };
 
+  const resolvedStaticColumns = staticColumns.map((column) => ({
+    ...column,
+    links: column.links.map((link) => ({
+      ...link,
+      href: resolveHref(link.href),
+    })),
+  }));
+
   const footerColumns = [
-    staticColumns[0],
+    resolvedStaticColumns[0],
     courseColumn,
-    ...staticColumns.slice(1),
+    ...resolvedStaticColumns.slice(1),
   ];
 
   return (

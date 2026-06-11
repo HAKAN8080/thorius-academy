@@ -9,7 +9,13 @@ const coachingFeatures = [
   "Liderlik ve Kariyer Gelişimi Değerlendirmeleri",
 ] as const;
 
-export function EcosystemCards() {
+interface EcosystemCardsProps {
+  coursesCatalogHref?: string;
+}
+
+export function EcosystemCards({
+  coursesCatalogHref = "/kurslar",
+}: EcosystemCardsProps) {
   return (
     <section
       id="ecosystem"
@@ -85,7 +91,10 @@ export function EcosystemCards() {
         </a>
 
         <p className="mt-4 text-center text-sm text-muted-foreground">
-          <Link href="/kurslar" className="font-medium text-primary-700 hover:underline">
+          <Link
+            href={coursesCatalogHref}
+            className="font-medium text-primary-700 hover:underline"
+          >
             Kurs kataloğunu inceleyin
           </Link>
           {" "}veya koçluk platformuna geçin.

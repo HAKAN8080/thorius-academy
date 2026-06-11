@@ -5,6 +5,7 @@ const steps: { id: CourseBuilderStep; label: string; suffix: string }[] = [
   { id: "basics", label: "Temel Bilgiler", suffix: "basics" },
   { id: "curriculum", label: "Müfredat", suffix: "curriculum" },
   { id: "additional", label: "Ek Bilgiler", suffix: "additional" },
+  { id: "students", label: "Öğrenciler", suffix: "ogrenciler" },
 ];
 
 interface CourseBuilderNavProps {
@@ -14,7 +15,7 @@ interface CourseBuilderNavProps {
 
 export function CourseBuilderNav({ courseId, current }: CourseBuilderNavProps) {
   return (
-    <nav className="grid gap-2 rounded-2xl border border-primary-100 bg-white p-2 shadow-sm sm:grid-cols-3">
+    <nav className="grid gap-2 rounded-2xl border border-primary-100 bg-white p-2 shadow-sm sm:grid-cols-2 lg:grid-cols-4">
       {steps.map((step, index) => {
         const active = step.id === current;
         return (

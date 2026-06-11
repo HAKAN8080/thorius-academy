@@ -6,7 +6,7 @@ export async function sendMembershipRenewalEmail(params: {
   email: string;
   fullName: string;
   passwordRenewalLink: string;
-  promoCourses: PromoCourse[];
+  promoCourses?: PromoCourse[];
 }): Promise<boolean> {
   if (!process.env.RESEND_API_KEY) {
     console.warn("[Campaign] RESEND_API_KEY not set");
@@ -19,11 +19,11 @@ export async function sendMembershipRenewalEmail(params: {
   const { error } = await resend.emails.send({
     from: getResendFromAddress(),
     to: params.email,
-    subject: "Thorius Academy — Üyelik şifrenizin süresi doldu",
+    subject:
+      "Thorius Academy — Şifrenizin süresi doldu, yeni platforma geçin",
     react: MembershipRenewalEmail({
       customerName,
       passwordRenewalLink: params.passwordRenewalLink,
-      promoCourses: params.promoCourses,
     }),
   });
 

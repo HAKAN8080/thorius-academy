@@ -27,7 +27,7 @@ export function Logo({
     <Link
       href="/"
       className={cn("group flex items-center gap-3", className)}
-      aria-label="Thorius Academy ana sayfa"
+      aria-label="Thorius ana sayfa"
     >
       <Image
         src="/images/thorius-academy-logo.png"
@@ -44,7 +44,7 @@ export function Logo({
             inverted ? "text-primary-200" : "text-primary-500",
           )}
         >
-          Premium İş Akademisi
+          Premium Eğitim & Teknoloji
         </span>
       )}
     </Link>

@@ -1,5 +1,36 @@
+import { headers } from "next/headers";
 import { Header } from "@/components/layout/header";
+import {
+  academyPath,
+  isCompanySiteHost,
+  resolveAcademyHref,
+} from "@/lib/site/site-mode";
+
+const baseNavLinks = [
+  { href: "/kurslar", label: "Academy" },
+  { href: "/kariyer-yolu", label: "Kariyer Yolu" },
+  { href: "/#ecosystem", label: "Koçluk" },
+  { href: "/kurumsal", label: "Kurumsal" },
+  { href: "/hakkimizda", label: "Hakkımızda" },
+  { href: "/blog", label: "Blog" },
+] as const;
 
 export function MarketingHeader() {
-  return <Header />;
+  const host = headers().get("host");
+  const isCompany = isCompanySiteHost(host);
+
+  const navLinks = baseNavLinks.map((link) => ({
+    href: resolveAcademyHref(link.href, isCompany),
+    label: link.label,
+  }));
+
+  const authUrls = isCompany
+    ? {
+        loginHref: academyPath("/giris"),
+        registerHref: academyPath("/kayit"),
+        panelHref: academyPath("/panel"),
+      }
+    : undefined;
+
+  return <Header navLinks={navLinks} authUrls={authUrls} />;
 }

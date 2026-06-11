@@ -1,6 +1,10 @@
 export type CoursePricingModel = "free" | "paid";
 export type CourseVisibility = "public" | "private";
-export type CourseBuilderStep = "basics" | "curriculum" | "additional";
+export type CourseBuilderStep =
+  | "basics"
+  | "curriculum"
+  | "additional"
+  | "students";
 
 export interface CoursesCache {
   id: string;

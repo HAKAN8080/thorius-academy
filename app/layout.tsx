@@ -13,11 +13,11 @@ const inter = Inter({
 
 export const metadata: Metadata = {
   title: {
-    default: "Thorius Academy - Perakendenin Yeni Nesil Akademisi",
-    template: "%s | Thorius Academy",
+    default: "Thorius — Eğitim, LMS ve Kariyer Platformu",
+    template: "%s | Thorius",
   },
   description:
-    "Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş premium eğitim deneyimi. Perakende planlama, AI & veri, liderlik, operasyon kursları.",
+    "Thorius Eğitim ve Danışmanlık: Thorius-LMS, Thorius Academy ve koçluk ekosistemi. Perakende planlama, İK ve yapay zeka eğitimleri.",
   keywords: [
     "perakende eğitimi",
     "merchandising",
@@ -38,18 +38,18 @@ export const metadata: Metadata = {
     canonical: "/",
   },
   openGraph: {
-    title: "Thorius Academy - Perakendenin Yeni Nesil Akademisi",
+    title: "Thorius — Eğitim, LMS ve Kariyer Platformu",
     description:
-      "Sektörün en deneyimli isimlerinden, AI ile zenginleştirilmiş premium eğitim deneyimi.",
+      "Thorius-LMS, Thorius Academy ve koçluk ekosistemi. Perakende, İK ve yapay zeka odaklı dijital öğrenme.",
     url: "https://academy.thorius.com.tr",
-    siteName: "Thorius Academy",
+    siteName: "Thorius",
     locale: "tr_TR",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Thorius Academy",
-    description: "Perakendenin Yeni Nesil Akademisi",
+    title: "Thorius",
+    description: "Eğitim, LMS ve kariyer platformu",
     creator: "@thorius",
   },
   robots: {

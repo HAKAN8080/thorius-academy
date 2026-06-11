@@ -5,6 +5,7 @@ import {
 } from "@/lib/tutor/ensure-wp-migration-user";
 import { fetchWpMembersPage } from "@/lib/tutor/fetch-wp-members";
 import { syncLegacyUserData } from "@/lib/tutor/sync-legacy-user-data";
+import { getWpSiteOrigin } from "@/lib/wordpress/wp-site-origin";
 
 export interface WpUsersMigrationBatchOptions {
   offset: number;
@@ -30,6 +31,7 @@ export interface WpUsersMigrationBatchResult {
   progressImported: number;
   invitesSent: number;
   failed: number;
+  error?: string;
   details: Array<{
     email: string;
     wp_user_id: number;
@@ -59,6 +61,13 @@ export async function runWpUsersMigrationBatch(
   });
 
   if (!memberPage) {
+    const missing: string[] = [];
+    if (!process.env.WP_WEBHOOK_SECRET?.trim()) {
+      missing.push("WP_WEBHOOK_SECRET (.env.local)");
+    }
+    if (!getWpSiteOrigin()) {
+      missing.push("NEXT_PUBLIC_WP_SITE_URL veya NEXT_PUBLIC_WP_API_URL");
+    }
     return {
       success: false,
       dryRun,
@@ -75,6 +84,10 @@ export async function runWpUsersMigrationBatch(
       invitesSent: 0,
       failed: 0,
       details: [],
+      error:
+        missing.length > 0
+          ? `Eksik yapılandırma: ${missing.join(", ")}`
+          : "WP academy-member-list yanıt vermedi (plugin kapalı, secret uyuşmuyor veya sürüm < 1.7.0)",
     };
   }
 

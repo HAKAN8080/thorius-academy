@@ -15,16 +15,23 @@ import { Container } from "@/components/layout/container";
 import { AuthButtons } from "@/components/layout/auth-buttons";
 import { Logo } from "@/components/layout/logo";
 
-const navLinks = [
-  { href: "/kurslar", label: "Kurslar" },
-  { href: "/kariyer-yolu", label: "Kariyer Yolu" },
-  { href: "/#ecosystem", label: "Koçluk" },
-  { href: "/kurumsal", label: "Kurumsal" },
-  { href: "/hakkimizda", label: "Hakkımızda" },
-  { href: "/blog", label: "Blog" },
-] as const;
+export interface HeaderNavLink {
+  href: string;
+  label: string;
+}
 
-export function Header() {
+export interface HeaderAuthUrls {
+  loginHref: string;
+  registerHref: string;
+  panelHref: string;
+}
+
+interface HeaderProps {
+  navLinks: HeaderNavLink[];
+  authUrls?: HeaderAuthUrls;
+}
+
+export function Header({ navLinks, authUrls }: HeaderProps) {
   const [open, setOpen] = useState(false);
 
   return (
@@ -48,7 +55,7 @@ export function Header() {
         </nav>
 
         <div className="hidden md:flex">
-          <AuthButtons className="flex items-center gap-3" />
+          <AuthButtons className="flex items-center gap-3" authUrls={authUrls} />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
@@ -78,6 +85,7 @@ export function Header() {
                 <hr className="my-2 border-primary-100" />
                 <AuthButtons
                   className="flex flex-col gap-2"
+                  authUrls={authUrls}
                   onNavigate={() => setOpen(false)}
                 />
               </nav>

@@ -1,3 +1,4 @@
+import { headers } from "next/headers";
 import Link from "next/link";
 import { CheckCircle2, Users, LineChart, Shield } from "lucide-react";
 import { Container } from "@/components/layout/container";
@@ -11,6 +12,8 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { CorporateContactForm } from "@/components/marketing/corporate-contact-form";
+import { CompanyConsultingPage } from "@/components/marketing/company-consulting-page";
+import { isCompanySiteHost } from "@/lib/site/site-mode";
 
 const benefits = [
   {
@@ -59,16 +62,21 @@ const packages = [
 ] as const;
 
 export default function KurumsalPage() {
+  if (isCompanySiteHost(headers().get("host"))) {
+    return <CompanyConsultingPage />;
+  }
+
   return (
     <>
       <section className="bg-gradient-to-br from-primary-900 to-primary-700 py-20 text-white">
         <Container size="narrow" className="text-center">
           <h1 className="text-4xl font-bold sm:text-5xl">
-            Kurumsal Perakende Akademisi
+            Kurumsal danışmanlık & dönüşüm
           </h1>
           <p className="mt-6 text-lg text-primary-100">
-            Zincir mağazalarınız için uçtan uca yetkinlik geliştirme programları.
-            Planlama, operasyon ve dijital dönüşümü tek platformda birleştirin.
+            Tedarik zinciri, planlama ve İK alanlarında audit ile başlayın; AI4U
+            Retail yazılımı ve Thorius Academy eğitimleriyle sürdürülebilir
+            yetkinlik inşa edin.
           </p>
           <Button variant="gold" size="lg" className="mt-10" asChild>
             <Link href="#iletisim">Demo Talep Et</Link>
