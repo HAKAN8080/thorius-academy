@@ -9,8 +9,23 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { LESSON_VIDEO_MAX_BYTES } from "@/lib/upload/file-guard";
+import {
+  BUNNY_TRANSCODING_BODY,
+  BUNNY_TRANSCODING_TITLE,
+  BUNNY_TRANSCODING_TOAST,
+} from "@/lib/video/bunny-messages";
+import { isBunnyStreamUrl } from "@/lib/video/bunny-stream";
 
 type VideoSourceMode = "url" | "upload";
+
+function BunnyTranscodingNotice() {
+  return (
+    <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2.5 text-xs text-amber-950">
+      <p className="font-semibold">{BUNNY_TRANSCODING_TITLE}</p>
+      <p className="mt-1 leading-relaxed">{BUNNY_TRANSCODING_BODY}</p>
+    </div>
+  );
+}
 
 interface LessonVideoSourceFieldProps {
   videoUrl: string;
@@ -35,6 +50,7 @@ export function LessonVideoSourceField({
   const [mode, setMode] = useState<VideoSourceMode>("url");
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
   const [isPending, startTransition] = useTransition();
+  const showTranscodingNotice = isBunnyStreamUrl(videoUrl);
 
   function handleFileChange(event: React.ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0];
@@ -96,7 +112,10 @@ export function LessonVideoSourceField({
           onVideoUrlChange(session.playUrl);
           setMode("url");
           setUploadProgress(null);
-          toast.success("Video Bunny Stream'e yüklendi.");
+          toast.success("Video Bunny Stream'e yüklendi", {
+            description: BUNNY_TRANSCODING_TOAST,
+            duration: 12_000,
+          });
         })
         .catch((error: unknown) => {
           const message =
@@ -155,6 +174,7 @@ export function LessonVideoSourceField({
             ve &quot;Kurs — Ders&quot; adlandırması uygulanır. YouTube/Vimeo
             desteklenmez.
           </p>
+          {showTranscodingNotice ? <BunnyTranscodingNotice /> : null}
         </div>
       ) : (
         <div className="space-y-2 rounded-xl border border-dashed border-primary-200 p-4">
@@ -181,13 +201,9 @@ export function LessonVideoSourceField({
           <p className="text-xs text-primary-500">
             MP4, WebM veya MOV · en fazla 500 MB · Bunny Stream kütüphanesinde
             kurs klasörü (collection) açılır; video adı &quot;Kurs adı — Ders
-            adı&quot; olur.
+            adı&quot; olur. Yükleme sonrası işleme genelde 1–2 saat sürer.
           </p>
-          {videoUrl ? (
-            <p className="truncate text-xs text-emerald-700">
-              Hazır: {videoUrl}
-            </p>
-          ) : null}
+          {showTranscodingNotice ? <BunnyTranscodingNotice /> : null}
         </div>
       )}
     </div>
