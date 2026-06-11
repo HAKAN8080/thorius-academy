@@ -404,44 +404,7 @@ async function grantInstructorAccess(
   };
 }
 
-export async function linkInstructorProfileFromWpUserId(
-  userId: string,
-  wpUserId: number,
-): Promise<boolean> {
-  const parsedId = parsePositiveInt(wpUserId);
-  if (!parsedId) {
-    return false;
-  }
-
-  let admin: AdminClient;
-  try {
-    admin = getSupabaseAdmin();
-  } catch {
-    return false;
-  }
-
-  const instructor = await lookupInstructorByWpUserId(admin, parsedId);
-  if (!instructor) {
-    return false;
-  }
-
-  const { data: authUser } = await admin.auth.admin.getUserById(userId);
-  const email = normalizeEmail(authUser.user?.email);
-  const { data: profile } = await admin
-    .from("profiles")
-    .select("wp_instructor_id, full_name")
-    .eq("id", userId)
-    .maybeSingle();
-
-  await grantInstructorAccess(
-    userId,
-    parsedId,
-    email,
-    profile,
-    instructor,
-  );
-  return true;
-}
+export { linkInstructorProfileFromWpUserId } from "@/lib/instructor/link-instructor-profile";
 
 export const getInstructorAccess = cache(async (): Promise<InstructorAccess> => {
   const supabase = await createClient();

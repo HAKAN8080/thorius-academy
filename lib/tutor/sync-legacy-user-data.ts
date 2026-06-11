@@ -2,7 +2,7 @@ import {
   getKnownInstructorWpUserId,
   getLegacySyncEmails,
 } from "@/lib/constants/instructor-allowlist";
-import { linkInstructorProfileFromWpUserId } from "@/lib/instructor/access";
+import { linkInstructorProfileFromWpUserId } from "@/lib/instructor/link-instructor-profile";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { fetchLegacyUserDataFromWp } from "@/lib/tutor/fetch-legacy-user-data";
 import type {
@@ -211,6 +211,8 @@ async function importLessonProgress(
 export interface SyncLegacyUserDataOptions {
   lastSyncedAt?: string;
   wpUserId?: number;
+  /** Toplu migrasyonda 6 saatlik throttle'ı atla */
+  force?: boolean;
 }
 
 export async function syncLegacyUserData(
@@ -237,7 +239,7 @@ export async function syncLegacyUserData(
       ? authUser.user.user_metadata.tutor_legacy_synced_at
       : undefined) ?? options.lastSyncedAt;
 
-  if (!shouldRunLegacySync(lastSyncedAt)) {
+  if (!options.force && !shouldRunLegacySync(lastSyncedAt)) {
     return {
       skipped: true,
       reason: "recently_synced",
