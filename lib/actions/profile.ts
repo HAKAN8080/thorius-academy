@@ -6,6 +6,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import {
   buildProfileAvatarStoragePath,
+  mapProfileAvatarUploadError,
   uploadProfileAvatarBuffer,
   validateProfileAvatarBuffer,
   validateProfileAvatarMeta,
@@ -101,12 +102,14 @@ export async function uploadProfileAvatar(
       return { error: bufferError };
     }
 
-    const path = buildProfileAvatarStoragePath(user.id, file.type);
-    const url = await uploadProfileAvatarBuffer(path, buffer, file.type);
+    const path = buildProfileAvatarStoragePath(user.id);
+    const url = await uploadProfileAvatarBuffer(path, buffer);
 
     return { url };
-  } catch {
-    return { error: "Profil fotoğrafı yüklenemedi." };
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    console.error("[uploadProfileAvatar]", message);
+    return { error: mapProfileAvatarUploadError(message) };
   }
 }
 

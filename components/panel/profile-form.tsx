@@ -4,11 +4,10 @@ import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   updateUserProfile,
-  uploadProfileAvatar,
   type ProfileActionState,
   type UserProfile,
 } from "@/lib/actions/profile";
-import { ImageUploadField } from "@/components/instructor/image-upload-field";
+import { ProfileAvatarUploadField } from "@/components/panel/profile-avatar-upload-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -74,13 +73,10 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
 
         <div className="space-y-2 sm:col-span-2">
           <input type="hidden" name="avatar_url" value={avatarUrl} />
-          <ImageUploadField
-            label="Profil Fotoğrafı"
+          <ProfileAvatarUploadField
             value={avatarUrl || null}
             onChange={(url) => setAvatarUrl(url ?? "")}
-            onUpload={uploadProfileAvatar}
             previewAlt={profile.full_name ?? "Profil fotoğrafı"}
-            hint="JPG, PNG veya WebP · en fazla 2 MB"
           />
         </div>
 

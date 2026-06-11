@@ -1,19 +1,14 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 export const PROFILE_MEDIA_BUCKET = "profile-media";
-export const PROFILE_AVATAR_MAX_BYTES = 2 * 1024 * 1024;
+/** Kırpılmış JPEG çıktı üst sınırı */
+export const PROFILE_AVATAR_MAX_BYTES = 512 * 1024;
 
 const ALLOWED_MIME_TYPES = new Set([
   "image/jpeg",
   "image/png",
   "image/webp",
 ]);
-
-const EXTENSION_BY_MIME: Record<string, string> = {
-  "image/jpeg": "jpg",
-  "image/png": "png",
-  "image/webp": "webp",
-};
 
 function hasJpegMagicBytes(buffer: Buffer): boolean {
   return (
@@ -79,12 +74,8 @@ export function validateProfileAvatarBuffer(
   return null;
 }
 
-export function buildProfileAvatarStoragePath(
-  userId: string,
-  mimeType: string,
-): string {
-  const ext = EXTENSION_BY_MIME[mimeType] ?? "jpg";
-  return `${userId}/avatar.${ext}`;
+export function buildProfileAvatarStoragePath(userId: string): string {
+  return `${userId}/avatar.jpg`;
 }
 
 export function getProfileMediaPublicUrl(path: string): string {
@@ -96,17 +87,32 @@ export function getProfileMediaPublicUrl(path: string): string {
 export async function uploadProfileAvatarBuffer(
   path: string,
   buffer: Buffer,
-  mimeType: string,
 ): Promise<string> {
   const admin = getSupabaseAdmin();
   const { error } = await admin.storage.from(PROFILE_MEDIA_BUCKET).upload(path, buffer, {
-    contentType: mimeType,
+    contentType: "image/jpeg",
     upsert: true,
+    cacheControl: "3600",
   });
 
   if (error) {
     throw new Error(error.message);
   }
 
-  return getProfileMediaPublicUrl(path);
+  const baseUrl = getProfileMediaPublicUrl(path);
+  return `${baseUrl}?v=${Date.now()}`;
+}
+
+export function mapProfileAvatarUploadError(message: string): string {
+  const lower = message.toLowerCase();
+  if (lower.includes("bucket not found") || lower.includes("profile-media")) {
+    return "Profil fotoğrafı depolaması henüz hazır değil. Lütfen yöneticiye bildirin (profile-media bucket).";
+  }
+  if (lower.includes("payload too large") || lower.includes("entity too large")) {
+    return "Profil fotoğrafı çok büyük. Lütfen daha küçük bir görsel deneyin.";
+  }
+  if (lower.includes("invalid mime") || lower.includes("mime type")) {
+    return "Desteklenmeyen dosya formatı. JPG, PNG veya WebP kullanın.";
+  }
+  return `Profil fotoğrafı yüklenemedi: ${message}`;
 }
