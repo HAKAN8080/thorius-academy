@@ -1,11 +1,14 @@
 "use client";
 
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import {
   updateUserProfile,
+  uploadProfileAvatar,
   type ProfileActionState,
   type UserProfile,
 } from "@/lib/actions/profile";
+import { ImageUploadField } from "@/components/instructor/image-upload-field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -24,6 +27,7 @@ function SubmitButton() {
 
 export function ProfileForm({ profile }: { profile: UserProfile }) {
   const [state, formAction] = useFormState(updateUserProfile, initialState);
+  const [avatarUrl, setAvatarUrl] = useState(profile.avatar_url ?? "");
 
   return (
     <form action={formAction} className="space-y-6">
@@ -68,14 +72,15 @@ export function ProfileForm({ profile }: { profile: UserProfile }) {
           />
         </div>
 
-        <div className="space-y-2">
-          <Label htmlFor="avatar_url">Profil Fotoğrafı URL</Label>
-          <Input
-            id="avatar_url"
-            name="avatar_url"
-            type="url"
-            defaultValue={profile.avatar_url ?? ""}
-            placeholder="https://..."
+        <div className="space-y-2 sm:col-span-2">
+          <input type="hidden" name="avatar_url" value={avatarUrl} />
+          <ImageUploadField
+            label="Profil Fotoğrafı"
+            value={avatarUrl || null}
+            onChange={(url) => setAvatarUrl(url ?? "")}
+            onUpload={uploadProfileAvatar}
+            previewAlt={profile.full_name ?? "Profil fotoğrafı"}
+            hint="JPG, PNG veya WebP · en fazla 2 MB"
           />
         </div>
 

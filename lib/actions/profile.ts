@@ -4,6 +4,12 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
+import {
+  buildProfileAvatarStoragePath,
+  uploadProfileAvatarBuffer,
+  validateProfileAvatarBuffer,
+  validateProfileAvatarMeta,
+} from "@/lib/profile/profile-avatar-storage";
 import { syncProfileToWp } from "@/lib/tutor/sync-profile-to-wp";
 
 export interface UserProfile {
@@ -64,6 +70,44 @@ export async function getUserProfile(): Promise<UserProfile | null> {
     wp_user_id: profile?.wp_user_id ?? wpUserIdMeta,
     role: profile?.role ?? "student",
   };
+}
+
+export async function uploadProfileAvatar(
+  formData: FormData,
+): Promise<{ url: string } | { error: string }> {
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user?.id) {
+      return { error: "Giriş yapmalısınız." };
+    }
+
+    const file = formData.get("file");
+    if (!(file instanceof File) || file.size === 0) {
+      return { error: "Lütfen bir görsel seçin." };
+    }
+
+    const validationError = validateProfileAvatarMeta(file);
+    if (validationError) {
+      return { error: validationError };
+    }
+
+    const buffer = Buffer.from(await file.arrayBuffer());
+    const bufferError = validateProfileAvatarBuffer(buffer, file.type);
+    if (bufferError) {
+      return { error: bufferError };
+    }
+
+    const path = buildProfileAvatarStoragePath(user.id, file.type);
+    const url = await uploadProfileAvatarBuffer(path, buffer, file.type);
+
+    return { url };
+  } catch {
+    return { error: "Profil fotoğrafı yüklenemedi." };
+  }
 }
 
 export async function updateUserProfile(

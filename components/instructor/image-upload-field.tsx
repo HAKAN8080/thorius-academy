@@ -13,6 +13,7 @@ interface ImageUploadFieldProps {
   onUpload: (formData: FormData) => Promise<{ url: string } | { error: string }>;
   disabled?: boolean;
   previewAlt?: string;
+  hint?: string;
 }
 
 export function ImageUploadField({
@@ -22,6 +23,7 @@ export function ImageUploadField({
   onUpload,
   disabled = false,
   previewAlt = "Görsel önizleme",
+  hint = "JPG, PNG veya WebP · en fazla 5 MB",
 }: ImageUploadFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null);
   const [isPending, startTransition] = useTransition();
@@ -81,7 +83,7 @@ export function ImageUploadField({
           </Button>
         ) : null}
       </div>
-      <p className="text-xs text-primary-500">JPG, PNG veya WebP · en fazla 5 MB</p>
+      <p className="text-xs text-primary-500">{hint}</p>
       {value ? (
         <div className="relative mt-2 h-40 w-full max-w-md overflow-hidden rounded-xl border border-primary-100">
           <Image src={value} alt={previewAlt} fill className="object-cover" />
