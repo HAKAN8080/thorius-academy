@@ -9,7 +9,7 @@ import {
   parseKurslarPage,
   parseKurslarSearch,
 } from "@/lib/course/kurslar-url";
-import { getCourseListingPage } from "@/lib/wordpress/catalog";
+import { getCoursesCacheListingPage } from "@/lib/course/courses-cache-catalog";
 
 export const metadata: Metadata = {
   title: "Tüm Kurslar",
@@ -32,7 +32,7 @@ async function KurslarCatalogSection({
   categorySlug?: string;
   searchQuery?: string;
 }) {
-  const listing = await getCourseListingPage({
+  const listing = await getCoursesCacheListingPage({
     page,
     categorySlug,
     search: searchQuery,
@@ -55,8 +55,6 @@ async function KurslarCatalogSection({
     <KurslarCatalog
       courses={listing.courses}
       categories={listing.categories}
-      products={listing.products}
-      stats={listing.stats}
       pagination={listing.pagination}
       totalPublished={listing.totalPublished}
       selectedCategory={listing.selectedCategory}
@@ -72,23 +70,31 @@ export default function KurslarPage({ searchParams }: KurslarPageProps) {
   const suspenseKey = `${categorySlug ?? "all"}-${page}-${searchQuery ?? ""}`;
 
   return (
-    <Container className="py-12 md:py-16">
-      <div className="mb-8 md:mb-12">
-        <h1 className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl">
-          Tüm Kurslar
-        </h1>
-        <p className="text-lg text-muted-foreground">
-          Perakende profesyonelleri için seçilmiş eğitim programları
-        </p>
-      </div>
+    <div className="bg-[#0B1E3F]">
+      <Container className="py-12 md:py-16">
+        <div className="mb-8 md:mb-12">
+          <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#D4AF37]">
+            Thorius Academy
+          </p>
+          <h1 className="mb-3 text-3xl font-bold text-white md:text-4xl">
+            Tüm Kurslar
+          </h1>
+          <p className="text-lg text-white/70">
+            Perakende profesyonelleri için seçilmiş eğitim programları
+          </p>
+        </div>
 
-      <Suspense key={suspenseKey} fallback={<CourseGridSkeleton count={8} />}>
-        <KurslarCatalogSection
-          page={page}
-          categorySlug={categorySlug}
-          searchQuery={searchQuery}
-        />
-      </Suspense>
-    </Container>
+        <Suspense
+          key={suspenseKey}
+          fallback={<CourseGridSkeleton count={8} variant="dark" />}
+        >
+          <KurslarCatalogSection
+            page={page}
+            categorySlug={categorySlug}
+            searchQuery={searchQuery}
+          />
+        </Suspense>
+      </Container>
+    </div>
   );
 }

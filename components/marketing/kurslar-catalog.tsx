@@ -1,16 +1,15 @@
+import { CourseCardV2 } from "@/components/course/course-card-v2";
 import { CategoryFilter } from "@/components/marketing/category-filter";
 import { CatalogPagination } from "@/components/marketing/catalog-pagination";
 import { CourseSearchForm } from "@/components/marketing/course-search-form";
-import { CourseCard } from "@/components/marketing/course-card";
-import type { CourseStats } from "@/lib/actions/course-stats";
-import type { CourseProduct } from "@/types/course-product";
-import type { Course, WPCategory } from "@/types/wordpress";
+import type {
+  CatalogCategoryItem,
+  CatalogCourseItem,
+} from "@/lib/course/courses-cache-catalog";
 
 interface KurslarCatalogProps {
-  courses: Course[];
-  categories: WPCategory[];
-  products: CourseProduct[];
-  stats: Record<string, CourseStats>;
+  courses: CatalogCourseItem[];
+  categories: CatalogCategoryItem[];
   pagination: {
     page: number;
     totalPages: number;
@@ -22,6 +21,26 @@ interface KurslarCatalogProps {
   searchQuery?: string;
 }
 
+function mapCourseToCardProps(course: CatalogCourseItem) {
+  const isFree = course.pricingModel === "free" || course.price <= 0;
+  const priceNormal = isFree ? null : course.price;
+  const priceSale =
+    !isFree && course.salePrice != null && course.salePrice < course.price
+      ? course.salePrice
+      : null;
+
+  return {
+    slug: course.slug,
+    title: course.title,
+    excerpt: course.description,
+    thumbnail: course.coverImageUrl ?? "",
+    category: course.category ?? undefined,
+    level: course.level,
+    priceNormal,
+    priceSale,
+  };
+}
+
 function EmptyStateMessage({
   searchQuery,
   selectedCategory,
@@ -31,8 +50,8 @@ function EmptyStateMessage({
 }) {
   if (searchQuery) {
     return (
-      <p className="text-muted-foreground">
-        <span className="font-medium text-primary-900">
+      <p className="text-white/70">
+        <span className="font-medium text-[#D4AF37]">
           &ldquo;{searchQuery}&rdquo;
         </span>{" "}
         ile eşleşen kurs bulunamadı.
@@ -42,33 +61,25 @@ function EmptyStateMessage({
 
   if (selectedCategory) {
     return (
-      <p className="text-muted-foreground">
-        Bu kategoride henüz kurs bulunmuyor.
-      </p>
+      <p className="text-white/70">Bu kategoride henüz kurs bulunmuyor.</p>
     );
   }
 
-  return <p className="text-muted-foreground">Henüz kurs yok.</p>;
+  return <p className="text-white/70">Henüz kurs yok.</p>;
 }
 
 export function KurslarCatalog({
   courses,
   categories,
-  products,
-  stats,
   pagination,
   totalPublished,
   selectedCategory,
   searchQuery,
 }: KurslarCatalogProps) {
-  const productBySlug = new Map(
-    products.map((product) => [product.course_slug, product]),
-  );
-
   if (totalPublished === 0 && courses.length === 0 && !searchQuery) {
     return (
       <div className="py-16 text-center">
-        <p className="text-muted-foreground">Henüz kurs yok.</p>
+        <p className="text-white/70">Henüz kurs yok.</p>
       </div>
     );
   }
@@ -81,6 +92,7 @@ export function KurslarCatalog({
           selectedSlug={selectedCategory}
           totalCount={totalPublished}
           searchQuery={searchQuery}
+          variant="dark"
         />
       </aside>
 
@@ -88,11 +100,12 @@ export function KurslarCatalog({
         <CourseSearchForm
           defaultQuery={searchQuery}
           categorySlug={selectedCategory}
+          variant="dark"
         />
 
         {searchQuery ? (
-          <p className="text-sm text-muted-foreground">
-            <span className="font-medium text-primary-900">
+          <p className="text-sm text-white/70">
+            <span className="font-medium text-[#D4AF37]">
               &ldquo;{searchQuery}&rdquo;
             </span>{" "}
             için {pagination.total} sonuç bulundu
@@ -109,18 +122,12 @@ export function KurslarCatalog({
         ) : (
           <>
             <div className="grid grid-cols-1 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {courses.map((course) => {
-                const courseStats = stats[course.slug];
-                return (
-                  <CourseCard
-                    key={course.id}
-                    course={course}
-                    product={productBySlug.get(course.slug) ?? null}
-                    lessonCount={courseStats?.lessonCount}
-                    duration={courseStats?.durationLabel}
-                  />
-                );
-              })}
+              {courses.map((course) => (
+                <CourseCardV2
+                  key={course.id}
+                  {...mapCourseToCardProps(course)}
+                />
+              ))}
             </div>
 
             <CatalogPagination
@@ -129,6 +136,7 @@ export function KurslarCatalog({
               total={pagination.total}
               categorySlug={selectedCategory}
               searchQuery={searchQuery}
+              variant="dark"
             />
           </>
         )}

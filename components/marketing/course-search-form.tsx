@@ -3,17 +3,21 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import { cn } from "@/lib/utils";
 
 interface CourseSearchFormProps {
   defaultQuery?: string;
   categorySlug?: string;
+  variant?: "light" | "dark";
 }
 
 export function CourseSearchForm({
   defaultQuery,
   categorySlug,
+  variant = "light",
 }: CourseSearchFormProps) {
   const hasQuery = Boolean(defaultQuery?.trim());
+  const isDark = variant === "dark";
 
   return (
     <form action="/kurslar" method="get" className="w-full">
@@ -24,7 +28,10 @@ export function CourseSearchForm({
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
           <Search
-            className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground"
+            className={cn(
+              "pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2",
+              isDark ? "text-white/50" : "text-muted-foreground",
+            )}
             aria-hidden="true"
           />
           <Input
@@ -32,7 +39,12 @@ export function CourseSearchForm({
             name="ara"
             defaultValue={defaultQuery ?? ""}
             placeholder="Kurs adı veya konu ara..."
-            className="h-11 rounded-xl border-primary-100 bg-white pl-10 pr-4 text-base shadow-sm"
+            className={cn(
+              "h-11 rounded-xl pl-10 pr-4 text-base shadow-sm",
+              isDark
+                ? "border-white/15 bg-white/10 text-white placeholder:text-white/50"
+                : "border-primary-100 bg-white",
+            )}
             aria-label="Kurs ara"
           />
         </div>
@@ -40,7 +52,12 @@ export function CourseSearchForm({
         <div className="flex shrink-0 gap-2">
           <Button
             type="submit"
-            className="h-11 rounded-xl bg-primary-950 px-6 text-white hover:bg-primary-900"
+            className={cn(
+              "h-11 rounded-xl px-6",
+              isDark
+                ? "bg-[#D4AF37] text-[#0B1E3F] hover:bg-[#c4a030]"
+                : "bg-primary-950 text-white hover:bg-primary-900",
+            )}
           >
             Ara
           </Button>
@@ -49,7 +66,12 @@ export function CourseSearchForm({
             <Button
               type="button"
               variant="outline"
-              className="h-11 rounded-xl border-primary-100"
+              className={cn(
+                "h-11 rounded-xl",
+                isDark
+                  ? "border-white/20 bg-transparent text-white hover:bg-white/10"
+                  : "border-primary-100",
+              )}
               asChild
             >
               <Link

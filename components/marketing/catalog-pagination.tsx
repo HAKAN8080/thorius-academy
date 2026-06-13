@@ -9,6 +9,7 @@ interface CatalogPaginationProps {
   total: number;
   categorySlug?: string;
   searchQuery?: string;
+  variant?: "light" | "dark";
 }
 
 function getVisiblePages(
@@ -46,11 +47,13 @@ export function CatalogPagination({
   total,
   categorySlug,
   searchQuery,
+  variant = "light",
 }: CatalogPaginationProps) {
   if (totalPages <= 1) {
     return null;
   }
 
+  const isDark = variant === "dark";
   const visiblePages = getVisiblePages(page, totalPages);
   const prevHref =
     page > 1
@@ -70,7 +73,7 @@ export function CatalogPagination({
       className="mt-10 flex flex-col items-center gap-4"
       aria-label="Kurs sayfaları"
     >
-      <p className="text-sm text-muted-foreground">
+      <p className={cn("text-sm", isDark ? "text-white/70" : "text-muted-foreground")}>
         Toplam {total} kurs · Sayfa {page} / {totalPages}
       </p>
 
@@ -78,14 +81,26 @@ export function CatalogPagination({
         {prevHref ? (
           <Link
             href={prevHref}
-            className="inline-flex h-10 items-center gap-1 rounded-lg border border-primary-100 px-3 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-50"
+            className={cn(
+              "inline-flex h-10 items-center gap-1 rounded-lg border px-3 text-sm font-medium transition-colors",
+              isDark
+                ? "border-white/20 text-white hover:bg-white/10"
+                : "border-primary-100 text-primary-900 hover:bg-primary-50",
+            )}
             aria-label="Önceki sayfa"
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Önceki
           </Link>
         ) : (
-          <span className="inline-flex h-10 items-center gap-1 rounded-lg border border-primary-50 px-3 text-sm text-muted-foreground">
+          <span
+            className={cn(
+              "inline-flex h-10 items-center gap-1 rounded-lg border px-3 text-sm",
+              isDark
+                ? "border-white/10 text-white/40"
+                : "border-primary-50 text-muted-foreground",
+            )}
+          >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
             Önceki
           </span>
@@ -113,8 +128,12 @@ export function CatalogPagination({
               className={cn(
                 "inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors",
                 item === page
-                  ? "bg-primary-950 text-white"
-                  : "border border-primary-100 text-primary-900 hover:bg-primary-50",
+                  ? isDark
+                    ? "bg-[#D4AF37] text-[#0B1E3F]"
+                    : "bg-primary-950 text-white"
+                  : isDark
+                    ? "border border-white/20 text-white hover:bg-white/10"
+                    : "border border-primary-100 text-primary-900 hover:bg-primary-50",
               )}
             >
               {item}
@@ -125,14 +144,26 @@ export function CatalogPagination({
         {nextHref ? (
           <Link
             href={nextHref}
-            className="inline-flex h-10 items-center gap-1 rounded-lg border border-primary-100 px-3 text-sm font-medium text-primary-900 transition-colors hover:bg-primary-50"
+            className={cn(
+              "inline-flex h-10 items-center gap-1 rounded-lg border px-3 text-sm font-medium transition-colors",
+              isDark
+                ? "border-white/20 text-white hover:bg-white/10"
+                : "border-primary-100 text-primary-900 hover:bg-primary-50",
+            )}
             aria-label="Sonraki sayfa"
           >
             Sonraki
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         ) : (
-          <span className="inline-flex h-10 items-center gap-1 rounded-lg border border-primary-50 px-3 text-sm text-muted-foreground">
+          <span
+            className={cn(
+              "inline-flex h-10 items-center gap-1 rounded-lg border px-3 text-sm",
+              isDark
+                ? "border-white/10 text-white/40"
+                : "border-primary-50 text-muted-foreground",
+            )}
+          >
             Sonraki
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </span>
