@@ -9,6 +9,7 @@ import {
   parseKurslarPage,
   parseKurslarSearch,
 } from "@/lib/course/kurslar-url";
+import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import { getCoursesCacheListingPage } from "@/lib/course/courses-cache-catalog";
 
 export const metadata: Metadata = {
@@ -65,8 +66,22 @@ async function KurslarCatalogSection({
 
 export default function KurslarPage({ searchParams }: KurslarPageProps) {
   const page = parseKurslarPage(searchParams.sayfa);
-  const categorySlug = searchParams.kategori?.trim() || undefined;
+  const rawCategorySlug = searchParams.kategori?.trim() || undefined;
+  const categorySlug = rawCategorySlug
+    ? canonicalizeCategorySlug(rawCategorySlug)
+    : undefined;
   const searchQuery = parseKurslarSearch(searchParams.ara);
+
+  if (rawCategorySlug && categorySlug && rawCategorySlug !== categorySlug) {
+    redirect(
+      buildKurslarUrl({
+        page,
+        categorySlug,
+        search: searchQuery,
+      }),
+    );
+  }
+
   const suspenseKey = `${categorySlug ?? "all"}-${page}-${searchQuery ?? ""}`;
 
   return (

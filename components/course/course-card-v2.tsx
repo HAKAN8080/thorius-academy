@@ -58,7 +58,7 @@ export function CourseCardV2({
           "aspect-video",
         )}
       >
-        {thumbnail ? (
+        {thumbnail?.trim() ? (
           <Image
             src={thumbnail}
             alt={imageAlt || title}

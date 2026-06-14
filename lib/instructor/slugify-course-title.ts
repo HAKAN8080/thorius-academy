@@ -1,6 +1,7 @@
 export function slugifyCourseTitle(title: string): string {
   return title
-    .toLowerCase()
+    .normalize("NFC")
+    .toLocaleLowerCase("tr")
     .replace(/ğ/g, "g")
     .replace(/ü/g, "u")
     .replace(/ş/g, "s")

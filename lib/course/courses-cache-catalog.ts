@@ -1,6 +1,10 @@
 import { unstable_cache } from "next/cache";
+import {
+  canonicalizeCategorySlug,
+  slugifyCategoryName,
+} from "@/lib/course/category-slug";
+import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { fromCoursesCacheLevelLabel } from "@/lib/instructor/courses-cache-write";
-import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 export const COURSES_CATALOG_PER_PAGE = 24;
@@ -100,7 +104,7 @@ function buildCategories(rows: Array<{ category: string | null }>): CatalogCateg
       continue;
     }
 
-    const slug = slugifyCourseTitle(name);
+    const slug = slugifyCategoryName(name);
     const existing = counts.get(slug);
     if (existing) {
       existing.count += 1;
@@ -127,7 +131,16 @@ function resolveCategoryName(
     return undefined;
   }
 
-  return categories.find((category) => category.slug === categorySlug)?.name;
+  const canonical = canonicalizeCategorySlug(categorySlug);
+
+  const bySlug = categories.find(
+    (category) =>
+      category.slug === canonical ||
+      category.slug === categorySlug ||
+      slugifyCategoryName(category.name) === canonical,
+  );
+
+  return bySlug?.name;
 }
 
 async function fetchCategorySourceRows(): Promise<Array<{ category: string | null }>> {
@@ -155,11 +168,14 @@ async function buildCoursesCacheListingPage(params: {
   const page = Math.max(1, params.page ?? 1);
   const perPage = COURSES_CATALOG_PER_PAGE;
   const searchQuery = params.search?.trim() || undefined;
+  const categorySlug = params.categorySlug
+    ? canonicalizeCategorySlug(params.categorySlug)
+    : undefined;
   const categoryRows = await fetchCategorySourceRows();
   const categories = buildCategories(categoryRows);
-  const categoryName = resolveCategoryName(categories, params.categorySlug);
+  const categoryName = resolveCategoryName(categories, categorySlug);
 
-  if (params.categorySlug && !categoryName) {
+  if (categorySlug && !categoryName) {
     return {
       courses: [],
       categories,
@@ -170,7 +186,7 @@ async function buildCoursesCacheListingPage(params: {
         perPage,
       },
       totalPublished: categoryRows.length,
-      selectedCategory: params.categorySlug,
+      selectedCategory: categorySlug,
       searchQuery,
     };
   }
@@ -213,7 +229,7 @@ async function buildCoursesCacheListingPage(params: {
         perPage,
       },
       totalPublished: categoryRows.length,
-      selectedCategory: params.categorySlug,
+      selectedCategory: categorySlug,
       searchQuery,
     };
   }
@@ -223,6 +239,8 @@ async function buildCoursesCacheListingPage(params: {
   const courses = (data ?? [])
     .map((row) => mapRow(row as Record<string, unknown>))
     .filter((course): course is CatalogCourseItem => course !== null);
+
+  await enrichCatalogCoverImages(courses);
 
   return {
     courses,
@@ -234,7 +252,7 @@ async function buildCoursesCacheListingPage(params: {
       perPage,
     },
     totalPublished: categoryRows.length,
-    selectedCategory: params.categorySlug,
+    selectedCategory: categorySlug,
     searchQuery,
   };
 }
@@ -245,7 +263,9 @@ export async function getCoursesCacheListingPage(params: {
   search?: string;
 }): Promise<CoursesCacheListingPage> {
   const page = params.page ?? 1;
-  const categorySlug = params.categorySlug ?? "all";
+  const categorySlug = params.categorySlug
+    ? canonicalizeCategorySlug(params.categorySlug)
+    : "all";
   const search = params.search?.trim() ?? "";
 
   return unstable_cache(

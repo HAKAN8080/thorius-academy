@@ -22,7 +22,7 @@ export function mapCourseToCardProps(
     slug: course.slug,
     title: course.title,
     excerpt: course.excerpt.slice(0, 100),
-    thumbnail: course.featuredImage ?? "",
+    thumbnail: course.featuredImage || undefined,
     imageAlt: course.imageAlt,
     category: course.categories[0]?.name,
     level: options.level ?? course.level ?? "Başlangıç",

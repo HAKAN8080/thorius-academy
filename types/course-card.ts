@@ -2,7 +2,7 @@ export interface CourseCardV2Props {
   slug: string;
   title: string;
   excerpt?: string;
-  thumbnail: string;
+  thumbnail?: string;
   imageAlt?: string;
   category?: string;
   level?: string;

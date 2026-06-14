@@ -33,7 +33,7 @@ function mapCourseToCardProps(course: CatalogCourseItem) {
     slug: course.slug,
     title: course.title,
     excerpt: course.description,
-    thumbnail: course.coverImageUrl ?? "",
+    thumbnail: course.coverImageUrl ?? undefined,
     category: course.category ?? undefined,
     level: course.level,
     priceNormal,
