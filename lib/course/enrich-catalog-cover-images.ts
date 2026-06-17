@@ -5,10 +5,11 @@ import {
   normalizeCoverImageUrl,
 } from "@/lib/course/resolve-course-cover-image";
 
+/** Matches COURSES_CATALOG_PER_PAGE — slug fallback must cover a full listing page. */
 const PER_SLUG_CONCURRENCY = 4;
-const SLUG_FETCH_TIMEOUT_MS = 1500;
-const ENRICH_BUDGET_MS = 5000;
-const MAX_SLUG_FALLBACKS = 8;
+const SLUG_FETCH_TIMEOUT_MS = 2500;
+const ENRICH_BUDGET_MS = 15000;
+const MAX_SLUG_FALLBACKS = 24;
 
 async function mapWithConcurrency<T>(
   items: T[],
@@ -73,7 +74,13 @@ export async function enrichCatalogCoverImages(
     .filter((id): id is number => id != null && id > 0);
 
   if (wpCourseIds.length > 0) {
-    const byWpId = await fetchWpCoverImagesByWpIds(wpCourseIds);
+    let byWpId: Record<number, string> = {};
+    try {
+      byWpId = await fetchWpCoverImagesByWpIds(wpCourseIds);
+    } catch (error) {
+      console.error("[enrich-catalog-cover-images] batch fetch failed:", error);
+    }
+
     for (const course of missing) {
       if (!course.wpCourseId) {
         continue;

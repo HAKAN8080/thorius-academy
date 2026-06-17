@@ -10,6 +10,7 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
+const WP_COVER_BATCH_SIZE = 100;
 
 const WP_COVER_FIELDS = "id,slug,featured_media,thorius_youtube";
 
@@ -158,6 +159,21 @@ export async function fetchWpCoverImageBySlug(
   )();
 }
 
+function mergeWpCoverBatch(
+  record: Record<number, string>,
+  courses: WpCoverCourseResponse[],
+): void {
+  for (const course of courses) {
+    if (!course.id) {
+      continue;
+    }
+    const cover = parseWpCoverCourse(course);
+    if (cover) {
+      record[course.id] = cover;
+    }
+  }
+}
+
 async function fetchWpCoverImagesByWpIdsUncached(
   wpCourseIds: number[],
 ): Promise<Record<number, string>> {
@@ -166,9 +182,12 @@ async function fetchWpCoverImagesByWpIdsUncached(
     return {};
   }
 
-  try {
+  const record: Record<number, string> = {};
+
+  for (let offset = 0; offset < uniqueIds.length; offset += WP_COVER_BATCH_SIZE) {
+    const chunk = uniqueIds.slice(offset, offset + WP_COVER_BATCH_SIZE);
     const res = await fetch(
-      `${WP_API_BASE}/courses?include=${uniqueIds.join(",")}&per_page=${uniqueIds.length}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
+      `${WP_API_BASE}/courses?include=${chunk.join(",")}&per_page=${chunk.length}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
       {
         next: {
           revalidate: REVALIDATE_SECONDS,
@@ -178,27 +197,16 @@ async function fetchWpCoverImagesByWpIdsUncached(
     );
 
     if (!res.ok) {
-      return {};
+      throw new Error(
+        `[resolve-course-cover-image] batch fetch failed: ${res.status} ${res.statusText}`,
+      );
     }
 
     const courses: WpCoverCourseResponse[] = await res.json();
-    const record: Record<number, string> = {};
-
-    for (const course of courses) {
-      if (!course.id) {
-        continue;
-      }
-      const cover = parseWpCoverCourse(course);
-      if (cover) {
-        record[course.id] = cover;
-      }
-    }
-
-    return record;
-  } catch (error) {
-    console.error("[resolve-course-cover-image] batch fetch failed:", error);
-    return {};
+    mergeWpCoverBatch(record, courses);
   }
+
+  return record;
 }
 
 export async function fetchWpCoverImagesByWpIds(
