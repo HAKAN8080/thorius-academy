@@ -2,6 +2,8 @@ import Link from "next/link";
 import Image from "next/image";
 import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
+import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
 import type { WPCategory } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
 
@@ -31,7 +33,9 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           {categories.map((category) => (
             <Link
               key={category.id}
-              href={`/kurslar?kategori=${category.slug}`}
+              href={buildKurslarUrl({
+                categorySlug: catalogSlugFromWordPressCategory(category),
+              })}
               className="group"
             >
               <Card

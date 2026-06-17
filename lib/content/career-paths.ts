@@ -202,7 +202,7 @@ export const AI_CAREER_PATH: CareerPathDefinition = {
     },
   ],
   milestones: [...SHARED_MILESTONES],
-  catalogHref: "/kurslar?kategori=ai",
+  catalogHref: "/kurslar?kategori=yapay-zeka",
   catalogLabel: "Yapay zeka kursları",
   closingTitle: "Yapay zeka uzmanlığınızı inşa edin",
   closingDescription:

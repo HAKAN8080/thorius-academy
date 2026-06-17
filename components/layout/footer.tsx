@@ -2,6 +2,7 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
+import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import {
   isCompanySiteHost,
@@ -105,7 +106,11 @@ export async function Footer() {
     links: [
       { href: resolveHref("/kurslar"), label: "Tüm Kurslar" },
       ...topCategories.map((category) => ({
-        href: resolveHref(buildKurslarUrl({ categorySlug: category.slug })),
+        href: resolveHref(
+          buildKurslarUrl({
+            categorySlug: catalogSlugFromWordPressCategory(category),
+          }),
+        ),
         label: category.name,
       })),
     ],
