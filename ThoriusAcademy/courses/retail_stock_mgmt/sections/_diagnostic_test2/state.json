@@ -1,0 +1,17 @@
+{
+  "course": "retail_stock_mgmt",
+  "section": "_diagnostic_test2",
+  "exists": true,
+  "steps": {
+    "pptx": true,
+    "jpg": true,
+    "narration": false,
+    "mp3": false,
+    "srt": false,
+    "mp4": false
+  },
+  "files": {
+    "pptx": "/Users/eladenizugur/Desktop/ThoriusAcademy/courses/retail_stock_mgmt/sections/_diagnostic_test2/slides.pptx",
+    "jpg": "/Users/eladenizugur/Desktop/ThoriusAcademy/courses/retail_stock_mgmt/sections/_diagnostic_test2/slides"
+  }
+}

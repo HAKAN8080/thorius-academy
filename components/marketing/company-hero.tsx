@@ -24,7 +24,7 @@ export function CompanyHero() {
 
       <Container size="wide" className="relative w-full">
         <div className="mx-auto max-w-4xl text-center">
-          <p className="hero-fade-up text-sm font-semibold uppercase tracking-[0.22em] text-accent-400">
+          <p className="hero-fade-up text-base font-semibold uppercase tracking-[0.22em] text-accent-400 sm:text-lg md:text-xl">
             {COMPANY_LEGAL_NAME}
           </p>
           <h1

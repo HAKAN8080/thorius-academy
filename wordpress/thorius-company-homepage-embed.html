@@ -1,0 +1,907 @@
+<style>
+  .thorius-company {
+    --tc-navy: #0b1e3f;
+    --tc-navy-deep: #061229;
+    --tc-gold: #d4af37;
+    --tc-gold-soft: #f5e6a8;
+    --tc-text: #1e293b;
+    --tc-muted: #64748b;
+    --tc-line: #e2e8f0;
+    --tc-bg: #f1f5f9;
+    --tc-max: 1360px;
+    all: initial;
+    display: block;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
+    font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif !important;
+    font-size: 17px !important;
+    line-height: 1.55 !important;
+    color: var(--tc-text) !important;
+    -webkit-font-smoothing: antialiased;
+    overflow-x: hidden;
+  }
+
+  .thorius-company *,
+  .thorius-company *::before,
+  .thorius-company *::after {
+    box-sizing: border-box !important;
+  }
+
+  .thorius-company a {
+    text-decoration: none !important;
+    color: inherit;
+    transition: color 0.15s ease, background 0.15s ease, border-color 0.15s ease,
+      transform 0.15s ease;
+  }
+
+  .thorius-company a:focus,
+  .thorius-company a:active,
+  .thorius-company a:visited {
+    outline: none !important;
+    font-size: inherit !important;
+    transform: none !important;
+  }
+
+  .thorius-company h1,
+  .thorius-company h2,
+  .thorius-company h3,
+  .thorius-company p,
+  .thorius-company li,
+  .thorius-company span,
+  .thorius-company small {
+    margin: 0 !important;
+    padding: 0 !important;
+    font-family: inherit !important;
+    letter-spacing: normal !important;
+    text-transform: none !important;
+  }
+
+  .thorius-company .tc-wrap {
+    width: 100%;
+    max-width: var(--tc-max);
+    margin: 0 auto;
+    padding: 0 clamp(1rem, 3vw, 2.5rem);
+  }
+
+  .thorius-company .tc-hero {
+    position: relative;
+    isolation: isolate;
+    overflow: hidden;
+    background: radial-gradient(ellipse 120% 80% at 20% 40%, #0f2847 0%, #061229 45%, #020810 100%);
+    color: #fff !important;
+    padding: clamp(3rem, 6vw, 5rem) 0 clamp(3.5rem, 7vw, 5.5rem);
+  }
+
+  .thorius-company .tc-hero-bg {
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .thorius-company .tc-nebula {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 50% 40% at 78% 35%, rgba(88, 28, 135, 0.22) 0%, transparent 70%),
+      radial-gradient(ellipse 40% 35% at 65% 70%, rgba(30, 64, 175, 0.18) 0%, transparent 65%),
+      radial-gradient(ellipse 30% 25% at 15% 80%, rgba(212, 175, 55, 0.08) 0%, transparent 60%);
+  }
+
+  .thorius-company .tc-stars-field {
+    position: absolute;
+    inset: 0;
+  }
+
+  .thorius-company .tc-star {
+    position: absolute;
+    border-radius: 999px;
+    background: #fff;
+    animation: tc-star-twinkle var(--dur, 3s) ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    transform: none !important;
+    will-change: opacity;
+  }
+
+  .thorius-company .tc-star-xs {
+    width: 1px;
+    height: 1px;
+    opacity: 0.55;
+  }
+
+  .thorius-company .tc-star-sm {
+    width: 2px;
+    height: 2px;
+    opacity: 0.7;
+    box-shadow: 0 0 4px rgba(255, 255, 255, 0.5);
+  }
+
+  .thorius-company .tc-star-md {
+    width: 3px;
+    height: 3px;
+    opacity: 0.85;
+    box-shadow: 0 0 6px rgba(255, 255, 255, 0.65);
+  }
+
+  @keyframes tc-star-twinkle {
+    0%,
+    100% {
+      opacity: var(--min, 0.3);
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes tc-twinkle-fixed {
+    0%,
+    100% {
+      opacity: 0.5;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes tc-sirius-glow {
+    0%,
+    100% {
+      opacity: 0.8;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+
+  @keyframes tc-sirius-halo {
+    0%,
+    100% {
+      stroke-opacity: 0.25;
+    }
+    50% {
+      stroke-opacity: 0.55;
+    }
+  }
+
+  .thorius-company .tc-hero-grid {
+    position: relative;
+    z-index: 1;
+    display: grid;
+    gap: 2.5rem;
+    align-items: center;
+  }
+
+  .thorius-company .tc-hero-content {
+    position: relative;
+    z-index: 2;
+  }
+
+  .thorius-company .tc-hero-constellation {
+    display: none;
+    justify-content: center;
+    align-items: center;
+    position: relative;
+    z-index: 1;
+  }
+
+  .thorius-company .tc-hero-constellation svg {
+    width: min(100%, 340px);
+    height: auto;
+    overflow: visible;
+  }
+
+  .thorius-company .tc-hero-constellation .tc-cm-lines {
+    stroke: rgba(255, 255, 255, 0.13);
+    stroke-width: 1;
+    stroke-linecap: round;
+  }
+
+  .thorius-company .tc-hero-constellation .tc-cm-star {
+    animation: tc-twinkle-fixed 2.4s ease-in-out infinite;
+    animation-delay: var(--delay, 0s);
+    transform: none !important;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .thorius-company .tc-hero-constellation .tc-cm-star-white {
+    fill: #ffffff;
+    filter: drop-shadow(0 0 3px rgba(255, 255, 255, 0.45));
+  }
+
+  .thorius-company .tc-hero-constellation .tc-cm-star-warm {
+    fill: #ff9a8b;
+    filter: drop-shadow(0 0 4px rgba(255, 120, 100, 0.55));
+  }
+
+  .thorius-company .tc-hero-constellation .tc-cm-star-cool {
+    fill: #dbeafe;
+    filter: drop-shadow(0 0 3px rgba(147, 197, 253, 0.5));
+  }
+
+  .thorius-company .tc-hero-constellation .tc-sirius-core {
+    fill: #fffaf0;
+    filter: drop-shadow(0 0 8px rgba(255, 236, 179, 0.85))
+      drop-shadow(0 0 16px rgba(255, 180, 120, 0.35));
+    animation: tc-sirius-glow 2.8s ease-in-out infinite;
+    transform: none !important;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .thorius-company .tc-hero-constellation .tc-sirius-halo {
+    stroke: rgba(255, 200, 150, 0.4);
+    animation: tc-sirius-halo 2.8s ease-in-out infinite;
+    transform: none !important;
+  }
+
+  .thorius-company .tc-constellation-label {
+    display: block;
+    margin-top: 0.85rem !important;
+    text-align: center;
+    font-size: 0.7rem !important;
+    letter-spacing: 0.22em !important;
+    text-transform: uppercase !important;
+    color: rgba(255, 236, 179, 0.55) !important;
+  }
+
+  @media (min-width: 960px) {
+    .thorius-company .tc-hero-grid {
+      grid-template-columns: 1.05fr 0.95fr;
+    }
+    .thorius-company .tc-hero-constellation {
+      display: flex;
+      flex-direction: column;
+    }
+    .thorius-company .tc-hero-lead {
+      max-width: 36rem !important;
+    }
+    /* Arka plan yıldızları sadece sol metin alanında — Sirius tarafı temiz */
+    .thorius-company .tc-stars-field {
+      clip-path: inset(0 42% 0 0);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .thorius-company .tc-star,
+    .thorius-company .tc-sirius-core,
+    .thorius-company .tc-cm-star {
+      animation: none !important;
+      opacity: 0.85 !important;
+    }
+  }
+
+  .thorius-company .tc-hero-kicker {
+    display: inline-block;
+    font-size: 0.72rem !important;
+    font-weight: 700 !important;
+    letter-spacing: 0.16em !important;
+    text-transform: uppercase !important;
+    color: var(--tc-gold-soft) !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .thorius-company .tc-hero h1 {
+    font-size: clamp(2.1rem, 5vw, 3.75rem) !important;
+    font-weight: 800 !important;
+    line-height: 1.1 !important;
+    color: #ffffff !important;
+    max-width: none !important;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .thorius-company .tc-hero h1 .tc-accent {
+    color: var(--tc-gold-soft) !important;
+  }
+
+  .thorius-company .tc-hero-lead {
+    font-size: clamp(1.05rem, 2vw, 1.25rem) !important;
+    line-height: 1.65 !important;
+    color: rgba(255, 255, 255, 0.88) !important;
+    max-width: 52rem;
+    margin-bottom: 2rem !important;
+  }
+
+  .thorius-company .tc-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+
+  .thorius-company .tc-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+    padding: 0.85rem 1.35rem !important;
+    border-radius: 0.6rem !important;
+    font-size: 0.95rem !important;
+    font-weight: 700 !important;
+    line-height: 1.2 !important;
+    border: 2px solid transparent !important;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .thorius-company .tc-btn-gold {
+    background: var(--tc-gold) !important;
+    color: var(--tc-navy-deep) !important;
+    border-color: var(--tc-gold) !important;
+  }
+
+  .thorius-company .tc-btn-outline-light {
+    background: transparent !important;
+    color: #fff !important;
+    border-color: rgba(255, 255, 255, 0.45) !important;
+  }
+
+  .thorius-company .tc-section {
+    padding: clamp(3rem, 5vw, 4.5rem) 0;
+  }
+
+  .thorius-company .tc-section-alt {
+    background: var(--tc-bg);
+  }
+
+  .thorius-company .tc-section-head {
+    margin-bottom: 2.25rem !important;
+    text-align: center;
+  }
+
+  .thorius-company .tc-section-head h2 {
+    font-size: clamp(1.75rem, 3.5vw, 2.35rem) !important;
+    font-weight: 800 !important;
+    color: var(--tc-navy) !important;
+    line-height: 1.15 !important;
+    margin-bottom: 0.65rem !important;
+  }
+
+  .thorius-company .tc-section-head p {
+    font-size: 1.08rem !important;
+    color: var(--tc-muted) !important;
+    max-width: 40rem;
+    line-height: 1.6 !important;
+    margin: 0 auto !important;
+  }
+
+  /* ——— Model kartları (vurgulu) ——— */
+  .thorius-company .tc-model-grid {
+    display: grid;
+    gap: 1.5rem;
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .thorius-company .tc-model-card {
+    position: relative;
+    border-radius: 1.25rem !important;
+    padding: 2.1rem 1.85rem 1.85rem !important;
+    min-height: 22rem;
+    display: flex;
+    flex-direction: column;
+    border: 1px solid transparent !important;
+    box-shadow: 0 4px 24px rgba(11, 30, 63, 0.08);
+    overflow: hidden;
+  }
+
+  .thorius-company .tc-model-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 5px;
+  }
+
+  .thorius-company .tc-model-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 14px 40px rgba(11, 30, 63, 0.14);
+  }
+
+  .thorius-company .tc-model-card .tc-step-label {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 3rem;
+    height: 3rem;
+    border-radius: 0.9rem;
+    font-size: 1.2rem !important;
+    font-weight: 800 !important;
+    margin-bottom: 1.15rem !important;
+    flex-shrink: 0;
+  }
+
+  .thorius-company .tc-model-card h3 {
+    font-size: 1.4rem !important;
+    font-weight: 800 !important;
+    line-height: 1.2 !important;
+    margin-bottom: 0.85rem !important;
+    letter-spacing: -0.02em !important;
+  }
+
+  .thorius-company .tc-model-card p {
+    font-size: 1.05rem !important;
+    line-height: 1.65 !important;
+    flex: 1;
+    margin-bottom: 1.25rem !important;
+  }
+
+  .thorius-company .tc-model-card .tc-card-cta {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    align-self: stretch;
+    width: 100%;
+    margin-top: auto;
+    padding: 0.75rem 0.85rem !important;
+    border-radius: 0.6rem !important;
+    font-size: 0.88rem !important;
+    font-weight: 700 !important;
+    letter-spacing: -0.01em !important;
+    text-align: center;
+    white-space: nowrap;
+    line-height: 1.2 !important;
+  }
+
+  .thorius-company .tc-model-card .tc-card-cta-url {
+    font-size: clamp(0.68rem, 1.1vw, 0.78rem) !important;
+    letter-spacing: -0.035em !important;
+    padding-left: 0.55rem !important;
+    padding-right: 0.55rem !important;
+  }
+
+  /* Adım 1 — Danışmanlık: lacivert */
+  .thorius-company .tc-step-1 {
+    background: linear-gradient(160deg, #ffffff 0%, #eef2ff 100%) !important;
+    border-color: #c7d2fe !important;
+  }
+  .thorius-company .tc-step-1::before {
+    background: linear-gradient(90deg, #0b1e3f, #1e40af);
+  }
+  .thorius-company .tc-step-1 .tc-step-label {
+    background: #0b1e3f !important;
+    color: #d4af37 !important;
+  }
+  .thorius-company .tc-step-1 h3 {
+    color: #0b1e3f !important;
+  }
+  .thorius-company .tc-step-1 p {
+    color: #475569 !important;
+  }
+  .thorius-company .tc-step-1 .tc-card-cta {
+    background: #0b1e3f !important;
+    color: #fff !important;
+  }
+  .thorius-company .tc-step-1 .tc-card-cta:hover {
+    background: #132d54 !important;
+  }
+
+  /* Adım 2 — AI4U: mor-mavi tech */
+  .thorius-company .tc-step-2 {
+    background: linear-gradient(160deg, #ffffff 0%, #f0f4ff 100%) !important;
+    border-color: #bfdbfe !important;
+  }
+  .thorius-company .tc-step-2::before {
+    background: linear-gradient(90deg, #2563eb, #7c3aed);
+  }
+  .thorius-company .tc-step-2 .tc-step-label {
+    background: linear-gradient(135deg, #2563eb, #7c3aed) !important;
+    color: #fff !important;
+  }
+  .thorius-company .tc-step-2 h3 {
+    color: #1e3a8a !important;
+  }
+  .thorius-company .tc-step-2 p {
+    color: #475569 !important;
+  }
+  .thorius-company .tc-step-2 .tc-card-cta {
+    background: #2563eb !important;
+    color: #fff !important;
+  }
+  .thorius-company .tc-step-2 .tc-card-cta:hover {
+    background: #1d4ed8 !important;
+  }
+
+  /* Adım 3 — Academy: altın */
+  .thorius-company .tc-step-3 {
+    background: linear-gradient(160deg, #ffffff 0%, #fffbeb 100%) !important;
+    border-color: #fde68a !important;
+  }
+  .thorius-company .tc-step-3::before {
+    background: linear-gradient(90deg, #b8941f, #d4af37);
+  }
+  .thorius-company .tc-step-3 .tc-step-label {
+    background: linear-gradient(135deg, #b8941f, #d4af37) !important;
+    color: #061229 !important;
+  }
+  .thorius-company .tc-step-3 h3 {
+    color: #78350f !important;
+  }
+  .thorius-company .tc-step-3 p {
+    color: #57534e !important;
+  }
+  .thorius-company .tc-step-3 .tc-card-cta {
+    background: #d4af37 !important;
+    color: #061229 !important;
+  }
+  .thorius-company .tc-step-3 .tc-card-cta:hover {
+    background: #e8c96a !important;
+  }
+
+  /* Adım 4 — Coaching: koyu mor */
+  .thorius-company .tc-step-4 {
+    background: linear-gradient(160deg, #ffffff 0%, #ede9fe 100%) !important;
+    border-color: #c4b5fd !important;
+  }
+  .thorius-company .tc-step-4::before {
+    background: linear-gradient(90deg, #3b0764, #5b21b6);
+  }
+  .thorius-company .tc-step-4 .tc-step-label {
+    background: linear-gradient(135deg, #4c1d95, #5b21b6) !important;
+    color: #fff !important;
+  }
+  .thorius-company .tc-step-4 h3 {
+    color: #4c1d95 !important;
+  }
+  .thorius-company .tc-step-4 p {
+    color: #475569 !important;
+  }
+  .thorius-company .tc-step-4 .tc-card-cta {
+    background: #4c1d95 !important;
+    color: #fff !important;
+  }
+  .thorius-company .tc-step-4 .tc-card-cta:hover {
+    background: #5b21b6 !important;
+  }
+
+  /* Diğer kartlar */
+  .thorius-company .tc-card {
+    background: #fff !important;
+    border: 1px solid var(--tc-line) !important;
+    border-radius: 1rem !important;
+    padding: clamp(1.5rem, 3vw, 2rem) !important;
+  }
+
+  .thorius-company .tc-card h3 {
+    font-size: 1.2rem !important;
+    font-weight: 800 !important;
+    color: var(--tc-navy) !important;
+  }
+
+  .thorius-company .tc-split {
+    display: grid;
+    gap: 1.25rem;
+  }
+
+  .thorius-company .tc-pill-row {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.65rem;
+    margin: 1.25rem 0 1.5rem;
+  }
+
+  .thorius-company .tc-pill {
+    background: var(--tc-bg) !important;
+    border: 1px solid var(--tc-line) !important;
+    border-radius: 999px !important;
+    padding: 0.55rem 1.1rem !important;
+    font-size: 0.92rem !important;
+    font-weight: 700 !important;
+    color: var(--tc-navy) !important;
+  }
+
+  .thorius-company .tc-founder-list {
+    list-style: none !important;
+    padding: 0 !important;
+    margin: 1rem 0 0 !important;
+  }
+
+  .thorius-company .tc-founder-list li + li {
+    margin-top: 1rem !important;
+    padding-top: 1rem !important;
+    border-top: 1px solid var(--tc-line);
+  }
+
+  .thorius-company .tc-founder-list strong {
+    display: block;
+    font-size: 1.05rem !important;
+    color: var(--tc-navy) !important;
+  }
+
+  .thorius-company .tc-founder-list span {
+    font-size: 0.9rem !important;
+    color: var(--tc-muted) !important;
+  }
+
+  .thorius-company .tc-contact-grid {
+    display: grid;
+    gap: 1rem;
+    grid-template-columns: 1fr;
+  }
+
+  .thorius-company .tc-contact-card {
+    background: #fff !important;
+    border: 1px solid var(--tc-line) !important;
+    border-radius: 0.85rem !important;
+    padding: 1.35rem !important;
+  }
+
+  .thorius-company .tc-contact-card strong {
+    display: block;
+    font-size: 0.8rem !important;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--tc-navy) !important;
+    margin-bottom: 0.4rem !important;
+  }
+
+  .thorius-company .tc-contact-card a,
+  .thorius-company .tc-contact-card span {
+    font-size: 1rem !important;
+    color: var(--tc-muted) !important;
+  }
+
+  .thorius-company .tc-footer {
+    background: var(--tc-navy-deep) !important;
+    color: rgba(255, 255, 255, 0.7) !important;
+    padding: 2rem 0 !important;
+    font-size: 0.88rem !important;
+  }
+
+  .thorius-company .tc-footer strong {
+    color: #fff !important;
+    font-size: 1rem !important;
+    display: block;
+    margin-bottom: 0.35rem !important;
+  }
+
+  .thorius-company .tc-anchor {
+    scroll-margin-top: 100px;
+  }
+
+  @media (min-width: 640px) {
+    .thorius-company .tc-model-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+    .thorius-company .tc-contact-grid {
+      grid-template-columns: repeat(2, 1fr);
+    }
+  }
+
+  @media (min-width: 960px) {
+    .thorius-company {
+      --tc-max: 1400px;
+    }
+    .thorius-company .tc-split {
+      grid-template-columns: 1.15fr 0.85fr;
+    }
+    .thorius-company .tc-contact-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+
+  @media (min-width: 1200px) {
+    .thorius-company .tc-model-card {
+      min-height: 23.5rem;
+      padding: 2.25rem 2rem 2rem !important;
+    }
+  }
+
+  @media (min-width: 1400px) {
+    .thorius-company .tc-model-grid {
+      grid-template-columns: repeat(4, 1fr);
+    }
+  }
+</style>
+
+<div class="thorius-company">
+  <section class="tc-hero">
+    <div class="tc-hero-bg" aria-hidden="true">
+      <div class="tc-nebula"></div>
+      <div class="tc-stars-field">
+        <span class="tc-star tc-star-xs" style="left:8%;top:12%;--dur:2.8s;--delay:0.1s"></span>
+        <span class="tc-star tc-star-sm" style="left:18%;top:28%;--dur:3.6s;--delay:0.8s"></span>
+        <span class="tc-star tc-star-xs" style="left:32%;top:8%;--dur:4.2s;--delay:1.4s"></span>
+        <span class="tc-star tc-star-md" style="left:42%;top:22%;--dur:3.1s;--delay:0.3s"></span>
+        <span class="tc-star tc-star-xs" style="left:55%;top:15%;--dur:5s;--delay:2.1s"></span>
+        <span class="tc-star tc-star-sm" style="left:12%;top:55%;--dur:3.8s;--delay:1.9s"></span>
+        <span class="tc-star tc-star-xs" style="left:28%;top:68%;--dur:4.5s;--delay:0.5s"></span>
+        <span class="tc-star tc-star-sm" style="left:38%;top:78%;--dur:2.6s;--delay:1.2s"></span>
+        <span class="tc-star tc-star-xs" style="left:6%;top:82%;--dur:3.9s;--delay:2.6s"></span>
+        <span class="tc-star tc-star-md" style="left:22%;top:42%;--dur:4.1s;--delay:1.7s"></span>
+        <span class="tc-star tc-star-xs" style="left:48%;top:48%;--dur:3.3s;--delay:0.9s"></span>
+        <span class="tc-star tc-star-sm" style="left:58%;top:62%;--dur:2.9s;--delay:2.3s"></span>
+        <span class="tc-star tc-star-xs" style="left:72%;top:18%;--dur:4.8s;--delay:0.2s"></span>
+        <span class="tc-star tc-star-sm" style="left:88%;top:10%;--dur:3.4s;--delay:1.5s"></span>
+        <span class="tc-star tc-star-xs" style="left:92%;top:38%;--dur:5.2s;--delay:2.8s"></span>
+        <span class="tc-star tc-star-md" style="left:78%;top:52%;--dur:3.7s;--delay:0.7s"></span>
+        <span class="tc-star tc-star-xs" style="left:65%;top:88%;--dur:4.3s;--delay:1.1s"></span>
+        <span class="tc-star tc-star-sm" style="left:52%;top:92%;--dur:2.5s;--delay:2.4s"></span>
+        <span class="tc-star tc-star-xs" style="left:35%;top:35%;--dur:3.2s;--delay:1.8s"></span>
+        <span class="tc-star tc-star-sm" style="left:15%;top:18%;--dur:4.6s;--delay:0.4s"></span>
+        <span class="tc-star tc-star-xs" style="left:62%;top:32%;--dur:3.5s;--delay:2.2s"></span>
+        <span class="tc-star tc-star-xs" style="left:82%;top:72%;--dur:4.9s;--delay:1.3s"></span>
+        <span class="tc-star tc-star-sm" style="left:95%;top:58%;--dur:2.7s;--delay:0.6s"></span>
+        <span class="tc-star tc-star-xs" style="left:70%;top:8%;--dur:3.8s;--delay:2.5s"></span>
+      </div>
+    </div>
+
+    <div class="tc-wrap tc-hero-grid">
+      <div class="tc-hero-content">
+        <span class="tc-hero-kicker">Thorius Eğitim ve Danışmanlık Ltd. Şti.</span>
+        <h1>
+          Perakende dönüşümünde<br />
+          <span class="tc-accent">uçtan uca</span> partneriniz
+        </h1>
+        <p class="tc-hero-lead">
+          Audit ile eksikleri buluyor, AI4U Retail ile çözüyor, Thorius Academy ile sürdürülebilir
+          kılıyoruz. Koçlukla derinleşen bütüncül bir dönüşüm modeli.
+        </p>
+        <div class="tc-actions">
+          <a class="tc-btn tc-btn-gold" href="#iletisim">Görüşme talep edin</a>
+          <a class="tc-btn tc-btn-outline-light" href="#model">Modelimiz</a>
+        </div>
+      </div>
+
+      <div class="tc-hero-constellation" aria-hidden="true">
+        <svg viewBox="0 0 320 360" fill="none" xmlns="http://www.w3.org/2000/svg" role="img">
+          <title>Canis Major — Sirius</title>
+          <!-- Takım yıldızı çizgileri (Canis Major) -->
+          <g class="tc-cm-lines">
+            <line x1="158" y1="268" x2="128" y2="218" />
+            <line x1="128" y1="218" x2="108" y2="168" />
+            <line x1="108" y1="168" x2="138" y2="118" />
+            <line x1="138" y1="118" x2="188" y2="78" />
+            <line x1="188" y1="78" x2="238" y2="58" />
+            <line x1="128" y1="218" x2="178" y2="198" />
+            <line x1="178" y1="198" x2="218" y2="148" />
+            <line x1="218" y1="148" x2="188" y2="78" />
+          </g>
+          <circle class="tc-cm-star tc-cm-star-cool" cx="238" cy="58" r="3" style="--delay:0.2s" />
+          <circle class="tc-cm-star tc-cm-star-white" cx="188" cy="78" r="3.5" style="--delay:0.7s" />
+          <circle class="tc-cm-star tc-cm-star-warm" cx="138" cy="118" r="2.5" style="--delay:1.1s" />
+          <circle class="tc-cm-star tc-cm-star-white" cx="108" cy="168" r="2.5" style="--delay:0.4s" />
+          <circle class="tc-cm-star tc-cm-star-warm" cx="128" cy="218" r="3" style="--delay:1.5s" />
+          <circle class="tc-cm-star tc-cm-star-white" cx="178" cy="198" r="2.5" style="--delay:0.9s" />
+          <circle class="tc-cm-star tc-cm-star-cool" cx="218" cy="148" r="2.5" style="--delay:1.8s" />
+          <circle class="tc-sirius-core" cx="158" cy="268" r="7" />
+          <circle class="tc-sirius-halo" cx="158" cy="268" r="11" fill="none" stroke-width="1.5" />
+        </svg>
+        <span class="tc-constellation-label">Sirius · Canis Major</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="tc-section tc-section-alt tc-anchor" id="model">
+    <div class="tc-wrap">
+      <div class="tc-section-head">
+        <h2>Dört adımlı model</h2>
+        <p>Danışmanlıktan yazılıma, eğitimden koçluğa tek çatı altında.</p>
+      </div>
+
+      <ol class="tc-model-grid">
+        <li class="tc-model-card tc-step-1">
+          <span class="tc-step-label">1</span>
+          <h3>Danışmanlık &amp; Audit</h3>
+          <p>
+            Tedarik zinciri, planlama ve İK süreçlerinizi inceliyor; gap analizi ve yol haritası
+            çıkarıyoruz.
+          </p>
+          <a class="tc-card-cta" href="#iletisim">Danışmanlık talebi →</a>
+        </li>
+        <li class="tc-model-card tc-step-2">
+          <span class="tc-step-label">2</span>
+          <h3>AI4U Retail</h3>
+          <p>Audit sonuçlarına dayalı AI destekli perakende yazılım çözümleri.</p>
+          <a
+            class="tc-card-cta tc-card-cta-url"
+            href="https://siriusabcx.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            >siriusabcx.com →</a
+          >
+        </li>
+        <li class="tc-model-card tc-step-3">
+          <span class="tc-step-label">3</span>
+          <h3>Thorius Academy</h3>
+          <p>Ekiplerinizi Thorius-LMS üzerinde eğiterek bilgiyi kalıcı yetkinliğe dönüştürüyoruz.</p>
+          <a
+            class="tc-card-cta tc-card-cta-url"
+            href="https://academy.thorius.com.tr/kurslar"
+            target="_blank"
+            rel="noopener noreferrer"
+            >academy.thorius.com.tr →</a
+          >
+        </li>
+        <li class="tc-model-card tc-step-4">
+          <span class="tc-step-label">4</span>
+          <h3>Thorius Coaching</h3>
+          <p>Bireysel kariyer ve liderlik gelişimi için koçluk ve mentorluk.</p>
+          <a
+            class="tc-card-cta tc-card-cta-url"
+            href="https://coaching.thorius.com.tr"
+            target="_blank"
+            rel="noopener noreferrer"
+            >coaching.thorius.com.tr →</a
+          >
+        </li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="tc-section tc-anchor" id="danismanlik">
+    <div class="tc-wrap tc-split">
+      <div class="tc-card">
+        <h3>Danışmanlık alanlarımız</h3>
+        <p
+          style="margin-top: 0.75rem !important; font-size: 1rem !important; color: var(--tc-muted) !important; line-height: 1.6 !important;"
+        >
+          Perakende ve hizmet sektöründe 25 yılı aşkın deneyimle süreçlerinizi analiz ediyoruz.
+        </p>
+        <div class="tc-pill-row">
+          <span class="tc-pill">Tedarik zinciri</span>
+          <span class="tc-pill">Perakende planlama</span>
+          <span class="tc-pill">İnsan kaynakları</span>
+        </div>
+        <a class="tc-btn tc-btn-gold" href="#iletisim">Teklif alın</a>
+      </div>
+      <div class="tc-card">
+        <h3>Kurucular</h3>
+        <ul class="tc-founder-list">
+          <li>
+            <strong>Dr. Elif Demir Uğur</strong>
+            <span>Kurucu Ortak</span>
+          </li>
+          <li>
+            <strong>M. Hakan Uğur</strong>
+            <span>Kurucu Ortak</span>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="tc-section tc-section-alt tc-anchor" id="iletisim">
+    <div class="tc-wrap">
+      <div class="tc-section-head">
+        <h2>İletişim</h2>
+        <p>Danışmanlık ve kurumsal dönüşüm için bize ulaşın.</p>
+      </div>
+      <div class="tc-contact-grid">
+        <div class="tc-contact-card">
+          <strong>E-posta</strong>
+          <a href="mailto:info@thorius.com.tr">info@thorius.com.tr</a>
+        </div>
+        <div class="tc-contact-card">
+          <strong>WhatsApp</strong>
+          <a href="https://wa.me/905431323503" target="_blank" rel="noopener noreferrer"
+            >+90 543 132 35 03</a
+          >
+        </div>
+        <div class="tc-contact-card">
+          <strong>Adres</strong>
+          <span>Sandalcı Mecit Cd. No 9/1<br />Ortaköy / Beşiktaş — İstanbul</span>
+        </div>
+        <div class="tc-contact-card">
+          <strong>Academy</strong>
+          <a href="https://academy.thorius.com.tr" target="_blank" rel="noopener noreferrer"
+            >academy.thorius.com.tr</a
+          >
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer class="tc-footer">
+    <div class="tc-wrap">
+      <strong>Thorius</strong>
+      Danışmanlık · Yazılım · Eğitim · Koçluk
+      <br />
+      <small style="display: block; margin-top: 0.75rem; opacity: 0.6"
+        >© 2026 Thorius Eğitim ve Danışmanlık Ltd. Şti.</small
+      >
+    </div>
+  </footer>
+</div>

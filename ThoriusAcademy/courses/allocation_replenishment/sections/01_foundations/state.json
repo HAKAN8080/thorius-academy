@@ -1,0 +1,16 @@
+{
+  "course": "allocation_replenishment",
+  "section": "01_foundations",
+  "exists": true,
+  "steps": {
+    "pptx": true,
+    "jpg": false,
+    "narration": false,
+    "mp3": false,
+    "srt": false,
+    "mp4": false
+  },
+  "files": {
+    "pptx": "/Users/eladenizugur/Desktop/ThoriusAcademy/courses/allocation_replenishment/sections/01_foundations/slides.pptx"
+  }
+}
