@@ -8,11 +8,9 @@ import {
 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
+import { CompanyHero } from "@/components/marketing/company-hero";
 import {
   COMPANY_FOUNDERS,
-  COMPANY_HERO_SUBTITLE,
-  COMPANY_LEGAL_NAME,
-  COMPANY_TAGLINE,
   CONSULTING_DOMAINS,
   VALUE_CHAIN_STEPS,
 } from "@/lib/content/company-model";
@@ -43,49 +41,7 @@ function resolveStepLink(item: (typeof VALUE_CHAIN_STEPS)[number]) {
 export function CompanyHomePage() {
   return (
     <>
-      <section
-        className="relative overflow-hidden bg-primary-950 py-20 text-white sm:py-24 md:py-28"
-        aria-labelledby="company-hero-heading"
-      >
-        <div
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-accent-600/15 via-transparent to-transparent"
-          aria-hidden="true"
-        />
-
-        <Container size="wide" className="relative">
-          <div className="mx-auto max-w-4xl">
-            <p className="text-sm font-semibold uppercase tracking-[0.22em] text-accent-400">
-              {COMPANY_LEGAL_NAME}
-            </p>
-            <h1
-              id="company-hero-heading"
-              className="mt-5 text-4xl font-bold leading-[1.1] tracking-tight sm:text-5xl md:text-6xl"
-            >
-              Perakende dönüşümünde{" "}
-              <span className="text-accent-400">uçtan uca</span> partneriniz
-            </h1>
-            <p className="mt-5 max-w-2xl text-lg font-medium text-primary-200">
-              {COMPANY_TAGLINE}
-            </p>
-            <p className="mt-4 max-w-3xl leading-relaxed text-primary-300/90">
-              {COMPANY_HERO_SUBTITLE}
-            </p>
-            <div className="mt-10 flex flex-col gap-3 sm:flex-row sm:flex-wrap">
-              <Button variant="gold" size="lg" asChild>
-                <Link href="/kurumsal#iletisim">Görüşme talep edin</Link>
-              </Button>
-              <Button
-                size="lg"
-                variant="outline"
-                className="border-white/30 bg-transparent text-white hover:bg-white hover:text-primary-950"
-                asChild
-              >
-                <Link href="/#model">Modelimizi keşfedin</Link>
-              </Button>
-            </div>
-          </div>
-        </Container>
-      </section>
+      <CompanyHero />
 
       <section
         id="model"

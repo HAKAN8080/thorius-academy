@@ -291,3 +291,39 @@ html.navigation-pending::before {
     transform: translateX(100%);
   }
 }
+
+@keyframes heroFadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.hero-fade-up {
+  animation: heroFadeUp 600ms ease-out both;
+}
+.hero-fade-up-1 {
+  animation-delay: 80ms;
+}
+.hero-fade-up-2 {
+  animation-delay: 160ms;
+}
+.hero-fade-up-3 {
+  animation-delay: 240ms;
+}
+.hero-fade-up-4 {
+  animation-delay: 320ms;
+}
+.hero-fade-up-5 {
+  animation-delay: 400ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-fade-up {
+    animation: none !important;
+  }
+}
