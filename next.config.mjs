@@ -17,6 +17,8 @@ const nextConfig = {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
   },
   images: {
+    /** Vercel Image Optimization kotası aşıldığında (402) görseller doğrudan kaynaktan yüklenir. */
+    unoptimized: true,
     remotePatterns: [
       {
         protocol: "https",
