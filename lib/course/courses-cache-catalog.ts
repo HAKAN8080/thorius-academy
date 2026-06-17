@@ -144,21 +144,35 @@ function resolveCategoryName(
 }
 
 async function fetchCategorySourceRows(): Promise<Array<{ category: string | null }>> {
-  const supabase = getSupabasePublicClient();
-  const { data, error } = await supabase
-    .from("courses_cache")
-    .select("category")
-    .eq("published", true)
-    .eq("visibility", "public")
-    .not("course_slug", "is", null);
-
-  if (error) {
-    console.error("[courses-cache-catalog] category fetch failed:", error.message);
-    return [];
-  }
-
-  return (data ?? []) as Array<{ category: string | null }>;
+  return getCachedCategorySourceRows();
 }
+
+const getCachedCategorySourceRows = unstable_cache(
+  async () => {
+    const supabase = getSupabasePublicClient();
+    const { data, error } = await supabase
+      .from("courses_cache")
+      .select("category")
+      .eq("published", true)
+      .eq("visibility", "public")
+      .not("course_slug", "is", null);
+
+    if (error) {
+      console.error(
+        "[courses-cache-catalog] category fetch failed:",
+        error.message,
+      );
+      return [];
+    }
+
+    return (data ?? []) as Array<{ category: string | null }>;
+  },
+  ["courses-cache-category-rows"],
+  {
+    revalidate: REVALIDATE_SECONDS,
+    tags: ["courses-cache-catalog"],
+  },
+);
 
 async function buildCoursesCacheListingPage(params: {
   page?: number;
