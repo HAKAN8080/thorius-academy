@@ -7,6 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
+    "test": "vitest run",
+    "test:watch": "vitest",
     "day1:check": "node scripts/day1-instructor-check.mjs",
     "import:tutor": "node scripts/import-tutor-courses.mjs",
     "migrate:wp-users": "node scripts/migrate-wp-users.mjs",
@@ -46,15 +48,21 @@
   },
   "devDependencies": {
     "@tailwindcss/typography": "^0.5.19",
+    "@testing-library/dom": "^10.4.1",
+    "@testing-library/jest-dom": "^6.9.1",
+    "@testing-library/react": "^16.3.2",
     "@types/node": "^20",
     "@types/qrcode": "^1.5.6",
     "@types/react": "^18",
     "@types/react-dom": "^18",
+    "@vitejs/plugin-react": "^4.7.0",
     "eslint": "^8",
     "eslint-config-next": "14.2.35",
+    "jsdom": "^25.0.1",
     "pg": "^8.21.0",
     "postcss": "^8",
     "tailwindcss": "^3.4.1",
-    "typescript": "^5"
+    "typescript": "^5",
+    "vitest": "^2.1.9"
   }
 }
