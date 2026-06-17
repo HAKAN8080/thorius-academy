@@ -12,6 +12,8 @@ const WORDPRESS_CATEGORY_SLUG_ALIASES: Record<string, string> = {
   "mit-egitimleri": "mit-open-course-ware",
   /** Slugify öncesi Türkçe İ hatası */
   "i-nsan-kaynaklari": "insan-kaynaklari",
+  "i-ngilizce-egitimi": "ingilizce-egitimi",
+  "i-statistik": "istatistik",
 };
 
 export function slugifyCategoryName(name: string): string {

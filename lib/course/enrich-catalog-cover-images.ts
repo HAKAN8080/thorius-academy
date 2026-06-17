@@ -1,31 +1,13 @@
 import { unstable_cache } from "next/cache";
 import { fetchCoursesForListing } from "@/lib/wordpress/api";
 import type { CatalogCourseItem } from "@/lib/course/courses-cache-catalog";
+import {
+  fetchWpCoverImageBySlug,
+  normalizeCoverImageUrl,
+  pickBestCoverImageUrl,
+} from "@/lib/course/resolve-course-cover-image";
 
 const REVALIDATE_SECONDS = 3600;
-
-export function normalizeCoverImageUrl(
-  url: string | null | undefined,
-): string | null {
-  const trimmed = url?.trim();
-  if (!trimmed) {
-    return null;
-  }
-
-  if (trimmed.startsWith("//")) {
-    return `https:${trimmed}`;
-  }
-
-  if (trimmed.startsWith("/")) {
-    return `https://thorius.com.tr${trimmed}`;
-  }
-
-  if (trimmed.startsWith("http://")) {
-    return trimmed.replace(/^http:\/\//i, "https://");
-  }
-
-  return trimmed;
-}
 
 const getWpFeaturedImageBySlug = unstable_cache(
   async () => {
@@ -48,15 +30,45 @@ const getWpFeaturedImageBySlug = unstable_cache(
 export async function enrichCatalogCoverImages(
   courses: CatalogCourseItem[],
 ): Promise<void> {
-  const needsFallback = courses.some(
-    (course) => !normalizeCoverImageUrl(course.coverImageUrl),
-  );
+  if (courses.length === 0) {
+    return;
+  }
 
-  const wpImages = needsFallback ? await getWpFeaturedImageBySlug() : null;
+  const wpImages = await getWpFeaturedImageBySlug();
+  const missingSlugs = new Set<string>();
 
   for (const course of courses) {
-    const normalized = normalizeCoverImageUrl(course.coverImageUrl);
-    course.coverImageUrl =
-      normalized ?? wpImages?.get(course.slug) ?? null;
+    course.coverImageUrl = pickBestCoverImageUrl({
+      coverImageUrl: course.coverImageUrl,
+      fallbackUrl: wpImages.get(course.slug),
+    });
+
+    if (!course.coverImageUrl) {
+      missingSlugs.add(course.slug);
+    }
   }
+
+  if (missingSlugs.size === 0) {
+    return;
+  }
+
+  await Promise.all(
+    Array.from(missingSlugs, async (slug) => {
+      const image = await fetchWpCoverImageBySlug(slug);
+      if (!image) {
+        return;
+      }
+
+      for (const course of courses) {
+        if (course.slug === slug) {
+          course.coverImageUrl = pickBestCoverImageUrl({
+            coverImageUrl: course.coverImageUrl,
+            fallbackUrl: image,
+          });
+        }
+      }
+    }),
+  );
 }
+
+export { normalizeCoverImageUrl };

@@ -9,6 +9,7 @@ import { CourseDetailPurchaseSection } from "@/components/course/course-detail-p
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
 
 interface CourseDetailPageProps {
   params: { slug: string };
@@ -47,7 +48,18 @@ export default async function CourseDetailPage({
   const course = await fetchCourseBySlug(params.slug);
   if (!course) notFound();
 
-  const curriculum = await getCourseCurriculumPreview(course.id, params.slug);
+  const coverImageUrl = await resolveCourseCoverImageUrl({
+    slug: course.slug,
+    coverImageUrl: course.featuredImage,
+  });
+  const courseWithCover = coverImageUrl
+    ? { ...course, featuredImage: coverImageUrl }
+    : course;
+
+  const curriculum = await getCourseCurriculumPreview(
+    courseWithCover.id,
+    params.slug,
+  );
 
   return (
     <article>
@@ -103,18 +115,18 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <CourseDetailPurchaseSection course={course} />
+                <CourseDetailPurchaseSection course={courseWithCover} />
               </div>
             </div>
 
-            {course.featuredImage && (
+            {courseWithCover.featuredImage && (
               <div className="relative aspect-video overflow-hidden rounded-2xl border border-accent-500/20 bg-primary-900/50 shadow-2xl">
                 <Image
-                  src={course.featuredImage}
-                  alt={course.imageAlt}
+                  src={courseWithCover.featuredImage}
+                  alt={courseWithCover.imageAlt}
                   fill
                   sizes="(max-width: 1024px) 100vw, 400px"
-                  className="object-contain object-center"
+                  className="object-cover object-center"
                   priority
                 />
               </div>
@@ -144,7 +156,7 @@ export default async function CourseDetailPage({
             <p className="mb-6 text-muted-foreground">
               Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
             </p>
-            <CourseDetailPurchaseSection course={course} />
+            <CourseDetailPurchaseSection course={courseWithCover} />
           </div>
         </Container>
       </section>
