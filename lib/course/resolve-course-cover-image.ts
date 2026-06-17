@@ -42,10 +42,8 @@ export function isWpYoutubeMirrorUrl(url: string | null | undefined): boolean {
     return false;
   }
 
-  return (
-    /wp-content\/uploads\/.*(?:maxresdefault|hqdefault|sddefault)/i.test(
-      normalized,
-    ) || normalized.includes("i.ytimg.com/vi/")
+  return /wp-content\/uploads\/.*(?:maxresdefault|hqdefault|sddefault)/i.test(
+    normalized,
   );
 }
 
