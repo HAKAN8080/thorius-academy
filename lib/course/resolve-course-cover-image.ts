@@ -1,6 +1,5 @@
 import { unstable_cache } from "next/cache";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
-import { fetchCoursesForListing } from "@/lib/wordpress/api";
 import {
   COURSE_CACHE_TAG,
   courseSlugCacheTag,
@@ -12,7 +11,7 @@ const WP_API_BASE =
 
 const REVALIDATE_SECONDS = 3600;
 
-const WP_COVER_FIELDS = "slug,featured_media,thorius_youtube";
+const WP_COVER_FIELDS = "id,slug,featured_media,thorius_youtube";
 
 export function normalizeCoverImageUrl(
   url: string | null | undefined,
@@ -75,6 +74,7 @@ function resolveCoverFromWpFields(course: {
 }
 
 type WpCoverCourseResponse = {
+  id?: number;
   featured_media?: number;
   thorius_youtube?: {
     video_id?: string;
@@ -158,32 +158,69 @@ export async function fetchWpCoverImageBySlug(
   )();
 }
 
-/** unstable_cache JSON-safe: Record, Map değil. */
-async function buildBulkWpCoverImageRecord(): Promise<Record<string, string>> {
-  const courses = await fetchCoursesForListing();
-  const record: Record<string, string> = {};
-
-  for (const course of courses) {
-    const image = normalizeCoverImageUrl(course.featuredImage);
-    if (image) {
-      record[course.slug] = image;
-    }
+async function fetchWpCoverImagesByWpIdsUncached(
+  wpCourseIds: number[],
+): Promise<Record<number, string>> {
+  const uniqueIds = Array.from(new Set(wpCourseIds.filter((id) => id > 0)));
+  if (uniqueIds.length === 0) {
+    return {};
   }
 
-  return record;
+  try {
+    const res = await fetch(
+      `${WP_API_BASE}/courses?include=${uniqueIds.join(",")}&per_page=${uniqueIds.length}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CACHE_TAG],
+        },
+      },
+    );
+
+    if (!res.ok) {
+      return {};
+    }
+
+    const courses: WpCoverCourseResponse[] = await res.json();
+    const record: Record<number, string> = {};
+
+    for (const course of courses) {
+      if (!course.id) {
+        continue;
+      }
+      const cover = parseWpCoverCourse(course);
+      if (cover) {
+        record[course.id] = cover;
+      }
+    }
+
+    return record;
+  } catch (error) {
+    console.error("[resolve-course-cover-image] batch fetch failed:", error);
+    return {};
+  }
 }
 
-const getCachedBulkWpCoverImageRecord = unstable_cache(
-  buildBulkWpCoverImageRecord,
-  ["wp-course-featured-images-by-slug"],
-  {
-    revalidate: REVALIDATE_SECONDS,
-    tags: [COURSE_CACHE_TAG],
-  },
-);
+export async function fetchWpCoverImagesByWpIds(
+  wpCourseIds: number[],
+): Promise<Record<number, string>> {
+  const uniqueIds = Array.from(new Set(wpCourseIds.filter((id) => id > 0))).sort(
+    (a, b) => a - b,
+  );
+  const key = uniqueIds.join(",");
 
-export async function getBulkWpCoverImageRecord(): Promise<Record<string, string>> {
-  return getCachedBulkWpCoverImageRecord();
+  if (!key) {
+    return {};
+  }
+
+  return unstable_cache(
+    () => fetchWpCoverImagesByWpIdsUncached(uniqueIds),
+    ["wp-course-cover-by-ids", key],
+    {
+      revalidate: REVALIDATE_SECONDS,
+      tags: [COURSE_CACHE_TAG],
+    },
+  )();
 }
 
 export function pickBestCoverImageUrl(options: {
@@ -203,16 +240,23 @@ export function pickBestCoverImageUrl(options: {
 export async function resolveCourseCoverImageUrl(options: {
   slug: string;
   coverImageUrl?: string | null;
+  wpCourseId?: number | null;
 }): Promise<string | null> {
-  const bulk = await getBulkWpCoverImageRecord();
-  const fromBulk = bulk[options.slug] ?? null;
-  const picked = pickBestCoverImageUrl({
-    coverImageUrl: options.coverImageUrl,
-    fallbackUrl: fromBulk,
-  });
+  const dbCover = normalizeCoverImageUrl(options.coverImageUrl);
+  if (dbCover && !isWpYoutubeMirrorUrl(dbCover)) {
+    return dbCover;
+  }
 
-  if (picked) {
-    return picked;
+  if (options.wpCourseId && options.wpCourseId > 0) {
+    const byId = await fetchWpCoverImagesByWpIds([options.wpCourseId]);
+    const fromBatch = byId[options.wpCourseId] ?? null;
+    const picked = pickBestCoverImageUrl({
+      coverImageUrl: options.coverImageUrl,
+      fallbackUrl: fromBatch,
+    });
+    if (picked) {
+      return picked;
+    }
   }
 
   const wpCover = await fetchWpCoverImageBySlug(options.slug);

@@ -1,12 +1,14 @@
 import type { CatalogCourseItem } from "@/lib/course/courses-cache-catalog";
 import {
   fetchWpCoverImageBySlug,
-  getBulkWpCoverImageRecord,
+  fetchWpCoverImagesByWpIds,
   normalizeCoverImageUrl,
-  pickBestCoverImageUrl,
 } from "@/lib/course/resolve-course-cover-image";
 
-const PER_SLUG_CONCURRENCY = 6;
+const PER_SLUG_CONCURRENCY = 4;
+const SLUG_FETCH_TIMEOUT_MS = 1500;
+const ENRICH_BUDGET_MS = 5000;
+const MAX_SLUG_FALLBACKS = 8;
 
 async function mapWithConcurrency<T>(
   items: T[],
@@ -28,15 +30,26 @@ async function mapWithConcurrency<T>(
   );
 }
 
-function courseNeedsCoverEnrichment(
-  course: CatalogCourseItem,
-  bulk: Record<string, string>,
-): boolean {
-  const picked = pickBestCoverImageUrl({
-    coverImageUrl: course.coverImageUrl,
-    fallbackUrl: bulk[course.slug],
-  });
-  return !picked;
+async function withTimeout<T>(
+  promise: Promise<T>,
+  timeoutMs: number,
+): Promise<T | null> {
+  let timeoutId: ReturnType<typeof setTimeout> | undefined;
+
+  try {
+    return await Promise.race([
+      promise,
+      new Promise<null>((resolve) => {
+        timeoutId = setTimeout(() => resolve(null), timeoutMs);
+      }),
+    ]);
+  } catch {
+    return null;
+  } finally {
+    if (timeoutId) {
+      clearTimeout(timeoutId);
+    }
+  }
 }
 
 export async function enrichCatalogCoverImages(
@@ -46,29 +59,55 @@ export async function enrichCatalogCoverImages(
     return;
   }
 
-  const bulk = await getBulkWpCoverImageRecord();
-
   for (const course of courses) {
-    course.coverImageUrl = pickBestCoverImageUrl({
-      coverImageUrl: course.coverImageUrl,
-      fallbackUrl: bulk[course.slug],
-    });
+    course.coverImageUrl = normalizeCoverImageUrl(course.coverImageUrl);
   }
 
-  const missing = courses.filter((course) =>
-    courseNeedsCoverEnrichment(course, bulk),
-  );
+  let missing = courses.filter((course) => !course.coverImageUrl);
   if (missing.length === 0) {
     return;
   }
 
-  await mapWithConcurrency(missing, PER_SLUG_CONCURRENCY, async (course) => {
-    const wpCover = await fetchWpCoverImageBySlug(course.slug);
-    course.coverImageUrl = pickBestCoverImageUrl({
-      coverImageUrl: course.coverImageUrl,
-      fallbackUrl: wpCover,
-    });
-  });
+  const wpCourseIds = missing
+    .map((course) => course.wpCourseId)
+    .filter((id): id is number => id != null && id > 0);
+
+  if (wpCourseIds.length > 0) {
+    const byWpId = await fetchWpCoverImagesByWpIds(wpCourseIds);
+    for (const course of missing) {
+      if (!course.wpCourseId) {
+        continue;
+      }
+      const cover = byWpId[course.wpCourseId];
+      if (cover) {
+        course.coverImageUrl = cover;
+      }
+    }
+  }
+
+  missing = courses.filter((course) => !course.coverImageUrl);
+  if (missing.length === 0) {
+    return;
+  }
+
+  const deadline = Date.now() + ENRICH_BUDGET_MS;
+  await mapWithConcurrency(
+    missing.slice(0, MAX_SLUG_FALLBACKS),
+    PER_SLUG_CONCURRENCY,
+    async (course) => {
+      if (Date.now() > deadline) {
+        return;
+      }
+
+      const cover = await withTimeout(
+        fetchWpCoverImageBySlug(course.slug),
+        SLUG_FETCH_TIMEOUT_MS,
+      );
+      if (cover) {
+        course.coverImageUrl = cover;
+      }
+    },
+  );
 }
 
 export { normalizeCoverImageUrl };

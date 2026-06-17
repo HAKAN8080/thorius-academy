@@ -12,11 +12,12 @@ export const COURSES_CATALOG_PER_PAGE = 24;
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,title,description_md,cover_image_url,category,level,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,pricing_model,price,sale_price,updated_at";
 
 export interface CatalogCourseItem {
   id: string;
   slug: string;
+  wpCourseId: number | null;
   title: string;
   description: string;
   coverImageUrl: string | null;
@@ -84,6 +85,10 @@ function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
   return {
     id: String(row.id),
     slug,
+    wpCourseId:
+      row.wp_course_id == null || row.wp_course_id === ""
+        ? null
+        : Number(row.wp_course_id),
     title: (row.title as string) || "Kurs",
     description: excerptFromMarkdown(row.description_md as string | null),
     coverImageUrl: (row.cover_image_url as string | null) ?? null,
@@ -284,7 +289,7 @@ export async function getCoursesCacheListingPage(params: {
 
   return unstable_cache(
     () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing-v2", categorySlug, String(page), search],
+    ["courses-cache-listing-v3", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
