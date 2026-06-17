@@ -1,4 +1,6 @@
 import { unstable_cache } from "next/cache";
+import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
+import { fetchCoursesForListing } from "@/lib/wordpress/api";
 import {
   COURSE_CACHE_TAG,
   courseSlugCacheTag,
@@ -35,7 +37,7 @@ export function normalizeCoverImageUrl(
   return trimmed;
 }
 
-/** WP'ye yüklenmiş YouTube aynası; doğrudan i.ytimg genelde daha güvenilir. */
+/** WP'ye yüklenmiş YouTube aynası; i.ytimg tercih edilir ama ayna da geçerlidir. */
 export function isWpYoutubeMirrorUrl(url: string | null | undefined): boolean {
   const normalized = normalizeCoverImageUrl(url);
   if (!normalized) {
@@ -72,60 +74,71 @@ function resolveCoverFromWpFields(course: {
   return null;
 }
 
-async function fetchWpCoverImageBySlugUncached(
-  slug: string,
-): Promise<string | null> {
-  try {
+type WpCoverCourseResponse = {
+  featured_media?: number;
+  thorius_youtube?: {
+    video_id?: string;
+    thumbnail_url?: string;
+  } | null;
+  _embedded?: {
+    "wp:featuredmedia"?: Array<{
+      source_url?: string;
+      media_details?: {
+        sizes?: {
+          large?: { source_url?: string };
+          medium?: { source_url?: string };
+        };
+      };
+    }>;
+  };
+};
+
+function parseWpCoverCourse(course: WpCoverCourseResponse): string | null {
+  const featuredMedia = course._embedded?.["wp:featuredmedia"]?.[0];
+  const mediaSourceUrl =
+    featuredMedia?.media_details?.sizes?.large?.source_url ||
+    featuredMedia?.media_details?.sizes?.medium?.source_url ||
+    featuredMedia?.source_url ||
+    null;
+
+  return resolveCoverFromWpFields({
+    featured_media: course.featured_media,
+    thorius_youtube: course.thorius_youtube,
+    media_source_url: mediaSourceUrl,
+  });
+}
+
+async function fetchWpCoverFromApi(slug: string): Promise<string | null> {
+  for (const variant of getCourseSlugLookupVariants(slug)) {
     const res = await fetch(
-      `${WP_API_BASE}/courses?slug=${encodeURIComponent(slug)}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
+      `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
       {
         next: {
           revalidate: REVALIDATE_SECONDS,
-          tags: [COURSE_CACHE_TAG, courseSlugCacheTag(slug)],
+          tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],
         },
       },
     );
 
     if (!res.ok) {
-      return null;
+      continue;
     }
 
-    const courses: Array<{
-      featured_media?: number;
-      thorius_youtube?: {
-        video_id?: string;
-        thumbnail_url?: string;
-      } | null;
-      _embedded?: {
-        "wp:featuredmedia"?: Array<{
-          source_url?: string;
-          media_details?: {
-            sizes?: {
-              large?: { source_url?: string };
-              medium?: { source_url?: string };
-            };
-          };
-        }>;
-      };
-    }> = await res.json();
-
-    const course = courses[0];
-    if (!course) {
-      return null;
+    const courses: WpCoverCourseResponse[] = await res.json();
+    const cover = courses[0] ? parseWpCoverCourse(courses[0]) : null;
+    if (cover) {
+      return cover;
     }
+  }
 
-    const featuredMedia = course._embedded?.["wp:featuredmedia"]?.[0];
-    const mediaSourceUrl =
-      featuredMedia?.media_details?.sizes?.large?.source_url ||
-      featuredMedia?.media_details?.sizes?.medium?.source_url ||
-      featuredMedia?.source_url ||
-      null;
+  return null;
+}
 
-    return resolveCoverFromWpFields({
-      featured_media: course.featured_media,
-      thorius_youtube: course.thorius_youtube,
-      media_source_url: mediaSourceUrl,
-    });
+async function fetchWpCoverImageBySlugUncached(
+  slug: string,
+): Promise<string | null> {
+  try {
+    return await fetchWpCoverFromApi(slug);
   } catch (error) {
     console.error("[resolve-course-cover-image] fetch failed:", slug, error);
     return null;
@@ -143,6 +156,34 @@ export async function fetchWpCoverImageBySlug(
       tags: [COURSE_CACHE_TAG, courseSlugCacheTag(slug)],
     },
   )();
+}
+
+/** unstable_cache JSON-safe: Record, Map değil. */
+async function buildBulkWpCoverImageRecord(): Promise<Record<string, string>> {
+  const courses = await fetchCoursesForListing();
+  const record: Record<string, string> = {};
+
+  for (const course of courses) {
+    const image = normalizeCoverImageUrl(course.featuredImage);
+    if (image) {
+      record[course.slug] = image;
+    }
+  }
+
+  return record;
+}
+
+const getCachedBulkWpCoverImageRecord = unstable_cache(
+  buildBulkWpCoverImageRecord,
+  ["wp-course-featured-images-by-slug"],
+  {
+    revalidate: REVALIDATE_SECONDS,
+    tags: [COURSE_CACHE_TAG],
+  },
+);
+
+export async function getBulkWpCoverImageRecord(): Promise<Record<string, string>> {
+  return getCachedBulkWpCoverImageRecord();
 }
 
 export function pickBestCoverImageUrl(options: {
@@ -163,8 +204,14 @@ export async function resolveCourseCoverImageUrl(options: {
   slug: string;
   coverImageUrl?: string | null;
 }): Promise<string | null> {
-  const picked = pickBestCoverImageUrl({ coverImageUrl: options.coverImageUrl });
-  if (picked && !isWpYoutubeMirrorUrl(picked)) {
+  const bulk = await getBulkWpCoverImageRecord();
+  const fromBulk = bulk[options.slug] ?? null;
+  const picked = pickBestCoverImageUrl({
+    coverImageUrl: options.coverImageUrl,
+    fallbackUrl: fromBulk,
+  });
+
+  if (picked) {
     return picked;
   }
 

@@ -284,7 +284,7 @@ export async function getCoursesCacheListingPage(params: {
 
   return unstable_cache(
     () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing", categorySlug, String(page), search],
+    ["courses-cache-listing-v2", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
