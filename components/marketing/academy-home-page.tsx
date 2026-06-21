@@ -38,11 +38,30 @@ export async function AcademyHomePage() {
     ["insan-kaynaklari", "yoga"],
     5,
   );
-  let carouselCourses = pickCoursesByCategorySlugs(
-    allCourses,
-    ["planlama", "insan-kaynaklari"],
+
+  const coursesWithImages = allCourses.filter((course) => course.featuredImage);
+  let carouselCourses = pickFeaturedCoursesByCategory(
+    coursesWithImages,
+    categories,
     5,
   );
+  if (carouselCourses.length < 3) {
+    carouselCourses = pickCoursesByCategorySlugs(
+      coursesWithImages,
+      [
+        "planlama",
+        "insan-kaynaklari",
+        "ai",
+        "bt",
+        "ingilizce-egitimi",
+        "mit-egitimleri",
+        "yoga",
+        "yazilim",
+        "kocluk",
+      ],
+      5,
+    );
+  }
   if (carouselCourses.length === 0) {
     carouselCourses = pickFeaturedCoursesByCategory(
       filterPurchasableCourses(allCourses, productBySlug),

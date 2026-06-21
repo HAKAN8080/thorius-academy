@@ -25,10 +25,43 @@ const CATEGORY_IMAGE_COURSE_INDEX: Record<string, number> = {
 };
 
 /** Belirli bir kurs slug'ının görseli zorunlu kılınır (kötü varsayılan kapakları override eder). */
-const CATEGORY_IMAGE_COURSE_SLUG: Record<string, string> = {
+export const CATEGORY_IMAGE_COURSE_SLUG: Record<string, string> = {
   "mit-egitimleri":
     "mit-making-science-and-engineering-pictures-video-25-a-solar-thermophotovoltaic-system-stvp-case-study",
 };
+
+function pickCategoryCoverCourse(
+  category: WPCategory,
+  courses: Course[],
+): Course | undefined {
+  const slugOverride = CATEGORY_IMAGE_COURSE_SLUG[category.slug];
+  if (slugOverride) {
+    const overrideCourse = courses.find((course) => course.slug === slugOverride);
+    if (overrideCourse?.featuredImage) {
+      return overrideCourse;
+    }
+  }
+
+  const categoryCourses = courses.filter((course) =>
+    course.categories.some((item) => item.id === category.id),
+  );
+
+  if (categoryCourses.length === 0) {
+    return undefined;
+  }
+
+  const preferredIndex = CATEGORY_IMAGE_COURSE_INDEX[category.slug];
+  if (
+    preferredIndex != null &&
+    categoryCourses[preferredIndex]?.featuredImage
+  ) {
+    return categoryCourses[preferredIndex];
+  }
+
+  return (
+    categoryCourses.find((course) => course.featuredImage) ?? categoryCourses[0]
+  );
+}
 
 function stripHtml(html: string): string {
   return decodeHtmlEntities(html);
@@ -602,20 +635,7 @@ export function enrichCategoriesFromCourses(
   const imageByCategoryId = new Map<number, string | null>();
 
   for (const category of categories) {
-    const slugOverride = CATEGORY_IMAGE_COURSE_SLUG[category.slug];
-    if (slugOverride) {
-      const overrideCourse = courses.find((course) => course.slug === slugOverride);
-      if (overrideCourse?.featuredImage) {
-        imageByCategoryId.set(category.id, overrideCourse.featuredImage);
-        continue;
-      }
-    }
-
-    const courseIndex = CATEGORY_IMAGE_COURSE_INDEX[category.slug] ?? 0;
-    const categoryCourses = courses.filter((course) =>
-      course.categories.some((item) => item.id === category.id),
-    );
-    const pickedCourse = categoryCourses[courseIndex] ?? categoryCourses[0];
+    const pickedCourse = pickCategoryCoverCourse(category, courses);
     imageByCategoryId.set(category.id, pickedCourse?.featuredImage ?? null);
   }
 

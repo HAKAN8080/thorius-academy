@@ -1,4 +1,6 @@
 import { unstable_cache } from "next/cache";
+import { backfillCategoryGridImages } from "@/lib/course/backfill-category-grid-images";
+import { enrichHomeCourseFeaturedImages } from "@/lib/course/enrich-home-course-images";
 import { getAllCourseProducts } from "@/lib/actions/course-products";
 import { getCourseStatsMap } from "@/lib/actions/course-stats";
 import {
@@ -73,14 +75,18 @@ async function buildAcademyHomeCatalog(): Promise<CourseCatalog> {
   }
 
   const courses = Array.from(courseById.values());
+  await enrichHomeCourseFeaturedImages(courses);
   const statsMap = await getCourseStatsMap(
     courses.map((course) => ({ id: course.id, slug: course.slug })),
   );
   const stats = Object.fromEntries(statsMap);
 
+  let enrichedCategories = enrichCategoriesFromCourses(categories, courses);
+  enrichedCategories = await backfillCategoryGridImages(enrichedCategories, courses);
+
   return {
     courses,
-    categories: enrichCategoriesFromCourses(categories, courses),
+    categories: enrichedCategories,
     products,
     stats,
   };
@@ -88,7 +94,7 @@ async function buildAcademyHomeCatalog(): Promise<CourseCatalog> {
 
 const getCachedAcademyHomeCatalog = unstable_cache(
   buildAcademyHomeCatalog,
-  ["academy-home-catalog-v2"],
+  ["academy-home-catalog-v3"],
   {
     revalidate: REVALIDATE_SECONDS,
     tags: [
