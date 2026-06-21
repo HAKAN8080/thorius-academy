@@ -1,11 +1,6 @@
 "use client";
 
-import {
-  useCallback,
-  useEffect,
-  useRef,
-  useState,
-} from "react";
+import { useCallback, useEffect, useState } from "react";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { HeroCourseSlide } from "@/components/marketing/hero-course-slide";
 import {
@@ -34,10 +29,8 @@ function scheduleIdleWork(callback: () => void): () => void {
 }
 
 export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientProps) {
-  const rootRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [active, setActive] = useState(false);
   const [extraSlidesReady, setExtraSlidesReady] = useState(false);
 
   const count = courses.length;
@@ -51,17 +44,6 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
     },
     [count],
   );
-
-  useEffect(() => {
-    setActive(true);
-    const host = rootRef.current?.closest("[data-hero-carousel]");
-    const staticPreview = host?.querySelector<HTMLElement>(
-      "[data-hero-carousel-static]",
-    );
-    if (staticPreview) {
-      staticPreview.hidden = true;
-    }
-  }, []);
 
   useEffect(() => {
     if (count <= 1) {
@@ -91,7 +73,7 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
     return () => window.clearInterval(id);
   }, [count, paused, extraSlidesReady]);
 
-  if (count === 0 || !active) {
+  if (count === 0) {
     return null;
   }
 
@@ -100,7 +82,6 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
 
   return (
     <div
-      ref={rootRef}
       className="w-full"
       aria-roledescription="carousel"
       aria-label="Öne çıkan kurslar"

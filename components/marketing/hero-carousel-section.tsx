@@ -1,5 +1,5 @@
 import dynamic from "next/dynamic";
-import { HeroCarouselStatic } from "@/components/marketing/hero-carousel-static";
+import { HeroCarouselLoading } from "@/components/marketing/hero-carousel-loading";
 import type { Course } from "@/types/wordpress";
 
 const HeroCourseCarouselClient = dynamic(
@@ -7,7 +7,10 @@ const HeroCourseCarouselClient = dynamic(
     import("@/components/marketing/hero-course-carousel.client").then(
       (mod) => mod.HeroCourseCarouselClient,
     ),
-  { ssr: false },
+  {
+    ssr: false,
+    loading: () => <HeroCarouselLoading />,
+  },
 );
 
 interface HeroCarouselSectionProps {
@@ -19,11 +22,8 @@ export function HeroCarouselSection({ courses }: HeroCarouselSectionProps) {
     return null;
   }
 
-  const firstCourse = courses[0];
-
   return (
-    <div className="w-full" data-hero-carousel>
-      <HeroCarouselStatic course={firstCourse} slideCount={courses.length} />
+    <div className="w-full">
       <HeroCourseCarouselClient courses={courses} />
     </div>
   );
