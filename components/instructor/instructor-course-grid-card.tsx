@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Clock, Star, Users } from "lucide-react";
 import type { InstructorCourseListItem } from "@/types/instructor-course";
 import { InstructorCourseDeleteButton } from "@/components/instructor/instructor-course-delete-button";
@@ -24,12 +23,13 @@ export function InstructorCourseGridCard({ course }: InstructorCourseGridCardPro
     <article className="overflow-hidden rounded-xl border border-primary-100 bg-white shadow-sm transition hover:shadow-md">
       <div className="relative aspect-[16/10] bg-primary-100">
         {course.cover_image_url ? (
-          <Image
+          // eslint-disable-next-line @next/next/no-img-element
+          <img
             src={course.cover_image_url}
             alt={course.title}
-            fill
-            className="object-cover"
-            sizes="(max-width: 768px) 100vw, 33vw"
+            loading="lazy"
+            decoding="async"
+            className="absolute inset-0 h-full w-full object-cover"
           />
         ) : (
           <div className="flex h-full items-center justify-center text-4xl font-bold text-primary-300">

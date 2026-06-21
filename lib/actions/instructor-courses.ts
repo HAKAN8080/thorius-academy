@@ -19,6 +19,7 @@ import {
   getCoursePublishReadiness,
 } from "@/lib/instructor/course-publish-readiness";
 import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
+import { enrichInstructorCourseListCovers } from "@/lib/instructor/enrich-instructor-course-covers";
 import { syncCourseToWp } from "@/lib/wordpress/sync-course-to-wp";
 import type {
   CourseAdditionalInput,
@@ -304,12 +305,21 @@ export async function getInstructorCourseList(): Promise<
 
   const { data: cacheRows } = await admin
     .from("courses_cache")
-    .select("id, wp_course_id")
+    .select("id, wp_course_id, cover_image_url, course_slug")
     .in("wp_course_id", wpIds);
 
   const cacheIdByWp = new Map<number, string>();
+  const cacheByWp = new Map<
+    number,
+    { cover_image_url: string | null; course_slug: string | null }
+  >();
   for (const row of cacheRows ?? []) {
-    cacheIdByWp.set(row.wp_course_id as number, String(row.id));
+    const wpCourseId = row.wp_course_id as number;
+    cacheIdByWp.set(wpCourseId, String(row.id));
+    cacheByWp.set(wpCourseId, {
+      cover_image_url: (row.cover_image_url as string | null) ?? null,
+      course_slug: (row.course_slug as string | null) ?? null,
+    });
   }
 
   let earningsQuery = admin
@@ -332,7 +342,7 @@ export async function getInstructorCourseList(): Promise<
     );
   }
 
-  return statsRows.map((row) => {
+  const items: InstructorCourseListItem[] = statsRows.map((row) => {
     const wpCourseId = row.wp_course_id as number;
     const cacheId = cacheIdByWp.get(wpCourseId);
 
@@ -351,6 +361,8 @@ export async function getInstructorCourseList(): Promise<
       rating_count: Number(row.rating_count ?? 0),
     };
   });
+
+  return enrichInstructorCourseListCovers(items, cacheByWp);
 }
 
 export async function createInstructorCourse(): Promise<{ id: string }> {
