@@ -157,7 +157,7 @@ export function CourseCardV2({
               >
                 <Image
                   src={instructor.avatar}
-                  alt=""
+                  alt={instructor.name}
                   fill
                   className="object-cover"
                   sizes="28px"

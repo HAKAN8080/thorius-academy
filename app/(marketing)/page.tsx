@@ -29,10 +29,24 @@ export async function generateMetadata(): Promise<Metadata> {
     };
   }
 
+  const academyTitle =
+    "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri";
+  const academyDescription =
+    "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.";
+
   return {
-    title: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
-    description:
-      "Thorius-LMS üzerinde kariyer odaklı eğitimler. Retail Planning, İK ve yapay zeka kariyer yolları.",
+    title: { absolute: academyTitle },
+    description: academyDescription,
+    openGraph: {
+      title: academyTitle,
+      description: academyDescription,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: academyTitle,
+      description: academyDescription,
+    },
   };
 }
 

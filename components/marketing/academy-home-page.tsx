@@ -13,11 +13,11 @@ import {
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
 } from "@/lib/course/pick-featured-courses";
-import { getCourseCatalog } from "@/lib/wordpress/catalog";
+import { getAcademyHomeCatalog } from "@/lib/wordpress/academy-home-catalog";
 import type { CourseProduct } from "@/types/course-product";
 
 export async function AcademyHomePage() {
-  const catalog = await getCourseCatalog();
+  const catalog = await getAcademyHomeCatalog();
   const { courses: allCourses, categories, products, stats } = catalog;
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),

@@ -188,7 +188,7 @@ export function CareerPathView({ path, steps, productBySlug }: CareerPathViewPro
           <div className="relative mx-auto mb-8 max-w-md overflow-hidden rounded-2xl">
             <Image
               src="/images/hero-visual.jpg"
-              alt=""
+              alt={`${path.title} kariyer yolu görseli`}
               width={800}
               height={450}
               className="h-auto w-full object-cover"

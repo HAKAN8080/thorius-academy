@@ -31,7 +31,7 @@ export function Logo({
     >
       <Image
         src="/images/thorius-academy-logo.png"
-        alt="Thorius Academy"
+        alt="Thorius Academy Logo"
         width={160}
         height={64}
         className={cn("shrink-0 object-contain", variantHeights[variant])}

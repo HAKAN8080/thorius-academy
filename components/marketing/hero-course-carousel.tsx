@@ -29,7 +29,7 @@ function HeroCourseSlide({ course }: { course: Course }) {
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={course.featuredImage}
-              alt=""
+              alt={course.imageAlt || course.title}
               className="absolute inset-0 h-full w-full object-cover"
             />
           )}

@@ -48,7 +48,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                   {category.image ? (
                     <Image
                       src={category.image}
-                      alt=""
+                      alt={`${category.name} kategorisi`}
                       fill
                       className="object-cover transition-transform duration-500 group-hover:scale-105"
                       sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 16vw"

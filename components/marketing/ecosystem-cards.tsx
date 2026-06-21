@@ -76,7 +76,7 @@ export function EcosystemCards({
             <div className="relative min-h-[16rem] lg:min-h-full">
               <Image
                 src="/images/coaching-promo.png"
-                alt=""
+                alt="Thorius Coaching — kariyer koçluğu ve mentorluk platformu"
                 fill
                 className="object-cover object-[center_20%]"
                 sizes="(max-width: 1024px) 100vw, 45vw"

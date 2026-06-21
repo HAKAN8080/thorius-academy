@@ -30,7 +30,7 @@ export function Hero({ courses }: HeroProps) {
             <div className="flex flex-wrap items-center gap-3">
               <Image
                 src="/images/thorius-academy-logo.png"
-                alt="Thorius Academy"
+                alt="Thorius Academy Logo"
                 width={140}
                 height={56}
                 className="h-12 w-auto object-contain sm:h-14"
@@ -44,14 +44,15 @@ export function Hero({ courses }: HeroProps) {
               id="hero-heading"
               className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
             >
-              Perakende planlamada{" "}
+              Perakende Planlama ve İK{" "}
               <span className="bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
-                uzmanlaşın
+                Online Eğitimleri
               </span>
             </h1>
             <p className="max-w-3xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl lg:text-2xl">
               OTB, range plan, envanter ve AI destekli forecast — kariyer
-              sonucuna odaklı öğrenme yolları ve sektör deneyimli eğitmenler
+              sonucuna odaklı online kurslar, dijital sertifika programları ve
+              sektör deneyimli eğitmenlerle kariyer yolları
             </p>
             <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
               <Button

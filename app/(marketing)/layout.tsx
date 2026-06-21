@@ -4,6 +4,8 @@ import { CompanyFooter } from "@/components/layout/company-footer";
 import { CompanyMarketingHeader } from "@/components/layout/company-marketing-header";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { PromoBanner } from "@/components/marketing/promo-banner";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { buildAcademyOrganizationJsonLd } from "@/lib/seo/organization-schema";
 import { isCompanySiteHost } from "@/lib/site/site-mode";
 
 export const revalidate = 3600;
@@ -27,6 +29,7 @@ export default function MarketingLayout({
 
   return (
     <div className="flex min-h-screen flex-col">
+      <JsonLd data={buildAcademyOrganizationJsonLd()} />
       <PromoBanner />
       <MarketingHeader />
       <main className="flex-1">{children}</main>

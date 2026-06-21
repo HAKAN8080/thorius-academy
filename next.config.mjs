@@ -13,12 +13,15 @@ const supabaseHostname = (() => {
 })();
 
 const nextConfig = {
+  reactStrictMode: true,
+  poweredByHeader: false,
+  compress: true,
   experimental: {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
   },
   images: {
-    /** Vercel Image Optimization kotası aşıldığında (402) görseller doğrudan kaynaktan yüklenir. */
-    unoptimized: true,
+    formats: ["image/avif", "image/webp"],
+    minimumCacheTTL: 86400,
     remotePatterns: [
       {
         protocol: "https",

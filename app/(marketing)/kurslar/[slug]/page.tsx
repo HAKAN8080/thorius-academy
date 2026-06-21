@@ -10,6 +10,9 @@ import { CourseCurriculumPreview } from "@/components/course/course-curriculum-p
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
+import { getCourseProduct } from "@/lib/actions/course-products";
+import { JsonLd } from "@/lib/seo/json-ld";
+import { buildCourseJsonLd } from "@/lib/seo/course-schema";
 
 interface CourseDetailPageProps {
   params: { slug: string };
@@ -60,9 +63,16 @@ export default async function CourseDetailPage({
     courseWithCover.id,
     params.slug,
   );
+  const product = await getCourseProduct(params.slug);
+  const courseJsonLd = buildCourseJsonLd(
+    courseWithCover,
+    product,
+    coverImageUrl,
+  );
 
   return (
     <article>
+      <JsonLd data={courseJsonLd} />
       <header className="bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-16 md:py-20">
         <Container>
           <Link
@@ -123,7 +133,7 @@ export default async function CourseDetailPage({
               <div className="relative aspect-video overflow-hidden rounded-2xl border border-accent-500/20 bg-primary-900/50 shadow-2xl">
                 <Image
                   src={courseWithCover.featuredImage}
-                  alt={courseWithCover.imageAlt}
+                  alt={courseWithCover.imageAlt || courseWithCover.title}
                   fill
                   sizes="(max-width: 1024px) 100vw, 400px"
                   className="object-cover object-center"
