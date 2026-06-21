@@ -23,12 +23,19 @@ export function HeroCarouselSection({ courses }: HeroCarouselSectionProps) {
   const firstCourse = courses[0];
 
   return (
-    <div className="relative w-full" data-hero-carousel>
-      <HeroCarouselStatic course={firstCourse} slideCount={courses.length} />
-      <div className="absolute inset-x-0 top-0">
-        <Suspense fallback={null}>
-          <HeroCourseCarouselClient courses={courses} />
-        </Suspense>
+    <div
+      className="relative w-full min-h-[22rem] sm:min-h-[24rem]"
+      data-hero-carousel
+    >
+      <div className="grid [grid-template-areas:'stack']">
+        <div className="[grid-area:stack]" data-hero-carousel-static>
+          <HeroCarouselStatic course={firstCourse} slideCount={courses.length} />
+        </div>
+        <div className="pointer-events-none invisible [grid-area:stack] data-[ready=true]:pointer-events-auto data-[ready=true]:visible">
+          <Suspense fallback={null}>
+            <HeroCourseCarouselClient courses={courses} />
+          </Suspense>
+        </div>
       </div>
     </div>
   );

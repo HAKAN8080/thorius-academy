@@ -1,143 +1,24 @@
-import Link from "next/link";
-import { Building2 } from "lucide-react";
-import { Container } from "@/components/layout/container";
-import { Hero } from "@/components/marketing/hero";
-import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
-import { CategoryGrid } from "@/components/marketing/category-grid";
-import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
-import { CareerOutcomesSection } from "@/components/marketing/career-outcomes-section";
-import { InspirationBanner } from "@/components/marketing/inspiration-banner";
-import { Button } from "@/components/ui/button";
-import {
-  filterPurchasableCourses,
-  pickCoursesByCategorySlugs,
-  pickFeaturedCoursesByCategory,
-} from "@/lib/course/pick-featured-courses";
-import { getAcademyHomeCatalog } from "@/lib/wordpress/academy-home-catalog";
-import type { CourseProduct } from "@/types/course-product";
+import { Suspense } from "react";
+import { CategoryGridSkeleton } from "@/components/marketing/category-grid-skeleton";
+import { HeroSkeleton } from "@/components/marketing/hero-skeleton";
+import { HomeCategorySection } from "@/components/marketing/home-category-section";
+import { HomeHeroSection } from "@/components/marketing/home-hero-section";
+import { HomeShowcaseSections } from "@/components/marketing/home-showcase-sections";
 
 export async function AcademyHomePage() {
-  const catalog = await getAcademyHomeCatalog();
-  const { courses: allCourses, categories, products, stats } = catalog;
-  const productBySlug = new Map<string, CourseProduct>(
-    products.map((p) => [p.course_slug, p]),
-  );
-  const statsBySlug = new Map(Object.entries(stats));
-  const featuredCourses = pickFeaturedCoursesByCategory(
-    filterPurchasableCourses(allCourses, productBySlug),
-    categories,
-    5,
-  );
-  const planningCourses = pickCoursesByCategorySlugs(
-    allCourses,
-    ["planlama", "ai"],
-    5,
-  );
-  const hrCourses = pickCoursesByCategorySlugs(
-    allCourses,
-    ["insan-kaynaklari", "yoga"],
-    5,
-  );
-
-  const coursesWithImages = allCourses.filter((course) => course.featuredImage);
-  let carouselCourses = pickFeaturedCoursesByCategory(
-    coursesWithImages,
-    categories,
-    5,
-  );
-  if (carouselCourses.length < 3) {
-    carouselCourses = pickCoursesByCategorySlugs(
-      coursesWithImages,
-      [
-        "planlama",
-        "insan-kaynaklari",
-        "ai",
-        "bt",
-        "ingilizce-egitimi",
-        "mit-egitimleri",
-        "yoga",
-        "yazilim",
-        "kocluk",
-      ],
-      5,
-    );
-  }
-  if (carouselCourses.length === 0) {
-    carouselCourses = pickFeaturedCoursesByCategory(
-      filterPurchasableCourses(allCourses, productBySlug),
-      categories,
-      5,
-    );
-  }
-  if (carouselCourses.length === 0 && allCourses.length > 0) {
-    carouselCourses = allCourses.slice(0, 5);
-  }
-
   return (
     <>
-      <CategoryGrid categories={categories} />
-      <Hero courses={carouselCourses} />
-      <CareerOutcomesSection className="bg-white py-14 md:py-20" />
-      <EcosystemCards />
+      <Suspense fallback={<CategoryGridSkeleton />}>
+        <HomeCategorySection />
+      </Suspense>
 
-      <CourseShowcaseSection
-        id="featured-heading"
-        title="Öne Çıkan Kurslar"
-        description="Profesyoneller için seçilmiş premium eğitimler"
-        courses={featuredCourses}
-        productBySlug={productBySlug}
-        statsBySlug={statsBySlug}
-        viewAllHref="/kurslar"
-        viewAllLabel="Tüm Kursları Görüntüle →"
-        className="bg-gradient-to-b from-white to-primary-50"
-      />
+      <Suspense fallback={<HeroSkeleton />}>
+        <HomeHeroSection />
+      </Suspense>
 
-      <CourseShowcaseSection
-        id="planning-heading"
-        title="Planlama Kursları"
-        description="Perakende planlama, bütçe ve talep yönetimi eğitimleri"
-        courses={planningCourses}
-        productBySlug={productBySlug}
-        statsBySlug={statsBySlug}
-        viewAllHref="/kurslar?kategori=planlama"
-      />
-
-      <CourseShowcaseSection
-        id="hr-heading"
-        title="İK Kursları"
-        description="İnsan kaynakları, yetenek yönetimi ve organizasyonel gelişim"
-        courses={hrCourses}
-        productBySlug={productBySlug}
-        statsBySlug={statsBySlug}
-        viewAllHref="/kurslar?kategori=insan-kaynaklari"
-        className="bg-primary-50"
-      />
-
-      <InspirationBanner compact />
-
-      <section
-        className="border-y border-primary-100 bg-primary-900 py-16 text-white"
-        aria-labelledby="b2b-heading"
-      >
-        <Container
-          size="wide"
-          className="flex flex-col items-center gap-8 text-center lg:flex-row lg:justify-between lg:text-left"
-        >
-          <div className="flex max-w-2xl flex-col items-center gap-4 lg:items-start">
-            <Building2 className="h-12 w-12 text-accent-500" aria-hidden="true" />
-            <h2 id="b2b-heading" className="text-2xl font-bold sm:text-3xl">
-              Şirketinize özel eğitim çözümleri
-            </h2>
-            <p className="text-primary-100">
-              50+ mağazalı perakende zincirleri için özelleştirilmiş öğrenme
-              yolları, canlı atölyeler ve performans raporlama.
-            </p>
-          </div>
-          <Button variant="gold" size="lg" asChild>
-            <Link href="/kurumsal">Kurumsal Teklif Alın</Link>
-          </Button>
-        </Container>
-      </section>
+      <Suspense fallback={null}>
+        <HomeShowcaseSections />
+      </Suspense>
     </>
   );
 }

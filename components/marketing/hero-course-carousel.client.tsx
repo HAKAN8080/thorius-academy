@@ -74,8 +74,13 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
     const staticPreview = host?.querySelector<HTMLElement>(
       "[data-hero-carousel-static]",
     );
+    const clientLayer = rootRef.current?.parentElement;
+
     if (staticPreview) {
       staticPreview.hidden = true;
+    }
+    if (clientLayer) {
+      clientLayer.dataset.ready = "true";
     }
   }, [hydrated]);
 

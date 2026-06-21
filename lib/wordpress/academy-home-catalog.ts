@@ -1,10 +1,9 @@
 import { unstable_cache } from "next/cache";
-import { backfillCategoryGridImages } from "@/lib/course/backfill-category-grid-images";
 import { enrichHomeCourseFeaturedImages } from "@/lib/course/enrich-home-course-images";
+import { resolveAllCategoryCoverImages } from "@/lib/course/resolve-category-cover-image";
 import { getAllCourseProducts } from "@/lib/actions/course-products";
 import { getCourseStatsMap } from "@/lib/actions/course-stats";
 import {
-  enrichCategoriesFromCourses,
   fetchCategoryList,
   fetchCoursesByCategory,
 } from "@/lib/wordpress/api";
@@ -21,12 +20,9 @@ import type { Course } from "@/types/wordpress";
 const REVALIDATE_SECONDS = 3600;
 const MIN_COURSES_BEFORE_FALLBACK = 10;
 
-/** Hero + vitrin için zorunlu WP kategori slug'ları. */
-const PRIORITY_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
-
-/** Ana sayfa vitrininde kullanılan ek WP kategori slug'ları. */
 const HOME_CATEGORY_SLUGS = [
-  ...PRIORITY_CATEGORY_SLUGS,
+  "planlama",
+  "insan-kaynaklari",
   "ai",
   "bt",
   "ist",
@@ -49,23 +45,11 @@ async function fetchCategoryCourses(slug: string): Promise<Course[]> {
 }
 
 async function buildAcademyHomeCatalog(): Promise<CourseCatalog> {
-  const extraSlugs = HOME_CATEGORY_SLUGS.filter(
-    (slug) =>
-      !PRIORITY_CATEGORY_SLUGS.includes(
-        slug as (typeof PRIORITY_CATEGORY_SLUGS)[number],
-      ),
-  );
-
-  const results = await Promise.all([
+  const [categories, products, ...categoryBatches] = await Promise.all([
     fetchCategoryList(),
     getAllCourseProducts(),
-    ...PRIORITY_CATEGORY_SLUGS.map((slug) => fetchCategoryCourses(slug)),
-    ...extraSlugs.map((slug) => fetchCategoryCourses(slug)),
+    ...HOME_CATEGORY_SLUGS.map((slug) => fetchCategoryCourses(slug)),
   ]);
-
-  const categories = results[0] as Awaited<ReturnType<typeof fetchCategoryList>>;
-  const products = results[1] as Awaited<ReturnType<typeof getAllCourseProducts>>;
-  const categoryBatches = results.slice(2) as Course[][];
 
   const courseById = new Map<number, Course>();
   for (const batch of categoryBatches) {
@@ -75,26 +59,27 @@ async function buildAcademyHomeCatalog(): Promise<CourseCatalog> {
   }
 
   const courses = Array.from(courseById.values());
-  await enrichHomeCourseFeaturedImages(courses);
+
+  const [categoriesWithImages] = await Promise.all([
+    resolveAllCategoryCoverImages(categories),
+    enrichHomeCourseFeaturedImages(courses, { slugFallbackLimit: 12 }),
+  ]);
+
   const statsMap = await getCourseStatsMap(
     courses.map((course) => ({ id: course.id, slug: course.slug })),
   );
-  const stats = Object.fromEntries(statsMap);
-
-  let enrichedCategories = enrichCategoriesFromCourses(categories, courses);
-  enrichedCategories = await backfillCategoryGridImages(enrichedCategories, courses);
 
   return {
     courses,
-    categories: enrichedCategories,
+    categories: categoriesWithImages,
     products,
-    stats,
+    stats: Object.fromEntries(statsMap),
   };
 }
 
 const getCachedAcademyHomeCatalog = unstable_cache(
   buildAcademyHomeCatalog,
-  ["academy-home-catalog-v3"],
+  ["academy-home-catalog-v4"],
   {
     revalidate: REVALIDATE_SECONDS,
     tags: [
@@ -116,5 +101,14 @@ export async function getAcademyHomeCatalog(): Promise<CourseCatalog> {
   console.warn(
     `[academy-home-catalog] only ${catalog.courses.length} courses loaded; falling back to full catalog`,
   );
-  return getCourseCatalog();
+
+  const fullCatalog = await getCourseCatalog();
+  const categoriesWithImages = await resolveAllCategoryCoverImages(
+    fullCatalog.categories,
+  );
+
+  return {
+    ...fullCatalog,
+    categories: categoriesWithImages,
+  };
 }

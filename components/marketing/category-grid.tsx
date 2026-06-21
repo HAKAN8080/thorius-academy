@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
@@ -46,12 +45,13 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
               >
                 <div className="relative aspect-[16/10] overflow-hidden bg-primary-100">
                   {category.image ? (
-                    <Image
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
                       src={category.image}
                       alt={`${category.name} kategorisi`}
-                      fill
-                      className="object-cover transition-transform duration-500 group-hover:scale-105"
-                      sizes="(max-width: 768px) 100vw, (max-width: 1280px) 33vw, 16vw"
+                      loading="lazy"
+                      decoding="async"
+                      className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
                     />
                   ) : (
                     <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-300" />

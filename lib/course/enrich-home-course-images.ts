@@ -8,7 +8,9 @@ const MAX_SLUG_FALLBACKS = 48;
 
 export async function enrichHomeCourseFeaturedImages(
   courses: Course[],
+  options: { slugFallbackLimit?: number } = {},
 ): Promise<void> {
+  const slugFallbackLimit = options.slugFallbackLimit ?? MAX_SLUG_FALLBACKS;
   let missing = courses.filter((course) => !course.featuredImage);
   if (missing.length === 0) {
     return;
@@ -27,8 +29,12 @@ export async function enrichHomeCourseFeaturedImages(
   }
 
   missing = courses.filter((course) => !course.featuredImage);
+  if (missing.length === 0 || slugFallbackLimit <= 0) {
+    return;
+  }
+
   await Promise.all(
-    missing.slice(0, MAX_SLUG_FALLBACKS).map(async (course) => {
+    missing.slice(0, slugFallbackLimit).map(async (course) => {
       const cover = await fetchWpCoverImageBySlug(course.slug);
       if (cover) {
         course.featuredImage = cover;
