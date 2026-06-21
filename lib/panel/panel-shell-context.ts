@@ -1,6 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { resolvePanelDisplayName } from "@/lib/instructor/display-name";
 
@@ -9,6 +10,7 @@ export interface PanelShellContext {
   userName: string | null;
   avatarUrl: string | null;
   isInstructor: boolean;
+  isCareerPathAdmin: boolean;
 }
 
 export const getPanelShellContext = cache(async (): Promise<PanelShellContext> => {
@@ -23,10 +25,14 @@ export const getPanelShellContext = cache(async (): Promise<PanelShellContext> =
       userName: null,
       avatarUrl: null,
       isInstructor: false,
+      isCareerPathAdmin: false,
     };
   }
 
-  const access = await getInstructorAccess();
+  const [access, careerPathAdmin] = await Promise.all([
+    getInstructorAccess(),
+    isCareerPathAdmin(),
+  ]);
   const loginEmail = user.email ?? null;
 
   const admin = getSupabaseAdmin();
@@ -77,5 +83,6 @@ export const getPanelShellContext = cache(async (): Promise<PanelShellContext> =
     userName,
     avatarUrl: profile?.avatar_url ?? avatarUrl,
     isInstructor: access.isInstructor,
+    isCareerPathAdmin: careerPathAdmin,
   };
 });

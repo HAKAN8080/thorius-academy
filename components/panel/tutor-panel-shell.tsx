@@ -8,6 +8,7 @@ import { Logo } from "@/components/layout/logo";
 import { NewCourseButton } from "@/components/instructor/course-builder/new-course-button";
 import { SignOutButton } from "@/components/panel/sign-out-button";
 import {
+  adminPanelNav,
   instructorPanelNav,
   isPanelNavActive,
   studentPanelNav,
@@ -21,19 +22,24 @@ interface TutorPanelShellProps {
   userName: string | null;
   avatarUrl: string | null;
   isInstructor: boolean;
+  isCareerPathAdmin: boolean;
 }
 
 function NavLink({
   item,
   isInstructor,
+  isCareerPathAdmin,
   pathname,
 }: {
   item: PanelNavItem;
   isInstructor: boolean;
+  isCareerPathAdmin: boolean;
   pathname: string;
 }) {
   const locked = item.requiresInstructor && !isInstructor;
-  const hidden = item.hideForInstructor && isInstructor;
+  const hidden =
+    (item.hideForInstructor && isInstructor) ||
+    (item.requiresCareerPathAdmin && !isCareerPathAdmin);
   const inactive = item.disabled || locked;
 
   if (hidden) {
@@ -99,6 +105,7 @@ export function TutorPanelShell({
   userName,
   avatarUrl,
   isInstructor,
+  isCareerPathAdmin,
 }: TutorPanelShellProps) {
   const pathname = usePathname();
   const displayName = userName ?? userEmail ?? "Kullanıcı";
@@ -170,10 +177,33 @@ export function TutorPanelShell({
                 key={item.id}
                 item={item}
                 isInstructor={isInstructor}
+                isCareerPathAdmin={isCareerPathAdmin}
                 pathname={pathname}
               />
             ))}
           </nav>
+
+          {isCareerPathAdmin ? (
+            <>
+              <div className="mx-3 border-t border-gray-200" />
+              <div className="p-3">
+                <p className="mb-2 px-3 text-xs font-semibold uppercase tracking-wide text-gray-400">
+                  Yönetim
+                </p>
+                <nav className="space-y-1">
+                  {adminPanelNav.map((item) => (
+                    <NavLink
+                      key={item.id}
+                      item={item}
+                      isInstructor={isInstructor}
+                      isCareerPathAdmin={isCareerPathAdmin}
+                      pathname={pathname}
+                    />
+                  ))}
+                </nav>
+              </div>
+            </>
+          ) : null}
 
           <div className="mx-3 border-t border-gray-200" />
 
@@ -187,6 +217,7 @@ export function TutorPanelShell({
                   key={item.id}
                   item={item}
                   isInstructor={isInstructor}
+                  isCareerPathAdmin={isCareerPathAdmin}
                   pathname={pathname}
                 />
               ))}

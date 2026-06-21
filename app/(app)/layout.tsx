@@ -61,6 +61,7 @@ export default async function AppLayout({
       userName={shell.userName}
       avatarUrl={shell.avatarUrl}
       isInstructor={shell.isInstructor}
+      isCareerPathAdmin={shell.isCareerPathAdmin}
     >
       {children}
     </TutorPanelShell>

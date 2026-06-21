@@ -11,6 +11,7 @@ import {
   Map,
   Megaphone,
   MessageSquare,
+  Route,
   Settings,
   ShoppingBag,
   Star,
@@ -25,6 +26,7 @@ export type PanelNavItem = {
   externalHref?: string;
   icon: LucideIcon;
   requiresInstructor?: boolean;
+  requiresCareerPathAdmin?: boolean;
   hideForInstructor?: boolean;
   disabled?: boolean;
   disabledReason?: string;
@@ -141,6 +143,16 @@ export const instructorPanelNav: PanelNavItem[] = [
   },
 ];
 
+export const adminPanelNav: PanelNavItem[] = [
+  {
+    id: "career-paths-admin",
+    label: "Kariyer Yolları",
+    href: "/panel/yonetim/kariyer-yollari",
+    icon: Route,
+    requiresCareerPathAdmin: true,
+  },
+];
+
 export function isPanelNavActive(pathname: string, href: string): boolean {
   if (href === "/") {
     return pathname === "/";
@@ -156,6 +168,9 @@ export function isPanelNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/panel/profil") {
     return pathname === "/panel/profil";
+  }
+  if (href === "/panel/yonetim/kariyer-yollari") {
+    return pathname.startsWith("/panel/yonetim/kariyer-yollari");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }
