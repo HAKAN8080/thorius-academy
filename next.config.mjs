@@ -20,6 +20,8 @@ const nextConfig = {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
   },
   images: {
+    /** Vercel Image Optimization kotası (402) — görseller kaynaktan doğrudan yüklenir. */
+    unoptimized: true,
     formats: ["image/avif", "image/webp"],
     minimumCacheTTL: 86400,
     remotePatterns: [

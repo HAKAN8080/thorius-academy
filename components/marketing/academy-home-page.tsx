@@ -38,11 +38,21 @@ export async function AcademyHomePage() {
     ["insan-kaynaklari", "yoga"],
     5,
   );
-  const carouselCourses = pickCoursesByCategorySlugs(
+  let carouselCourses = pickCoursesByCategorySlugs(
     allCourses,
     ["planlama", "insan-kaynaklari"],
     5,
   );
+  if (carouselCourses.length === 0) {
+    carouselCourses = pickFeaturedCoursesByCategory(
+      filterPurchasableCourses(allCourses, productBySlug),
+      categories,
+      5,
+    );
+  }
+  if (carouselCourses.length === 0 && allCourses.length > 0) {
+    carouselCourses = allCourses.slice(0, 5);
+  }
 
   return (
     <>
