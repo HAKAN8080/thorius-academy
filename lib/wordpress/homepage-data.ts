@@ -1,13 +1,14 @@
 import { cache } from "react";
 import { resolveAllCategoryCoverImages } from "@/lib/course/resolve-category-cover-image";
-import { fetchCategoryList } from "@/lib/wordpress/api";
-import { getAcademyHomeCatalog } from "@/lib/wordpress/academy-home-catalog";
+import { getCourseCatalog } from "@/lib/wordpress/catalog";
 
-/** Kategori grid — kurs kataloğu beklemeden, slug başına cache'li kapak. */
-export const getHomepageCategories = cache(async () => {
-  const categories = await fetchCategoryList();
-  return resolveAllCategoryCoverImages(categories);
+/** Ana sayfa — tek kaynak: tam WP katalog (1 saat cache) + kategori kapakları. */
+export const getHomepageCatalog = cache(async () => {
+  const catalog = await getCourseCatalog();
+  const categories = await resolveAllCategoryCoverImages(catalog.categories);
+
+  return {
+    ...catalog,
+    categories,
+  };
 });
-
-/** Hero + vitrin — kurs listesi, fiyat ve istatistikler. */
-export const getHomepageCatalog = cache(getAcademyHomeCatalog);

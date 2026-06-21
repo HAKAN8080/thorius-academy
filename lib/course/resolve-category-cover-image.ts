@@ -1,8 +1,6 @@
 import { unstable_cache } from "next/cache";
 import { fetchWpCoverImageBySlug } from "@/lib/course/resolve-course-cover-image";
-import {
-  CATEGORY_IMAGE_COURSE_SLUG,
-} from "@/lib/wordpress/api";
+import { CATEGORY_IMAGE_COURSE_SLUG } from "@/lib/wordpress/api";
 import {
   COURSE_CACHE_TAG,
   COURSE_CATEGORY_CACHE_TAG,
@@ -15,6 +13,49 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
+const MISSING = "__MISSING__";
+
+function coverFromEmbeddedSample(sample: {
+  slug: string;
+  thorius_youtube?: {
+    video_id?: string;
+    thumbnail_url?: string;
+  } | null;
+  _embedded?: {
+    "wp:featuredmedia"?: Array<{
+      source_url?: string;
+      media_details?: {
+        sizes?: {
+          large?: { source_url?: string };
+          medium?: { source_url?: string };
+        };
+      };
+    }>;
+  };
+}): string | null {
+  const featuredMedia = sample._embedded?.["wp:featuredmedia"]?.[0];
+  const embeddedUrl =
+    featuredMedia?.media_details?.sizes?.large?.source_url ||
+    featuredMedia?.media_details?.sizes?.medium?.source_url ||
+    featuredMedia?.source_url ||
+    null;
+
+  if (embeddedUrl) {
+    return embeddedUrl;
+  }
+
+  const youtubeThumb = sample.thorius_youtube?.thumbnail_url?.trim();
+  if (youtubeThumb) {
+    return youtubeThumb;
+  }
+
+  const videoId = sample.thorius_youtube?.video_id?.trim();
+  if (videoId) {
+    return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+  }
+
+  return null;
+}
 
 async function fetchCategoryCoverSampleUncached(
   categorySlug: string,
@@ -46,7 +87,7 @@ async function fetchCategoryCoverSampleUncached(
   }
 
   const courseRes = await fetch(
-    `${WP_API_BASE}/courses?per_page=8&course-category=${categories[0].id}&_embed=wp:featuredmedia&_fields=id,slug,featured_media,thorius_youtube`,
+    `${WP_API_BASE}/courses?per_page=12&status=publish&course-category=${categories[0].id}&_embed=true&_fields=id,slug,featured_media,thorius_youtube`,
     {
       next: {
         revalidate: REVALIDATE_SECONDS,
@@ -58,9 +99,8 @@ async function fetchCategoryCoverSampleUncached(
     return null;
   }
 
-  type WpSample = {
+  const samples = (await courseRes.json()) as Array<{
     slug: string;
-    featured_media?: number;
     thorius_youtube?: {
       video_id?: string;
       thumbnail_url?: string;
@@ -76,30 +116,12 @@ async function fetchCategoryCoverSampleUncached(
         };
       }>;
     };
-  };
-
-  const samples: WpSample[] = await courseRes.json();
+  }>;
 
   for (const sample of samples) {
-    const featuredMedia = sample._embedded?.["wp:featuredmedia"]?.[0];
-    const embeddedUrl =
-      featuredMedia?.media_details?.sizes?.large?.source_url ||
-      featuredMedia?.media_details?.sizes?.medium?.source_url ||
-      featuredMedia?.source_url ||
-      null;
-
-    if (embeddedUrl) {
-      return embeddedUrl;
-    }
-
-    const youtubeThumb = sample.thorius_youtube?.thumbnail_url?.trim();
-    if (youtubeThumb) {
-      return youtubeThumb;
-    }
-
-    const videoId = sample.thorius_youtube?.video_id?.trim();
-    if (videoId) {
-      return `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`;
+    const direct = coverFromEmbeddedSample(sample);
+    if (direct) {
+      return direct;
     }
 
     const slugCover = await fetchWpCoverImageBySlug(sample.slug);
@@ -119,9 +141,12 @@ export async function resolveCategoryCoverImage(
     return null;
   }
 
-  return unstable_cache(
-    () => fetchCategoryCoverSampleUncached(slug),
-    ["category-cover-v1", slug],
+  const cached = await unstable_cache(
+    async () => {
+      const cover = await fetchCategoryCoverSampleUncached(slug);
+      return cover ?? MISSING;
+    },
+    ["category-cover-v2", slug],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: [
@@ -131,6 +156,8 @@ export async function resolveCategoryCoverImage(
       ],
     },
   )();
+
+  return cached === MISSING ? null : cached;
 }
 
 export async function resolveAllCategoryCoverImages(

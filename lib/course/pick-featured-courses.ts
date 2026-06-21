@@ -1,4 +1,5 @@
 import { isPurchasableCourseProduct } from "@/lib/course/course-product-utils";
+import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import type { CourseProduct } from "@/types/course-product";
 import type { Course, WPCategory } from "@/types/wordpress";
 
@@ -47,11 +48,16 @@ export function pickCoursesByCategorySlugs(
       break;
     }
 
+    const targetSlug = canonicalizeCategorySlug(categorySlug);
+
     const categoryCourses = sortCoursesForDisplay(
       courses.filter(
         (course) =>
           !usedIds.has(course.id) &&
-          course.categories.some((category) => category.slug === categorySlug),
+          course.categories.some(
+            (category) =>
+              canonicalizeCategorySlug(category.slug) === targetSlug,
+          ),
       ),
     );
 

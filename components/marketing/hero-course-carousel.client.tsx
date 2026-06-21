@@ -37,7 +37,7 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
   const rootRef = useRef<HTMLDivElement>(null);
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
+  const [active, setActive] = useState(false);
   const [extraSlidesReady, setExtraSlidesReady] = useState(false);
 
   const count = courses.length;
@@ -53,7 +53,14 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
   );
 
   useEffect(() => {
-    setHydrated(true);
+    setActive(true);
+    const host = rootRef.current?.closest("[data-hero-carousel]");
+    const staticPreview = host?.querySelector<HTMLElement>(
+      "[data-hero-carousel-static]",
+    );
+    if (staticPreview) {
+      staticPreview.hidden = true;
+    }
   }, []);
 
   useEffect(() => {
@@ -64,25 +71,6 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
 
     return scheduleIdleWork(() => setExtraSlidesReady(true));
   }, [count]);
-
-  useEffect(() => {
-    if (!hydrated) {
-      return;
-    }
-
-    const host = rootRef.current?.closest("[data-hero-carousel]");
-    const staticPreview = host?.querySelector<HTMLElement>(
-      "[data-hero-carousel-static]",
-    );
-    const clientLayer = rootRef.current?.parentElement;
-
-    if (staticPreview) {
-      staticPreview.hidden = true;
-    }
-    if (clientLayer) {
-      clientLayer.dataset.ready = "true";
-    }
-  }, [hydrated]);
 
   useEffect(() => {
     if (count <= 1 || paused || !extraSlidesReady) {
@@ -103,11 +91,7 @@ export function HeroCourseCarouselClient({ courses }: HeroCourseCarouselClientPr
     return () => window.clearInterval(id);
   }, [count, paused, extraSlidesReady]);
 
-  if (count === 0) {
-    return null;
-  }
-
-  if (!hydrated) {
+  if (count === 0 || !active) {
     return null;
   }
 
