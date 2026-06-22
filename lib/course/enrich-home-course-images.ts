@@ -17,11 +17,16 @@ export async function enrichHomeCourseFeaturedImages(
   }
 
   try {
-    const byId = await fetchWpCoverImagesByWpIds(missing.map((course) => course.id));
-    for (const course of missing) {
-      const cover = byId[course.id];
-      if (cover) {
-        course.featuredImage = cover;
+    const wpIds = missing
+      .map((course) => course.id)
+      .filter((id) => Number.isFinite(id) && id > 0);
+    if (wpIds.length > 0) {
+      const byId = await fetchWpCoverImagesByWpIds(wpIds);
+      for (const course of missing) {
+        const cover = byId[course.id];
+        if (cover) {
+          course.featuredImage = cover;
+        }
       }
     }
   } catch (error) {

@@ -10,6 +10,7 @@ import {
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
+import { enrichHomeCourseFeaturedImages } from "@/lib/course/enrich-home-course-images";
 import { fromCoursesCacheLevelLabel } from "@/lib/instructor/courses-cache-write";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
 import {
@@ -171,13 +172,15 @@ async function buildHomepageCatalog(): Promise<HomepageCatalog> {
     .map((row) => mapCatalogRow(row as Record<string, unknown>))
     .filter((course): course is CatalogCourseItem => course !== null);
 
-  await enrichCatalogCoverImages(catalogItems, { skipSlugFallback: true });
+  await enrichCatalogCoverImages(catalogItems, { maxSlugFallbacks: 24 });
 
   const categoryRows = catalogItems.map((course) => ({
     category: course.category,
   }));
   const categories = mapToWpCategories(buildCategories(categoryRows), catalogItems);
   const courses = catalogItems.map(mapToCourse);
+
+  await enrichHomeCourseFeaturedImages(courses, { slugFallbackLimit: 12 });
 
   const [products, stats] = await Promise.all([
     getAllCourseProducts(),
@@ -188,7 +191,7 @@ async function buildHomepageCatalog(): Promise<HomepageCatalog> {
 }
 
 export async function getHomepageCatalogFromCache(): Promise<HomepageCatalog> {
-  return unstable_cache(buildHomepageCatalog, ["homepage-catalog-v1"], {
+  return unstable_cache(buildHomepageCatalog, ["homepage-catalog-v2"], {
     revalidate: REVALIDATE_SECONDS,
     tags: [
       COURSE_CACHE_TAG,
