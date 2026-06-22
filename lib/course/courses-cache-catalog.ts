@@ -100,7 +100,7 @@ function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
   };
 }
 
-function buildCategories(rows: Array<{ category: string | null }>): CatalogCategoryItem[] {
+export function buildCategories(rows: Array<{ category: string | null }>): CatalogCategoryItem[] {
   const counts = new Map<string, { name: string; count: number }>();
 
   for (const row of rows) {

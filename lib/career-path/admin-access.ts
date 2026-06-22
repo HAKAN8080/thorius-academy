@@ -11,22 +11,32 @@ function getAdminEmails(): string[] {
 }
 
 export async function isCareerPathAdmin(): Promise<boolean> {
-  const instructor = await getInstructorAccess();
-  if (instructor.isInstructor) {
-    return true;
-  }
+  const access = await getInstructorAccess();
+  return isCareerPathAdminForAccess(access, await getLoginEmail());
+}
 
+async function getLoginEmail(): Promise<string | null> {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  return user?.email?.trim().toLowerCase() ?? null;
+}
 
-  const email = user?.email?.trim().toLowerCase();
-  if (!email) {
+export function isCareerPathAdminForAccess(
+  access: Awaited<ReturnType<typeof getInstructorAccess>>,
+  email: string | null | undefined,
+): boolean {
+  if (access.isInstructor) {
+    return true;
+  }
+
+  const normalized = email?.trim().toLowerCase();
+  if (!normalized) {
     return false;
   }
 
-  return getAdminEmails().includes(email);
+  return getAdminEmails().includes(normalized);
 }
 
 export async function requireCareerPathAdmin(): Promise<void> {

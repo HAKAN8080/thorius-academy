@@ -1,7 +1,7 @@
 import { cache } from "react";
 import { createClient } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
+import { isCareerPathAdminForAccess } from "@/lib/career-path/admin-access";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { resolvePanelDisplayName } from "@/lib/instructor/display-name";
 
@@ -29,11 +29,9 @@ export const getPanelShellContext = cache(async (): Promise<PanelShellContext> =
     };
   }
 
-  const [access, careerPathAdmin] = await Promise.all([
-    getInstructorAccess(),
-    isCareerPathAdmin(),
-  ]);
+  const access = await getInstructorAccess();
   const loginEmail = user.email ?? null;
+  const careerPathAdmin = isCareerPathAdminForAccess(access, loginEmail);
 
   const admin = getSupabaseAdmin();
   const { data: profile } = await admin

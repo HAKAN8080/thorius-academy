@@ -8,7 +8,7 @@ import {
   isCompanySiteHost,
   resolveAcademyHref,
 } from "@/lib/site/site-mode";
-import { fetchCategoryList } from "@/lib/wordpress/api";
+import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
 
 const staticColumns = [
   {
@@ -95,7 +95,7 @@ export async function Footer() {
   const isCompany = isCompanySiteHost(host);
   const resolveHref = (href: string) => resolveAcademyHref(href, isCompany);
 
-  const categories = await fetchCategoryList();
+  const categories = await getFooterCategoriesFromCache();
   const topCategories = categories
     .filter((category) => category.count > 0)
     .sort((a, b) => b.count - a.count)

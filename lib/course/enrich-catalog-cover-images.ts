@@ -55,6 +55,7 @@ async function withTimeout<T>(
 
 export async function enrichCatalogCoverImages(
   courses: CatalogCourseItem[],
+  options?: { skipSlugFallback?: boolean; maxSlugFallbacks?: number },
 ): Promise<void> {
   if (courses.length === 0) {
     return;
@@ -93,13 +94,14 @@ export async function enrichCatalogCoverImages(
   }
 
   missing = courses.filter((course) => !course.coverImageUrl);
-  if (missing.length === 0) {
+  if (missing.length === 0 || options?.skipSlugFallback) {
     return;
   }
 
+  const maxSlugFallbacks = options?.maxSlugFallbacks ?? MAX_SLUG_FALLBACKS;
   const deadline = Date.now() + ENRICH_BUDGET_MS;
   await mapWithConcurrency(
-    missing.slice(0, MAX_SLUG_FALLBACKS),
+    missing.slice(0, maxSlugFallbacks),
     PER_SLUG_CONCURRENCY,
     async (course) => {
       if (Date.now() > deadline) {

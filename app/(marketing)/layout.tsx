@@ -10,23 +10,15 @@ import { isCompanySiteHost } from "@/lib/site/site-mode";
 
 export const revalidate = 3600;
 
-export default function MarketingLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const isCompany = isCompanySiteHost(headers().get("host"));
-
-  if (isCompany) {
-    return (
-      <div className="flex min-h-screen flex-col bg-white">
-        <CompanyMarketingHeader />
-        <main className="flex-1">{children}</main>
-        <CompanyFooter />
-      </div>
-    );
+function getConfiguredSiteMode(): "academy" | "company" | null {
+  const mode = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
+  if (mode === "academy" || mode === "company") {
+    return mode;
   }
+  return null;
+}
 
+function AcademyMarketingShell({ children }: { children: React.ReactNode }) {
   return (
     <div className="flex min-h-screen flex-col">
       <JsonLd data={buildAcademyOrganizationJsonLd()} />
@@ -36,4 +28,42 @@ export default function MarketingLayout({
       <Footer />
     </div>
   );
+}
+
+function CompanyMarketingShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <CompanyMarketingHeader />
+      <main className="flex-1">{children}</main>
+      <CompanyFooter />
+    </div>
+  );
+}
+
+function DynamicMarketingShell({ children }: { children: React.ReactNode }) {
+  const isCompany = isCompanySiteHost(headers().get("host"));
+
+  if (isCompany) {
+    return <CompanyMarketingShell>{children}</CompanyMarketingShell>;
+  }
+
+  return <AcademyMarketingShell>{children}</AcademyMarketingShell>;
+}
+
+export default function MarketingLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  const siteMode = getConfiguredSiteMode();
+
+  if (siteMode === "company") {
+    return <CompanyMarketingShell>{children}</CompanyMarketingShell>;
+  }
+
+  if (siteMode === "academy") {
+    return <AcademyMarketingShell>{children}</AcademyMarketingShell>;
+  }
+
+  return <DynamicMarketingShell>{children}</DynamicMarketingShell>;
 }

@@ -10,51 +10,76 @@ import {
 
 export const revalidate = 3600;
 
-export async function generateMetadata(): Promise<Metadata> {
-  const host = headers().get("host");
+const ACADEMY_HOME_METADATA: Metadata = {
+  title: {
+    absolute: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
+  },
+  description:
+    "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.",
+  openGraph: {
+    title: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
+    description:
+      "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
+    description:
+      "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar.",
+  },
+};
 
-  if (isCompanySiteHost(host)) {
-    return {
-      title: "Thorius — Danışmanlık, AI4U Retail ve Academy",
-      description:
-        "Thorius Eğitim ve Danışmanlık: tedarik zinciri, planlama ve İK audit; AI4U Retail yazılımı; Thorius Academy ile sürdürülebilir yetkinlik.",
-      alternates: {
-        canonical: getCompanyOrigin(),
-      },
-      openGraph: {
-        title: "Thorius — Danışmanlık, AI4U Retail ve Academy",
-        url: getCompanyOrigin(),
-        type: "website",
-      },
-    };
+const COMPANY_HOME_METADATA: Metadata = {
+  title: "Thorius — Danışmanlık, AI4U Retail ve Academy",
+  description:
+    "Thorius Eğitim ve Danışmanlık: tedarik zinciri, planlama ve İK audit; AI4U Retail yazılımı; Thorius Academy ile sürdürülebilir yetkinlik.",
+  alternates: {
+    canonical: getCompanyOrigin(),
+  },
+  openGraph: {
+    title: "Thorius — Danışmanlık, AI4U Retail ve Academy",
+    url: getCompanyOrigin(),
+    type: "website",
+  },
+};
+
+function getConfiguredSiteMode(): "academy" | "company" | null {
+  const mode = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
+  if (mode === "academy" || mode === "company") {
+    return mode;
+  }
+  return null;
+}
+
+export async function generateMetadata(): Promise<Metadata> {
+  const siteMode = getConfiguredSiteMode();
+  if (siteMode === "academy") {
+    return ACADEMY_HOME_METADATA;
+  }
+  if (siteMode === "company") {
+    return COMPANY_HOME_METADATA;
   }
 
-  const academyTitle =
-    "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri";
-  const academyDescription =
-    "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.";
+  const host = headers().get("host");
+  if (isCompanySiteHost(host)) {
+    return COMPANY_HOME_METADATA;
+  }
 
-  return {
-    title: { absolute: academyTitle },
-    description: academyDescription,
-    openGraph: {
-      title: academyTitle,
-      description: academyDescription,
-      type: "website",
-    },
-    twitter: {
-      card: "summary_large_image",
-      title: academyTitle,
-      description: academyDescription,
-    },
-  };
+  return ACADEMY_HOME_METADATA;
 }
 
 export default async function HomePage() {
-  const host = headers().get("host");
-  const mode = getSiteModeFromHost(host);
+  const siteMode = getConfiguredSiteMode();
+  if (siteMode === "company") {
+    return <CompanyHomePage />;
+  }
+  if (siteMode === "academy") {
+    return <AcademyHomePage />;
+  }
 
-  if (mode === "company") {
+  const host = headers().get("host");
+  if (getSiteModeFromHost(host) === "company") {
     return <CompanyHomePage />;
   }
 
