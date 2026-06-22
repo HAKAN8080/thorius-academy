@@ -191,7 +191,7 @@ async function buildHomepageCatalog(): Promise<HomepageCatalog> {
 }
 
 export async function getHomepageCatalogFromCache(): Promise<HomepageCatalog> {
-  return unstable_cache(buildHomepageCatalog, ["homepage-catalog-v2"], {
+  return unstable_cache(buildHomepageCatalog, ["homepage-catalog-v3"], {
     revalidate: REVALIDATE_SECONDS,
     tags: [
       COURSE_CACHE_TAG,

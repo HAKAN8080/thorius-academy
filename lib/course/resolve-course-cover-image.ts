@@ -159,6 +159,13 @@ export async function fetchWpCoverImageBySlug(
   )();
 }
 
+/** CLI / backfill — Next cache olmadan doğrudan WP fetch. */
+export function fetchWpCoverImageBySlugFresh(
+  slug: string,
+): Promise<string | null> {
+  return fetchWpCoverImageBySlugUncached(slug);
+}
+
 function mergeWpCoverBatch(
   record: Record<number, string>,
   courses: WpCoverCourseResponse[],
@@ -229,6 +236,13 @@ export async function fetchWpCoverImagesByWpIds(
       tags: [COURSE_CACHE_TAG],
     },
   )();
+}
+
+/** CLI / backfill — Next cache olmadan doğrudan WP batch fetch. */
+export function fetchWpCoverImagesByWpIdsFresh(
+  wpCourseIds: number[],
+): Promise<Record<number, string>> {
+  return fetchWpCoverImagesByWpIdsUncached(wpCourseIds);
 }
 
 export function pickBestCoverImageUrl(options: {

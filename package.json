@@ -9,6 +9,7 @@
     "lint": "next lint",
     "day1:check": "node scripts/day1-instructor-check.mjs",
     "import:tutor": "node scripts/import-tutor-courses.mjs",
+    "backfill:covers": "node scripts/backfill-course-covers.mjs",
     "migrate:wp-users": "node scripts/migrate-wp-users.mjs",
     "audit:wc-tutor-gap": "node scripts/audit-wc-tutor-gap.mjs",
     "audit:tutor-no-purchase": "node scripts/audit-tutor-no-purchase-segment.mjs",
