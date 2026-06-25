@@ -1,0 +1,1 @@
+export const COMPLETION_PROGRESS_THRESHOLD = 70;

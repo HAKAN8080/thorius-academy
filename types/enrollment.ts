@@ -12,6 +12,8 @@ export interface Enrollment {
   completed_at: string | null;
   last_lesson_id: number | null;
   status: "active" | "completed" | "cancelled";
+  source: string | null;
+  wc_order_id: number | null;
 }
 
 export interface EnrollResult {

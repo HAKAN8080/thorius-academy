@@ -35,6 +35,12 @@ const emptyForm: CareerPathAdminInput = {
       description: "",
     },
   ],
+  product: {
+    wcProductId: 0,
+    priceNormal: null,
+    priceSale: null,
+    isActive: false,
+  },
 };
 
 export default async function NewCareerPathPage() {

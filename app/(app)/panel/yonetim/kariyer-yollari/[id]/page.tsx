@@ -5,6 +5,7 @@ import { ArrowLeft } from "lucide-react";
 import { AdminPathForm } from "@/components/career-path/admin-path-form";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
 import { getAdminCourseOptions } from "@/lib/career-path/admin-course-options";
+import { getCareerPathProductForAdmin } from "@/lib/career-path/admin-product";
 import { getCareerPathAdminById } from "@/lib/career-path/repository";
 import type { CareerPathAdminInput } from "@/lib/career-path/types";
 
@@ -24,6 +25,7 @@ export async function generateMetadata({ params }: PageProps): Promise<Metadata>
 
 function toAdminInput(
   data: NonNullable<Awaited<ReturnType<typeof getCareerPathAdminById>>>,
+  product: Awaited<ReturnType<typeof getCareerPathProductForAdmin>>,
 ): CareerPathAdminInput {
   return {
     slug: data.path.slug,
@@ -45,6 +47,12 @@ function toAdminInput(
       fallbackTitle: step.fallback_title,
       description: step.description,
     })),
+    product: {
+      wcProductId: product?.wc_product_id ?? 0,
+      priceNormal: product?.price_normal ?? null,
+      priceSale: product?.price_sale ?? null,
+      isActive: product?.is_active ?? false,
+    },
   };
 }
 
@@ -55,13 +63,15 @@ export default async function EditCareerPathPage({ params }: PageProps) {
   }
 
   const { id: slugOrId } = await params;
-  const [data, courses] = await Promise.all([
-    getCareerPathAdminById(slugOrId),
-    getAdminCourseOptions(),
-  ]);
+  const data = await getCareerPathAdminById(slugOrId);
   if (!data) {
     notFound();
   }
+
+  const [courses, product] = await Promise.all([
+    getAdminCourseOptions(),
+    getCareerPathProductForAdmin(data.path.id),
+  ]);
 
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 lg:px-8">
@@ -89,7 +99,7 @@ export default async function EditCareerPathPage({ params }: PageProps) {
 
       <AdminPathForm
         pathId={data.path.id}
-        initial={toAdminInput(data)}
+        initial={toAdminInput(data, product)}
         courses={courses}
       />
     </div>

@@ -1,14 +1,24 @@
 import { getAuthCallbackUrl, getAppOrigin } from "@/lib/auth/app-url";
+import { fulfillCareerPathPurchase } from "@/lib/career-path/fulfill-career-path-purchase";
 import { EnrollmentEmail } from "@/lib/email/templates/enrollment";
 import { recordEnrollmentEarning } from "@/lib/earnings/record-enrollment-earning";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import type { CareerPathProduct } from "@/types/career-path-product";
 import type { CourseProduct } from "@/types/course-product";
 import type { Database } from "@/types/database";
 import type { WooCommerceOrderWebhook } from "@/types/woocommerce-webhook";
 
 type CourseProductMapping = Pick<CourseProduct, "course_slug" | "wp_course_id">;
+type CareerPathProductMapping = Pick<
+  CareerPathProduct,
+  | "career_path_id"
+  | "career_path_slug"
+  | "wc_product_id"
+  | "price_normal"
+  | "price_sale"
+>;
 type EnrollmentInsert = Database["public"]["Tables"]["enrollments"]["Insert"];
 
 interface EnrolledCourse {
@@ -103,18 +113,35 @@ async function getOrCreateUser(
 
 async function isOrderAlreadyProcessed(orderId: number): Promise<boolean> {
   const supabaseAdmin = getSupabaseAdmin();
-  const { data, error } = await supabaseAdmin
-    .from("enrollments")
-    .select("id")
-    .eq("wc_order_id", orderId)
-    .limit(1);
 
-  if (error) {
-    console.warn("[Webhook] wc_order_id check skipped:", error.message);
-    return false;
+  const [enrollmentCheck, pathEnrollmentCheck] = await Promise.all([
+    supabaseAdmin
+      .from("enrollments")
+      .select("id")
+      .eq("wc_order_id", orderId)
+      .limit(1),
+    supabaseAdmin
+      .from("career_path_enrollments")
+      .select("id")
+      .eq("wc_order_id", orderId)
+      .limit(1),
+  ]);
+
+  if (enrollmentCheck.error) {
+    console.warn("[Webhook] wc_order_id check skipped:", enrollmentCheck.error.message);
   }
 
-  return (data?.length ?? 0) > 0;
+  if (pathEnrollmentCheck.error) {
+    console.warn(
+      "[Webhook] career path wc_order_id check skipped:",
+      pathEnrollmentCheck.error.message,
+    );
+  }
+
+  return (
+    (enrollmentCheck.data?.length ?? 0) > 0 ||
+    (pathEnrollmentCheck.data?.length ?? 0) > 0
+  );
 }
 
 export async function processWooCommerceOrder(
@@ -166,6 +193,43 @@ export async function processWooCommerceOrder(
 
   for (const item of order.line_items ?? []) {
     const wcProductId = item.product_id;
+
+    const { data: pathProductData, error: pathProductError } =
+      await supabaseAdmin
+        .from("career_path_products")
+        .select(
+          "career_path_id, career_path_slug, wc_product_id, price_normal, price_sale",
+        )
+        .eq("wc_product_id", wcProductId)
+        .eq("is_active", true)
+        .maybeSingle();
+
+    const pathProduct = pathProductData as CareerPathProductMapping | null;
+
+    if (!pathProductError && pathProduct) {
+      const fulfillment = await fulfillCareerPathPurchase({
+        userId,
+        wcOrderId: order.id,
+        pathProduct: pathProduct as CareerPathProduct,
+        orderTotal: saleAmountBase,
+        lineItemName: item.name,
+      });
+
+      if (fulfillment.success && fulfillment.firstCourseSlug) {
+        enrolledCourses.push({
+          slug: fulfillment.firstCourseSlug,
+          title: fulfillment.firstCourseTitle ?? item.name,
+        });
+        console.log(
+          `[Webhook] Career path enrolled: ${fulfillment.pathSlug} → ${fulfillment.firstCourseSlug}`,
+        );
+      } else if (!fulfillment.success) {
+        console.error(
+          `[Webhook] Career path fulfillment failed: ${fulfillment.error}`,
+        );
+      }
+      continue;
+    }
 
     const { data: courseProductData, error: productError } = await supabaseAdmin
       .from("course_products")

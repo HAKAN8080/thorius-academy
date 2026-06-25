@@ -8,7 +8,7 @@ import {
   syncCourseFromTutor,
 } from "@/lib/actions/lesson-sync";
 import { getUserLessonProgress } from "@/lib/actions/lesson-progress";
-import { checkEnrollment } from "@/lib/actions/enrollment";
+import { checkCourseAccess } from "@/lib/actions/enrollment";
 import { DownloadCertificateButton } from "@/components/certificate/download-button";
 import { CourseProgressBar } from "@/components/player/course-progress-bar";
 import { VideoPlayer } from "@/components/player/video-player";
@@ -49,7 +49,7 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
   const course = await fetchCourseBySlug(slug);
   if (!course) notFound();
 
-  const enrollment = await checkEnrollment(course.id);
+  const enrollment = await checkCourseAccess(course.id, slug);
   if (!enrollment) redirect(`/kurslar/${slug}`);
 
   const lessonSlug = course.slug;

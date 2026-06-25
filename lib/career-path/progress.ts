@@ -1,7 +1,6 @@
+import { COMPLETION_PROGRESS_THRESHOLD } from "@/lib/career-path/progress-constants";
 import type { CareerPathStepStatus } from "@/lib/career-path/types";
 import type { Enrollment } from "@/types/enrollment";
-
-const COMPLETION_PROGRESS_THRESHOLD = 70;
 
 export function isCourseStepCompleted(
   enrollment: Enrollment | undefined,

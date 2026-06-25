@@ -1,6 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
+import { getCareerPathProduct } from "@/lib/actions/career-path-products";
+import { isPurchasableCareerPathProduct } from "@/lib/career-path/career-path-product-utils";
 import { createClient } from "@/lib/supabase/server";
 
 export interface CareerPathEnrollResult {
@@ -31,9 +33,19 @@ export async function enrollInCareerPath(
       return { success: false, error: "Giriş yapmalısınız" };
     }
 
+    const pathProduct = await getCareerPathProduct(slug);
+    if (isPurchasableCareerPathProduct(pathProduct)) {
+      return {
+        success: false,
+        error:
+          "Bu kariyer yolu ücretli bir pakettir. Satın aldıktan sonra panelinizde görünür.",
+      };
+    }
+
     const { error } = await supabase.from("career_path_enrollments").insert({
       user_id: user.id,
       career_path_id: careerPathId,
+      source: "free",
     });
 
     if (error) {

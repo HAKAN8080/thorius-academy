@@ -3,7 +3,10 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import { CareerPathEnrollButton } from "@/components/career-path/career-path-enroll-button";
+import { CareerPathPanelPurchase } from "@/components/career-path/career-path-panel-purchase";
 import { RoadmapTimeline } from "@/components/career-path/roadmap-timeline";
+import { isPurchasableCareerPathProduct } from "@/lib/career-path/career-path-product-utils";
+import { getCareerPathPurchaseState } from "@/lib/career-path/career-path-purchase-state";
 import { getUserCareerPathWithProgress } from "@/lib/career-path/user-progress";
 
 interface PageProps {
@@ -27,6 +30,9 @@ export default async function CareerPathDetailPage({ params }: PageProps) {
     notFound();
   }
 
+  const purchaseState = await getCareerPathPurchaseState(slug);
+  const isPaidPath = isPurchasableCareerPathProduct(purchaseState.pathProduct);
+
   const nextStep = path.steps.find(
     (step) => step.status === "available" || step.status === "in_progress",
   );
@@ -43,7 +49,7 @@ export default async function CareerPathDetailPage({ params }: PageProps) {
 
       <header className="mb-8">
         <p className="text-sm text-muted-foreground">{path.subtitle}</p>
-        {!path.isEnrolled ? (
+        {!path.isEnrolled && !isPaidPath ? (
           <div className="mt-4">
             <CareerPathEnrollButton
               careerPathId={path.id}
@@ -51,6 +57,9 @@ export default async function CareerPathDetailPage({ params }: PageProps) {
               isEnrolled={path.isEnrolled}
             />
           </div>
+        ) : null}
+        {!path.isEnrolled && isPaidPath ? (
+          <CareerPathPanelPurchase path={path} purchaseState={purchaseState} />
         ) : null}
         {nextStep ? (
           <p className="mt-4 rounded-xl border border-accent-200 bg-accent-50/60 px-4 py-3 text-sm text-primary-900">

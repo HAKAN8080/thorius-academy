@@ -260,6 +260,85 @@ export function AdminPathForm({ pathId, initial, courses }: AdminPathFormProps) 
       </section>
 
       <section className="rounded-2xl border border-primary-100 bg-white p-6">
+        <h2 className="mb-2 text-lg font-bold text-primary-950">
+          Satılabilir paket (WooCommerce)
+        </h2>
+        <p className="mb-4 text-sm text-muted-foreground">
+          WooCommerce ürün ID ve fiyatları girin. Öğrenci paketi satın alınca
+          yalnızca ilk kurs açılır; sonraki kurslar tamamladıkça otomatik
+          açılır.
+        </p>
+        <div className="grid gap-4 md:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="wcProductId">WooCommerce ürün ID</Label>
+            <Input
+              id="wcProductId"
+              type="number"
+              min={0}
+              value={form.product.wcProductId || ""}
+              onChange={(event) =>
+                updateField("product", {
+                  ...form.product,
+                  wcProductId: Number(event.target.value) || 0,
+                })
+              }
+              placeholder="ör. 12345"
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="priceNormal">Liste fiyatı (₺)</Label>
+            <Input
+              id="priceNormal"
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.product.priceNormal ?? ""}
+              onChange={(event) =>
+                updateField("product", {
+                  ...form.product,
+                  priceNormal: event.target.value
+                    ? Number(event.target.value)
+                    : null,
+                })
+              }
+            />
+          </div>
+          <div className="space-y-2">
+            <Label htmlFor="priceSale">İndirimli fiyat (₺)</Label>
+            <Input
+              id="priceSale"
+              type="number"
+              min={0}
+              step="0.01"
+              value={form.product.priceSale ?? ""}
+              onChange={(event) =>
+                updateField("product", {
+                  ...form.product,
+                  priceSale: event.target.value
+                    ? Number(event.target.value)
+                    : null,
+                })
+              }
+            />
+          </div>
+          <label className="flex items-center gap-2 self-end text-sm font-medium text-primary-900">
+            <input
+              type="checkbox"
+              checked={form.product.isActive}
+              onChange={(event) =>
+                updateField("product", {
+                  ...form.product,
+                  isActive: event.target.checked,
+                })
+              }
+              className="h-4 w-4 rounded border-primary-300"
+            />
+            Paket satışı aktif
+          </label>
+        </div>
+      </section>
+
+      <section className="rounded-2xl border border-primary-100 bg-white p-6">
         <div className="mb-4 flex items-center justify-between gap-3">
           <div>
             <h2 className="text-lg font-bold text-primary-950">

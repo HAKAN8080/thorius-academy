@@ -1,11 +1,15 @@
 import Link from "next/link";
 import Image from "next/image";
 import { ArrowDown, ArrowRight, Award, Briefcase, Users } from "lucide-react";
+import { CareerPathBuyButton } from "@/components/career-path/career-path-buy-button";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { CourseCard } from "@/components/marketing/course-card";
+import { isPurchasableCareerPathProduct } from "@/lib/career-path/career-path-product-utils";
+import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import type { CareerPathDefinition } from "@/lib/content/career-path-types";
 import type { ResolvedCareerPathStep } from "@/lib/course/resolve-career-path-courses";
+import type { CareerPathProduct } from "@/types/career-path-product";
 import type { CourseProduct } from "@/types/course-product";
 
 const milestoneIcons = [Award, Users, Briefcase] as const;
@@ -14,10 +18,23 @@ interface CareerPathViewProps {
   path: CareerPathDefinition;
   steps: ResolvedCareerPathStep[];
   productBySlug: Map<string, CourseProduct>;
+  pathProduct?: CareerPathProduct | null;
+  isLoggedIn?: boolean;
+  customer?: CheckoutCustomer | null;
 }
 
-export function CareerPathView({ path, steps, productBySlug }: CareerPathViewProps) {
+export function CareerPathView({
+  path,
+  steps,
+  productBySlug,
+  pathProduct = null,
+  isLoggedIn = false,
+  customer = null,
+}: CareerPathViewProps) {
   const firstStepWithCourse = steps.find((step) => step.course);
+  const isPaidPackage = isPurchasableCareerPathProduct(pathProduct);
+  const packagePrice =
+    pathProduct?.price_sale ?? pathProduct?.price_normal ?? null;
 
   return (
     <>
@@ -30,7 +47,15 @@ export function CareerPathView({ path, steps, productBySlug }: CareerPathViewPro
           <p className="mx-auto mt-6 max-w-2xl text-lg leading-relaxed text-primary-100">
             {path.subtitle}
           </p>
-          {firstStepWithCourse?.course && (
+          {isPaidPackage && pathProduct ? (
+            <CareerPathBuyButton
+              pathSlug={path.slug}
+              pathProduct={pathProduct}
+              isLoggedIn={isLoggedIn}
+              customer={customer}
+              stepCount={steps.length}
+            />
+          ) : firstStepWithCourse?.course ? (
             <Button
               asChild
               size="lg"
@@ -41,7 +66,13 @@ export function CareerPathView({ path, steps, productBySlug }: CareerPathViewPro
                 <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
               </Link>
             </Button>
-          )}
+          ) : null}
+          {isPaidPackage && packagePrice ? (
+            <p className="mt-4 text-sm text-primary-200">
+              {steps.length} kurs · sıralı öğrenme yolu · paket fiyatı{" "}
+              {packagePrice.toLocaleString("tr-TR")}₺
+            </p>
+          ) : null}
         </Container>
       </section>
 

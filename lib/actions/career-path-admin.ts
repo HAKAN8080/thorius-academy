@@ -135,6 +135,39 @@ export async function saveCareerPath(
       return { success: false, error: "Adımlar kaydedilemedi." };
     }
 
+    const productRow = {
+      career_path_id: pathId,
+      career_path_slug: pathRow.slug,
+      wc_product_id: input.product.wcProductId,
+      price_normal: input.product.priceNormal,
+      price_sale: input.product.priceSale,
+      is_active: input.product.isActive && input.product.wcProductId > 0,
+      currency: "TRY",
+    };
+
+    if (input.product.wcProductId > 0) {
+      const { error: productError } = await admin
+        .from("career_path_products")
+        .upsert(productRow, { onConflict: "career_path_id" });
+
+      if (productError) {
+        console.error("[Career Path Admin] Product upsert error:", productError);
+        return { success: false, error: "Paket ürün bilgisi kaydedilemedi." };
+      }
+    } else {
+      const { error: deactivateError } = await admin
+        .from("career_path_products")
+        .update({ is_active: false })
+        .eq("career_path_id", pathId);
+
+      if (deactivateError) {
+        console.warn(
+          "[Career Path Admin] Product deactivate warning:",
+          deactivateError.message,
+        );
+      }
+    }
+
     revalidatePath("/panel/yonetim/kariyer-yollari");
     revalidatePath(`/panel/yonetim/kariyer-yollari/${pathRow.slug}`);
     revalidatePath(`/panel/yonetim/kariyer-yollari/${pathId}`);

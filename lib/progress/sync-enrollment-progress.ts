@@ -1,6 +1,10 @@
 import { revalidatePath } from "next/cache";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { deliverCertificateOnCourseComplete } from "@/lib/certificate/certificate-service";
+import {
+  shouldTriggerCareerPathDrip,
+  unlockNextStepAfterCompletion,
+} from "@/lib/career-path/drip-unlock";
 
 export async function syncEnrollmentProgress(
   supabase: SupabaseClient,
@@ -67,5 +71,19 @@ export async function syncEnrollmentProgress(
         console.error("[Certificate] Auto-delivery failed:", error);
       },
     );
+  }
+
+  if (
+    options?.courseSlug &&
+    shouldTriggerCareerPathDrip(progress, isCourseComplete)
+  ) {
+    const unlockedSlug = await unlockNextStepAfterCompletion(
+      userId,
+      options.courseSlug,
+    );
+    if (unlockedSlug) {
+      revalidatePath("/panel/kariyer-yolu");
+      revalidatePath(`/panel/kurslarim/${unlockedSlug}`);
+    }
   }
 }

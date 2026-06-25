@@ -67,4 +67,10 @@ export interface CareerPathAdminInput {
     fallbackTitle: string;
     description: string;
   }>;
+  product: {
+    wcProductId: number;
+    priceNormal: number | null;
+    priceSale: number | null;
+    isActive: boolean;
+  };
 }

@@ -171,6 +171,45 @@ export async function checkEnrollment(
   }
 }
 
+export async function checkCourseAccess(
+  courseId: number,
+  courseSlug: string,
+): Promise<Enrollment | null> {
+  const enrollment = await checkEnrollment(courseId);
+  if (!enrollment) {
+    return null;
+  }
+
+  try {
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) {
+      return null;
+    }
+
+    const { canAccessCourseViaCareerPath } = await import(
+      "@/lib/career-path/access"
+    );
+    const allowed = await canAccessCourseViaCareerPath(
+      user.id,
+      courseSlug,
+      enrollment,
+    );
+
+    if (!allowed) {
+      return null;
+    }
+
+    return enrollment;
+  } catch (error) {
+    console.error("Check course access error:", error);
+    return null;
+  }
+}
+
 export async function unenrollFromCourse(
   courseId: number
 ): Promise<{ success: boolean; error?: string }> {
