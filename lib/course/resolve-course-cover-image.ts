@@ -12,7 +12,10 @@ const WP_API_BASE =
 const REVALIDATE_SECONDS = 3600;
 const WP_COVER_BATCH_SIZE = 100;
 
-const WP_COVER_FIELDS = "id,slug,featured_media,thorius_youtube";
+// `_embedded` ve `_links` olmadan WP, `_fields` ile birlikte `_embed` edilen
+// featured media bloğunu kırpar; bu olmadan WP featured görseli olan kurslar çözülemez.
+const WP_COVER_FIELDS =
+  "id,slug,featured_media,thorius_youtube,_links,_embedded";
 
 export function normalizeCoverImageUrl(
   url: string | null | undefined,
