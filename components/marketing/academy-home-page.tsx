@@ -2,7 +2,6 @@ import Link from "next/link";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Hero } from "@/components/marketing/hero";
-import { HeroAnimation } from "@/components/marketing/hero-animation";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
@@ -80,7 +79,6 @@ export async function AcademyHomePage() {
     <>
       <CategoryGrid categories={categories} />
       <Hero courses={carouselCourses} />
-      <HeroAnimation />
       <CareerOutcomesSection className="bg-white py-14 md:py-20" />
       <EcosystemCards />
 
