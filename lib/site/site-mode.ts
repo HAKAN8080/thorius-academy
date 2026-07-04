@@ -180,7 +180,8 @@ export function getCompanyNavLinks(): CompanyNavLink[] {
       external: true,
     },
     {
-      href: getShopOrigin(),
+      // Shop subdomain canlıya alınınca getShopOrigin() olarak güncellenecek
+      href: academyPath("/magaza"),
       label: "Mağaza",
       external: true,
     },

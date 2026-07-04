@@ -7,7 +7,6 @@ import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import {
   isCompanySiteHost,
   resolveAcademyHref,
-  shopPath,
 } from "@/lib/site/site-mode";
 import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
 
@@ -17,7 +16,8 @@ const staticColumns = [
     links: [
       { href: "/hakkimizda", label: "Misyonumuz" },
       { href: "/kariyer-yolu", label: "Kariyer Yolları" },
-      { href: shopPath("/"), label: "Kitaplar" },
+      // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
+      { href: "/magaza", label: "Kitaplar" },
       { href: "/#ecosystem", label: "Koçluk" },
       { href: "/blog", label: "Blog" },
     ],

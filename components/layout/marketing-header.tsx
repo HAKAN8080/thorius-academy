@@ -4,13 +4,13 @@ import {
   academyPath,
   isCompanySiteHost,
   resolveAcademyHref,
-  shopPath,
 } from "@/lib/site/site-mode";
 
 const baseNavLinks = [
   { href: "/kurslar", label: "Academy" },
   { href: "/kariyer-yolu", label: "Kariyer Yolu" },
-  { href: shopPath("/"), label: "Mağaza", external: true },
+  // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
+  { href: "/magaza", label: "Mağaza" },
   { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
   { href: "/hakkimizda", label: "Hakkımızda" },
