@@ -27,7 +27,7 @@ export function Hero({ pathCourses }: HeroProps) {
           <HeroMarketingCopy />
 
           <div className="order-1 xl:order-2">
-            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_11rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
+            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_14.5rem]">
               <div className="relative min-w-0">
                 <HeroCarouselSection
                   courses={pathCourses}
@@ -35,7 +35,7 @@ export function Hero({ pathCourses }: HeroProps) {
                   ariaLabel="Retail Planning kariyer yolu kursları"
                 />
               </div>
-              <div className="mx-auto w-full max-w-xs lg:mx-0 lg:max-w-none lg:pt-8">
+              <div className="mx-auto w-full max-w-[17rem] sm:max-w-xs lg:mx-0 lg:max-w-none lg:pt-8">
                 <HeroNeonTagline />
               </div>
             </div>
