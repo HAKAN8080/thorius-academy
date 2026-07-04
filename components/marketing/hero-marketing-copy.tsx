@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -27,25 +26,19 @@ const PATH_STEPS = [
 export function HeroMarketingCopy() {
   return (
     <div className="order-2 flex flex-col gap-5 sm:gap-6 xl:order-1">
-      <Image
-        src="/images/thorius-academy-logo.png"
-        alt="Thorius Academy Logo"
-        width={140}
-        height={56}
-        className="h-12 w-auto object-contain sm:h-14"
-        priority
-      />
-
       <div className="space-y-4">
         <h1
           id="hero-heading"
-          className="text-2xl font-bold text-white sm:text-3xl md:text-4xl"
+          className="text-balance text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-[2.65rem]"
         >
           Kurs değil,{" "}
-          <span className="text-accent-300">kariyer sonucu</span> satın alırsınız
+          <span className="bg-gradient-to-r from-accent-300 via-amber-200 to-accent-400 bg-clip-text text-transparent">
+            kariyer sonucu
+          </span>{" "}
+          satın alırsınız
         </h1>
 
-        <p className="max-w-xl text-base text-primary-100/90 sm:text-lg">
+        <p className="max-w-xl text-base text-primary-100/95 sm:text-lg">
           Video izlemek değil — iş yapabilir hale gelmek.
         </p>
 
