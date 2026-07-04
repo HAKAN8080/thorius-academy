@@ -13,6 +13,21 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.7.2 — Siparis ozeti toplam satiri
+- Toplam satirinda **Toplam** etiketi gorunur
+- Satir fiyatlari ve toplam tutarin yaninda **KDV Dahil** notu
+
+### v1.7.1 — Beyaz panel okunabilirlik
+- Siparis ozeti fiyatlari ve PayTR etiketi koyu metin (tema beyaz override duzeltmesi)
+- Toplam tutar saga hizali
+- "Sadece ad, soyad..." bilgi notu kaldirildi
+
+### v1.7.0 — Checkout guven ve okunabilirlik
+- Ad / soyad alanlari tam genislik (daha uzun yazim alani)
+- Sag siparis ozeti paneli **beyaz** zemin, koyu metin (lacivert uzerine yazı kaldirildi)
+- PayTR + Visa + Mastercard + Troy guven rozetleri (fatura alti + odeme paneli)
+- PayTR logo dosyasi duzeltildi (`.svg`)
+
 ### v1.6.2 — Odeme sonrasi yonlendirme
 - PayTR / WooCommerce teşekkür sayfasindan otomatik **academy.thorius.com.tr/kurslar** yonlendirmesi
 - Dis domain icin `allowed_redirect_hosts`; JS + link yedegi

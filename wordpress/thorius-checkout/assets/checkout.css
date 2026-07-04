@@ -1,6 +1,6 @@
 /* ═══════════════════════════════════════════════════════
-   Thorius Checkout — UI düzeltmeleri v1.3.0
-   Minimal fatura (ad/soyad/e-posta) · PayTR · Sticky sidebar
+   Thorius Checkout — UI düzeltmeleri v1.7.2
+   Minimal fatura · beyaz sipariş paneli · güven rozetleri
    ═══════════════════════════════════════════════════════ */
 
 /* ── Checkout grid: hata kutusu tam genişlik, form yapısı korunur ── */
@@ -12,9 +12,12 @@ body.woocommerce-checkout .woocommerce > .woocommerce-notices-wrapper {
 
 form.checkout {
   display: grid !important;
-  grid-template-columns: minmax(0, 1.55fr) minmax(300px, 370px) !important;
+  grid-template-columns: minmax(0, 1.85fr) minmax(300px, 400px) !important;
   gap: 40px !important;
   align-items: start !important;
+  max-width: 1120px !important;
+  margin-left: auto !important;
+  margin-right: auto !important;
 }
 
 form.checkout > .woocommerce-NoticeGroup,
@@ -88,14 +91,7 @@ body.woocommerce-checkout .woocommerce-error li:last-child {
 }
 
 .thorius-checkout-required-note {
-  margin: 0 0 16px 0 !important;
-  padding: 10px 14px !important;
-  background: #f8fafc !important;
-  border: 1px solid #e2e8f0 !important;
-  border-radius: 10px !important;
-  color: #475569 !important;
-  font-size: 13px !important;
-  line-height: 1.5 !important;
+  display: none !important;
 }
 
 .woocommerce-checkout h1 {
@@ -145,6 +141,12 @@ body.woocommerce-checkout
   display: none !important;
 }
 
+/* Ad ve soyad tam genişlik — daha uzun yazım alanı */
+#billing_first_name_field,
+#billing_last_name_field {
+  grid-column: 1 / -1 !important;
+}
+
 /* E-posta ve telefon tam genişlik */
 #billing_email_field,
 #billing_phone_field {
@@ -167,18 +169,22 @@ body.woocommerce-checkout
 #billing_email_field .input-text,
 #billing_phone_field .input-text {
   min-width: 0 !important;
+  box-sizing: border-box !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
 }
 
-/* Sağ panel — lacivert kutu, kaydırınca sabit kalır */
+/* Sağ panel — beyaz kutu, okunabilir metin, sticky */
 #order_review,
 .woocommerce-checkout-review-order {
   position: sticky !important;
   top: 32px !important;
   align-self: start !important;
-  background: #0b1e3f !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
   border-radius: 16px !important;
-  color: #ffffff !important;
-  box-shadow: 0 16px 48px rgba(11, 30, 63, 0.28) !important;
+  color: #0b1e3f !important;
+  box-shadow: 0 8px 32px rgba(11, 30, 63, 0.08) !important;
   overflow: hidden !important;
 }
 
@@ -190,13 +196,13 @@ body.woocommerce-checkout
   margin-bottom: 16px !important;
   font-size: 13px !important;
   line-height: 1.55 !important;
-  color: rgba(255, 255, 255, 0.75) !important;
+  color: #64748b !important;
 }
 
 #order_review_heading,
 .woocommerce-checkout-review-order > h3 {
-  color: #ffffff !important;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.12) !important;
+  color: #0b1e3f !important;
+  border-bottom: 1px solid #e2e8f0 !important;
   padding-bottom: 14px !important;
   margin-bottom: 18px !important;
 }
@@ -206,16 +212,74 @@ body.woocommerce-checkout
 .woocommerce-checkout-review-order .shop_table tbody td,
 .woocommerce-checkout-review-order .shop_table tfoot th,
 .woocommerce-checkout-review-order .shop_table tfoot td {
-  color: rgba(255, 255, 255, 0.92) !important;
-  border-color: rgba(255, 255, 255, 0.14) !important;
+  color: #334155 !important;
+  border-color: #e2e8f0 !important;
   background: transparent !important;
 }
 
 .woocommerce-checkout-review-order .shop_table .order-total th,
 .woocommerce-checkout-review-order .shop_table .order-total td,
 .woocommerce-checkout-review-order .shop_table .order-total .amount {
-  color: #d4af37 !important;
+  color: #0b1e3f !important;
   font-size: 1.15em !important;
+  font-weight: 800 !important;
+}
+
+.woocommerce-checkout-review-order .shop_table .order-total th {
+  display: table-cell !important;
+  visibility: visible !important;
+  text-align: left !important;
+  width: 50% !important;
+  padding-top: 14px !important;
+  border-top: 2px solid #e2e8f0 !important;
+}
+
+.woocommerce-checkout-review-order .shop_table .order-total td {
+  text-align: right !important;
+  padding-top: 14px !important;
+  border-top: 2px solid #e2e8f0 !important;
+}
+
+.woocommerce-checkout-review-order .shop_table .order-total .amount,
+.woocommerce-checkout-review-order .shop_table .order-total .woocommerce-Price-amount {
+  color: #b8860b !important;
+}
+
+.thorius-vat-note {
+  display: inline-block !important;
+  margin-left: 6px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+  color: #64748b !important;
+  vertical-align: middle !important;
+  white-space: nowrap !important;
+}
+
+.woocommerce-checkout-review-order .shop_table .order-total .thorius-vat-note {
+  font-size: 12px !important;
+}
+
+/* Tema beyaz metin override — fiyatlar ve urun adlari */
+#order_review .woocommerce-Price-amount,
+#order_review .amount,
+#order_review .product-name,
+#order_review .product-quantity,
+.woocommerce-checkout-review-order .woocommerce-Price-amount,
+.woocommerce-checkout-review-order .amount,
+.woocommerce-checkout-review-order .product-name,
+.woocommerce-checkout-review-order .product-quantity,
+.woocommerce-checkout-review-order .shop_table tbody td,
+.woocommerce-checkout-review-order .shop_table tfoot th,
+.woocommerce-checkout-review-order .shop_table tfoot td,
+.woocommerce-checkout-review-order .shop_table thead th {
+  color: #334155 !important;
+  -webkit-text-fill-color: #334155 !important;
+}
+
+.woocommerce-checkout-review-order .shop_table td.product-total,
+.woocommerce-checkout-review-order .shop_table tfoot td:last-child {
+  text-align: right !important;
+  white-space: nowrap !important;
 }
 
 .woocommerce-checkout-review-order #payment {
@@ -224,8 +288,10 @@ body.woocommerce-checkout
 }
 
 .woocommerce-checkout-review-order #payment ul.payment_methods {
-  border-color: rgba(255, 255, 255, 0.14) !important;
-  background: rgba(255, 255, 255, 0.04) !important;
+  border: 1px solid #e2e8f0 !important;
+  background: #f8fafc !important;
+  border-radius: 12px !important;
+  padding: 4px 0 !important;
 }
 
 .woocommerce-checkout-review-order #place_order,
@@ -304,8 +370,23 @@ body.woocommerce-checkout [class*="payment_method_paytr"] .payment_box {
   display: none !important;
 }
 
-.woocommerce-checkout-review-order #payment ul.payment_methods li label {
-  color: #ffffff !important;
+.woocommerce-checkout-review-order #payment ul.payment_methods li,
+.woocommerce-checkout-review-order #payment ul.payment_methods li label,
+.woocommerce-checkout-review-order #payment ul.payment_methods li input[type="radio"] + label,
+body.woocommerce-checkout #order_review #payment ul.payment_methods li label {
+  color: #0b1e3f !important;
+  -webkit-text-fill-color: #0b1e3f !important;
+  font-weight: 600 !important;
+}
+
+.woocommerce-checkout-review-order #payment ul.payment_methods li.wc_payment_method > label {
+  display: block !important;
+  padding: 12px 16px !important;
+  cursor: pointer !important;
+}
+
+.woocommerce-checkout-review-order #payment ul.payment_methods li input[type="radio"] {
+  accent-color: #0b1e3f !important;
 }
 
 /* Sağ panel dışındaki ödeme kutusu (fallback) */
@@ -382,34 +463,59 @@ body.woocommerce-checkout .thorius-policy-link:hover {
   color: #1e3a5f !important;
 }
 
-/* PayTR guven rozeti — fatura kutusu alti */
-.thorius-paytr-trust {
-  display: flex !important;
-  align-items: center !important;
-  gap: 14px !important;
+/* Güven rozetleri — PayTR + kart ağları */
+.thorius-payment-trust {
   margin-top: 16px !important;
-  padding: 14px 16px !important;
+  padding: 16px 18px !important;
   background: #f8fafc !important;
   border: 1px solid #e2e8f0 !important;
   border-radius: 12px !important;
 }
 
-.thorius-paytr-trust img {
-  flex: 0 0 auto !important;
-  height: 36px !important;
+.thorius-payment-trust--sidebar {
+  margin-top: 20px !important;
+  background: #ffffff !important;
+}
+
+.thorius-payment-trust__title {
+  margin: 0 0 12px 0 !important;
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  letter-spacing: 0.06em !important;
+  text-transform: uppercase !important;
+  color: #64748b !important;
+}
+
+.thorius-payment-trust__logos {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  align-items: center !important;
+  gap: 10px 12px !important;
+}
+
+.thorius-trust-logo {
+  display: block !important;
+  height: 32px !important;
   width: auto !important;
-  max-width: 140px !important;
-  padding: 8px 12px !important;
-  background: #000000 !important;
-  border-radius: 8px !important;
+  max-width: 72px !important;
   object-fit: contain !important;
 }
 
-.thorius-paytr-trust p {
-  margin: 0 !important;
+.thorius-trust-logo--paytr {
+  height: 36px !important;
+  max-width: 120px !important;
+}
+
+.thorius-payment-trust__note {
+  margin: 12px 0 0 0 !important;
   font-size: 12px !important;
   line-height: 1.45 !important;
   color: #64748b !important;
+}
+
+/* Eski rozet sınıfı — geriye dönük */
+.thorius-paytr-trust {
+  display: none !important;
 }
 
 body.woocommerce-cart .woocommerce {
@@ -785,6 +891,8 @@ body.woocommerce-cart .wc-proceed-to-checkout a.checkout-button:hover {
     gap: 12px !important;
   }
 
+  #billing_first_name_field,
+  #billing_last_name_field,
   #billing_email_field {
     grid-column: auto !important;
   }

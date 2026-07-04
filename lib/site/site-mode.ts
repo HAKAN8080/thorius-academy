@@ -1,6 +1,7 @@
-export type SiteMode = "company" | "academy";
+export type SiteMode = "company" | "academy" | "shop";
 
 const COMPANY_HOSTS = new Set(["thorius.com.tr", "www.thorius.com.tr"]);
+const SHOP_HOSTS = new Set(["shop.thorius.com.tr"]);
 
 export function normalizeHost(host: string | null | undefined): string {
   return (host ?? "").toLowerCase().split(":")[0] ?? "";
@@ -8,11 +9,14 @@ export function normalizeHost(host: string | null | undefined): string {
 
 export function getSiteModeFromHost(host: string | null | undefined): SiteMode {
   const override = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
-  if (override === "company" || override === "academy") {
+  if (override === "company" || override === "academy" || override === "shop") {
     return override;
   }
 
   const normalized = normalizeHost(host);
+  if (SHOP_HOSTS.has(normalized)) {
+    return "shop";
+  }
   if (COMPANY_HOSTS.has(normalized)) {
     return "company";
   }
@@ -22,6 +26,10 @@ export function getSiteModeFromHost(host: string | null | undefined): SiteMode {
 
 export function isCompanySiteHost(host: string | null | undefined): boolean {
   return getSiteModeFromHost(host) === "company";
+}
+
+export function isShopSiteHost(host: string | null | undefined): boolean {
+  return getSiteModeFromHost(host) === "shop";
 }
 
 /** Academy uygulaması (panel, kurslar, auth) — her zaman academy subdomain. */
@@ -34,6 +42,17 @@ export function getAcademyOrigin(): string {
 export function getCompanyOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_COMPANY_SITE_URL?.replace(/\/$/, "");
   return configured || "https://thorius.com.tr";
+}
+
+/** Kitap mağazası vitrin. */
+export function getShopOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_SHOP_SITE_URL?.replace(/\/$/, "");
+  return configured || "https://shop.thorius.com.tr";
+}
+
+export function shopPath(path: string): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${getShopOrigin()}${normalized}`;
 }
 
 export function academyPath(path: string): string {
@@ -160,6 +179,11 @@ export function getCompanyNavLinks(): CompanyNavLink[] {
       label: "Coaching",
       external: true,
     },
+    {
+      href: getShopOrigin(),
+      label: "Mağaza",
+      external: true,
+    },
     { href: "/hakkimizda", label: "Hakkımızda" },
     { href: "/iletisim", label: "İletişim" },
   ];
@@ -177,4 +201,17 @@ export function resolveCompanyNavHref(
   }
 
   return link;
+}
+
+/** shop.thorius.com.tr üzerinde açık kalacak sayfalar. */
+export const SHOP_ALLOWED_PATH_PREFIXES = ["/kitap"] as const;
+
+export function isShopAllowedPath(pathname: string): boolean {
+  if (pathname === "/") {
+    return true;
+  }
+
+  return SHOP_ALLOWED_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
 }

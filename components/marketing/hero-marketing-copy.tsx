@@ -31,11 +31,11 @@ export function HeroMarketingCopy() {
           id="hero-heading"
           className="text-balance text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-[2.65rem]"
         >
-          Kurs değil,{" "}
+          Sadece bir kurs değil; profesyonel geleceğiniz için{" "}
           <span className="bg-gradient-to-r from-accent-300 via-amber-200 to-accent-400 bg-clip-text text-transparent">
-            kariyer sonucu
-          </span>{" "}
-          satın alırsınız
+            stratejik bir yatırım
+          </span>
+          .
         </h1>
 
         <p className="max-w-xl text-base text-primary-100/95 sm:text-lg">

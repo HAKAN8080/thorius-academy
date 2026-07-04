@@ -38,9 +38,8 @@ export function CareerOutcomesSection({
               id="career-outcomes-heading"
               className="text-3xl font-bold text-primary-950 md:text-4xl"
             >
-              Kurs değil,{" "}
-              <span className="text-primary-700">kariyer sonucu</span> satın
-              alırsınız
+              Sadece bir kurs değil; profesyonel geleceğiniz için{" "}
+              <span className="text-primary-700">stratejik bir yatırım</span>.
             </h2>
             <p className="mt-4 max-w-xl text-lg leading-relaxed text-muted-foreground">
               Thorius Academy&apos;de amaç video izlemek değil; iş yapabilir

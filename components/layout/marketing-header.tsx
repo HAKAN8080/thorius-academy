@@ -4,11 +4,13 @@ import {
   academyPath,
   isCompanySiteHost,
   resolveAcademyHref,
+  shopPath,
 } from "@/lib/site/site-mode";
 
 const baseNavLinks = [
   { href: "/kurslar", label: "Academy" },
   { href: "/kariyer-yolu", label: "Kariyer Yolu" },
+  { href: shopPath("/"), label: "Mağaza", external: true },
   { href: "/#ecosystem", label: "Koçluk" },
   { href: "/kurumsal", label: "Kurumsal" },
   { href: "/hakkimizda", label: "Hakkımızda" },
@@ -20,7 +22,10 @@ export function MarketingHeader() {
   const isCompany = isCompanySiteHost(host);
 
   const navLinks = baseNavLinks.map((link) => ({
-    href: resolveAcademyHref(link.href, isCompany),
+    href:
+      "external" in link && link.external
+        ? link.href
+        : resolveAcademyHref(link.href, isCompany),
     label: link.label,
   }));
 

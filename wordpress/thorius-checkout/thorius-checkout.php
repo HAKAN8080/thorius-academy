@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.6.2
+ * Version: 1.7.2
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.6.2');
+define('THORIUS_CHECKOUT_VERSION', '1.7.2');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -259,17 +259,6 @@ add_filter('woocommerce_enable_order_notes_field', '__return_false');
 add_filter('woocommerce_ship_to_different_address_checked', '__return_false');
 
 /**
- * Fatura formu ustunde zorunlu alan notu.
- */
-function thorius_checkout_billing_required_note(): void
-{
-    echo '<p class="thorius-checkout-required-note">' .
-        esc_html__('Sadece ad, soyad, e-posta ve telefon yeterlidir. Zorunlu alanlar * ile isaretlenmistir.', 'thorius-checkout') .
-        '</p>';
-}
-add_action('woocommerce_before_checkout_billing_form', 'thorius_checkout_billing_required_note', 5);
-
-/**
  * @param 'terms'|'privacy' $type
  */
 function thorius_checkout_policy_url(string $type): string
@@ -320,7 +309,38 @@ function thorius_checkout_terms_checkbox_text(): string
 add_filter('woocommerce_get_terms_and_conditions_checkbox_text', 'thorius_checkout_terms_checkbox_text');
 
 /**
- * Fatura kutusunun altinda PayTR guven rozetı.
+ * Guven rozetleri HTML (PayTR + kart aglari).
+ */
+function thorius_checkout_payment_trust_markup(string $context = 'billing'): string
+{
+    $assets = THORIUS_CHECKOUT_URL . 'assets/';
+    $logos = [
+        ['src' => $assets . 'paytr-logo.svg', 'alt' => 'PayTR', 'class' => 'thorius-trust-logo--paytr'],
+        ['src' => $assets . 'visa.svg', 'alt' => 'Visa', 'class' => ''],
+        ['src' => $assets . 'mastercard.svg', 'alt' => 'Mastercard', 'class' => ''],
+        ['src' => $assets . 'troy.svg', 'alt' => 'Troy', 'class' => ''],
+    ];
+
+    $logo_html = '';
+    foreach ($logos as $logo) {
+        $class = trim('thorius-trust-logo ' . ($logo['class'] ?? ''));
+        $logo_html .= '<img src="' . esc_url($logo['src']) . '" alt="' . esc_attr($logo['alt']) .
+            '" class="' . esc_attr($class) . '" loading="lazy" decoding="async" />';
+    }
+
+    $note = $context === 'sidebar'
+        ? esc_html__('256-bit SSL · 3D Secure · PayTR altyapısı', 'thorius-checkout')
+        : esc_html__('256-bit SSL ile güvenli ödeme · Visa, Mastercard, Troy · PayTR altyapısı', 'thorius-checkout');
+
+    return '<div class="thorius-payment-trust thorius-payment-trust--' . esc_attr($context) . '">' .
+        '<p class="thorius-payment-trust__title">' . esc_html__('Güvenli ödeme', 'thorius-checkout') . '</p>' .
+        '<div class="thorius-payment-trust__logos" aria-hidden="true">' . $logo_html . '</div>' .
+        '<p class="thorius-payment-trust__note">' . $note . '</p>' .
+        '</div>';
+}
+
+/**
+ * Fatura kutusunun altinda odeme guven rozetleri.
  */
 function thorius_checkout_paytr_trust_badge(): void
 {
@@ -328,14 +348,90 @@ function thorius_checkout_paytr_trust_badge(): void
         return;
     }
 
-    $logo_url = THORIUS_CHECKOUT_URL . 'assets/paytr-logo.png';
-
-    echo '<div class="thorius-paytr-trust">' .
-        '<img src="' . esc_url($logo_url) . '" alt="PayTR" width="140" height="36" loading="lazy" decoding="async" />' .
-        '<p>' . esc_html__('256-bit SSL ile güvenli ödeme · PayTR altyapısı', 'thorius-checkout') . '</p>' .
-        '</div>';
+    echo thorius_checkout_payment_trust_markup('billing');
 }
 add_action('woocommerce_after_checkout_billing_form', 'thorius_checkout_paytr_trust_badge', 18);
+
+/**
+ * Siparis ozeti panelinde odeme butonunun altinda guven rozetleri.
+ */
+function thorius_checkout_sidebar_trust_badge(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return;
+    }
+
+    echo thorius_checkout_payment_trust_markup('sidebar');
+}
+add_action('woocommerce_review_order_after_payment', 'thorius_checkout_sidebar_trust_badge', 20);
+
+/**
+ * Siparis ozeti — fiyat yaninda KDV Dahil notu.
+ */
+function thorius_checkout_vat_included_markup(): string
+{
+    return ' <span class="thorius-vat-note">' .
+        esc_html__('KDV Dahil', 'thorius-checkout') .
+        '</span>';
+}
+
+function thorius_checkout_is_checkout_context(): bool
+{
+    return function_exists('is_checkout') && is_checkout() && !is_wc_endpoint_url('order-received');
+}
+
+/**
+ * @param string $subtotal
+ * @param array<string, mixed> $cart_item
+ */
+function thorius_checkout_cart_item_subtotal_vat_note(
+    string $subtotal,
+    array $cart_item,
+    string $cart_item_key,
+): string {
+    unset($cart_item, $cart_item_key);
+
+    if (!thorius_checkout_is_checkout_context()) {
+        return $subtotal;
+    }
+
+    return $subtotal . thorius_checkout_vat_included_markup();
+}
+add_filter('woocommerce_cart_item_subtotal', 'thorius_checkout_cart_item_subtotal_vat_note', 20, 3);
+
+function thorius_checkout_order_total_vat_note(string $value): string
+{
+    if (!thorius_checkout_is_checkout_context()) {
+        return $value;
+    }
+
+    return $value . thorius_checkout_vat_included_markup();
+}
+add_filter('woocommerce_cart_totals_order_total_html', 'thorius_checkout_order_total_vat_note', 20);
+
+/**
+ * Siparis ozeti toplam satiri basligi.
+ *
+ * @param string $translated
+ * @param string $text
+ * @param string $domain
+ */
+function thorius_checkout_translate_total_label(
+    string $translated,
+    string $text,
+    string $domain,
+): string {
+    if ($domain !== 'woocommerce') {
+        return $translated;
+    }
+
+    if ($text === 'Total' || $translated === 'Toplam') {
+        return __('Toplam', 'thorius-checkout');
+    }
+
+    return $translated;
+}
+add_filter('gettext', 'thorius_checkout_translate_total_label', 25, 3);
 
 /**
  * Eski siparislerdeki vergi numarasini admin ekraninda goster.

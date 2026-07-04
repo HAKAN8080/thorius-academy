@@ -3,11 +3,14 @@ import { updateSession } from "@/lib/supabase/middleware";
 import {
   getAcademyOrigin,
   getCompanyOrigin,
+  getShopOrigin,
   getWordPressOrigin,
   isCompanyAllowedPath,
   isCompanyRedirectToAcademyPath,
   isCompanyRedirectToWordPressPath,
   isCompanySiteHost,
+  isShopAllowedPath,
+  isShopSiteHost,
 } from "@/lib/site/site-mode";
 
 function redirectToAcademy(request: NextRequest) {
@@ -30,9 +33,23 @@ function redirectToCompanyHome() {
   return NextResponse.redirect(new URL("/", getCompanyOrigin()));
 }
 
+function redirectToShopHome() {
+  return NextResponse.redirect(new URL("/", getShopOrigin()));
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host");
   const { pathname } = request.nextUrl;
+
+  if (isShopSiteHost(host)) {
+    if (isCompanyRedirectToAcademyPath(pathname)) {
+      return redirectToAcademy(request);
+    }
+
+    if (!isShopAllowedPath(pathname)) {
+      return redirectToShopHome();
+    }
+  }
 
   if (isCompanySiteHost(host)) {
     if (isCompanyRedirectToWordPressPath(pathname)) {

@@ -21,16 +21,9 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   return (
     <section
       className="border-b border-primary-100 bg-white py-4 md:py-5"
-      aria-labelledby="categories-heading"
+      aria-label="Kurs kategorileri"
     >
       <Container size="wide">
-        <h2
-          id="categories-heading"
-          className="mb-2 text-lg font-bold text-primary-900 md:mb-3 md:text-xl"
-        >
-          Uzmanlık Alanları
-        </h2>
-
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-10 lg:gap-2.5">
           {visibleCategories.map((category) => (
             <Link

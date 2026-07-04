@@ -7,8 +7,6 @@ type LogoVariant = "full" | "compact" | "icon";
 interface LogoProps {
   className?: string;
   variant?: LogoVariant;
-  showTagline?: boolean;
-  inverted?: boolean;
 }
 
 const variantHeights: Record<LogoVariant, string> = {
@@ -20,8 +18,6 @@ const variantHeights: Record<LogoVariant, string> = {
 export function Logo({
   className,
   variant = "compact",
-  showTagline = false,
-  inverted = false,
 }: LogoProps) {
   return (
     <Link
@@ -37,16 +33,6 @@ export function Logo({
         className={cn("shrink-0 object-contain", variantHeights[variant])}
         priority={variant !== "icon"}
       />
-      {showTagline && variant !== "icon" && (
-        <span
-          className={cn(
-            "hidden text-[10px] font-medium uppercase tracking-wider sm:block sm:text-xs",
-            inverted ? "text-primary-200" : "text-primary-500",
-          )}
-        >
-          Premium Eğitim & Teknoloji
-        </span>
-      )}
     </Link>
   );
 }

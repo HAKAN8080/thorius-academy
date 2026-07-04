@@ -7,6 +7,7 @@ import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import {
   isCompanySiteHost,
   resolveAcademyHref,
+  shopPath,
 } from "@/lib/site/site-mode";
 import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
 
@@ -16,6 +17,7 @@ const staticColumns = [
     links: [
       { href: "/hakkimizda", label: "Misyonumuz" },
       { href: "/kariyer-yolu", label: "Kariyer Yolları" },
+      { href: shopPath("/"), label: "Kitaplar" },
       { href: "/#ecosystem", label: "Koçluk" },
       { href: "/blog", label: "Blog" },
     ],
@@ -120,7 +122,7 @@ export async function Footer() {
     ...column,
     links: column.links.map((link) => ({
       ...link,
-      href: resolveHref(link.href),
+      href: link.href.startsWith("http") ? link.href : resolveHref(link.href),
     })),
   }));
 
@@ -134,7 +136,7 @@ export async function Footer() {
     <footer className="bg-primary-900 text-white">
       <Container size="wide" className="py-12">
         <div className="mb-10 border-b border-primary-700 pb-10">
-          <Logo variant="full" inverted />
+          <Logo variant="full" />
         </div>
 
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">

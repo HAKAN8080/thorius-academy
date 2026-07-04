@@ -37,7 +37,7 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
   return (
     <header className="sticky top-0 z-50 w-full border-b border-primary-100/60 bg-white/80 backdrop-blur-md">
       <Container size="wide" className="flex h-16 items-center justify-between gap-4">
-        <Logo variant="compact" showTagline />
+        <Logo variant="compact" />
 
         <nav
           className="hidden items-center gap-6 lg:gap-8 xl:flex"

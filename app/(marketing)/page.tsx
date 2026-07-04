@@ -2,8 +2,10 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import { AcademyHomePage } from "@/components/marketing/academy-home-page";
 import { CompanyHomePage } from "@/components/marketing/company-home-page";
+import { ShopHomePage } from "@/components/shop/shop-home-page";
 import {
   getCompanyOrigin,
+  getShopOrigin,
   getSiteModeFromHost,
   isCompanySiteHost,
 } from "@/lib/site/site-mode";
@@ -44,9 +46,22 @@ const COMPANY_HOME_METADATA: Metadata = {
   },
 };
 
-function getConfiguredSiteMode(): "academy" | "company" | null {
+const SHOP_HOME_METADATA: Metadata = {
+  title: {
+    absolute: "Thorius Mağaza — Uzmanlık Kitapları",
+  },
+  description:
+    "Perakende, planlama ve liderlik alanlarında seçilmiş kitaplar. Güvenli ödeme ve kargo ile teslim.",
+  openGraph: {
+    title: "Thorius Mağaza — Uzmanlık Kitapları",
+    url: getShopOrigin(),
+    type: "website",
+  },
+};
+
+function getConfiguredSiteMode(): "academy" | "company" | "shop" | null {
   const mode = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
-  if (mode === "academy" || mode === "company") {
+  if (mode === "academy" || mode === "company" || mode === "shop") {
     return mode;
   }
   return null;
@@ -60,8 +75,14 @@ export async function generateMetadata(): Promise<Metadata> {
   if (siteMode === "company") {
     return COMPANY_HOME_METADATA;
   }
+  if (siteMode === "shop") {
+    return SHOP_HOME_METADATA;
+  }
 
   const host = headers().get("host");
+  if (getSiteModeFromHost(host) === "shop") {
+    return SHOP_HOME_METADATA;
+  }
   if (isCompanySiteHost(host)) {
     return COMPANY_HOME_METADATA;
   }
@@ -74,13 +95,20 @@ export default async function HomePage() {
   if (siteMode === "company") {
     return <CompanyHomePage />;
   }
+  if (siteMode === "shop") {
+    return <ShopHomePage />;
+  }
   if (siteMode === "academy") {
     return <AcademyHomePage />;
   }
 
   const host = headers().get("host");
-  if (getSiteModeFromHost(host) === "company") {
+  const mode = getSiteModeFromHost(host);
+  if (mode === "company") {
     return <CompanyHomePage />;
+  }
+  if (mode === "shop") {
+    return <ShopHomePage />;
   }
 
   return <AcademyHomePage />;
