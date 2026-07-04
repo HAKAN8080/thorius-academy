@@ -145,19 +145,23 @@ export default async function CourseDetailPage({
         </Container>
       </header>
 
+      {curriculum && curriculum.totalLessons > 0 ? (
+        <section className="border-b border-primary-100 py-10 md:py-12">
+          <Container size="narrow">
+            <CourseCurriculumPreview
+              courseSlug={params.slug}
+              curriculum={curriculum}
+            />
+          </Container>
+        </section>
+      ) : null}
+
       <section className="py-12 md:py-16">
         <Container size="narrow">
           <div
             className="prose prose-lg max-w-none prose-headings:text-primary-950 prose-a:text-accent-600"
             dangerouslySetInnerHTML={{ __html: course.content }}
           />
-
-          {curriculum && curriculum.totalLessons > 0 ? (
-            <CourseCurriculumPreview
-              courseSlug={params.slug}
-              curriculum={curriculum}
-            />
-          ) : null}
 
           <div className="mt-12 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-8 text-center">
             <h3 className="mb-3 text-xl font-bold text-primary-950 md:text-2xl">

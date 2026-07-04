@@ -17,7 +17,7 @@ export function CourseCurriculumPreview({
   const totalDuration = formatLessonDuration(curriculum.totalDurationSeconds);
 
   return (
-    <section className="mt-12 rounded-2xl border border-primary-100 bg-white p-6 md:p-8">
+    <section className="mt-0 rounded-2xl border border-primary-100 bg-white p-6 md:p-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
           <h2 className="text-2xl font-bold text-primary-950">Müfredat</h2>
