@@ -9,8 +9,8 @@ export function CategoryGridSkeleton() {
     >
       <Container size="wide">
         <div className="mb-3 h-8 w-48 animate-pulse rounded-lg bg-primary-100 md:mb-4" />
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-          {Array.from({ length: 12 }).map((_, index) => (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {Array.from({ length: 10 }).map((_, index) => (
             <div
               key={index}
               className="aspect-[16/10] animate-pulse rounded-xl bg-gradient-to-br from-primary-100 to-primary-200"

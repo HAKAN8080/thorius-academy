@@ -11,7 +11,9 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
-  if (categories.length === 0) {
+  const visibleCategories = categories.slice(0, 10);
+
+  if (visibleCategories.length === 0) {
     return null;
   }
 
@@ -28,8 +30,8 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
           Uzmanlık Alanları
         </h2>
 
-        <div className="grid gap-3 sm:grid-cols-2 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4 2xl:grid-cols-6">
-          {categories.map((category) => (
+        <div className="grid grid-cols-2 gap-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {visibleCategories.map((category) => (
             <Link
               key={category.id}
               href={buildKurslarUrl({
