@@ -193,6 +193,44 @@ body {
     career-path-neon-pulse 2.2s ease-in-out infinite;
 }
 
+/* Hero tagline — neon dolgu içeride, koyu çerçeve dışarıda (ring’in tersi) */
+.hero-neon-tagline-ring {
+  padding: 2px;
+  background: linear-gradient(
+    155deg,
+    rgba(8, 12, 28, 0.98) 0%,
+    rgba(22, 14, 42, 0.95) 45%,
+    rgba(8, 12, 28, 0.98) 100%
+  );
+  box-shadow:
+    0 0 0 1px rgba(255, 107, 157, 0.22),
+    0 0 18px rgba(199, 125, 255, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+}
+
+.hero-neon-tagline-inner {
+  background: linear-gradient(
+    300deg,
+    #9d7aff,
+    #c77dff,
+    #ff6b9d,
+    #ff2d55,
+    #9d7aff
+  );
+  background-size: 280% 280%;
+  animation: career-path-neon-shift 4s ease-in-out infinite;
+  box-shadow:
+    inset 0 0 28px rgba(255, 45, 85, 0.35),
+    inset 0 0 48px rgba(157, 122, 255, 0.2);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hero-neon-tagline-inner {
+    animation: none;
+    background: linear-gradient(145deg, #c77dff, #ff6b9d);
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
   .career-path-neon-ring {
     animation: none;
@@ -246,6 +284,9 @@ body {
   line-height: 1.15;
   letter-spacing: 0.01em;
   color: #fff;
+  text-shadow:
+    0 1px 2px rgba(8, 12, 28, 0.45),
+    0 0 12px rgba(255, 255, 255, 0.15);
 }
 
 @media (min-width: 1024px) {
