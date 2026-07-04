@@ -3,6 +3,7 @@ import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
+import { sortHomepageCategories } from "@/lib/course/sort-homepage-categories";
 import type { WPCategory } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
 
@@ -11,7 +12,7 @@ interface CategoryGridProps {
 }
 
 export function CategoryGrid({ categories }: CategoryGridProps) {
-  const visibleCategories = categories.slice(0, 10);
+  const visibleCategories = sortHomepageCategories(categories).slice(0, 10);
 
   if (visibleCategories.length === 0) {
     return null;
