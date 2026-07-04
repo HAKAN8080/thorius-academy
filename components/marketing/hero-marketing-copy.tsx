@@ -1,8 +1,7 @@
 import Link from "next/link";
 import Image from "next/image";
-import { ArrowRight, CheckCircle2 } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
 
 const CAREER_PATH_LINKS = [
   {
@@ -19,6 +18,12 @@ const CAREER_PATH_LINKS = [
   },
 ] as const;
 
+const PATH_STEPS = [
+  "Bir kariyer yolu seçin — her yol sıralı kurslardan oluşur.",
+  "Adım adım ilerleyin — her adım gerçek bir Thorius kursu.",
+  "Kursu bitirin — sonraki adım otomatik açılır.",
+] as const;
+
 export function HeroMarketingCopy() {
   return (
     <div className="order-2 flex flex-col gap-5 sm:gap-6 xl:order-1">
@@ -32,9 +37,6 @@ export function HeroMarketingCopy() {
       />
 
       <div className="space-y-4">
-        <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-400">
-          Mezunların kazanımları
-        </p>
         <h1
           id="hero-heading"
           className="text-2xl font-bold text-white sm:text-3xl md:text-4xl"
@@ -42,20 +44,26 @@ export function HeroMarketingCopy() {
           Kurs değil,{" "}
           <span className="text-accent-300">kariyer sonucu</span> satın alırsınız
         </h1>
-        <p className="max-w-2xl text-base leading-relaxed text-primary-100/90 sm:text-lg">
-          Thorius Academy&apos;de amaç video izlemek değil; iş yapabilir hale
-          gelmek.{" "}
-          <Link
-            href={`/kariyer-yolu/${RETAIL_PLANNING_PATH.slug}`}
-            className="font-semibold text-accent-300 underline-offset-4 hover:text-accent-200 hover:underline"
-          >
-            {RETAIL_PLANNING_PATH.title}
-          </Link>{" "}
-          ve diğer kariyer yolları bu yetkinlikleri sırayla inşa eder — her adım
-          gerçek bir kursa bağlıdır, bir sonraki adım tamamladıkça açılır.
+
+        <p className="max-w-xl text-base text-primary-100/90 sm:text-lg">
+          Video izlemek değil — iş yapabilir hale gelmek.
         </p>
 
-        <div className="flex flex-wrap gap-2">
+        <ol className="max-w-xl space-y-2.5">
+          {PATH_STEPS.map((step, index) => (
+            <li key={step} className="flex gap-3 text-sm leading-snug text-primary-100 sm:text-base">
+              <span
+                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-bold text-accent-300"
+                aria-hidden="true"
+              >
+                {index + 1}
+              </span>
+              <span>{step}</span>
+            </li>
+          ))}
+        </ol>
+
+        <div className="flex flex-wrap gap-2 pt-1">
           {CAREER_PATH_LINKS.map((item) => (
             <Link
               key={item.href}
@@ -66,23 +74,6 @@ export function HeroMarketingCopy() {
             </Link>
           ))}
         </div>
-
-        <ul className="grid gap-2 sm:grid-cols-2">
-          {RETAIL_PLANNING_PATH.outcomes.map((outcome) => (
-            <li
-              key={outcome}
-              className="flex items-start gap-2.5 rounded-xl border border-white/10 bg-white/5 px-3 py-2.5"
-            >
-              <CheckCircle2
-                className="mt-0.5 h-4 w-4 shrink-0 text-accent-400"
-                aria-hidden="true"
-              />
-              <span className="text-sm font-medium leading-snug text-primary-50">
-                {outcome}
-              </span>
-            </li>
-          ))}
-        </ul>
       </div>
 
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
