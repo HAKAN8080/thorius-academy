@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 
 export function HeroCarouselHeading({ title = "Öne Çıkan Kurslar" }: { title?: string }) {
   return (
-    <p className="mb-3 text-center text-sm font-semibold uppercase tracking-wider text-accent-400 lg:text-left">
+    <p className="mb-3 text-center text-sm font-semibold tracking-wide text-accent-400 lg:text-left">
       {title}
     </p>
   );
