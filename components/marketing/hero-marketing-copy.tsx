@@ -22,15 +22,15 @@ export function HeroMarketingCopy() {
         id="hero-heading"
         className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
       >
-        Perakende Planlama ve İK{" "}
+        Perakende planlama ve İK&apos;da{" "}
         <span className="bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
-          Online Eğitimleri
+          kariyere giden yol
         </span>
       </h1>
       <p className="max-w-3xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl lg:text-2xl">
-        OTB, range plan, envanter ve AI destekli forecast — kariyer sonucuna odaklı
-        online kurslar, dijital sertifika programları ve sektör deneyimli eğitmenlerle
-        kariyer yolları
+        OTB, range plan, envanter ve AI destekli forecast — sıralı adımlarla
+        Merchandise / Retail Planner yetkinliği. Online kurslar, dijital sertifika
+        programları ve sektör deneyimli eğitmenler.
       </p>
       <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
         <Button
@@ -47,14 +47,6 @@ export function HeroMarketingCopy() {
           asChild
         >
           <Link href="/kurslar">Tüm kurslar</Link>
-        </Button>
-        <Button
-          size="lg"
-          variant="ghost"
-          className="w-full rounded-xl text-primary-100 hover:bg-white/10 hover:text-white sm:w-auto"
-          asChild
-        >
-          <Link href="/kayit">Üye ol — %20 indirim</Link>
         </Button>
       </div>
     </div>

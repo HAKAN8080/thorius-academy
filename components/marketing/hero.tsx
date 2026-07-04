@@ -1,14 +1,9 @@
 import { Container } from "@/components/layout/container";
-import { HeroCarouselSection } from "@/components/marketing/hero-carousel-section";
 import { HeroMarketingCopy } from "@/components/marketing/hero-marketing-copy";
+import { HeroRoadmapPreview } from "@/components/marketing/hero-roadmap-preview";
 import { SignupDiscountBadge } from "@/components/marketing/signup-discount-badge";
-import type { Course } from "@/types/wordpress";
 
-interface HeroProps {
-  courses: Course[];
-}
-
-export function Hero({ courses }: HeroProps) {
+export function Hero() {
   return (
     <section
       className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-12 sm:py-16 md:py-20 lg:py-24"
@@ -29,7 +24,7 @@ export function Hero({ courses }: HeroProps) {
           <div className="order-1 xl:order-2">
             <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_11rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_12.5rem]">
               <div className="relative min-w-0">
-                <HeroCarouselSection courses={courses} />
+                <HeroRoadmapPreview />
               </div>
               <div className="mx-auto w-full max-w-xs lg:mx-0 lg:max-w-none lg:pt-8">
                 <SignupDiscountBadge />

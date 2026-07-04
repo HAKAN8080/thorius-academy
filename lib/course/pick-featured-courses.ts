@@ -13,6 +13,19 @@ export function filterPurchasableCourses(
   });
 }
 
+export function filterCoursesByCategorySlugs(
+  courses: Course[],
+  categorySlugs: string[],
+): Course[] {
+  const targets = new Set(categorySlugs.map(canonicalizeCategorySlug));
+
+  return courses.filter((course) =>
+    course.categories.some((category) =>
+      targets.has(canonicalizeCategorySlug(category.slug)),
+    ),
+  );
+}
+
 function sortCoursesForDisplay(courses: Course[]): Course[] {
   return [...courses].sort((a, b) => {
     if (a.featuredImage && !b.featuredImage) {

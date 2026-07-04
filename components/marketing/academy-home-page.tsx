@@ -8,11 +8,15 @@ import { CourseShowcaseSection } from "@/components/marketing/course-showcase-se
 import { CareerOutcomesSection } from "@/components/marketing/career-outcomes-section";
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
+import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import {
+  filterCoursesByCategorySlugs,
   filterPurchasableCourses,
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
 } from "@/lib/course/pick-featured-courses";
+
+const FEATURED_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
 import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -25,9 +29,18 @@ export async function AcademyHomePage() {
   );
   const statsBySlug = new Map(Object.entries(stats));
 
+  const featuredCategorySlugs = new Set(
+    FEATURED_CATEGORY_SLUGS.map(canonicalizeCategorySlug),
+  );
+  const featuredCategories = categories.filter((category) =>
+    featuredCategorySlugs.has(canonicalizeCategorySlug(category.slug)),
+  );
   const featuredCourses = pickFeaturedCoursesByCategory(
-    filterPurchasableCourses(allCourses, productBySlug),
-    categories,
+    filterCoursesByCategorySlugs(
+      filterPurchasableCourses(allCourses, productBySlug),
+      [...FEATURED_CATEGORY_SLUGS],
+    ),
+    featuredCategories,
     5,
   );
   const planningCourses = pickCoursesByCategorySlugs(
@@ -41,44 +54,10 @@ export async function AcademyHomePage() {
     5,
   );
 
-  const coursesWithImages = allCourses.filter((course) => course.featuredImage);
-  let carouselCourses = pickFeaturedCoursesByCategory(
-    coursesWithImages,
-    categories,
-    5,
-  );
-  if (carouselCourses.length < 3) {
-    carouselCourses = pickCoursesByCategorySlugs(
-      coursesWithImages,
-      [
-        "planlama",
-        "insan-kaynaklari",
-        "ai",
-        "bt",
-        "ingilizce-egitimi",
-        "mit-egitimleri",
-        "yoga",
-        "yazilim",
-        "kocluk",
-      ],
-      5,
-    );
-  }
-  if (carouselCourses.length === 0) {
-    carouselCourses = pickFeaturedCoursesByCategory(
-      filterPurchasableCourses(allCourses, productBySlug),
-      categories,
-      5,
-    );
-  }
-  if (carouselCourses.length === 0 && allCourses.length > 0) {
-    carouselCourses = allCourses.slice(0, 5);
-  }
-
   return (
     <>
       <CategoryGrid categories={categories} />
-      <Hero courses={carouselCourses} />
+      <Hero />
       <CareerOutcomesSection className="bg-white py-14 md:py-20" />
       <EcosystemCards />
 
