@@ -10,7 +10,7 @@ export const KNOWN_INSTRUCTOR_EMAILS = [
  */
 export const KNOWN_INSTRUCTOR_WP_USER_IDS: Record<string, number> = {
   "siriusdanismanlik.tr@gmail.com": 277,
-  "mhakan_ugur@yahoo.com": 1,
+  "mhakan_ugur@yahoo.com": 277,
 };
 
 export function getKnownInstructorWpUserId(email: string): number | null {
