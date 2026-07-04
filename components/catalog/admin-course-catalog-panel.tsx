@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import { toast } from "sonner";
-import { bulkToggleAdminCatalogCoursesPublished, toggleAdminCatalogCoursePublished, updateAdminCatalogCourseInstructor } from "@/lib/actions/catalog-admin";
+import { bulkToggleAdminCatalogCoursesPublished, toggleAdminCatalogCoursePublished, updateAdminCatalogCourseCategory, updateAdminCatalogCourseInstructor } from "@/lib/actions/catalog-admin";
 import type {
   AdminCatalogCourse,
   AdminCatalogInstructor,
@@ -41,7 +41,18 @@ export function AdminCourseCatalogPanel({
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [pendingAuthorId, setPendingAuthorId] = useState<string | null>(null);
+  const [pendingCategoryId, setPendingCategoryId] = useState<string | null>(null);
   const [isBulkPending, startBulk] = useTransition();
+
+  const categoryOptions = useMemo(() => {
+    const options = new Set(categories);
+    for (const course of courses) {
+      if (course.category?.trim()) {
+        options.add(course.category.trim());
+      }
+    }
+    return Array.from(options).sort((a, b) => a.localeCompare(b, "tr"));
+  }, [categories, courses]);
 
   const summary = useMemo(() => {
     const publishedCount = courses.filter((course) => course.published).length;
@@ -136,6 +147,38 @@ export function AdminCourseCatalogPanel({
     router.refresh();
   }
 
+  async function handleCategoryChange(course: AdminCatalogCourse, nextCategory: string) {
+    const trimmed = nextCategory.trim();
+    if (!trimmed || trimmed === course.category) {
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `"${course.title}" kursunun kategorisini "${trimmed}" olarak değiştirmek istiyor musunuz?`,
+    );
+    if (!confirmed) {
+      router.refresh();
+      return;
+    }
+
+    setPendingCategoryId(course.id);
+    const result = await updateAdminCatalogCourseCategory(course.id, trimmed);
+    setPendingCategoryId(null);
+
+    if ("error" in result) {
+      toast.error(result.error);
+      router.refresh();
+      return;
+    }
+
+    if (result.wpWarning) {
+      toast.warning(`Kategori güncellendi; WordPress: ${result.wpWarning}`);
+    } else {
+      toast.success(`"${course.title}" kategorisi güncellendi.`);
+    }
+    router.refresh();
+  }
+
   function handleBulkToggle(nextPublished: boolean) {
     const actionLabel = nextPublished ? "yayına almak" : "yayından kaldırmak";
     const confirmed = window.confirm(
@@ -191,7 +234,7 @@ export function AdminCourseCatalogPanel({
           className="h-10 rounded-md border border-input bg-background px-3 text-sm"
         >
           <option value="">Tüm kategoriler</option>
-          {categories.map((item) => (
+          {categoryOptions.map((item) => (
             <option key={item} value={item}>
               {item}
             </option>
@@ -256,8 +299,35 @@ export function AdminCourseCatalogPanel({
                     <p className="font-medium text-primary-950">{course.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{course.slug}</p>
                   </td>
-                  <td className="px-4 py-3 align-top text-primary-800">
-                    {course.category ?? "—"}
+                  <td className="px-4 py-3 align-top">
+                    <div className="min-w-[180px]">
+                      <select
+                        key={`${course.id}-${course.category ?? "none"}`}
+                        defaultValue={course.category ?? ""}
+                        disabled={
+                          pendingCategoryId === course.id ||
+                          pendingAuthorId === course.id ||
+                          pendingId === course.id ||
+                          isBulkPending
+                        }
+                        onChange={(event) => {
+                          const value = event.target.value.trim();
+                          if (!value) return;
+                          void handleCategoryChange(course, value);
+                        }}
+                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        aria-label={`${course.title} kategorisi`}
+                      >
+                        <option value="" disabled>
+                          Kategori seç…
+                        </option>
+                        {categoryOptions.map((item) => (
+                          <option key={item} value={item}>
+                            {item}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
                   </td>
                   <td className="px-4 py-3 align-top">
                     <div className="min-w-[220px] space-y-1">
@@ -266,6 +336,7 @@ export function AdminCourseCatalogPanel({
                         defaultValue={course.instructorWpUserId ?? ""}
                         disabled={
                           pendingAuthorId === course.id ||
+                          pendingCategoryId === course.id ||
                           pendingId === course.id ||
                           isBulkPending
                         }
