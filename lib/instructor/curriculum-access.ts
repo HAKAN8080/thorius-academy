@@ -81,12 +81,28 @@ export async function verifyInstructorCourseAccess(
 
   const { data, error } = await query.maybeSingle();
 
-  if (error || !data) {
-    return null;
+  if (!error && data) {
+    return {
+      course_slug: data.course_slug as string,
+      course_title: data.title as string,
+    };
   }
 
-  return {
-    course_slug: data.course_slug as string,
-    course_title: data.title as string,
-  };
+  if (!access.isAdmin && access.wpInstructorId) {
+    const { data: cacheRow, error: cacheError } = await admin
+      .from("courses_cache")
+      .select("course_slug, title")
+      .eq("wp_course_id", courseId)
+      .eq("instructor_wp_user_id", access.wpInstructorId)
+      .maybeSingle();
+
+    if (!cacheError && cacheRow?.course_slug) {
+      return {
+        course_slug: cacheRow.course_slug as string,
+        course_title: (cacheRow.title as string) || "Kurs",
+      };
+    }
+  }
+
+  return null;
 }

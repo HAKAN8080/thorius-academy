@@ -19,6 +19,7 @@ import {
   getCoursePublishReadiness,
 } from "@/lib/instructor/course-publish-readiness";
 import { ensureCoursesCacheForInstructor } from "@/lib/instructor/sync-courses-cache";
+import { ensureInstructorCourseStatsFromCache } from "@/lib/instructor/sync-instructor-course-stats";
 import { enrichInstructorCourseListCovers } from "@/lib/instructor/enrich-instructor-course-covers";
 import { syncCourseToWp } from "@/lib/wordpress/sync-course-to-wp";
 import type {
@@ -192,6 +193,7 @@ export async function getInstructorDashboardStats(): Promise<InstructorDashboard
 
   if (access.wpInstructorId) {
     await ensureCoursesCacheForInstructor(access.wpInstructorId);
+    await ensureInstructorCourseStatsFromCache(access.wpInstructorId);
   }
 
   let totalCourses = 0;
@@ -282,6 +284,7 @@ export async function getInstructorCourseList(): Promise<
 
   if (access.wpInstructorId) {
     await ensureCoursesCacheForInstructor(access.wpInstructorId);
+    await ensureInstructorCourseStatsFromCache(access.wpInstructorId);
   }
 
   let statsQuery = admin
@@ -289,7 +292,7 @@ export async function getInstructorCourseList(): Promise<
     .select("*")
     .order("published_at", { ascending: false });
 
-  if (!access.isAdmin && access.wpInstructorId) {
+  if (access.wpInstructorId) {
     statsQuery = statsQuery.eq("instructor_wp_user_id", access.wpInstructorId);
   }
 
