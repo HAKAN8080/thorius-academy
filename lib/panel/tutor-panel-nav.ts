@@ -8,6 +8,7 @@ import {
   Heart,
   Home,
   LayoutDashboard,
+  Library,
   Map,
   Megaphone,
   MessageSquare,
@@ -151,6 +152,13 @@ export const adminPanelNav: PanelNavItem[] = [
     icon: Route,
     requiresCareerPathAdmin: true,
   },
+  {
+    id: "catalog-admin",
+    label: "Kurs Kataloğu",
+    href: "/panel/yonetim/kurslar",
+    icon: Library,
+    requiresCareerPathAdmin: true,
+  },
 ];
 
 export function isPanelNavActive(pathname: string, href: string): boolean {
@@ -171,6 +179,9 @@ export function isPanelNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/panel/yonetim/kariyer-yollari") {
     return pathname.startsWith("/panel/yonetim/kariyer-yollari");
+  }
+  if (href === "/panel/yonetim/kurslar") {
+    return pathname.startsWith("/panel/yonetim/kurslar");
   }
   return pathname === href || pathname.startsWith(`${href}/`);
 }

@@ -35,12 +35,20 @@ export async function PanelNavLinks() {
           Kariyer Yolum
         </Link>
         {careerPathAdmin ? (
-          <Link
-            href="/panel/yonetim/kariyer-yollari"
-            className="text-sm font-medium text-primary-700 hover:text-primary-900"
-          >
-            Kariyer Yolları Yönetimi
-          </Link>
+          <>
+            <Link
+              href="/panel/yonetim/kariyer-yollari"
+              className="text-sm font-medium text-primary-700 hover:text-primary-900"
+            >
+              Kariyer Yolları Yönetimi
+            </Link>
+            <Link
+              href="/panel/yonetim/kurslar"
+              className="text-sm font-medium text-primary-700 hover:text-primary-900"
+            >
+              Kurs Kataloğu
+            </Link>
+          </>
         ) : null}
         <TutorDashboardLink variant="instructor" compact />
         <Link
@@ -68,12 +76,20 @@ export async function PanelNavLinks() {
         Kariyer Yolum
       </Link>
       {careerPathAdmin ? (
-        <Link
-          href="/panel/yonetim/kariyer-yollari"
-          className="text-sm font-medium text-primary-700 hover:text-primary-900"
-        >
-          Kariyer Yolları Yönetimi
-        </Link>
+        <>
+          <Link
+            href="/panel/yonetim/kariyer-yollari"
+            className="text-sm font-medium text-primary-700 hover:text-primary-900"
+          >
+            Kariyer Yolları Yönetimi
+          </Link>
+          <Link
+            href="/panel/yonetim/kurslar"
+            className="text-sm font-medium text-primary-700 hover:text-primary-900"
+          >
+            Kurs Kataloğu
+          </Link>
+        </>
       ) : null}
       <TutorDashboardLink variant="student" compact />
       <Link
