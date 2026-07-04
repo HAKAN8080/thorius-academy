@@ -170,9 +170,9 @@ export interface CompanyNavLink {
 /** thorius.com.tr ana menüsü — academy yolları runtime'da academyPath ile çözülür. */
 export function getCompanyNavLinks(): CompanyNavLink[] {
   return [
-    { href: "/#model", label: "Modelimiz" },
-    { href: "/kurumsal", label: "Danışmanlık" },
-    { href: "https://siriusabcx.com/", label: "AI4U Retail", external: true },
+    { href: "/#hizmetler", label: "Hizmetler" },
+    { href: "/#yaklasim", label: "Yaklaşım" },
+    { href: "/#referanslar", label: "Referanslar" },
     { href: "/kurslar", label: "Academy", external: true },
     {
       href: "https://coaching.thorius.com.tr",

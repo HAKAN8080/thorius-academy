@@ -1,24 +1,29 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { CompanyLogo } from "@/components/layout/company-logo";
-import { COMPANY_LEGAL_NAME } from "@/lib/content/company-model";
+import {
+  AI4U_RETAIL_URL,
+  COMPANY_LEGAL_NAME,
+} from "@/lib/content/company-model";
 import { academyPath } from "@/lib/site/site-mode";
 
 const footerColumns = [
   {
-    title: "Model",
+    title: "Hizmetler",
     links: [
-      { href: "/#model", label: "Nasıl çalışıyoruz?" },
+      { href: "/#hizmetler", label: "Hizmetlerimiz" },
+      { href: "/#yaklasim", label: "Yaklaşımımız" },
+      { href: "/#referanslar", label: "Referanslar" },
       { href: "/kurumsal", label: "Danışmanlık & audit" },
       { href: "/hakkimizda", label: "Hakkımızda" },
     ],
   },
   {
-    title: "Hizmetler",
+    title: "Platformlar",
     links: [
       {
-        href: "https://siriusabcx.com/",
-        label: "AI4U Retail",
+        href: AI4U_RETAIL_URL,
+        label: "AI-4U Platform",
         external: true,
       },
       { href: academyPath("/kurslar"), label: "Thorius Academy", external: true },
@@ -32,6 +37,7 @@ const footerColumns = [
   {
     title: "İletişim",
     links: [
+      { href: "/kurumsal#iletisim", label: "Ücretsiz Keşif" },
       { href: "/iletisim", label: "Bize ulaşın" },
       { href: "mailto:info@thorius.com.tr", label: "info@thorius.com.tr" },
       {
@@ -90,8 +96,11 @@ export function CompanyFooter() {
         <div className="mb-10 border-b border-primary-800 pb-10">
           <CompanyLogo inverted />
           <p className="mt-4 max-w-md text-sm leading-relaxed text-primary-300">
-            {COMPANY_LEGAL_NAME} — perakende dönüşümünde danışmanlıktan yazılıma,
-            eğitimden koçluğa uçtan uca model.
+            Perakende sektörü için yapay zeka destekli danışmanlık, yazılım ve
+            eğitim çözümleri.
+          </p>
+          <p className="mt-2 text-xs text-primary-400">
+            {COMPANY_LEGAL_NAME} · İstanbul, Türkiye
           </p>
         </div>
 
