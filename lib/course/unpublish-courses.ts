@@ -22,7 +22,7 @@ export interface UnpublishCoursesResult {
 }
 
 function normalizeSlugList(slugs: string[]): string[] {
-  return [...new Set(slugs.map((slug) => slug.trim()).filter(Boolean))];
+  return Array.from(new Set(slugs.map((slug) => slug.trim()).filter(Boolean)));
 }
 
 export async function listCoursesForUnpublish(
