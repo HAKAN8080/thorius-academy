@@ -26,7 +26,7 @@ interface AdminCourseCatalogPanelProps {
 }
 
 export function AdminCourseCatalogPanel({
-  courses: initialCourses,
+  courses,
   categories,
   total,
   page,
@@ -38,8 +38,6 @@ export function AdminCourseCatalogPanel({
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
   const [isBulkPending, startBulk] = useTransition();
-  const [isNavigating, startNavigate] = useTransition();
-  const [courses, setCourses] = useState(initialCourses);
 
   const summary = useMemo(() => {
     const publishedCount = courses.filter((course) => course.published).length;
@@ -67,23 +65,6 @@ export function AdminCourseCatalogPanel({
     return query ? `/panel/yonetim/kurslar?${query}` : "/panel/yonetim/kurslar";
   }
 
-  function navigate(next: Parameters<typeof buildUrl>[0]) {
-    startNavigate(() => {
-      router.push(buildUrl(next));
-    });
-  }
-
-  function handleFilterSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    const formData = new FormData(event.currentTarget);
-    navigate({
-      search: String(formData.get("q") ?? ""),
-      category: String(formData.get("category") ?? ""),
-      published: (formData.get("status") as CatalogPublishedFilter) || "all",
-      page: 1,
-    });
-  }
-
   async function handleToggle(course: AdminCatalogCourse) {
     const nextPublished = !course.published;
     setPendingId(course.id);
@@ -96,13 +77,6 @@ export function AdminCourseCatalogPanel({
       return;
     }
 
-    setCourses((current) =>
-      current.map((item) =>
-        item.id === course.id
-          ? { ...item, published: result.course.published }
-          : item,
-      ),
-    );
     toast.success(
       nextPublished ? `"${course.title}" yayına alındı.` : `"${course.title}" yayından kaldırıldı.`,
     );
@@ -141,7 +115,8 @@ export function AdminCourseCatalogPanel({
   return (
     <div className="space-y-6">
       <form
-        onSubmit={handleFilterSubmit}
+        method="get"
+        action="/panel/yonetim/kurslar"
         className="grid gap-3 rounded-2xl border border-primary-100 bg-white p-4 md:grid-cols-[1fr_220px_180px_auto]"
       >
         <div className="relative">
@@ -180,9 +155,7 @@ export function AdminCourseCatalogPanel({
           <option value="unpublished">Yayından kaldırılmış</option>
         </select>
 
-        <Button type="submit" disabled={isNavigating}>
-          {isNavigating ? "Yükleniyor…" : "Filtrele"}
-        </Button>
+        <Button type="submit">Filtrele</Button>
       </form>
 
       <div className="flex flex-wrap items-center justify-between gap-3">
@@ -193,7 +166,7 @@ export function AdminCourseCatalogPanel({
               type="button"
               size="sm"
               variant="outline"
-              disabled={isBulkPending || isNavigating}
+              disabled={isBulkPending || pendingId !== null}
               onClick={() => handleBulkToggle(false)}
             >
               Filtredekileri yayından kaldır ({total})
@@ -202,7 +175,7 @@ export function AdminCourseCatalogPanel({
               type="button"
               size="sm"
               variant="outline"
-              disabled={isBulkPending || isNavigating}
+              disabled={isBulkPending || pendingId !== null}
               onClick={() => handleBulkToggle(true)}
             >
               Filtredekileri yayına al ({total})
@@ -276,25 +249,27 @@ export function AdminCourseCatalogPanel({
 
       {totalPages > 1 ? (
         <div className="flex items-center justify-between gap-3">
-          <Button
-            type="button"
-            variant="outline"
-            disabled={page <= 1 || isNavigating}
-            onClick={() => navigate({ page: page - 1 })}
-          >
-            Önceki
-          </Button>
+          {page > 1 ? (
+            <Button asChild variant="outline">
+              <Link href={buildUrl({ page: page - 1 })}>Önceki</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" disabled>
+              Önceki
+            </Button>
+          )}
           <p className="text-sm text-muted-foreground">
             Sayfa {page} / {totalPages}
           </p>
-          <Button
-            type="button"
-            variant="outline"
-            disabled={page >= totalPages || isNavigating}
-            onClick={() => navigate({ page: page + 1 })}
-          >
-            Sonraki
-          </Button>
+          {page < totalPages ? (
+            <Button asChild variant="outline">
+              <Link href={buildUrl({ page: page + 1 })}>Sonraki</Link>
+            </Button>
+          ) : (
+            <Button variant="outline" disabled>
+              Sonraki
+            </Button>
+          )}
         </div>
       ) : null}
     </div>

@@ -11,6 +11,8 @@ export const metadata: Metadata = {
   title: "Kurs Kataloğu Yönetimi",
 };
 
+export const dynamic = "force-dynamic";
+
 interface AdminCoursesPageProps {
   searchParams?: Promise<{
     q?: string;
@@ -74,6 +76,7 @@ export default async function AdminCoursesPage({ searchParams }: AdminCoursesPag
       </header>
 
       <AdminCourseCatalogPanel
+        key={`${search}|${category}|${published}|${page}`}
         courses={catalog.courses}
         categories={catalog.categories}
         total={catalog.total}
