@@ -125,7 +125,7 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <CourseDetailPurchaseSection course={courseWithCover} />
+                <CourseDetailPurchaseSection course={courseWithCover} theme="dark" />
               </div>
             </div>
 

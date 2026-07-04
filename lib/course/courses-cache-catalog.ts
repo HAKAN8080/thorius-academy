@@ -4,6 +4,7 @@ import {
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
+import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
 import { fromCoursesCacheLevelLabel } from "@/lib/instructor/courses-cache-write";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
 
@@ -287,12 +288,17 @@ export async function getCoursesCacheListingPage(params: {
     : "all";
   const search = params.search?.trim() ?? "";
 
-  return unstable_cache(
+  const listing = await unstable_cache(
     () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing-v4", categorySlug, String(page), search],
+    ["courses-cache-listing-v5", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
     },
   )();
+
+  return {
+    ...listing,
+    courses: await enrichCatalogWithCourseProducts(listing.courses),
+  };
 }

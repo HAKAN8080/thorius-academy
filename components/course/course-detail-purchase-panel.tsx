@@ -14,10 +14,12 @@ interface CourseDetailPurchasePanelProps {
     | "instructor"
     | "youtubeVideoId"
   >;
+  theme?: "light" | "dark";
 }
 
 export async function CourseDetailPurchasePanel({
   course,
+  theme = "light",
 }: CourseDetailPurchasePanelProps) {
   const purchaseState = await getCoursePurchaseState(course);
 
@@ -30,6 +32,7 @@ export async function CourseDetailPurchasePanel({
       courseCategory={course.categories[0]?.name}
       instructorName={course.instructor?.name}
       isFreeYoutubeCourse={Boolean(course.youtubeVideoId)}
+      theme={theme}
       {...purchaseState}
     />
   );
@@ -46,10 +49,11 @@ export function CourseDetailPurchasePanelSkeleton() {
 
 export function CourseDetailPurchaseSection({
   course,
+  theme = "light",
 }: CourseDetailPurchasePanelProps) {
   return (
     <Suspense fallback={<CourseDetailPurchasePanelSkeleton />}>
-      <CourseDetailPurchasePanel course={course} />
+      <CourseDetailPurchasePanel course={course} theme={theme} />
     </Suspense>
   );
 }

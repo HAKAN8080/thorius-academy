@@ -5,6 +5,7 @@ import {
   buildCategories,
   type CatalogCourseItem,
 } from "@/lib/course/courses-cache-catalog";
+import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
 import {
   canonicalizeCategorySlug,
   slugifyCategoryName,
@@ -24,7 +25,7 @@ import type { Course, WPCategory } from "@/types/wordpress";
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,updated_at";
+  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,pricing_model,price,sale_price,updated_at";
 
 function stableNumericId(value: string): number {
   let hash = 0;
@@ -59,6 +60,13 @@ function mapCatalogRow(row: Record<string, unknown>): CatalogCourseItem | null {
     return null;
   }
 
+  const pricingModel = row.pricing_model === "paid" ? "paid" : "free";
+  const price = Number(row.price ?? 0);
+  const salePrice =
+    row.sale_price == null || row.sale_price === ""
+      ? null
+      : Number(row.sale_price);
+
   return {
     id: String(row.id),
     slug,
@@ -71,9 +79,9 @@ function mapCatalogRow(row: Record<string, unknown>): CatalogCourseItem | null {
     coverImageUrl: (row.cover_image_url as string | null) ?? null,
     category: (row.category as string | null)?.trim() || null,
     level: fromCoursesCacheLevelLabel(row.level as string | null | undefined),
-    pricingModel: "free",
-    price: 0,
-    salePrice: null,
+    pricingModel,
+    price,
+    salePrice,
   };
 }
 
@@ -152,7 +160,14 @@ export interface HomepageCatalog {
   stats: Record<string, CourseStats>;
 }
 
-async function buildHomepageCatalog(): Promise<HomepageCatalog> {
+interface HomepageCatalogRaw {
+  catalogItems: CatalogCourseItem[];
+  categoryRows: Array<{ category: string | null }>;
+  products: CourseProduct[];
+  stats: Record<string, CourseStats>;
+}
+
+async function buildHomepageCatalog(): Promise<HomepageCatalogRaw> {
   const supabase = getSupabasePublicClient();
   const { data, error } = await supabase
     .from("courses_cache")
@@ -173,19 +188,37 @@ async function buildHomepageCatalog(): Promise<HomepageCatalog> {
   const categoryRows = catalogItems.map((course) => ({
     category: course.category,
   }));
-  const categories = mapToWpCategories(buildCategories(categoryRows), catalogItems);
-  const courses = catalogItems.map(mapToCourse);
 
   const [products, stats] = await Promise.all([
     getAllCourseProducts(),
     getAllCourseStats(),
   ]);
 
-  return { courses, categories, products, stats };
+  return { catalogItems, categoryRows, products, stats };
+}
+
+async function finalizeHomepageCatalog(
+  raw: HomepageCatalogRaw,
+): Promise<HomepageCatalog> {
+  const enrichedCatalogItems = await enrichCatalogWithCourseProducts(
+    raw.catalogItems,
+  );
+  const categories = mapToWpCategories(
+    buildCategories(raw.categoryRows),
+    enrichedCatalogItems,
+  );
+  const courses = enrichedCatalogItems.map(mapToCourse);
+
+  return {
+    courses,
+    categories,
+    products: raw.products,
+    stats: raw.stats,
+  };
 }
 
 export async function getHomepageCatalogFromCache(): Promise<HomepageCatalog> {
-  return unstable_cache(buildHomepageCatalog, ["homepage-catalog-v4"], {
+  const raw = await unstable_cache(buildHomepageCatalog, ["homepage-catalog-v5"], {
     revalidate: REVALIDATE_SECONDS,
     tags: [
       COURSE_CACHE_TAG,
@@ -195,4 +228,6 @@ export async function getHomepageCatalogFromCache(): Promise<HomepageCatalog> {
       "courses-cache-catalog",
     ],
   })();
+
+  return finalizeHomepageCatalog(raw);
 }

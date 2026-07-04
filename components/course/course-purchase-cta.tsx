@@ -20,6 +20,7 @@ interface CoursePurchaseCtaProps {
   courseProduct: CourseProduct | null;
   customer: CheckoutCustomer | null;
   isFreeYoutubeCourse?: boolean;
+  theme?: "light" | "dark";
 }
 
 export function CoursePurchaseCta({
@@ -34,6 +35,7 @@ export function CoursePurchaseCta({
   courseProduct,
   customer,
   isFreeYoutubeCourse = false,
+  theme = "light",
 }: CoursePurchaseCtaProps) {
   if (isAlreadyEnrolled) {
     return (
@@ -59,6 +61,7 @@ export function CoursePurchaseCta({
         courseSlug={courseSlug}
         isLoggedIn={isLoggedIn}
         customer={customer}
+        theme={theme}
       />
     );
   }

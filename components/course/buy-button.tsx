@@ -16,6 +16,7 @@ interface Props {
   courseSlug: string;
   isLoggedIn: boolean;
   customer: CheckoutCustomer | null;
+  theme?: "light" | "dark";
 }
 
 export function BuyButton({
@@ -25,6 +26,7 @@ export function BuyButton({
   courseSlug,
   isLoggedIn,
   customer,
+  theme = "light",
 }: Props) {
   const router = useRouter();
   const finalPrice = priceSale || priceNormal;
@@ -61,10 +63,22 @@ export function BuyButton({
 
       {hasDiscount && (
         <div className="flex items-center gap-2 text-sm">
-          <span className="text-muted-foreground line-through">
+          <span
+            className={
+              theme === "dark"
+                ? "text-primary-200/90 line-through"
+                : "text-muted-foreground line-through"
+            }
+          >
             {priceNormal!.toLocaleString("tr-TR")}₺
           </span>
-          <span className="rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700">
+          <span
+            className={
+              theme === "dark"
+                ? "rounded bg-red-500/20 px-2 py-0.5 text-xs font-semibold text-red-200"
+                : "rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700"
+            }
+          >
             %
             {Math.round(
               ((priceNormal! - priceSale!) / priceNormal!) * 100,
@@ -74,7 +88,13 @@ export function BuyButton({
         </div>
       )}
 
-      <p className="text-center text-xs text-muted-foreground sm:text-left">
+      <p
+        className={
+          theme === "dark"
+            ? "text-center text-xs text-primary-200/80 sm:text-left"
+            : "text-center text-xs text-muted-foreground sm:text-left"
+        }
+      >
         Güvenli ödeme · PayTR · Ömür boyu erişim
       </p>
     </div>
