@@ -16,6 +16,8 @@ const AUTO_PLAY_MS = 4500;
 
 interface HeroCourseCarouselInnerProps {
   courses: Course[];
+  heading?: string;
+  ariaLabel?: string;
 }
 
 function scheduleIdleWork(callback: () => void): () => void {
@@ -28,7 +30,11 @@ function scheduleIdleWork(callback: () => void): () => void {
   return () => window.clearTimeout(id);
 }
 
-export function HeroCourseCarouselInner({ courses }: HeroCourseCarouselInnerProps) {
+export function HeroCourseCarouselInner({
+  courses,
+  heading = "Öne Çıkan Kurslar",
+  ariaLabel = "Öne çıkan kurslar",
+}: HeroCourseCarouselInnerProps) {
   const [index, setIndex] = useState(0);
   const [paused, setPaused] = useState(false);
   const [extraSlidesReady, setExtraSlidesReady] = useState(false);
@@ -84,9 +90,9 @@ export function HeroCourseCarouselInner({ courses }: HeroCourseCarouselInnerProp
     <div
       className="w-full"
       aria-roledescription="carousel"
-      aria-label="Öne çıkan kurslar"
+      aria-label={ariaLabel}
     >
-      <HeroCarouselHeading />
+      <HeroCarouselHeading title={heading} />
       <HeroCarouselShell>
         <ScreenFlicker trigger={index}>
           <div className="overflow-hidden">

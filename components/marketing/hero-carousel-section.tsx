@@ -3,16 +3,26 @@ import type { Course } from "@/types/wordpress";
 
 interface HeroCarouselSectionProps {
   courses: Course[];
+  heading?: string;
+  ariaLabel?: string;
 }
 
-export function HeroCarouselSection({ courses }: HeroCarouselSectionProps) {
+export function HeroCarouselSection({
+  courses,
+  heading = "Öne Çıkan Kurslar",
+  ariaLabel = "Öne çıkan kurslar",
+}: HeroCarouselSectionProps) {
   if (courses.length === 0) {
     return null;
   }
 
   return (
     <div className="w-full">
-      <HeroCarouselHydrated courses={courses} />
+      <HeroCarouselHydrated
+        courses={courses}
+        heading={heading}
+        ariaLabel={ariaLabel}
+      />
     </div>
   );
 }

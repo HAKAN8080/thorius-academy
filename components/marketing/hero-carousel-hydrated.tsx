@@ -7,10 +7,16 @@ import type { Course } from "@/types/wordpress";
 
 interface HeroCarouselHydratedProps {
   courses: Course[];
+  heading?: string;
+  ariaLabel?: string;
 }
 
 /** İlk paint: gerçek kurs slaytı (SSR). Hydration sonrası tam carousel. */
-export function HeroCarouselHydrated({ courses }: HeroCarouselHydratedProps) {
+export function HeroCarouselHydrated({
+  courses,
+  heading = "Öne Çıkan Kurslar",
+  ariaLabel = "Öne çıkan kurslar",
+}: HeroCarouselHydratedProps) {
   const [ready, setReady] = useState(false);
 
   useEffect(() => {
@@ -22,9 +28,16 @@ export function HeroCarouselHydrated({ courses }: HeroCarouselHydratedProps) {
       <HeroCarouselLoading
         slideCount={courses.length}
         firstCourse={courses[0]}
+        heading={heading}
       />
     );
   }
 
-  return <HeroCourseCarouselInner courses={courses} />;
+  return (
+    <HeroCourseCarouselInner
+      courses={courses}
+      heading={heading}
+      ariaLabel={ariaLabel}
+    />
+  );
 }

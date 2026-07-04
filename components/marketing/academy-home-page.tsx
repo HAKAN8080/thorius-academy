@@ -5,16 +5,17 @@ import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
-import { CareerOutcomesSection } from "@/components/marketing/career-outcomes-section";
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
+import { pickCareerPathCourses } from "@/lib/course/pick-career-path-courses";
 import {
   filterCoursesByCategorySlugs,
   filterPurchasableCourses,
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
 } from "@/lib/course/pick-featured-courses";
+import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
 
 const FEATURED_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
 import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
@@ -53,12 +54,15 @@ export async function AcademyHomePage() {
     ["insan-kaynaklari", "yoga"],
     5,
   );
+  const retailPlanningCourses = pickCareerPathCourses(
+    allCourses,
+    RETAIL_PLANNING_PATH.steps,
+  );
 
   return (
     <>
       <CategoryGrid categories={categories} />
-      <Hero />
-      <CareerOutcomesSection className="bg-white py-14 md:py-20" />
+      <Hero pathCourses={retailPlanningCourses} />
       <EcosystemCards />
 
       <CourseShowcaseSection
