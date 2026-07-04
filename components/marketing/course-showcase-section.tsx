@@ -42,13 +42,19 @@ export function CourseShowcaseSection({
     >
       <Container size="wide">
         <div className="mb-10 text-center">
+          <span
+            className="mx-auto mb-4 block h-1 w-12 rounded-full bg-gradient-to-r from-accent-400 to-accent-600"
+            aria-hidden="true"
+          />
           <h2
             id={id}
-            className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl"
+            className="mb-3 text-3xl font-bold tracking-tight text-primary-950 md:text-4xl"
           >
             {title}
           </h2>
-          <p className="text-lg text-muted-foreground">{description}</p>
+          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+            {description}
+          </p>
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-4 xl:gap-5">
@@ -70,7 +76,7 @@ export function CourseShowcaseSection({
         <div className="mt-10 text-center">
           <Link
             href={viewAllHref}
-            className="inline-flex items-center gap-2 font-semibold text-primary-950 transition-colors hover:text-accent-600"
+            className="inline-flex items-center gap-2 rounded-full border border-primary-200 bg-white px-6 py-2.5 text-sm font-semibold text-primary-950 shadow-sm transition-all hover:-translate-y-0.5 hover:border-accent-500/60 hover:shadow-md"
           >
             {viewAllLabel}
           </Link>
