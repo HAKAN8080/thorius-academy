@@ -22,45 +22,26 @@ const CAREER_PATH_LINKS = [
 export function HeroMarketingCopy() {
   return (
     <div className="order-2 flex flex-col gap-5 sm:gap-6 xl:order-1">
-      <div className="flex flex-wrap items-center gap-3">
-        <Image
-          src="/images/thorius-academy-logo.png"
-          alt="Thorius Academy Logo"
-          width={140}
-          height={56}
-          className="h-12 w-auto object-contain sm:h-14"
-          priority
-        />
-        <p className="inline-flex items-center gap-2 rounded-full border border-accent-500/30 bg-accent-500/10 px-3 py-1.5 text-xs font-medium text-accent-400 sm:px-4 sm:py-2 sm:text-sm">
-          Perakende Planlama Uzmanlık Akademisi
-        </p>
-      </div>
+      <Image
+        src="/images/thorius-academy-logo.png"
+        alt="Thorius Academy Logo"
+        width={140}
+        height={56}
+        className="h-12 w-auto object-contain sm:h-14"
+        priority
+      />
 
       <div className="space-y-4">
-        <h1
-          id="hero-heading"
-          className="text-3xl font-bold leading-tight tracking-tight text-white sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl"
-        >
-          Perakende planlama ve İK&apos;da{" "}
-          <span className="bg-gradient-to-r from-accent-400 to-accent-600 bg-clip-text text-transparent">
-            kariyere giden yol
-          </span>
-        </h1>
-        <p className="max-w-3xl text-base leading-relaxed text-primary-100 sm:text-lg md:text-xl">
-          OTB, range plan, envanter ve AI destekli forecast — sıralı adımlarla
-          Merchandise / Retail Planner yetkinliği. Online kurslar, dijital
-          sertifika programları ve sektör deneyimli eğitmenler.
-        </p>
-      </div>
-
-      <div className="space-y-4 border-t border-white/10 pt-5">
         <p className="text-xs font-semibold uppercase tracking-[0.18em] text-accent-400">
           Mezunların kazanımları
         </p>
-        <h2 className="text-2xl font-bold text-white sm:text-3xl">
+        <h1
+          id="hero-heading"
+          className="text-2xl font-bold text-white sm:text-3xl md:text-4xl"
+        >
           Kurs değil,{" "}
           <span className="text-accent-300">kariyer sonucu</span> satın alırsınız
-        </h2>
+        </h1>
         <p className="max-w-2xl text-base leading-relaxed text-primary-100/90 sm:text-lg">
           Thorius Academy&apos;de amaç video izlemek değil; iş yapabilir hale
           gelmek.{" "}
