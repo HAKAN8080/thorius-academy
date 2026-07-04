@@ -1,6 +1,13 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { syncCourseToWp } from "@/lib/wordpress/sync-course-to-wp";
 
 export type CatalogPublishedFilter = "all" | "published" | "unpublished";
+
+export interface AdminCatalogInstructor {
+  wpUserId: number;
+  fullName: string | null;
+  email: string | null;
+}
 
 export interface AdminCatalogCourse {
   id: string;
@@ -10,8 +17,23 @@ export interface AdminCatalogCourse {
   published: boolean;
   visibility: string;
   wpCourseId: number | null;
+  instructorWpUserId: number | null;
+  instructorName: string | null;
+  instructorEmail: string | null;
   updatedAt: string;
 }
+
+export interface SetAdminCatalogCourseInstructorResult {
+  course: AdminCatalogCourse;
+  wpSynced: boolean;
+  wpWarning?: string;
+}
+
+const CATALOG_LIST_SELECT =
+  "id, course_slug, title, category, published, visibility, wp_course_id, instructor_wp_user_id, updated_at";
+
+const CATALOG_AUTHOR_SYNC_SELECT =
+  "id, course_slug, title, subtitle, description_md, cover_image_url, category, published, visibility, wp_course_id, instructor_wp_user_id, pricing_model, price, sale_price, seo_title, seo_description, seo_focus_keyword";
 
 export interface ListAdminCatalogCoursesOptions {
   search?: string;
@@ -32,11 +54,18 @@ export interface ListAdminCatalogCoursesResult {
 
 const DEFAULT_PER_PAGE = 30;
 
-function mapRow(row: Record<string, unknown>): AdminCatalogCourse | null {
+function mapRow(
+  row: Record<string, unknown>,
+  instructorByWpId: Map<number, AdminCatalogInstructor>,
+): AdminCatalogCourse | null {
   const slug = (row.course_slug as string | null)?.trim();
   if (!slug) {
     return null;
   }
+
+  const instructorWpUserId = Number(row.instructor_wp_user_id ?? 0);
+  const instructor =
+    instructorWpUserId > 0 ? instructorByWpId.get(instructorWpUserId) : undefined;
 
   return {
     id: String(row.id),
@@ -49,7 +78,23 @@ function mapRow(row: Record<string, unknown>): AdminCatalogCourse | null {
       row.wp_course_id == null || row.wp_course_id === ""
         ? null
         : Number(row.wp_course_id),
+    instructorWpUserId: instructorWpUserId > 0 ? instructorWpUserId : null,
+    instructorName: instructor?.fullName ?? null,
+    instructorEmail: instructor?.email ?? null,
     updatedAt: String(row.updated_at ?? ""),
+  };
+}
+
+async function loadInstructorLookup(): Promise<Map<number, AdminCatalogInstructor>> {
+  const instructors = await listAdminCatalogInstructors();
+  return new Map(instructors.map((instructor) => [instructor.wpUserId, instructor]));
+}
+
+function mapInstructorRow(row: Record<string, unknown>): AdminCatalogInstructor {
+  return {
+    wpUserId: Number(row.wp_user_id),
+    fullName: (row.full_name as string | null)?.trim() || null,
+    email: (row.email as string | null)?.trim() || null,
   };
 }
 
@@ -80,6 +125,22 @@ export async function listAdminCatalogCategories(): Promise<string[]> {
   return Array.from(categories).sort((a, b) => a.localeCompare(b, "tr"));
 }
 
+export async function listAdminCatalogInstructors(): Promise<AdminCatalogInstructor[]> {
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin
+    .from("instructors")
+    .select("wp_user_id, full_name, email")
+    .order("full_name", { ascending: true });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return (data ?? [])
+    .map((row) => mapInstructorRow(row as Record<string, unknown>))
+    .filter((instructor) => instructor.wpUserId > 0);
+}
+
 export async function listAdminCatalogCourses(
   options: ListAdminCatalogCoursesOptions = {},
 ): Promise<ListAdminCatalogCoursesResult> {
@@ -89,12 +150,11 @@ export async function listAdminCatalogCourses(
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
 
+  const instructorByWpId = await loadInstructorLookup();
+
   let query = admin
     .from("courses_cache")
-    .select(
-      "id, course_slug, title, category, published, visibility, wp_course_id, updated_at",
-      { count: "exact" },
-    )
+    .select(CATALOG_LIST_SELECT, { count: "exact" })
     .not("course_slug", "is", null);
 
   const search = options.search?.trim();
@@ -124,7 +184,7 @@ export async function listAdminCatalogCourses(
   }
 
   const courses = (data ?? [])
-    .map((row) => mapRow(row as Record<string, unknown>))
+    .map((row) => mapRow(row as Record<string, unknown>, instructorByWpId))
     .filter((course): course is AdminCatalogCourse => course !== null);
 
   const total = count ?? courses.length;
@@ -147,11 +207,11 @@ export async function setAdminCatalogCoursePublished(
   const admin = getSupabaseAdmin();
   const now = new Date().toISOString();
 
+  const instructorByWpId = await loadInstructorLookup();
+
   const { data: existing, error: lookupError } = await admin
     .from("courses_cache")
-    .select(
-      "id, course_slug, title, category, published, visibility, wp_course_id, updated_at",
-    )
+    .select(CATALOG_LIST_SELECT)
     .eq("id", courseId)
     .maybeSingle();
 
@@ -167,9 +227,7 @@ export async function setAdminCatalogCoursePublished(
       updated_at: now,
     })
     .eq("id", courseId)
-    .select(
-      "id, course_slug, title, category, published, visibility, wp_course_id, updated_at",
-    )
+    .select(CATALOG_LIST_SELECT)
     .single();
 
   if (error || !data) {
@@ -192,12 +250,136 @@ export async function setAdminCatalogCoursePublished(
     }
   }
 
-  const mapped = mapRow(data as Record<string, unknown>);
+  const mapped = mapRow(data as Record<string, unknown>, instructorByWpId);
   if (!mapped) {
     throw new Error("Kurs güncellenemedi.");
   }
 
   return mapped;
+}
+
+export async function setAdminCatalogCourseInstructor(
+  courseId: string,
+  instructorWpUserId: number,
+): Promise<SetAdminCatalogCourseInstructorResult> {
+  if (!Number.isFinite(instructorWpUserId) || instructorWpUserId <= 0) {
+    throw new Error("Geçerli bir yazar seçin.");
+  }
+
+  const admin = getSupabaseAdmin();
+  const now = new Date().toISOString();
+  const instructorByWpId = await loadInstructorLookup();
+  const instructor = instructorByWpId.get(instructorWpUserId);
+
+  if (!instructor) {
+    throw new Error("Seçilen yazar kayıtlı eğitmenler arasında bulunamadı.");
+  }
+
+  const { data: existing, error: lookupError } = await admin
+    .from("courses_cache")
+    .select(CATALOG_AUTHOR_SYNC_SELECT)
+    .eq("id", courseId)
+    .maybeSingle();
+
+  if (lookupError || !existing) {
+    throw new Error(lookupError?.message ?? "Kurs bulunamadı.");
+  }
+
+  const slug = String(existing.course_slug ?? "").trim();
+  if (!slug) {
+    throw new Error("Kurs slug bilgisi eksik.");
+  }
+
+  const currentInstructorId = Number(existing.instructor_wp_user_id ?? 0);
+  if (currentInstructorId === instructorWpUserId) {
+    const mapped = mapRow(existing as Record<string, unknown>, instructorByWpId);
+    if (!mapped) {
+      throw new Error("Kurs güncellenemedi.");
+    }
+    return { course: mapped, wpSynced: true };
+  }
+
+  const { data, error } = await admin
+    .from("courses_cache")
+    .update({
+      instructor_wp_user_id: instructorWpUserId,
+      updated_at: now,
+    })
+    .eq("id", courseId)
+    .select(CATALOG_LIST_SELECT)
+    .single();
+
+  if (error || !data) {
+    throw new Error(error?.message ?? "Kurs yazarı güncellenemedi.");
+  }
+
+  const wpCourseId =
+    existing.wp_course_id == null || existing.wp_course_id === ""
+      ? null
+      : Number(existing.wp_course_id);
+
+  if (wpCourseId && wpCourseId > 0) {
+    const { error: statsError } = await admin
+      .from("instructor_course_stats")
+      .upsert(
+        {
+          wp_course_id: wpCourseId,
+          course_slug: slug,
+          instructor_wp_user_id: instructorWpUserId,
+          title: String(existing.title ?? "Kurs"),
+          image_url: (existing.cover_image_url as string | null)?.trim() || null,
+          status: existing.published ? "publish" : "draft",
+          synced_at: now,
+        },
+        { onConflict: "wp_course_id" },
+      );
+
+    if (statsError) {
+      throw new Error(`Eğitmen paneli kaydı güncellenemedi: ${statsError.message}`);
+    }
+  }
+
+  const mapped = mapRow(data as Record<string, unknown>, instructorByWpId);
+  if (!mapped) {
+    throw new Error("Kurs güncellenemedi.");
+  }
+
+  let wpSynced = false;
+  let wpWarning: string | undefined;
+
+  if (wpCourseId && wpCourseId > 0) {
+    const pricingModel = existing.pricing_model === "paid" ? "paid" : "free";
+    const syncResult = await syncCourseToWp({
+      academyCourseId: courseId,
+      title: String(existing.title ?? "Kurs"),
+      slug,
+      subtitle: (existing.subtitle as string | null) ?? null,
+      description: (existing.description_md as string | null) ?? null,
+      coverImageUrl: (existing.cover_image_url as string | null) ?? null,
+      category: (existing.category as string | null) ?? null,
+      price: pricingModel === "paid" ? Number(existing.price ?? 0) : 0,
+      salePrice:
+        existing.sale_price == null ? null : Number(existing.sale_price),
+      instructorWpUserId,
+      instructorName: instructor.fullName,
+      instructorEmail: instructor.email,
+      seoTitle: (existing.seo_title as string | null) ?? null,
+      seoDescription: (existing.seo_description as string | null) ?? null,
+      seoFocusKeyword: (existing.seo_focus_keyword as string | null) ?? null,
+      published: Boolean(existing.published),
+      wpCourseId,
+    });
+
+    if (syncResult.success) {
+      wpSynced = true;
+    } else if (syncResult.skipped) {
+      wpWarning = syncResult.error ?? "WordPress senkronizasyonu yapılandırılmamış.";
+    } else {
+      wpWarning = syncResult.error ?? "WordPress yazar bilgisi güncellenemedi.";
+    }
+  }
+
+  return { course: mapped, wpSynced, wpWarning };
 }
 
 export async function bulkSetAdminCatalogCoursesPublished(

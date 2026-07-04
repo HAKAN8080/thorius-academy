@@ -5,6 +5,7 @@ import { requireCareerPathAdmin } from "@/lib/career-path/admin-access";
 import {
   bulkSetAdminCatalogCoursesPublished,
   listAdminCatalogCourses,
+  setAdminCatalogCourseInstructor,
   setAdminCatalogCoursePublished,
   type CatalogPublishedFilter,
   type ListAdminCatalogCoursesResult,
@@ -86,6 +87,41 @@ export async function bulkToggleAdminCatalogCoursesPublished(input: {
     }
     return {
       error: error instanceof Error ? error.message : "Toplu güncelleme başarısız.",
+    };
+  }
+}
+
+export async function updateAdminCatalogCourseInstructor(
+  courseId: string,
+  instructorWpUserId: number,
+): Promise<
+  | {
+      course: Awaited<ReturnType<typeof setAdminCatalogCourseInstructor>>["course"];
+      wpSynced: boolean;
+      wpWarning?: string;
+    }
+  | { error: string }
+> {
+  try {
+    await requireCareerPathAdmin();
+    const result = await setAdminCatalogCourseInstructor(courseId, instructorWpUserId);
+
+    revalidateCourseCache({ slug: result.course.slug });
+    revalidatePath("/panel/yonetim/kurslar");
+    revalidatePath("/kurslar");
+    revalidatePath("/instructor/courses");
+
+    return {
+      course: result.course,
+      wpSynced: result.wpSynced,
+      wpWarning: result.wpWarning,
+    };
+  } catch (error) {
+    if (error instanceof Error && error.message === "CAREER_PATH_ADMIN_DENIED") {
+      return { error: "Bu işlem için yetkiniz yok." };
+    }
+    return {
+      error: error instanceof Error ? error.message : "Kurs yazarı güncellenemedi.",
     };
   }
 }

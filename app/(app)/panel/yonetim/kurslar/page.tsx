@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import { BookOpen, ChevronLeft } from "lucide-react";
 import { AdminCourseCatalogPanel } from "@/components/catalog/admin-course-catalog-panel";
 import { isCareerPathAdmin } from "@/lib/career-path/admin-access";
-import { listAdminCatalogCourses } from "@/lib/course/catalog-admin";
+import { listAdminCatalogCourses, listAdminCatalogInstructors } from "@/lib/course/catalog-admin";
 import type { CatalogPublishedFilter } from "@/lib/course/catalog-admin";
 
 export const metadata: Metadata = {
@@ -41,12 +41,15 @@ export default async function AdminCoursesPage({ searchParams }: AdminCoursesPag
   const published = parsePublishedFilter(params.status);
   const page = Math.max(1, Number(params.page ?? "1") || 1);
 
-  const catalog = await listAdminCatalogCourses({
-    search,
-    category,
-    published,
-    page,
-  });
+  const [catalog, instructors] = await Promise.all([
+    listAdminCatalogCourses({
+      search,
+      category,
+      published,
+      page,
+    }),
+    listAdminCatalogInstructors(),
+  ]);
 
   return (
     <div className="mx-auto max-w-7xl">
@@ -79,6 +82,7 @@ export default async function AdminCoursesPage({ searchParams }: AdminCoursesPag
         key={`${search}|${category}|${published}|${page}`}
         courses={catalog.courses}
         categories={catalog.categories}
+        instructors={instructors}
         total={catalog.total}
         page={catalog.page}
         totalPages={catalog.totalPages}

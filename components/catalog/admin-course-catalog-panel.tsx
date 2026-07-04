@@ -5,9 +5,10 @@ import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
 import { ExternalLink, Search } from "lucide-react";
 import { toast } from "sonner";
-import { bulkToggleAdminCatalogCoursesPublished, toggleAdminCatalogCoursePublished } from "@/lib/actions/catalog-admin";
+import { bulkToggleAdminCatalogCoursesPublished, toggleAdminCatalogCoursePublished, updateAdminCatalogCourseInstructor } from "@/lib/actions/catalog-admin";
 import type {
   AdminCatalogCourse,
+  AdminCatalogInstructor,
   CatalogPublishedFilter,
 } from "@/lib/course/catalog-admin";
 import { Badge } from "@/components/ui/badge";
@@ -17,6 +18,7 @@ import { Input } from "@/components/ui/input";
 interface AdminCourseCatalogPanelProps {
   courses: AdminCatalogCourse[];
   categories: string[];
+  instructors: AdminCatalogInstructor[];
   total: number;
   page: number;
   totalPages: number;
@@ -28,6 +30,7 @@ interface AdminCourseCatalogPanelProps {
 export function AdminCourseCatalogPanel({
   courses,
   categories,
+  instructors,
   total,
   page,
   totalPages,
@@ -37,6 +40,7 @@ export function AdminCourseCatalogPanel({
 }: AdminCourseCatalogPanelProps) {
   const router = useRouter();
   const [pendingId, setPendingId] = useState<string | null>(null);
+  const [pendingAuthorId, setPendingAuthorId] = useState<string | null>(null);
   const [isBulkPending, startBulk] = useTransition();
 
   const summary = useMemo(() => {
@@ -80,6 +84,55 @@ export function AdminCourseCatalogPanel({
     toast.success(
       nextPublished ? `"${course.title}" yayına alındı.` : `"${course.title}" yayından kaldırıldı.`,
     );
+    router.refresh();
+  }
+
+  function instructorLabel(instructor: AdminCatalogInstructor): string {
+    if (instructor.fullName && instructor.email) {
+      return `${instructor.fullName} (${instructor.email})`;
+    }
+    return instructor.fullName || instructor.email || `WP #${instructor.wpUserId}`;
+  }
+
+  async function handleAuthorChange(course: AdminCatalogCourse, nextInstructorWpUserId: number) {
+    if (!nextInstructorWpUserId || nextInstructorWpUserId === course.instructorWpUserId) {
+      return;
+    }
+
+    const nextInstructor = instructors.find(
+      (instructor) => instructor.wpUserId === nextInstructorWpUserId,
+    );
+    if (!nextInstructor) {
+      toast.error("Seçilen yazar bulunamadı.");
+      return;
+    }
+
+    const confirmed = window.confirm(
+      `"${course.title}" kursunun yazarını "${instructorLabel(nextInstructor)}" olarak değiştirmek istiyor musunuz?`,
+    );
+    if (!confirmed) {
+      router.refresh();
+      return;
+    }
+
+    setPendingAuthorId(course.id);
+    const result = await updateAdminCatalogCourseInstructor(
+      course.id,
+      nextInstructorWpUserId,
+    );
+    setPendingAuthorId(null);
+
+    if ("error" in result) {
+      toast.error(result.error);
+      router.refresh();
+      return;
+    }
+
+    if (result.wpWarning) {
+      toast.warning(`Yazar güncellendi; WordPress: ${result.wpWarning}`);
+    } else {
+      toast.success(`"${course.title}" yazarı güncellendi.`);
+    }
     router.refresh();
   }
 
@@ -191,6 +244,7 @@ export function AdminCourseCatalogPanel({
               <tr>
                 <th className="px-4 py-3 font-semibold text-primary-950">Kurs</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">Kategori</th>
+                <th className="px-4 py-3 font-semibold text-primary-950">Yazar</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">Durum</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">İşlem</th>
               </tr>
@@ -204,6 +258,38 @@ export function AdminCourseCatalogPanel({
                   </td>
                   <td className="px-4 py-3 align-top text-primary-800">
                     {course.category ?? "—"}
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <div className="min-w-[220px] space-y-1">
+                      <select
+                        key={`${course.id}-${course.instructorWpUserId ?? "none"}`}
+                        defaultValue={course.instructorWpUserId ?? ""}
+                        disabled={
+                          pendingAuthorId === course.id ||
+                          pendingId === course.id ||
+                          isBulkPending
+                        }
+                        onChange={(event) => {
+                          const value = Number(event.target.value);
+                          if (!value) return;
+                          void handleAuthorChange(course, value);
+                        }}
+                        className="h-9 w-full rounded-md border border-input bg-background px-2 text-sm"
+                        aria-label={`${course.title} yazarı`}
+                      >
+                        <option value="" disabled>
+                          Yazar seç…
+                        </option>
+                        {instructors.map((instructor) => (
+                          <option key={instructor.wpUserId} value={instructor.wpUserId}>
+                            {instructorLabel(instructor)}
+                          </option>
+                        ))}
+                      </select>
+                      {course.instructorEmail ? (
+                        <p className="text-xs text-muted-foreground">{course.instructorEmail}</p>
+                      ) : null}
+                    </div>
                   </td>
                   <td className="px-4 py-3 align-top">
                     <Badge variant={course.published ? "default" : "secondary"}>
