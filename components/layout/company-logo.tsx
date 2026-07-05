@@ -1,3 +1,4 @@
+import Image from "next/image";
 import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { COMPANY_BRAND_LINE } from "@/lib/content/company-model";
@@ -16,17 +17,17 @@ export function CompanyLogo({
   return (
     <Link
       href="/"
-      className={cn("group flex flex-col gap-0.5", className)}
+      className={cn("group flex flex-col gap-1", className)}
       aria-label="Thorius ana sayfa"
     >
-      <span
-        className={cn(
-          "text-xl font-bold tracking-tight sm:text-2xl",
-          inverted ? "text-white" : "text-primary-950",
-        )}
-      >
-        Thorius
-      </span>
+      <Image
+        src="/images/thorius-logo.png"
+        alt="Thorius"
+        width={120}
+        height={120}
+        className="h-10 w-auto object-contain sm:h-11"
+        priority
+      />
       {showTagline && (
         <span
           className={cn(

@@ -11,8 +11,8 @@ interface LogoProps {
 
 const variantHeights: Record<LogoVariant, string> = {
   full: "h-14 w-auto sm:h-16",
-  compact: "h-9 w-auto sm:h-10",
-  icon: "h-8 w-auto",
+  compact: "h-10 w-auto sm:h-11",
+  icon: "h-8 w-8",
 };
 
 export function Logo({
@@ -26,10 +26,10 @@ export function Logo({
       aria-label="Thorius ana sayfa"
     >
       <Image
-        src="/images/thorius-academy-logo.png"
-        alt="Thorius Academy Logo"
-        width={160}
-        height={64}
+        src="/images/thorius-logo.png"
+        alt="Thorius"
+        width={120}
+        height={120}
         className={cn("shrink-0 object-contain", variantHeights[variant])}
         priority={variant !== "icon"}
       />

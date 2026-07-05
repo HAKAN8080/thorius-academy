@@ -24,7 +24,7 @@ export function buildAcademyOrganizationJsonLd() {
       "@type": "EducationalOrganization",
       name: "Thorius Academy",
       url: siteUrl,
-      logo: `${siteUrl}/images/thorius-academy-logo.png`,
+      logo: `${siteUrl}/images/thorius-logo.png`,
       contactPoint: {
         "@type": "ContactPoint",
         telephone: "+90-543-132-35-03",

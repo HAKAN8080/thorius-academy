@@ -1,5 +1,7 @@
-<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <rect width="256" height="256" rx="48" fill="#0B1E3F"/>
-  <text x="128" y="178" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Arial, sans-serif" font-size="160" font-weight="900" fill="white" text-anchor="middle" letter-spacing="-6">T</text>
-  <circle cx="208" cy="52" r="12" fill="#D4AF37"/>
+<svg width="256" height="256" viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Thorius">
+  <rect width="256" height="256" fill="#001b6e"/>
+  <path d="M48 72 C72 58, 118 52, 168 64 C176 66, 182 70, 186 76" stroke="#66e0e5" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M72 76 L96 196" stroke="#66e0e5" stroke-width="14" stroke-linecap="round" fill="none"/>
+  <path d="M148 88 C156 120, 160 156, 158 188" stroke="#f9b233" stroke-width="12" stroke-linecap="round" fill="none"/>
+  <text x="108" y="168" font-family="system-ui, sans-serif" font-size="28" font-weight="500" fill="#ffffff">horius</text>
 </svg>
