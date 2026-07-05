@@ -51,7 +51,7 @@ export default async function OkuPage({ params }: OkuPageProps) {
     );
   }
 
-  const watermark = user.email ?? user.id;
-
-  return <EbookReader slug={slug} title={book.title} watermark={watermark} />;
+  return (
+    <EbookReader slug={slug} title={book.title} watermark="Thorius" />
+  );
 }
