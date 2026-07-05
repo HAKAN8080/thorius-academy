@@ -562,3 +562,33 @@ html.navigation-pending::before {
     transform: translateX(100%);
   }
 }
+
+/* E-kitap okuyucu — sayfa çevirme */
+.ebook-flip-scene {
+  perspective: 1600px;
+}
+
+.ebook-flip-inner {
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.52s cubic-bezier(0.35, 0.15, 0.2, 1);
+}
+
+.ebook-flip-inner--forward {
+  transform: rotateY(-180deg);
+}
+
+.ebook-flip-inner--backward {
+  transform: rotateY(180deg);
+}
+
+.ebook-flip-face {
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.ebook-flip-face--back {
+  position: absolute;
+  inset: 0;
+  transform: rotateY(180deg);
+}
