@@ -12,73 +12,47 @@ interface EbookReaderProps {
   watermark: string;
 }
 
-const WATERMARK_POSITIONS = [
-  { x: 0.28, y: 0.22 },
-  { x: 0.52, y: 0.5 },
-  { x: 0.34, y: 0.76 },
-] as const;
-
-function drawWatermark(
-  context: CanvasRenderingContext2D,
-  width: number,
-  height: number,
-  text: string,
-) {
-  const fontSize = Math.round(Math.min(width, height) * 0.16);
-  const label = text.toUpperCase();
-
-  context.save();
-  context.globalAlpha = 0.14;
-  context.fillStyle = "#0a1228";
-  context.font = `700 ${fontSize}px Georgia, "Times New Roman", serif`;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-
-  for (const position of WATERMARK_POSITIONS) {
-    context.save();
-    context.translate(width * position.x, height * position.y);
-    context.rotate((-24 * Math.PI) / 180);
-    context.fillText(label, 0, 0);
-    context.restore();
-  }
-
-  context.restore();
-}
-
 export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
-  const frontCanvasRef = useRef<HTMLCanvasElement>(null!);
-  const backCanvasRef = useRef<HTMLCanvasElement>(null!);
-  const flipInnerRef = useRef<HTMLDivElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [flipping, setFlipping] = useState(false);
+  const [flipDirection, setFlipDirection] = useState<"next" | "prev" | null>(
+    null,
+  );
   const [pageInput, setPageInput] = useState("1");
 
-  const renderPageTo = useCallback(
-    async (canvas: HTMLCanvasElement | null, pageNum: number) => {
-      const pdf = pdfRef.current;
-      if (!pdf || !canvas) return;
+  const renderPage = useCallback(async (pageNum: number) => {
+    const pdf = pdfRef.current;
+    const canvas = canvasRef.current;
+    if (!pdf || !canvas) return;
 
-      const pdfPage = await pdf.getPage(pageNum);
-      const viewport = pdfPage.getViewport({ scale: 1.35 });
-      const context = canvas.getContext("2d");
-      if (!context) return;
+    const pdfPage = await pdf.getPage(pageNum);
+    const baseViewport = pdfPage.getViewport({ scale: 1 });
+    const maxHeight = Math.max(window.innerHeight - 144, 480);
+    const maxWidth = Math.max(window.innerWidth - 48, 320);
+    const scale = Math.min(
+      maxHeight / baseViewport.height,
+      maxWidth / baseViewport.width,
+      2,
+    );
+    const viewport = pdfPage.getViewport({ scale });
+    const context = canvas.getContext("2d");
+    if (!context) return;
 
-      canvas.width = viewport.width;
-      canvas.height = viewport.height;
+    canvas.width = viewport.width;
+    canvas.height = viewport.height;
+    canvas.style.width = `${viewport.width}px`;
+    canvas.style.height = `${viewport.height}px`;
 
-      await pdfPage.render({
-        canvas,
-        viewport,
-      }).promise;
-
-      drawWatermark(context, viewport.width, viewport.height, watermark);
-    },
-    [watermark],
-  );
+    await pdfPage.render({
+      canvas,
+      viewport,
+    }).promise;
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -109,7 +83,7 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
         setPageCount(pdf.numPages);
         setPage(1);
         setPageInput("1");
-        await renderPageTo(frontCanvasRef.current, 1);
+        await renderPage(1);
         setLoading(false);
       } catch (loadError) {
         if (!cancelled) {
@@ -127,67 +101,17 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
     return () => {
       cancelled = true;
     };
-  }, [renderPageTo, slug]);
+  }, [renderPage, slug]);
+
+  useEffect(() => {
+    if (pageCount > 0 && !loading) {
+      void renderPage(page);
+    }
+  }, [page, pageCount, loading, renderPage]);
 
   useEffect(() => {
     setPageInput(String(page));
   }, [page]);
-
-  const finishFlip = useCallback(
-    async (targetPage: number) => {
-      await renderPageTo(frontCanvasRef.current, targetPage);
-      setPage(targetPage);
-      setFlipping(false);
-      if (flipInnerRef.current) {
-        flipInnerRef.current.style.transition = "none";
-        flipInnerRef.current.classList.remove(
-          "ebook-flip-inner--forward",
-          "ebook-flip-inner--backward",
-        );
-        void flipInnerRef.current.offsetWidth;
-        flipInnerRef.current.style.transition = "";
-      }
-    },
-    [renderPageTo],
-  );
-
-  const turnToPage = useCallback(
-    async (targetPage: number) => {
-      if (
-        flipping ||
-        targetPage < 1 ||
-        targetPage > pageCount ||
-        targetPage === page
-      ) {
-        return;
-      }
-
-      const forward = targetPage > page;
-      setFlipping(true);
-
-      await renderPageTo(backCanvasRef.current, targetPage);
-
-      const inner = flipInnerRef.current;
-      if (!inner) {
-        setPage(targetPage);
-        await renderPageTo(frontCanvasRef.current, targetPage);
-        setFlipping(false);
-        return;
-      }
-
-      const onTransitionEnd = (event: TransitionEvent) => {
-        if (event.propertyName !== "transform") return;
-        inner.removeEventListener("transitionend", onTransitionEnd);
-        void finishFlip(targetPage);
-      };
-
-      inner.addEventListener("transitionend", onTransitionEnd);
-      inner.classList.add(
-        forward ? "ebook-flip-inner--forward" : "ebook-flip-inner--backward",
-      );
-    },
-    [finishFlip, flipping, page, pageCount, renderPageTo],
-  );
 
   useEffect(() => {
     const block = (event: Event) => event.preventDefault();
@@ -209,11 +133,11 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
 
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        void turnToPage(page - 1);
+        void changePage(page - 1);
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        void turnToPage(page + 1);
+        void changePage(page + 1);
       }
     };
 
@@ -228,27 +152,24 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
       document.removeEventListener("cut", block);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [page, turnToPage]);
+  }, [page]);
+
+  async function changePage(next: number) {
+    if (flipping || next < 1 || next > pageCount || next === page) return;
+    setFlipDirection(next > page ? "next" : "prev");
+    setFlipping(true);
+    setPage(next);
+    window.setTimeout(() => {
+      setFlipping(false);
+      setFlipDirection(null);
+    }, 360);
+  }
 
   function handlePageJump(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const parsed = Number.parseInt(pageInput, 10);
     if (Number.isNaN(parsed)) return;
-    void turnToPage(parsed);
-  }
-
-  function PageCanvas({
-    canvasRef,
-  }: {
-    canvasRef: React.RefObject<HTMLCanvasElement>;
-  }) {
-    return (
-      <canvas
-        ref={canvasRef}
-        className="block max-h-[calc(100vh-9rem)] w-auto max-w-full bg-white"
-        draggable={false}
-      />
-    );
+    void changePage(parsed);
   }
 
   if (loading) {
@@ -290,30 +211,43 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
         </Button>
       </header>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-hidden p-4 md:p-8">
+      <div className="relative flex flex-1 items-center justify-center overflow-auto p-4 md:p-8">
         <button
           type="button"
-          className="absolute inset-y-0 left-0 z-10 w-1/4 cursor-pointer bg-transparent md:w-[18%]"
+          className="absolute inset-y-0 left-0 z-10 w-1/5 cursor-pointer bg-transparent md:w-[15%]"
           aria-label="Önceki sayfa"
           disabled={page <= 1 || flipping}
-          onClick={() => void turnToPage(page - 1)}
+          onClick={() => void changePage(page - 1)}
         />
         <button
           type="button"
-          className="absolute inset-y-0 right-0 z-10 w-1/4 cursor-pointer bg-transparent md:w-[18%]"
+          className="absolute inset-y-0 right-0 z-10 w-1/5 cursor-pointer bg-transparent md:w-[15%]"
           aria-label="Sonraki sayfa"
           disabled={page >= pageCount || flipping}
-          onClick={() => void turnToPage(page + 1)}
+          onClick={() => void changePage(page + 1)}
         />
 
-        <div className="ebook-flip-scene max-h-[calc(100vh-9rem)] rounded-lg shadow-2xl">
-          <div ref={flipInnerRef} className="ebook-flip-inner">
-            <div className="ebook-flip-face">
-              <PageCanvas canvasRef={frontCanvasRef} />
-            </div>
-            <div className="ebook-flip-face ebook-flip-face--back">
-              <PageCanvas canvasRef={backCanvasRef} />
-            </div>
+        <div
+          className={`relative overflow-hidden rounded-lg shadow-2xl transition-transform duration-300 ${
+            flipping && flipDirection === "next"
+              ? "ebook-page-turn-next"
+              : flipping && flipDirection === "prev"
+                ? "ebook-page-turn-prev"
+                : ""
+          }`}
+          style={{ transformStyle: "preserve-3d", perspective: "1200px" }}
+        >
+          <canvas ref={canvasRef} className="block bg-white" draggable={false} />
+          <div
+            className="pointer-events-none absolute inset-0 flex items-center justify-center overflow-hidden opacity-[0.12]"
+            aria-hidden
+          >
+            <p
+              className="rotate-[-24deg] text-center text-sm font-semibold uppercase tracking-widest text-primary-900 md:text-base"
+              style={{ textShadow: "0 0 1px rgba(0,0,0,0.2)" }}
+            >
+              {watermark}
+            </p>
           </div>
         </div>
       </div>
@@ -325,7 +259,7 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
           size="icon"
           className="border-white/20 bg-transparent text-white"
           disabled={page <= 1 || flipping}
-          onClick={() => void turnToPage(page - 1)}
+          onClick={() => void changePage(page - 1)}
           aria-label="Önceki sayfa"
         >
           <ChevronLeft className="h-5 w-5" />
@@ -366,7 +300,7 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
           size="icon"
           className="border-white/20 bg-transparent text-white"
           disabled={page >= pageCount || flipping}
-          onClick={() => void turnToPage(page + 1)}
+          onClick={() => void changePage(page + 1)}
           aria-label="Sonraki sayfa"
         >
           <ChevronRight className="h-5 w-5" />
