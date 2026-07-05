@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.7.2
+ * Version: 1.7.3
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,10 +11,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.7.2');
+define('THORIUS_CHECKOUT_VERSION', '1.7.3');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
+define('THORIUS_CHECKOUT_KITAPLIK_MY_BOOKS_URL', 'https://kitaplik.thorius.com.tr/kitaplarim');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
 
@@ -472,11 +473,136 @@ add_filter('woocommerce_quantity_input_min', static function ($min, $product) {
 }, 20, 2);
 
 /**
- * Magaza sayfasi yerine Academy kurs listesine don.
+ * Magaza sayfasi yerine Academy kurs listesine don (varsayilan).
  */
 function thorius_checkout_catalog_url(): string
 {
     return THORIUS_CHECKOUT_CATALOG_URL;
+}
+
+/**
+ * @return list<string>
+ */
+function thorius_checkout_allowed_return_hosts(): array
+{
+    $hosts = array(
+        'academy.thorius.com.tr',
+        'kitaplik.thorius.com.tr',
+        'shop.thorius.com.tr',
+        'thorius.com.tr',
+        'www.thorius.com.tr',
+    );
+
+    return apply_filters('thorius_checkout_allowed_return_hosts', $hosts);
+}
+
+function thorius_checkout_is_allowed_return_url(string $url): bool
+{
+    $parts = wp_parse_url($url);
+    if (!is_array($parts) || empty($parts['host']) || empty($parts['scheme'])) {
+        return false;
+    }
+
+    if (!in_array($parts['scheme'], array('https', 'http'), true)) {
+        return false;
+    }
+
+    $host = strtolower((string) $parts['host']);
+    foreach (thorius_checkout_allowed_return_hosts() as $allowed) {
+        if ($host === strtolower($allowed)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/**
+ * Kitaplik WC urun ID'leri — siparis yalnizca bunlardan olusuyorsa Kitaplarim'a don.
+ *
+ * @return list<int>
+ */
+function thorius_checkout_library_product_ids(): array
+{
+    $ids = array(8978, 8980);
+
+    return array_map('absint', apply_filters('thorius_checkout_library_product_ids', $ids));
+}
+
+function thorius_checkout_store_return_url_from_request(): void
+{
+    if (is_admin() || wp_doing_ajax()) {
+        return;
+    }
+
+    if (!isset($_GET['thorius_return']) || $_GET['thorius_return'] === '') {
+        return;
+    }
+
+    if (!function_exists('WC') || !WC()->session) {
+        return;
+    }
+
+    $candidate = esc_url_raw(wp_unslash((string) $_GET['thorius_return']));
+    if ($candidate === '' || !thorius_checkout_is_allowed_return_url($candidate)) {
+        return;
+    }
+
+    WC()->session->set('thorius_return_url', $candidate);
+}
+add_action('template_redirect', 'thorius_checkout_store_return_url_from_request', 3);
+
+function thorius_checkout_order_contains_only_library_products(WC_Order $order): bool
+{
+    $library_ids = thorius_checkout_library_product_ids();
+    if ($library_ids === array()) {
+        return false;
+    }
+
+    $line_items = $order->get_items();
+    if ($line_items === array()) {
+        return false;
+    }
+
+    foreach ($line_items as $item) {
+        if (!($item instanceof WC_Order_Item_Product)) {
+            return false;
+        }
+
+        $product_id = absint($item->get_product_id());
+        if ($product_id <= 0 || !in_array($product_id, $library_ids, true)) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+function thorius_checkout_post_payment_url(?WC_Order $order = null): string
+{
+    if (function_exists('WC') && WC()->session) {
+        $stored = WC()->session->get('thorius_return_url');
+        if (is_string($stored) && $stored !== '' && thorius_checkout_is_allowed_return_url($stored)) {
+            WC()->session->__unset('thorius_return_url');
+            return $stored;
+        }
+    }
+
+    if ($order instanceof WC_Order && thorius_checkout_order_contains_only_library_products($order)) {
+        return THORIUS_CHECKOUT_KITAPLIK_MY_BOOKS_URL;
+    }
+
+    return thorius_checkout_catalog_url();
+}
+
+function thorius_checkout_post_payment_link_label(?WC_Order $order = null): string
+{
+    $target = thorius_checkout_post_payment_url($order);
+    if (strpos($target, 'kitaplik.thorius.com.tr') !== false) {
+        return __('Kitaplarıma dön', 'thorius-checkout');
+    }
+
+    return __('Kurslara dön', 'thorius-checkout');
 }
 add_filter('woocommerce_return_to_shop_redirect', 'thorius_checkout_catalog_url');
 add_filter('woocommerce_continue_shopping_redirect', 'thorius_checkout_catalog_url');
@@ -489,7 +615,9 @@ add_filter('woocommerce_continue_shopping_redirect', 'thorius_checkout_catalog_u
  */
 function thorius_checkout_allowed_redirect_hosts(array $hosts): array
 {
-    $hosts[] = 'academy.thorius.com.tr';
+    foreach (thorius_checkout_allowed_return_hosts() as $host) {
+        $hosts[] = $host;
+    }
 
     return $hosts;
 }
@@ -542,7 +670,7 @@ function thorius_checkout_redirect_order_received(): void
         return;
     }
 
-    wp_safe_redirect(thorius_checkout_catalog_url());
+    wp_safe_redirect(thorius_checkout_post_payment_url($order));
     exit;
 }
 add_action('template_redirect', 'thorius_checkout_redirect_order_received', 15);
@@ -557,15 +685,20 @@ function thorius_checkout_thankyou_redirect_fallback(int $order_id): void
         return;
     }
 
-    $catalog_url = thorius_checkout_catalog_url();
+    $catalog_url = thorius_checkout_post_payment_url($order);
+    $link_label = thorius_checkout_post_payment_link_label($order);
     $link = '<a href="' . esc_url($catalog_url) . '">' .
-        esc_html__('Kurslara dön', 'thorius-checkout') .
+        esc_html($link_label) .
         '</a>';
+
+    $message = strpos($catalog_url, 'kitaplik.thorius.com.tr') !== false
+        ? __('Ödemeniz alındı. Kitaplarım sayfasına yönlendiriliyorsunuz… %s', 'thorius-checkout')
+        : __('Ödemeniz alındı. Kurslarınıza yönlendiriliyorsunuz… %s', 'thorius-checkout');
 
     echo '<p class="thorius-thankyou-redirect">' .
         sprintf(
-            /* translators: %s: link to Academy course catalog */
-            esc_html__('Ödemeniz alındı. Kurslarınıza yönlendiriliyorsunuz… %s', 'thorius-checkout'),
+            /* translators: %s: link to post-payment destination */
+            esc_html($message),
             $link
         ) .
         '</p>';

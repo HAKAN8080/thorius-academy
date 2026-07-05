@@ -30,11 +30,16 @@ export function splitFullName(fullName: string): {
 export function buildWooCommerceCheckoutUrl(
   wcProductId: number,
   customer?: CheckoutCustomer | null,
+  options?: { returnUrl?: string | null },
 ): string {
   const checkoutBase = `${getWpSiteUrl()}/odeme/`;
   const url = new URL(checkoutBase);
   url.searchParams.set("add-to-cart", String(wcProductId));
   url.searchParams.set("quantity", "1");
+
+  if (options?.returnUrl) {
+    url.searchParams.set("thorius_return", options.returnUrl);
+  }
 
   if (customer?.email) {
     url.searchParams.set("billing_email", customer.email);

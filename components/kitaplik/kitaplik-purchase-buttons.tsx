@@ -63,6 +63,7 @@ export function KitaplikPurchaseButtons({
             lastName: customerLastName ?? "",
           }
         : undefined,
+      { returnUrl: kitaplikPath("/kitaplarim") },
     );
     window.location.href = checkoutUrl;
   }
