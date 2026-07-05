@@ -14,17 +14,26 @@ const HOMEPAGE_CATEGORY_PRIORITY = [
   { slug: "wellness", labels: ["wellness", "yoga"] },
 ] as const;
 
+export const KURSLAR_CATEGORY_PRIORITY_SLUGS = [
+  "planlama",
+  "insan-kaynaklari",
+] as const;
+
 function normalizeCategoryLabel(value: string): string {
   return value.trim().toLocaleLowerCase("tr");
 }
 
-function resolveHomepageCategoryPriority(category: WPCategory): number {
+/** Katalog / kurslar sayfası — düşük indeks = daha önce listelenir. */
+export function resolveCategoryDisplayPriority(input: {
+  slug?: string | null;
+  name?: string | null;
+}): number {
   const catalogSlug = canonicalizeCategorySlug(
-    catalogSlugFromWordPressCategory(category),
+    (input.slug ?? "").trim() || slugifyCategoryName(input.name ?? ""),
   );
-  const wpSlug = canonicalizeCategorySlug(category.slug);
-  const nameSlug = slugifyCategoryName(category.name);
-  const normalizedName = normalizeCategoryLabel(category.name);
+  const wpSlug = canonicalizeCategorySlug((input.slug ?? "").trim());
+  const nameSlug = slugifyCategoryName(input.name ?? "");
+  const normalizedName = normalizeCategoryLabel(input.name ?? "");
 
   for (let index = 0; index < HOMEPAGE_CATEGORY_PRIORITY.length; index += 1) {
     const item = HOMEPAGE_CATEGORY_PRIORITY[index];
@@ -49,6 +58,13 @@ function resolveHomepageCategoryPriority(category: WPCategory): number {
   }
 
   return HOMEPAGE_CATEGORY_PRIORITY.length;
+}
+
+function resolveHomepageCategoryPriority(category: WPCategory): number {
+  return resolveCategoryDisplayPriority({
+    slug: catalogSlugFromWordPressCategory(category),
+    name: category.name,
+  });
 }
 
 export function sortHomepageCategories(categories: WPCategory[]): WPCategory[] {

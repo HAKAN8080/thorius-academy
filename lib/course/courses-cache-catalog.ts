@@ -3,6 +3,7 @@ import {
   canonicalizeCategorySlug,
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
+import { resolveCategoryDisplayPriority } from "@/lib/course/sort-homepage-categories";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
 import { fromCoursesCacheLevelLabel } from "@/lib/instructor/courses-cache-write";
@@ -126,7 +127,43 @@ export function buildCategories(rows: Array<{ category: string | null }>): Catal
       name: value.name,
       count: value.count,
     }))
-    .sort((a, b) => a.name.localeCompare(b.name, "tr"));
+    .sort((left, right) => {
+      const leftPriority = resolveCategoryDisplayPriority({
+        slug: left.slug,
+        name: left.name,
+      });
+      const rightPriority = resolveCategoryDisplayPriority({
+        slug: right.slug,
+        name: right.name,
+      });
+
+      if (leftPriority !== rightPriority) {
+        return leftPriority - rightPriority;
+      }
+
+      return left.name.localeCompare(right.name, "tr");
+    });
+}
+
+function sortCatalogRowsByDisplayPriority(
+  rows: Record<string, unknown>[],
+): Record<string, unknown>[] {
+  return [...rows].sort((left, right) => {
+    const leftPriority = resolveCategoryDisplayPriority({
+      name: (left.category as string | null) ?? null,
+    });
+    const rightPriority = resolveCategoryDisplayPriority({
+      name: (right.category as string | null) ?? null,
+    });
+
+    if (leftPriority !== rightPriority) {
+      return leftPriority - rightPriority;
+    }
+
+    const leftUpdated = new Date(String(left.updated_at ?? 0)).getTime();
+    const rightUpdated = new Date(String(right.updated_at ?? 0)).getTime();
+    return rightUpdated - leftUpdated;
+  });
 }
 
 function resolveCategoryName(
@@ -214,15 +251,20 @@ async function buildCoursesCacheListingPage(params: {
   const supabase = getSupabasePublicClient();
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
+  const useCategoryPrioritySort = !categoryName && !searchQuery;
 
   let query = supabase
     .from("courses_cache")
     .select(LISTING_SELECT, { count: "exact" })
     .eq("published", true)
     .eq("visibility", "public")
-    .not("course_slug", "is", null)
-    .order("updated_at", { ascending: false })
-    .range(from, to);
+    .not("course_slug", "is", null);
+
+  if (useCategoryPrioritySort) {
+    query = query.order("updated_at", { ascending: false });
+  } else {
+    query = query.order("updated_at", { ascending: false }).range(from, to);
+  }
 
   if (categoryName) {
     query = query.eq("category", categoryName);
@@ -256,8 +298,12 @@ async function buildCoursesCacheListingPage(params: {
 
   const total = count ?? 0;
   const totalPages = total > 0 ? Math.ceil(total / perPage) : 0;
-  const courses = (data ?? [])
-    .map((row) => mapRow(row as Record<string, unknown>))
+  const rawRows = (data ?? []) as Record<string, unknown>[];
+  const pageRows = useCategoryPrioritySort
+    ? sortCatalogRowsByDisplayPriority(rawRows).slice(from, to + 1)
+    : rawRows;
+  const courses = pageRows
+    .map((row) => mapRow(row))
     .filter((course): course is CatalogCourseItem => course !== null);
 
   await enrichCatalogCoverImages(courses);
@@ -290,7 +336,7 @@ export async function getCoursesCacheListingPage(params: {
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing-v5", categorySlug, String(page), search],
+    ["courses-cache-listing-v6", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
