@@ -12,6 +12,39 @@ interface EbookReaderProps {
   watermark: string;
 }
 
+const WATERMARK_POSITIONS = [
+  { x: 0.28, y: 0.22 },
+  { x: 0.52, y: 0.5 },
+  { x: 0.34, y: 0.76 },
+] as const;
+
+function drawWatermark(
+  context: CanvasRenderingContext2D,
+  width: number,
+  height: number,
+  text: string,
+) {
+  const fontSize = Math.round(Math.min(width, height) * 0.16);
+  const label = text.toUpperCase();
+
+  context.save();
+  context.globalAlpha = 0.14;
+  context.fillStyle = "#0a1228";
+  context.font = `700 ${fontSize}px Georgia, "Times New Roman", serif`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+
+  for (const position of WATERMARK_POSITIONS) {
+    context.save();
+    context.translate(width * position.x, height * position.y);
+    context.rotate((-24 * Math.PI) / 180);
+    context.fillText(label, 0, 0);
+    context.restore();
+  }
+
+  context.restore();
+}
+
 export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
   const frontCanvasRef = useRef<HTMLCanvasElement>(null!);
   const backCanvasRef = useRef<HTMLCanvasElement>(null!);
@@ -41,8 +74,10 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
         canvas,
         viewport,
       }).promise;
+
+      drawWatermark(context, viewport.width, viewport.height, watermark);
     },
-    [],
+    [watermark],
   );
 
   useEffect(() => {
@@ -204,41 +239,15 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
 
   function PageCanvas({
     canvasRef,
-    className,
   }: {
     canvasRef: React.RefObject<HTMLCanvasElement>;
-    className?: string;
   }) {
     return (
-      <div className={`relative ${className ?? ""}`}>
-        <canvas
-          ref={canvasRef}
-          className="max-h-[calc(100vh-9rem)] w-auto max-w-full bg-white"
-          draggable={false}
-        />
-        <div
-          className="pointer-events-none absolute inset-0 overflow-hidden opacity-[0.12]"
-          aria-hidden
-        >
-          {[
-            { top: "22%", left: "28%" },
-            { top: "50%", left: "52%" },
-            { top: "76%", left: "34%" },
-          ].map((position, index) => (
-            <p
-              key={index}
-              className="absolute -translate-x-1/2 -translate-y-1/2 rotate-[-24deg] text-center text-2xl font-semibold uppercase tracking-[0.35em] text-primary-900 md:text-3xl"
-              style={{
-                top: position.top,
-                left: position.left,
-                textShadow: "0 0 1px rgba(0,0,0,0.2)",
-              }}
-            >
-              {watermark}
-            </p>
-          ))}
-        </div>
-      </div>
+      <canvas
+        ref={canvasRef}
+        className="block max-h-[calc(100vh-9rem)] w-auto max-w-full bg-white"
+        draggable={false}
+      />
     );
   }
 
