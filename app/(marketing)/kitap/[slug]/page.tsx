@@ -1,8 +1,11 @@
-import Link from "next/link";
+import { headers } from "next/headers";
 import { notFound } from "next/navigation";
-import { Container } from "@/components/layout/container";
+import { KitaplikBookDetailPage } from "@/components/kitaplik/kitaplik-book-detail-page";
 import { ShopBuyButton } from "@/components/shop/shop-buy-button";
+import { Container } from "@/components/layout/container";
 import { getShopProductBySlug } from "@/lib/shop/fetch-shop-products";
+import { getSiteModeFromHost } from "@/lib/site/site-mode";
+import Link from "next/link";
 
 interface ShopProductPageProps {
   params: Promise<{ slug: string }>;
@@ -10,8 +13,14 @@ interface ShopProductPageProps {
 
 export async function generateMetadata({ params }: ShopProductPageProps) {
   const { slug } = await params;
-  const product = await getShopProductBySlug(slug);
+  const host = headers().get("host");
+  const isKitaplik = getSiteModeFromHost(host) === "kitaplik";
 
+  if (isKitaplik) {
+    return { title: "Kitap" };
+  }
+
+  const product = await getShopProductBySlug(slug);
   if (!product) {
     return { title: "Kitap bulunamadı" };
   }
@@ -24,6 +33,12 @@ export async function generateMetadata({ params }: ShopProductPageProps) {
 
 export default async function ShopProductPage({ params }: ShopProductPageProps) {
   const { slug } = await params;
+  const host = headers().get("host");
+
+  if (getSiteModeFromHost(host) === "kitaplik") {
+    return <KitaplikBookDetailPage slug={slug} />;
+  }
+
   const product = await getShopProductBySlug(slug);
 
   if (!product) {
@@ -85,3 +100,4 @@ export default async function ShopProductPage({ params }: ShopProductPageProps) 
     </section>
   );
 }
+

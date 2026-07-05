@@ -1,5 +1,6 @@
 /**
  * Shop webhook safety check — kitap ürünleri course_products'ta olmamalı.
+ * library_books (basılı / e-kitap WC ID) eşleşmeleri de raporlanır.
  * Çalıştır: npx tsx scripts/verify-shop-webhook-safety.ts [wcProductId]
  */
 import { existsSync, readFileSync } from "node:fs";
@@ -46,7 +47,7 @@ async function main(): Promise<void> {
   }
 
   const admin = getSupabaseAdmin();
-  const [courseProduct, pathProduct] = await Promise.all([
+  const [courseProduct, pathProduct, libraryBook] = await Promise.all([
     admin
       .from("course_products")
       .select("course_slug")
@@ -57,10 +58,24 @@ async function main(): Promise<void> {
       .select("career_path_slug")
       .eq("wc_product_id", wcProductId)
       .maybeSingle(),
+    admin
+      .from("library_books")
+      .select("slug, printed_wc_product_id, ebook_wc_product_id")
+      .or(
+        `printed_wc_product_id.eq.${wcProductId},ebook_wc_product_id.eq.${wcProductId}`,
+      )
+      .maybeSingle(),
   ]);
 
   const mappedToCourse = Boolean(courseProduct.data?.course_slug);
   const mappedToPath = Boolean(pathProduct.data?.career_path_slug);
+  const mappedToLibraryBook = Boolean(libraryBook.data?.slug);
+  const libraryBookRole =
+    libraryBook.data?.ebook_wc_product_id === wcProductId
+      ? "ebook"
+      : libraryBook.data?.printed_wc_product_id === wcProductId
+        ? "printed"
+        : null;
 
   console.log(
     JSON.stringify(
@@ -68,8 +83,12 @@ async function main(): Promise<void> {
         wcProductId,
         mappedToCourse,
         mappedToPath,
+        mappedToLibraryBook,
+        libraryBookSlug: libraryBook.data?.slug ?? null,
+        libraryBookRole,
         enrollmentWouldRun: mappedToCourse || mappedToPath,
-        safeForShopBooks: !mappedToCourse && !mappedToPath,
+        safeFromWrongEnrollment: !mappedToCourse && !mappedToPath,
+        kitaplikProductConfigured: mappedToLibraryBook,
       },
       null,
       2,

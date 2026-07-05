@@ -3,12 +3,15 @@ import { updateSession } from "@/lib/supabase/middleware";
 import {
   getAcademyOrigin,
   getCompanyOrigin,
+  getKitaplikOrigin,
   getShopOrigin,
   getWordPressOrigin,
   isCompanyAllowedPath,
   isCompanyRedirectToAcademyPath,
   isCompanyRedirectToWordPressPath,
   isCompanySiteHost,
+  isKitaplikAllowedPath,
+  isKitaplikSiteHost,
   isShopAllowedPath,
   isShopSiteHost,
 } from "@/lib/site/site-mode";
@@ -37,9 +40,23 @@ function redirectToShopHome() {
   return NextResponse.redirect(new URL("/", getShopOrigin()));
 }
 
+function redirectToKitaplikHome() {
+  return NextResponse.redirect(new URL("/", getKitaplikOrigin()));
+}
+
 export async function middleware(request: NextRequest) {
   const host = request.headers.get("host");
   const { pathname } = request.nextUrl;
+
+  if (isKitaplikSiteHost(host)) {
+    if (isCompanyRedirectToAcademyPath(pathname)) {
+      return redirectToAcademy(request);
+    }
+
+    if (!isKitaplikAllowedPath(pathname)) {
+      return redirectToKitaplikHome();
+    }
+  }
 
   if (isShopSiteHost(host)) {
     if (isCompanyRedirectToAcademyPath(pathname)) {

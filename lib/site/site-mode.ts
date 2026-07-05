@@ -1,7 +1,8 @@
-export type SiteMode = "company" | "academy" | "shop";
+export type SiteMode = "company" | "academy" | "shop" | "kitaplik";
 
 const COMPANY_HOSTS = new Set(["thorius.com.tr", "www.thorius.com.tr"]);
 const SHOP_HOSTS = new Set(["shop.thorius.com.tr"]);
+const KITAPLIK_HOSTS = new Set(["kitaplik.thorius.com.tr"]);
 
 export function normalizeHost(host: string | null | undefined): string {
   return (host ?? "").toLowerCase().split(":")[0] ?? "";
@@ -9,11 +10,19 @@ export function normalizeHost(host: string | null | undefined): string {
 
 export function getSiteModeFromHost(host: string | null | undefined): SiteMode {
   const override = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
-  if (override === "company" || override === "academy" || override === "shop") {
+  if (
+    override === "company" ||
+    override === "academy" ||
+    override === "shop" ||
+    override === "kitaplik"
+  ) {
     return override;
   }
 
   const normalized = normalizeHost(host);
+  if (KITAPLIK_HOSTS.has(normalized)) {
+    return "kitaplik";
+  }
   if (SHOP_HOSTS.has(normalized)) {
     return "shop";
   }
@@ -32,6 +41,10 @@ export function isShopSiteHost(host: string | null | undefined): boolean {
   return getSiteModeFromHost(host) === "shop";
 }
 
+export function isKitaplikSiteHost(host: string | null | undefined): boolean {
+  return getSiteModeFromHost(host) === "kitaplik";
+}
+
 /** Academy uygulaması (panel, kurslar, auth) — her zaman academy subdomain. */
 export function getAcademyOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_APP_URL?.replace(/\/$/, "");
@@ -48,6 +61,20 @@ export function getCompanyOrigin(): string {
 export function getShopOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_SHOP_SITE_URL?.replace(/\/$/, "");
   return configured || "https://shop.thorius.com.tr";
+}
+
+/** E-kitap + basılı kitap vitrin. */
+export function getKitaplikOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_KITAPLIK_SITE_URL?.replace(
+    /\/$/,
+    "",
+  );
+  return configured || "https://kitaplik.thorius.com.tr";
+}
+
+export function kitaplikPath(path: string): string {
+  const normalized = path.startsWith("/") ? path : `/${path}`;
+  return `${getKitaplikOrigin()}${normalized}`;
 }
 
 export function shopPath(path: string): string {
@@ -213,6 +240,27 @@ export function isShopAllowedPath(pathname: string): boolean {
   }
 
   return SHOP_ALLOWED_PATH_PREFIXES.some(
+    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+  );
+}
+
+/** kitaplik.thorius.com.tr üzerinde açık kalacak sayfalar. */
+export const KITAPLIK_ALLOWED_PATH_PREFIXES = [
+  "/kitap",
+  "/kitaplarim",
+  "/oku",
+  "/giris",
+  "/kayit",
+  "/yeni-parola",
+  "/auth",
+] as const;
+
+export function isKitaplikAllowedPath(pathname: string): boolean {
+  if (pathname === "/") {
+    return true;
+  }
+
+  return KITAPLIK_ALLOWED_PATH_PREFIXES.some(
     (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
   );
 }

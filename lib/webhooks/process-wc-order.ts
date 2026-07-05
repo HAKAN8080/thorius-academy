@@ -1,5 +1,9 @@
 import { getAuthCallbackUrl, getAppOrigin } from "@/lib/auth/app-url";
 import { fulfillCareerPathPurchase } from "@/lib/career-path/fulfill-career-path-purchase";
+import {
+  fulfillEbookPurchase,
+  isLibraryBookProductId,
+} from "@/lib/kitaplik/fulfill-ebook-purchase";
 import { EnrollmentEmail } from "@/lib/email/templates/enrollment";
 import { recordEnrollmentEarning } from "@/lib/earnings/record-enrollment-earning";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
@@ -193,6 +197,31 @@ export async function processWooCommerceOrder(
 
   for (const item of order.line_items ?? []) {
     const wcProductId = item.product_id;
+
+    if (await isLibraryBookProductId(wcProductId)) {
+      const ebookResult = await fulfillEbookPurchase({
+        userId,
+        wcOrderId: order.id,
+        wcProductId,
+      });
+
+      if (ebookResult.success && ebookResult.bookSlug) {
+        console.log(
+          `[Webhook] E-kitap erişimi: ${ebookResult.bookSlug}${
+            ebookResult.alreadyGranted ? " (zaten vardı)" : ""
+          }`,
+        );
+      } else if (!ebookResult.success && ebookResult.error) {
+        console.warn(
+          `[Webhook] Kitaplık ürünü atlandı (${wcProductId}): ${ebookResult.error}`,
+        );
+      } else {
+        console.log(
+          `[Webhook] Basılı kitap siparişi — kurs kaydı açılmadı (${wcProductId})`,
+        );
+      }
+      continue;
+    }
 
     const { data: pathProductData, error: pathProductError } =
       await supabaseAdmin

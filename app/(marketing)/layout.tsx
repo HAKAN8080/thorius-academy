@@ -4,6 +4,7 @@ import { CompanyFooter } from "@/components/layout/company-footer";
 import { CompanyMarketingHeader } from "@/components/layout/company-marketing-header";
 import { MarketingHeader } from "@/components/layout/marketing-header";
 import { ShopHeader } from "@/components/shop/shop-header";
+import { KitaplikHeader } from "@/components/kitaplik/kitaplik-header";
 import { PromoBanner } from "@/components/marketing/promo-banner";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildAcademyOrganizationJsonLd } from "@/lib/seo/organization-schema";
@@ -14,9 +15,14 @@ import {
 
 export const revalidate = 3600;
 
-function getConfiguredSiteMode(): "academy" | "company" | "shop" | null {
+function getConfiguredSiteMode(): "academy" | "company" | "shop" | "kitaplik" | null {
   const mode = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
-  if (mode === "academy" || mode === "company" || mode === "shop") {
+  if (
+    mode === "academy" ||
+    mode === "company" ||
+    mode === "shop" ||
+    mode === "kitaplik"
+  ) {
     return mode;
   }
   return null;
@@ -54,9 +60,23 @@ function ShopMarketingShell({ children }: { children: React.ReactNode }) {
   );
 }
 
+function KitaplikMarketingShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex min-h-screen flex-col bg-white">
+      <KitaplikHeader />
+      <main className="flex-1">{children}</main>
+      <Footer />
+    </div>
+  );
+}
+
 function DynamicMarketingShell({ children }: { children: React.ReactNode }) {
   const host = headers().get("host");
   const siteMode = getSiteModeFromHost(host);
+
+  if (siteMode === "kitaplik") {
+    return <KitaplikMarketingShell>{children}</KitaplikMarketingShell>;
+  }
 
   if (siteMode === "shop") {
     return <ShopMarketingShell>{children}</ShopMarketingShell>;
@@ -82,6 +102,10 @@ export default function MarketingLayout({
 
   if (siteMode === "shop") {
     return <ShopMarketingShell>{children}</ShopMarketingShell>;
+  }
+
+  if (siteMode === "kitaplik") {
+    return <KitaplikMarketingShell>{children}</KitaplikMarketingShell>;
   }
 
   if (siteMode === "academy") {

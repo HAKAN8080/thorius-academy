@@ -3,8 +3,10 @@ import { headers } from "next/headers";
 import { AcademyHomePage } from "@/components/marketing/academy-home-page";
 import { CompanyHomePage } from "@/components/marketing/company-home-page";
 import { ShopHomePage } from "@/components/shop/shop-home-page";
+import { KitaplikHomePage } from "@/components/kitaplik/kitaplik-home-page";
 import {
   getCompanyOrigin,
+  getKitaplikOrigin,
   getShopOrigin,
   getSiteModeFromHost,
   isCompanySiteHost,
@@ -59,9 +61,27 @@ const SHOP_HOME_METADATA: Metadata = {
   },
 };
 
-function getConfiguredSiteMode(): "academy" | "company" | "shop" | null {
+const KITAPLIK_HOME_METADATA: Metadata = {
+  title: {
+    absolute: "Thorius Kitaplık — Basılı Kitap & E-Kitap",
+  },
+  description:
+    "Perakende ve liderlik kitapları. Basılı sipariş veya indirilemez e-kitap — güvenli okuyucuda sayfa çevirerek okuyun.",
+  openGraph: {
+    title: "Thorius Kitaplık",
+    url: getKitaplikOrigin(),
+    type: "website",
+  },
+};
+
+function getConfiguredSiteMode(): "academy" | "company" | "shop" | "kitaplik" | null {
   const mode = process.env.NEXT_PUBLIC_SITE_MODE?.trim().toLowerCase();
-  if (mode === "academy" || mode === "company" || mode === "shop") {
+  if (
+    mode === "academy" ||
+    mode === "company" ||
+    mode === "shop" ||
+    mode === "kitaplik"
+  ) {
     return mode;
   }
   return null;
@@ -78,8 +98,14 @@ export async function generateMetadata(): Promise<Metadata> {
   if (siteMode === "shop") {
     return SHOP_HOME_METADATA;
   }
+  if (siteMode === "kitaplik") {
+    return KITAPLIK_HOME_METADATA;
+  }
 
   const host = headers().get("host");
+  if (getSiteModeFromHost(host) === "kitaplik") {
+    return KITAPLIK_HOME_METADATA;
+  }
   if (getSiteModeFromHost(host) === "shop") {
     return SHOP_HOME_METADATA;
   }
@@ -98,12 +124,18 @@ export default async function HomePage() {
   if (siteMode === "shop") {
     return <ShopHomePage />;
   }
+  if (siteMode === "kitaplik") {
+    return <KitaplikHomePage />;
+  }
   if (siteMode === "academy") {
     return <AcademyHomePage />;
   }
 
   const host = headers().get("host");
   const mode = getSiteModeFromHost(host);
+  if (mode === "kitaplik") {
+    return <KitaplikHomePage />;
+  }
   if (mode === "company") {
     return <CompanyHomePage />;
   }
