@@ -2,9 +2,10 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { safeNextPath } from "@/lib/auth/app-url";
+import { redirectResponseUrl, safeNextPath } from "@/lib/auth/app-url";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { createClient } from "@/lib/supabase/server";
+import { mergeAuthCookieOptions } from "@/lib/supabase/auth-cookies";
 import {
   getSupabasePublishableKey,
   getSupabaseUrl,
@@ -44,7 +45,7 @@ async function finalizeVerifiedSession(
     });
   }
 
-  return NextResponse.redirect(`${origin}${next}`);
+  return NextResponse.redirect(redirectResponseUrl(next, origin));
 }
 
 export async function GET(request: Request) {
@@ -66,13 +67,14 @@ export async function GET(request: Request) {
   try {
     const cookieStore = await cookies();
     const supabase = createServerClient(supabaseUrl, publishableKey, {
+      cookieOptions: mergeAuthCookieOptions(),
       cookies: {
         getAll() {
           return cookieStore.getAll();
         },
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value, options }) => {
-            cookieStore.set(name, value, options);
+            cookieStore.set(name, value, mergeAuthCookieOptions(options));
           });
         },
       },

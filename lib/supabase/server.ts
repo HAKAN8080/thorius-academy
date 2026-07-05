@@ -4,6 +4,7 @@ import {
   getSupabasePublishableKey,
   getSupabaseUrl,
 } from "@/lib/supabase/env";
+import { mergeAuthCookieOptions } from "@/lib/supabase/auth-cookies";
 
 /**
  * Sunucu tarafı Supabase istemcisi (Server Components, Server Actions).
@@ -21,6 +22,7 @@ export async function createClient() {
   }
 
   return createServerClient(supabaseUrl, publishableKey, {
+    cookieOptions: mergeAuthCookieOptions(),
     cookies: {
       getAll() {
         return cookieStore.getAll();
@@ -28,7 +30,7 @@ export async function createClient() {
       setAll(cookiesToSet) {
         try {
           cookiesToSet.forEach(({ name, value, options }) =>
-            cookieStore.set(name, value, options)
+            cookieStore.set(name, value, mergeAuthCookieOptions(options))
           );
         } catch {
           // Server Component içinde cookie yazımı yok sayılır

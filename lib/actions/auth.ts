@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache";
 import { redirect } from "next/navigation";
-import { getEmailRedirectUrl, safeNextPath } from "@/lib/auth/app-url";
+import { getEmailRedirectUrl, safeRedirectTarget } from "@/lib/auth/app-url";
 import { provisionLinkedAccounts } from "@/lib/auth/provision-linked-accounts";
 import {
   registerUser,
@@ -22,7 +22,7 @@ function getSafeRedirect(value: unknown): string {
   if (typeof value !== "string") {
     return "/panel";
   }
-  return safeNextPath(value);
+  return safeRedirectTarget(value);
 }
 
 export async function signIn(

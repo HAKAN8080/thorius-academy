@@ -1,4 +1,5 @@
-import { safeNextPath } from "@/lib/auth/app-url";
+import { safeRedirectTarget } from "@/lib/auth/app-url";
+import { mergeAuthCookieOptions } from "@/lib/supabase/auth-cookies";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 
@@ -28,6 +29,7 @@ export async function updateSession(request: NextRequest) {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,
     {
+      cookieOptions: mergeAuthCookieOptions(),
       cookies: {
         getAll() {
           return request.cookies.getAll();
@@ -40,7 +42,11 @@ export async function updateSession(request: NextRequest) {
             request,
           });
           cookiesToSet.forEach(({ name, value, options }) =>
-            supabaseResponse.cookies.set(name, value, options)
+            supabaseResponse.cookies.set(
+              name,
+              value,
+              mergeAuthCookieOptions(options),
+            )
           );
         },
       },
@@ -66,9 +72,12 @@ export async function updateSession(request: NextRequest) {
   }
 
   if (user && AUTH_ROUTES.includes(pathname as (typeof AUTH_ROUTES)[number])) {
-    const redirectTo = safeNextPath(
+    const redirectTo = safeRedirectTarget(
       request.nextUrl.searchParams.get("redirect"),
     );
+    if (redirectTo.startsWith("http://") || redirectTo.startsWith("https://")) {
+      return NextResponse.redirect(redirectTo);
+    }
     const destination = request.nextUrl.clone();
     destination.pathname = redirectTo;
     destination.search = "";
