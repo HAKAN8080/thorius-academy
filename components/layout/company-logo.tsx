@@ -23,8 +23,8 @@ export function CompanyLogo({
       <Image
         src="/images/thorius-logo.png"
         alt="Thorius"
-        width={120}
-        height={120}
+        width={397}
+        height={373}
         className="h-10 w-auto object-contain sm:h-11"
         priority
       />
