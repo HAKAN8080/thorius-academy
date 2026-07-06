@@ -18,6 +18,7 @@ import { Logo } from "@/components/layout/logo";
 export interface HeaderNavLink {
   href: string;
   label: string;
+  external?: boolean;
 }
 
 export interface HeaderAuthUrls {
@@ -29,6 +30,36 @@ export interface HeaderAuthUrls {
 interface HeaderProps {
   navLinks: HeaderNavLink[];
   authUrls?: HeaderAuthUrls;
+}
+
+function HeaderNavItem({
+  link,
+  className,
+  onNavigate,
+}: {
+  link: HeaderNavLink;
+  className: string;
+  onNavigate?: () => void;
+}) {
+  if (link.external || link.href.startsWith("http")) {
+    return (
+      <a
+        href={link.href}
+        target="_blank"
+        rel="noopener noreferrer"
+        className={className}
+        onClick={onNavigate}
+      >
+        {link.label}
+      </a>
+    );
+  }
+
+  return (
+    <Link href={link.href} className={className} onClick={onNavigate}>
+      {link.label}
+    </Link>
+  );
 }
 
 export function Header({ navLinks, authUrls }: HeaderProps) {
@@ -44,13 +75,11 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
           aria-label="Ana menü"
         >
           {navLinks.map((link) => (
-            <Link
+            <HeaderNavItem
               key={link.href}
-              href={link.href}
+              link={link}
               className="text-sm font-medium text-primary-700 transition-colors hover:text-primary-900"
-            >
-              {link.label}
-            </Link>
+            />
           ))}
         </nav>
 
@@ -73,14 +102,12 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
               </SheetHeader>
               <nav className="mt-8 flex flex-col gap-4" aria-label="Mobil menü">
                 {navLinks.map((link) => (
-                  <Link
+                  <HeaderNavItem
                     key={link.href}
-                    href={link.href}
-                    onClick={() => setOpen(false)}
+                    link={link}
                     className="text-base font-medium text-primary-800"
-                  >
-                    {link.label}
-                  </Link>
+                    onNavigate={() => setOpen(false)}
+                  />
                 ))}
                 <hr className="my-2 border-primary-100" />
                 <AuthButtons

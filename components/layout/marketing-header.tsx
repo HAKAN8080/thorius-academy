@@ -3,12 +3,14 @@ import { Header } from "@/components/layout/header";
 import {
   academyPath,
   isCompanySiteHost,
+  kitaplikPath,
   resolveAcademyHref,
 } from "@/lib/site/site-mode";
 
 const baseNavLinks = [
   { href: "/kurslar", label: "Academy" },
   { href: "/kariyer-yolu", label: "Kariyer Yolu" },
+  { href: kitaplikPath("/"), label: "Kitaplık", external: true },
   // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
   { href: "/magaza", label: "Mağaza" },
   { href: "/#ecosystem", label: "Koçluk" },
@@ -27,6 +29,7 @@ export function MarketingHeader() {
         ? link.href
         : resolveAcademyHref(link.href, isCompany),
     label: link.label,
+    external: "external" in link && link.external,
   }));
 
   const authUrls = isCompany

@@ -6,6 +6,7 @@ import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import {
   isCompanySiteHost,
+  kitaplikPath,
   resolveAcademyHref,
 } from "@/lib/site/site-mode";
 import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
@@ -17,7 +18,7 @@ const staticColumns = [
       { href: "/hakkimizda", label: "Misyonumuz" },
       { href: "/kariyer-yolu", label: "Kariyer Yolları" },
       // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
-      { href: "/magaza", label: "Kitaplar" },
+      { href: kitaplikPath("/"), label: "Kitaplık" },
       { href: "/#ecosystem", label: "Koçluk" },
       { href: "/blog", label: "Blog" },
     ],
