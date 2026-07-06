@@ -13,14 +13,14 @@ export function KitaplikBookCard({ book }: KitaplikBookCardProps) {
   return (
     <Card className="flex h-full flex-col overflow-hidden border-primary-100">
       <Link href={`/kitap/${book.slug}`} className="group block">
-        <div className="relative aspect-[3/4] overflow-hidden bg-primary-100">
+        <div className="relative flex aspect-[3/4] items-center justify-center overflow-hidden bg-primary-50 p-3">
           {book.cover_image_url ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img
               src={book.cover_image_url}
               alt={book.title}
               loading="lazy"
-              className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
+              className="max-h-full max-w-full object-contain transition-transform duration-500 group-hover:scale-[1.02]"
             />
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-400" />

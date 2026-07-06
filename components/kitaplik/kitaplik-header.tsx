@@ -2,12 +2,23 @@ import Link from "next/link";
 import { BookOpen, Library, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Logo } from "@/components/layout/logo";
-import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
+import {
+  academyPath,
+  getCompanyOrigin,
+  kitaplikPath,
+} from "@/lib/site/site-mode";
 import { createClient } from "@/lib/supabase/server";
 
-const NAV = [
+const kitaplikNavLinks = [
   { href: "/", label: "Kitaplar" },
   { href: "/kitaplarim", label: "Kitaplarım" },
+  { href: getCompanyOrigin(), label: "Thorius", external: true },
+  { href: academyPath("/kurslar"), label: "Academy", external: true },
+  {
+    href: "https://coaching.thorius.com.tr",
+    label: "Coaching",
+    external: true,
+  },
 ] as const;
 
 export async function KitaplikHeader() {
@@ -19,24 +30,30 @@ export async function KitaplikHeader() {
   return (
     <header className="sticky top-0 z-50 border-b border-primary-100/80 bg-white/90 backdrop-blur-md">
       <Container size="wide">
-        <div className="flex h-16 items-center justify-between gap-4">
+        <div className="flex h-16 items-center justify-between gap-3">
           <Link href="/" className="shrink-0">
             <Logo variant="compact" />
           </Link>
 
-          <nav className="hidden items-center gap-6 md:flex" aria-label="Ana menü">
-            {NAV.map((item) => (
+          <nav
+            className="hidden min-w-0 flex-1 items-center justify-center gap-4 overflow-x-auto px-2 sm:gap-5 md:flex lg:gap-6"
+            aria-label="Ana menü"
+          >
+            {kitaplikNavLinks.map((link) => (
               <Link
-                key={item.href}
-                href={item.href}
-                className="text-sm font-medium text-primary-800 transition hover:text-primary-950"
+                key={link.href}
+                href={link.href}
+                className="whitespace-nowrap text-sm font-medium text-primary-800 transition hover:text-primary-950"
+                {...("external" in link && link.external
+                  ? { target: "_blank", rel: "noopener noreferrer" }
+                  : {})}
               >
-                {item.label}
+                {link.label}
               </Link>
             ))}
           </nav>
 
-          <div className="flex items-center gap-2">
+          <div className="flex shrink-0 items-center gap-2">
             <Link
               href="/kitaplarim"
               className="inline-flex items-center gap-1.5 rounded-full border border-primary-100 px-3 py-1.5 text-sm font-medium text-primary-800 hover:bg-primary-50 md:hidden"
@@ -67,6 +84,24 @@ export async function KitaplikHeader() {
             )}
           </div>
         </div>
+
+        <nav
+          className="-mx-1 flex items-center gap-4 overflow-x-auto border-t border-primary-100/70 px-1 pb-3 pt-2 md:hidden"
+          aria-label="Site menüsü"
+        >
+          {kitaplikNavLinks.map((link) => (
+            <Link
+              key={`mobile-${link.href}`}
+              href={link.href}
+              className="whitespace-nowrap text-xs font-medium text-primary-700 transition hover:text-primary-950 sm:text-sm"
+              {...("external" in link && link.external
+                ? { target: "_blank", rel: "noopener noreferrer" }
+                : {})}
+            >
+              {link.label}
+            </Link>
+          ))}
+        </nav>
       </Container>
     </header>
   );

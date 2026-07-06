@@ -66,7 +66,7 @@ export async function KitaplikMyBooksPage() {
                     <img
                       src={book.cover_image_url}
                       alt=""
-                      className="h-24 w-16 shrink-0 rounded object-cover"
+                      className="h-24 w-24 shrink-0 rounded bg-primary-50 object-contain p-1"
                     />
                   ) : (
                     <div className="h-24 w-16 shrink-0 rounded bg-primary-200" />

@@ -29,16 +29,16 @@ export async function KitaplikBookDetailPage({
         </Link>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-start">
-          <div className="overflow-hidden rounded-2xl border border-primary-100 bg-primary-50">
+          <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl border border-primary-100 bg-primary-50 p-4">
             {book.cover_image_url ? (
               // eslint-disable-next-line @next/next/no-img-element
               <img
                 src={book.cover_image_url}
                 alt={book.title}
-                className="aspect-[3/4] w-full object-cover"
+                className="max-h-full max-w-full object-contain"
               />
             ) : (
-              <div className="aspect-[3/4] w-full bg-gradient-to-br from-primary-200 to-primary-300" />
+              <div className="h-full w-full bg-gradient-to-br from-primary-200 to-primary-300" />
             )}
           </div>
 
