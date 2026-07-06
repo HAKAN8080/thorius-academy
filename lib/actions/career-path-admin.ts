@@ -175,6 +175,7 @@ export async function saveCareerPath(
     revalidatePath(`/panel/kariyer-yolu/${pathRow.slug}`);
     revalidatePath("/kariyer-yolu");
     revalidatePath(`/kariyer-yolu/${pathRow.slug}`);
+    revalidatePath("/");
 
     return { success: true, id: pathId, slug: pathRow.slug };
   } catch (error) {
@@ -203,6 +204,7 @@ export async function deleteCareerPath(
     revalidatePath("/panel/yonetim/kariyer-yollari");
     revalidatePath("/panel/kariyer-yolu");
     revalidatePath("/kariyer-yolu");
+    revalidatePath("/");
 
     return { success: true };
   } catch (error) {

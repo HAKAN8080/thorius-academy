@@ -8,6 +8,7 @@ import { CourseShowcaseSection } from "@/components/marketing/course-showcase-se
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
+import { loadCareerPathBySlug } from "@/lib/course/load-career-path-by-slug";
 import { pickCareerPathCourses } from "@/lib/course/pick-career-path-courses";
 import {
   filterCoursesByCategorySlugs,
@@ -22,8 +23,11 @@ import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
 import type { CourseProduct } from "@/types/course-product";
 
 export async function AcademyHomePage() {
-  const { courses: allCourses, categories, products, stats } =
-    await getHomepageCatalog();
+  const [{ courses: allCourses, categories, products, stats }, retailPath] =
+    await Promise.all([
+      getHomepageCatalog(),
+      loadCareerPathBySlug("retail-planning", RETAIL_PLANNING_PATH),
+    ]);
 
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
@@ -54,9 +58,11 @@ export async function AcademyHomePage() {
     ["insan-kaynaklari", "yoga"],
     5,
   );
+  const retailPlanningSteps =
+    retailPath?.path.steps ?? RETAIL_PLANNING_PATH.steps;
   const retailPlanningCourses = pickCareerPathCourses(
     allCourses,
-    RETAIL_PLANNING_PATH.steps,
+    retailPlanningSteps,
   );
 
   return (
