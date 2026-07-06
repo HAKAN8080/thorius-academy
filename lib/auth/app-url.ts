@@ -3,6 +3,7 @@
  */
 import {
   getAcademyOrigin,
+  getCoachingOrigin,
   getCompanyOrigin,
   getKitaplikOrigin,
   getShopOrigin,
@@ -24,6 +25,7 @@ function getTrustedRedirectOrigins(): Set<string> {
       getKitaplikOrigin(),
       getShopOrigin(),
       getCompanyOrigin(),
+      getCoachingOrigin(),
       "http://localhost:3000",
     ].map((origin) => origin.replace(/\/$/, "")),
   );

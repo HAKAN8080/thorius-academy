@@ -8,6 +8,7 @@ import {
   registerUser,
   resendSignupWelcomeEmail,
 } from "@/lib/auth/register-user";
+import { clearCoachingAuthCookie } from "@/lib/auth/ecosystem-cookies";
 import { createClient } from "@/lib/supabase/server";
 
 export interface AuthActionState {
@@ -210,7 +211,8 @@ export async function updatePassword(
 
 export async function signOut(): Promise<void> {
   const supabase = await createClient();
-  await supabase.auth.signOut();
+  await supabase.auth.signOut({ scope: "global" });
+  await clearCoachingAuthCookie();
   revalidatePath("/", "layout");
   redirect("/giris");
 }

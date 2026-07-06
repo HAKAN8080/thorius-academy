@@ -63,6 +63,15 @@ export function getShopOrigin(): string {
   return configured || "https://shop.thorius.com.tr";
 }
 
+/** Koçluk platformu. */
+export function getCoachingOrigin(): string {
+  const configured = process.env.NEXT_PUBLIC_COACHING_SITE_URL?.replace(
+    /\/$/,
+    "",
+  );
+  return configured || "https://coaching.thorius.com.tr";
+}
+
 /** E-kitap + basılı kitap vitrin. */
 export function getKitaplikOrigin(): string {
   const configured = process.env.NEXT_PUBLIC_KITAPLIK_SITE_URL?.replace(
