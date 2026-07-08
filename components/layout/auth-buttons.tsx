@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 interface AuthButtonsProps {
   onNavigate?: () => void;
   className?: string;
+  tone?: "light" | "dark";
   authUrls?: {
     loginHref: string;
     registerHref: string;
@@ -19,6 +20,7 @@ interface AuthButtonsProps {
 export function AuthButtons({
   onNavigate,
   className,
+  tone = "light",
   authUrls,
 }: AuthButtonsProps) {
   const loginHref = authUrls?.loginHref ?? "/giris";
@@ -47,7 +49,13 @@ export function AuthButtons({
   if (loading) {
     return (
       <div className={className}>
-        <div className="h-9 w-24 animate-pulse rounded-md bg-primary-100" />
+        <div
+          className={
+            tone === "dark"
+              ? "h-9 w-24 animate-pulse rounded-md bg-white/10"
+              : "h-9 w-24 animate-pulse rounded-md bg-primary-100"
+          }
+        />
       </div>
     );
   }
@@ -66,7 +74,15 @@ export function AuthButtons({
 
   return (
     <div className={className}>
-      <Button variant="ghost" asChild>
+      <Button
+        variant="ghost"
+        asChild
+        className={
+          tone === "dark"
+            ? "text-primary-100 hover:bg-white/10 hover:text-white"
+            : undefined
+        }
+      >
         <Link href={loginHref} onClick={onNavigate}>
           Giriş Yap
         </Link>

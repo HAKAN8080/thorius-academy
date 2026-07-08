@@ -83,8 +83,12 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
           ))}
         </nav>
 
-        <div className="hidden md:flex [&_button]:text-primary-100 [&_button:hover]:bg-white/10 [&_button:hover]:text-white">
-          <AuthButtons className="flex items-center gap-3" authUrls={authUrls} />
+        <div className="hidden md:flex">
+          <AuthButtons
+            className="flex items-center gap-3"
+            authUrls={authUrls}
+            tone="dark"
+          />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
