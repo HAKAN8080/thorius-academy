@@ -20,7 +20,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
 
   return (
     <section
-      className="border-b border-primary-100 bg-white py-4 md:py-5"
+      className="border-b border-white/10 bg-[var(--thorius-logo-bg)] py-4 md:py-5"
       aria-label="Kurs kategorileri"
     >
       <Container size="wide">

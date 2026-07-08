@@ -66,7 +66,7 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
   const [open, setOpen] = useState(false);
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b border-primary-100/60 bg-white/80 backdrop-blur-md">
+    <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[var(--thorius-logo-bg)]">
       <Container size="wide" className="flex h-16 items-center justify-between gap-4">
         <Logo variant="compact" />
 
@@ -78,19 +78,24 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
             <HeaderNavItem
               key={link.href}
               link={link}
-              className="text-sm font-medium text-primary-700 transition-colors hover:text-primary-900"
+              className="text-sm font-medium text-primary-100 transition-colors hover:text-white"
             />
           ))}
         </nav>
 
-        <div className="hidden md:flex">
+        <div className="hidden md:flex [&_button]:text-primary-100 [&_button:hover]:bg-white/10 [&_button:hover]:text-white">
           <AuthButtons className="flex items-center gap-3" authUrls={authUrls} />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
-              <Button variant="ghost" size="icon" aria-label="Menüyü aç">
+              <Button
+                variant="ghost"
+                size="icon"
+                aria-label="Menüyü aç"
+                className="text-primary-100 hover:bg-white/10 hover:text-white"
+              >
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
