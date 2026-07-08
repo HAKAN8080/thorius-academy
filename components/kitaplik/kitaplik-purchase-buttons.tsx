@@ -83,7 +83,7 @@ export function KitaplikPurchaseButtons({
             Kapınıza kargo ile gönderilir. İndirilemez dijital kopya içermez.
           </p>
           <Button
-            className="w-full bg-primary-950 font-semibold hover:bg-primary-900"
+            className="w-full bg-primary-950 font-semibold text-accent-500 hover:bg-primary-900 hover:text-accent-400"
             disabled={!printedInStock}
             onClick={() => goToCheckout(printedWcProductId, false)}
           >
