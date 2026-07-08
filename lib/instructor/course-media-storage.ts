@@ -52,8 +52,41 @@ export function buildLessonPdfStoragePath(
   lessonId: string,
   safeBaseName: string,
 ): string {
+  return buildLessonAttachmentStoragePath(
+    instructorWpUserId,
+    courseCacheId,
+    lessonId,
+    safeBaseName,
+    "pdf",
+  );
+}
+
+export function buildLessonExcelStoragePath(
+  instructorWpUserId: number,
+  courseCacheId: string,
+  lessonId: string,
+  safeBaseName: string,
+  fileName: string,
+): string {
+  const ext = fileName.toLowerCase().endsWith(".xls") ? "xls" : "xlsx";
+  return buildLessonAttachmentStoragePath(
+    instructorWpUserId,
+    courseCacheId,
+    lessonId,
+    safeBaseName,
+    ext,
+  );
+}
+
+function buildLessonAttachmentStoragePath(
+  instructorWpUserId: number,
+  courseCacheId: string,
+  lessonId: string,
+  safeBaseName: string,
+  extension: string,
+): string {
   const stamp = Date.now();
-  return `${instructorWpUserId}/courses/${courseCacheId}/lessons/${lessonId}/attachments/${stamp}-${safeBaseName}.pdf`;
+  return `${instructorWpUserId}/courses/${courseCacheId}/lessons/${lessonId}/attachments/${stamp}-${safeBaseName}.${extension}`;
 }
 
 export function getCourseMediaPublicUrl(path: string): string {

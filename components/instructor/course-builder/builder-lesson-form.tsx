@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label";
 import { ImageUploadField } from "@/components/instructor/image-upload-field";
 import { LessonVideoSourceField } from "@/components/instructor/lesson-video-source-field";
 import { LessonPdfUploadField } from "@/components/instructor/lesson-pdf-upload-field";
+import { LessonDocumentUploadField } from "@/components/instructor/lesson-document-upload-field";
 import "@uiw/react-md-editor/markdown-editor.css";
 
 const MarkdownEditor = dynamic(
@@ -57,6 +58,8 @@ export function BuilderLessonForm({
   const [featuredImageUrl, setFeaturedImageUrl] = useState("");
   const [attachmentUrl, setAttachmentUrl] = useState("");
   const [attachmentName, setAttachmentName] = useState("");
+  const [excelAttachmentUrl, setExcelAttachmentUrl] = useState("");
+  const [excelAttachmentName, setExcelAttachmentName] = useState("");
   const [isFreePreview, setIsFreePreview] = useState(false);
   const [published, setPublished] = useState(true);
 
@@ -69,6 +72,8 @@ export function BuilderLessonForm({
     setFeaturedImageUrl(lesson.featured_image_url ?? "");
     setAttachmentUrl(lesson.attachment_url ?? "");
     setAttachmentName(lesson.attachment_name ?? "");
+    setExcelAttachmentUrl(lesson.excel_attachment_url ?? "");
+    setExcelAttachmentName(lesson.excel_attachment_name ?? "");
     setIsFreePreview(lesson.is_free_preview);
     setPublished(lesson.published);
   }, [lesson]);
@@ -100,6 +105,8 @@ export function BuilderLessonForm({
       featured_image_url: featuredImageUrl || null,
       attachment_url: attachmentUrl || null,
       attachment_name: attachmentName || null,
+      excel_attachment_url: excelAttachmentUrl || null,
+      excel_attachment_name: excelAttachmentName || null,
       is_free_preview: isFreePreview,
       published,
     });
@@ -193,6 +200,19 @@ export function BuilderLessonForm({
           onChange={(next) => {
             setAttachmentUrl(next?.url ?? "");
             setAttachmentName(next?.name ?? "");
+          }}
+          courseCacheId={courseCacheId}
+          lessonId={lesson.id}
+          disabled={isPending}
+        />
+
+        <LessonDocumentUploadField
+          kind="excel"
+          attachmentUrl={excelAttachmentUrl}
+          attachmentName={excelAttachmentName}
+          onChange={(next) => {
+            setExcelAttachmentUrl(next?.url ?? "");
+            setExcelAttachmentName(next?.name ?? "");
           }}
           courseCacheId={courseCacheId}
           lessonId={lesson.id}

@@ -28,6 +28,8 @@ interface DbLessonRow {
   featured_image_url: string | null;
   attachment_url: string | null;
   attachment_name: string | null;
+  excel_attachment_url: string | null;
+  excel_attachment_name: string | null;
   duration_seconds: number | null;
   duration_minutes: number | null;
   is_free: boolean;
@@ -65,6 +67,8 @@ function mapLesson(row: DbLessonRow): BuilderLesson {
     featured_image_url: row.featured_image_url,
     attachment_url: row.attachment_url,
     attachment_name: row.attachment_name,
+    excel_attachment_url: row.excel_attachment_url,
+    excel_attachment_name: row.excel_attachment_name,
     duration_hours: parts.hours,
     duration_minutes: parts.minutes,
     duration_seconds: parts.seconds,
@@ -340,6 +344,8 @@ export async function saveBuilderLesson(
       featured_image_url: input.featured_image_url?.trim() || null,
       attachment_url: input.attachment_url?.trim() || null,
       attachment_name: input.attachment_name?.trim() || null,
+      excel_attachment_url: input.excel_attachment_url?.trim() || null,
+      excel_attachment_name: input.excel_attachment_name?.trim() || null,
       updated_at: new Date().toISOString(),
     };
 

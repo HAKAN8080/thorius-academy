@@ -15,6 +15,7 @@ import { VideoPlayer } from "@/components/player/video-player";
 import { CourseLessonsEmpty } from "@/components/player/course-lessons-empty";
 import { MarkLessonCompleteButton } from "@/components/player/mark-lesson-complete-button";
 import { LessonSidebar } from "@/components/player/lesson-sidebar";
+import { LessonAttachments } from "@/components/player/lesson-attachments";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import { groupLessonsByTopic } from "@/lib/lessons/group-by-topic";
 import { pickActiveLesson } from "@/lib/lessons/pick-active-lesson";
@@ -130,6 +131,13 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
                 isCompleted={!!activeProgress?.completed}
               />
             ) : null}
+
+            <LessonAttachments
+              pdfUrl={activeLesson.attachment_url}
+              pdfName={activeLesson.attachment_name}
+              excelUrl={activeLesson.excel_attachment_url}
+              excelName={activeLesson.excel_attachment_name}
+            />
 
             <div className="rounded-2xl border border-primary-100 bg-white p-6">
               <div className="mb-3 flex items-start justify-between gap-4">

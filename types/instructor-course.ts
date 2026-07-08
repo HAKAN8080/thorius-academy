@@ -56,6 +56,8 @@ export interface BuilderLesson {
   featured_image_url: string | null;
   attachment_url: string | null;
   attachment_name: string | null;
+  excel_attachment_url: string | null;
+  excel_attachment_name: string | null;
   duration_hours: number;
   duration_minutes: number;
   duration_seconds: number;
@@ -122,6 +124,8 @@ export interface BuilderLessonInput {
   featured_image_url?: string | null;
   attachment_url?: string | null;
   attachment_name?: string | null;
+  excel_attachment_url?: string | null;
+  excel_attachment_name?: string | null;
   duration_hours?: number;
   duration_minutes?: number;
   duration_seconds?: number;

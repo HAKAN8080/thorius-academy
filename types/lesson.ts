@@ -14,6 +14,10 @@ export interface Lesson {
   topic_order: number | null;
   section_id: string | null;
   is_free: boolean;
+  attachment_url: string | null;
+  attachment_name: string | null;
+  excel_attachment_url: string | null;
+  excel_attachment_name: string | null;
   created_at: string;
   updated_at: string;
 }
