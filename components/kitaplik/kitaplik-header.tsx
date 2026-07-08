@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Library, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { Logo } from "@/components/layout/logo";
+import { KitaplikLogo } from "@/components/kitaplik/kitaplik-logo";
 import {
   academyPath,
   getCompanyOrigin,
@@ -31,9 +31,7 @@ export async function KitaplikHeader() {
     <header className="sticky top-0 z-50 border-b border-primary-100/80 bg-white/90 backdrop-blur-md">
       <Container size="wide">
         <div className="flex h-16 items-center justify-between gap-3">
-          <Link href="/" className="shrink-0">
-            <Logo variant="compact" />
-          </Link>
+          <KitaplikLogo className="shrink-0" variant="compact" />
 
           <nav
             className="hidden min-w-0 flex-1 items-center justify-center gap-4 overflow-x-auto px-2 sm:gap-5 md:flex lg:gap-6"

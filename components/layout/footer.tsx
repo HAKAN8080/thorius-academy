@@ -1,10 +1,12 @@
 import Link from "next/link";
 import { headers } from "next/headers";
 import { Container } from "@/components/layout/container";
+import { KitaplikLogo } from "@/components/kitaplik/kitaplik-logo";
 import { Logo } from "@/components/layout/logo";
 import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import {
+  getSiteModeFromHost,
   isCompanySiteHost,
   kitaplikPath,
   resolveAcademyHref,
@@ -96,6 +98,7 @@ function FooterLink({ href, label }: { href: string; label: string }) {
 export async function Footer() {
   const host = headers().get("host");
   const isCompany = isCompanySiteHost(host);
+  const siteMode = getSiteModeFromHost(host);
   const resolveHref = (href: string) => resolveAcademyHref(href, isCompany);
 
   const categories = await getFooterCategoriesFromCache();
@@ -137,7 +140,11 @@ export async function Footer() {
     <footer className="bg-primary-900 text-white">
       <Container size="wide" className="py-12">
         <div className="mb-10 border-b border-primary-700 pb-10">
-          <Logo variant="full" />
+          {siteMode === "kitaplik" ? (
+            <KitaplikLogo variant="full" />
+          ) : (
+            <Logo variant="full" />
+          )}
         </div>
 
         <div className="grid gap-10 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6">
