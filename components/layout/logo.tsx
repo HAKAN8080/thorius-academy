@@ -28,8 +28,8 @@ export function Logo({
       <Image
         src="/images/thorius-logo.png"
         alt="Thorius"
-        width={397}
-        height={373}
+        width={1024}
+        height={1024}
         className={cn("shrink-0 object-contain", variantHeights[variant])}
         priority={variant !== "icon"}
       />
