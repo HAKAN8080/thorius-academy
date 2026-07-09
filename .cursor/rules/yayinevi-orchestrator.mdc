@@ -1,0 +1,35 @@
+---
+description: Thorius Yayınevi TYMM soru pipeline orchestrator — agent akışı ve insan onay kapısı
+globs: lib/yayinevi/**,components/yayinevi/**,app/(app)/yayinevi/**,planning/yayinevi/**
+alwaysApply: false
+---
+
+# Yayınevi Orchestrator (Novel Writer tarzı)
+
+## Akış
+
+```
+curriculum-planner → context-designer → visual-generator → question-writer
+  → distractor-specialist → math-validator → meb-compliance-editor → İNSAN ONAY
+```
+
+Kod girişi: `lib/yayinevi/orchestrator/run-pipeline.ts`
+
+## Kurallar
+
+- MEB Bağlam Temelli Çoktan Seçmeli Soru Yazım Kılavuzu (Mart 2026) esas alınır.
+- "Hepsi", "Hiçbiri" şıkları yasak.
+- Bağlam dekor olamaz; görsel çözüm için zorunlu olmalı.
+- `approved` statüsü yalnızca editör onayı ile (UI veya `approveContextSetAction`).
+- Faz 1 kapsamı: `MAT.8.1.1` (Tema 1 / ünite 472).
+- İlerleme: `planning/yayinevi/tema-1-progress.json`
+
+## Agent dosyaları
+
+Cursor geliştirme rehberi: `.cursor/agents/yayinevi-*.md`
+
+## Yeni agent eklerken
+
+1. `lib/yayinevi/agents/<name>.ts` implement et
+2. `run-pipeline.ts` içine sırayla ekle ve `pipeline_log` yaz
+3. Prompt'ta `MEB_CORE_RULES` kullan

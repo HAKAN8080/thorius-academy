@@ -36,6 +36,8 @@ function mapCourseToCardProps(course: CatalogCourseItem) {
     thumbnail: course.coverImageUrl ?? undefined,
     category: course.category ?? undefined,
     level: course.level,
+    language: course.language,
+    subtitleLanguage: course.subtitleLanguage,
     priceNormal,
     priceSale,
   };

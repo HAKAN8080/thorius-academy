@@ -1,0 +1,53 @@
+{
+  "grade": 8,
+  "subject": "matematik",
+  "themeNumber": 1,
+  "title": "Sayılar ve Nicelikler",
+  "tymmUnitUrl": "https://tymm.meb.gov.tr/ortaokul-matematik-dersi/unite/472",
+  "areaSkills": ["MAB1. Matematiksel Muhakeme"],
+  "conceptualSkills": [
+    "KB2.10. Çıkarım Yapma",
+    "KB2.14. Yorumlama",
+    "KB2.17. Değerlendirme"
+  ],
+  "outcomes": [
+    {
+      "code": "MAT.8.1.1",
+      "title": "Farklı bağlamlardaki üslü ifadelere, özelliklerine ve üslü ifadelerle yapılan işlemlere ilişkin çıkarım yapabilme",
+      "contentFramework": [
+        "Üslü İfadeler, Özellikleri ve İşlemler"
+      ],
+      "contextHints": [
+        "Bakteri çoğalması (zamana bağlı üslü artış)",
+        "Hafıza kartı veri boyutları (kilobayt, megabayt)",
+        "Kâğıdı art arda ikiye katlama ve parça sayısı",
+        "Hücre bölünmesi",
+        "Deprem şiddeti ölçümü",
+        "Küresel ısınma ve nüfus tahmini verileri"
+      ],
+      "keyConcepts": ["üslü ifadeler", "tekrarlı çarpma", "üs özellikleri"],
+      "processComponents": [
+        {
+          "letter": "a",
+          "description": "Karşılaştığı bağlamlardaki üslü ifadeler, özellikleri ve üslü ifadelerle yapılan işlemlere yönelik varsayımlarda bulunur."
+        },
+        {
+          "letter": "b",
+          "description": "Üslü ifadeleri, özelliklerini ve üslü ifadelerle yapılan işlemleri inceleyerek genellemeleri belirler."
+        },
+        {
+          "letter": "c",
+          "description": "Ulaştığı genellemelerin varsayımını karşılayıp karşılamadığını örnekler ve çeşitli temsiller (şekil ve tablo gibi) ile sınar."
+        },
+        {
+          "letter": "ç",
+          "description": "Üslü ifadelere, özelliklere ve üslü ifadelerle işlem yapmaya ilişkin önermeleri sözel ve cebirsel olarak ifade eder."
+        },
+        {
+          "letter": "d",
+          "description": "Sunduğu önermelerin matematiksel süreçlere katkısını sözel olarak açıklar."
+        }
+      ]
+    }
+  ]
+}

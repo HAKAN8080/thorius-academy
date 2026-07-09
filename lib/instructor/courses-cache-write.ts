@@ -74,6 +74,17 @@ export function normalizeCoursesCacheWritePayload(
     next.language = toCoursesCacheLanguageDbValue(next.language);
   }
 
+  if (
+    next.subtitle_language === null ||
+    next.subtitle_language === undefined ||
+    next.subtitle_language === "" ||
+    next.subtitle_language === "Yok"
+  ) {
+    next.subtitle_language = null;
+  } else if (typeof next.subtitle_language === "string") {
+    next.subtitle_language = toCoursesCacheLanguageDbValue(next.subtitle_language);
+  }
+
   return next;
 }
 

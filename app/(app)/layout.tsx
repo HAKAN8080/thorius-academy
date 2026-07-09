@@ -1,4 +1,6 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
+import { buildLoginRedirectPath } from "@/lib/auth/protected-paths";
 import { createClient } from "@/lib/supabase/server";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { syncLegacyUserData } from "@/lib/tutor/sync-legacy-user-data";
@@ -18,7 +20,9 @@ export default async function AppLayout({
   } = await supabase.auth.getUser();
 
   if (!user) {
-    redirect("/giris");
+    const headerStore = await headers();
+    const pathname = headerStore.get("x-pathname") ?? "/panel";
+    redirect(buildLoginRedirectPath(pathname));
   }
 
   const metadataName =
@@ -62,6 +66,7 @@ export default async function AppLayout({
       avatarUrl={shell.avatarUrl}
       isInstructor={shell.isInstructor}
       isCareerPathAdmin={shell.isCareerPathAdmin}
+      canAccessYayinevi={shell.canAccessYayinevi}
     >
       {children}
     </TutorPanelShell>

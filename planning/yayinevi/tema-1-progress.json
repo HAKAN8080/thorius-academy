@@ -1,0 +1,27 @@
+{
+  "theme": "Sayılar ve Nicelikler",
+  "tymmUnitUrl": "https://tymm.meb.gov.tr/ortaokul-matematik-dersi/unite/472",
+  "targetQuestions": 40,
+  "approvedQuestions": 0,
+  "pendingHumanReview": 0,
+  "outcomes": {
+    "MAT.8.1.1": {
+      "title": "Üslü ifadeler — çıkarım yapabilme",
+      "processComponents": {
+        "a": { "setsApproved": 0, "setsPending": 0, "targetSets": 2 },
+        "b": { "setsApproved": 0, "setsPending": 0, "targetSets": 2 },
+        "c": { "setsApproved": 0, "setsPending": 0, "targetSets": 2 },
+        "ç": { "setsApproved": 0, "setsPending": 0, "targetSets": 2 },
+        "d": { "setsApproved": 0, "setsPending": 0, "targetSets": 2 }
+      }
+    }
+  },
+  "nextAction": "generate_context_set",
+  "nextTarget": {
+    "outcomeCode": "MAT.8.1.1",
+    "processComponentLetter": "c",
+    "difficulty": "orta"
+  },
+  "pipelineVersion": "1.0",
+  "lastUpdated": null
+}

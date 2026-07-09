@@ -14,6 +14,7 @@ export const CONSULTING_DOMAINS = [
 ] as const;
 
 export const AI4U_RETAIL_URL = "https://siriusabcx.com/";
+export const KITAPLIK_ORIGIN = "https://kitaplik.thorius.com.tr";
 
 export const VALUE_CHAIN_STEPS = [
   {
@@ -44,6 +45,15 @@ export const VALUE_CHAIN_STEPS = [
   },
   {
     step: 4,
+    title: "Thorius Yayınevi & Kitaplık",
+    description:
+      "Kültür ve Turizm Bakanlığı onaylı yayınevi faaliyetimizle uzmanlık kitaplarını, e-kitapları ve basılı yayınları Thorius Kitaplık üzerinden sunuyoruz.",
+    href: KITAPLIK_ORIGIN,
+    cta: "Kitaplık'a git",
+    external: true,
+  },
+  {
+    step: 5,
     title: "Thorius Coaching",
     description:
       "Bireysel kariyer ve liderlik gelişimi için koçluk ve mentorluk ile desteği tamamlıyoruz.",

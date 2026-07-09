@@ -564,6 +564,7 @@ export async function saveCourseBasics(
       sale_price: input.sale_price ?? null,
       level: input.level ?? "Başlangıç",
       language: input.language ?? "Türkçe",
+      subtitle_language: input.subtitle_language ?? null,
       category: input.category?.trim() || null,
       visibility: input.visibility,
       seo_title: input.seo_title?.trim() || null,

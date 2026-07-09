@@ -5,6 +5,7 @@ import {
   buildCategories,
   type CatalogCourseItem,
 } from "@/lib/course/courses-cache-catalog";
+import { resolveCourseLanguageMeta } from "@/lib/course/course-language";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
 import {
   canonicalizeCategorySlug,
@@ -25,7 +26,7 @@ import type { Course, WPCategory } from "@/types/wordpress";
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
 
 function stableNumericId(value: string): number {
   let hash = 0;
@@ -67,6 +68,11 @@ function mapCatalogRow(row: Record<string, unknown>): CatalogCourseItem | null {
       ? null
       : Number(row.sale_price);
 
+  const languageMeta = resolveCourseLanguageMeta(
+    row.language as string | null | undefined,
+    row.subtitle_language as string | null | undefined,
+  );
+
   return {
     id: String(row.id),
     slug,
@@ -79,6 +85,8 @@ function mapCatalogRow(row: Record<string, unknown>): CatalogCourseItem | null {
     coverImageUrl: (row.cover_image_url as string | null) ?? null,
     category: (row.category as string | null)?.trim() || null,
     level: fromCoursesCacheLevelLabel(row.level as string | null | undefined),
+    language: languageMeta.language,
+    subtitleLanguage: languageMeta.subtitleLanguage,
     pricingModel,
     price,
     salePrice,
@@ -116,6 +124,8 @@ function mapToCourse(item: CatalogCourseItem): Course {
     wpLink: `/kurslar/${item.slug}`,
     publishedDate: new Date().toISOString(),
     level: item.level,
+    language: item.language,
+    subtitleLanguage: item.subtitleLanguage,
   };
 }
 
@@ -218,7 +228,7 @@ async function finalizeHomepageCatalog(
 }
 
 export async function getHomepageCatalogFromCache(): Promise<HomepageCatalog> {
-  const raw = await unstable_cache(buildHomepageCatalog, ["homepage-catalog-v5"], {
+  const raw = await unstable_cache(buildHomepageCatalog, ["homepage-catalog-v6"], {
     revalidate: REVALIDATE_SECONDS,
     tags: [
       COURSE_CACHE_TAG,

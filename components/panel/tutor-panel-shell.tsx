@@ -23,23 +23,27 @@ interface TutorPanelShellProps {
   avatarUrl: string | null;
   isInstructor: boolean;
   isCareerPathAdmin: boolean;
+  canAccessYayinevi: boolean;
 }
 
 function NavLink({
   item,
   isInstructor,
   isCareerPathAdmin,
+  canAccessYayinevi,
   pathname,
 }: {
   item: PanelNavItem;
   isInstructor: boolean;
   isCareerPathAdmin: boolean;
+  canAccessYayinevi: boolean;
   pathname: string;
 }) {
   const locked = item.requiresInstructor && !isInstructor;
   const hidden =
     (item.hideForInstructor && isInstructor) ||
-    (item.requiresCareerPathAdmin && !isCareerPathAdmin);
+    (item.requiresCareerPathAdmin && !isCareerPathAdmin) ||
+    (item.requiresYayineviEditor && !canAccessYayinevi);
   const inactive = item.disabled || locked;
 
   if (hidden) {
@@ -92,8 +96,15 @@ function NavLink({
     return null;
   }
 
+  const shouldDisablePrefetch =
+    item.href.startsWith("/panel") || item.href.startsWith("/instructor");
+
   return (
-    <Link href={item.href} className={className}>
+    <Link
+      href={item.href}
+      className={className}
+      prefetch={shouldDisablePrefetch ? false : undefined}
+    >
       {content}
     </Link>
   );
@@ -106,6 +117,7 @@ export function TutorPanelShell({
   avatarUrl,
   isInstructor,
   isCareerPathAdmin,
+  canAccessYayinevi,
 }: TutorPanelShellProps) {
   const pathname = usePathname();
   const displayName = userName ?? userEmail ?? "Kullanıcı";
@@ -178,6 +190,7 @@ export function TutorPanelShell({
                 item={item}
                 isInstructor={isInstructor}
                 isCareerPathAdmin={isCareerPathAdmin}
+                canAccessYayinevi={canAccessYayinevi}
                 pathname={pathname}
               />
             ))}
@@ -197,6 +210,7 @@ export function TutorPanelShell({
                       item={item}
                       isInstructor={isInstructor}
                       isCareerPathAdmin={isCareerPathAdmin}
+                      canAccessYayinevi={canAccessYayinevi}
                       pathname={pathname}
                     />
                   ))}
@@ -218,6 +232,7 @@ export function TutorPanelShell({
                   item={item}
                   isInstructor={isInstructor}
                   isCareerPathAdmin={isCareerPathAdmin}
+                  canAccessYayinevi={canAccessYayinevi}
                   pathname={pathname}
                 />
               ))}

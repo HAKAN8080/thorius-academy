@@ -1,6 +1,7 @@
 import type { CourseProduct } from "@/types/course-product";
 import type { Course } from "@/types/wordpress";
 import type { CourseCardV2Props } from "@/types/course-card";
+import { resolveCourseLanguageMeta } from "@/lib/course/course-language";
 
 interface MapCourseCardOptions {
   product?: CourseProduct | null;
@@ -8,6 +9,8 @@ interface MapCourseCardOptions {
   level?: string;
   lessonCount?: number;
   duration?: string;
+  language?: "tr" | "en";
+  subtitleLanguage?: "tr" | "en" | null;
   rating?: number;
   ratingCount?: number;
 }
@@ -17,6 +20,10 @@ export function mapCourseToCardProps(
   options: MapCourseCardOptions = {},
 ): CourseCardV2Props {
   const product = options.product;
+  const languageMeta = resolveCourseLanguageMeta(
+    options.language ?? course.language,
+    options.subtitleLanguage ?? course.subtitleLanguage,
+  );
 
   return {
     slug: course.slug,
@@ -36,6 +43,8 @@ export function mapCourseToCardProps(
     ratingCount: options.ratingCount ?? course.ratingCount ?? 0,
     lessonCount: options.lessonCount ?? course.lessonCount,
     duration: options.duration ?? course.duration,
+    language: languageMeta.language,
+    subtitleLanguage: languageMeta.subtitleLanguage,
     priceNormal: product?.price_normal ?? null,
     priceSale: product?.price_sale ?? null,
     isEnrolled: options.isEnrolled,

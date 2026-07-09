@@ -1,4 +1,5 @@
 import { getSiteUrl } from "@/lib/seo/site-url";
+import { COMPANY_PROFILE } from "@/lib/content/company-credentials";
 
 export function buildAcademyOrganizationJsonLd() {
   const siteUrl = getSiteUrl();
@@ -23,6 +24,8 @@ export function buildAcademyOrganizationJsonLd() {
       "@context": "https://schema.org",
       "@type": "EducationalOrganization",
       name: "Thorius Academy",
+      legalName: COMPANY_PROFILE.legalName,
+      taxID: COMPANY_PROFILE.taxNo,
       url: siteUrl,
       logo: `${siteUrl}/images/thorius-logo.png`,
       contactPoint: {

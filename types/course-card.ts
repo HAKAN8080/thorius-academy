@@ -14,6 +14,8 @@ export interface CourseCardV2Props {
   ratingCount?: number;
   lessonCount?: number;
   duration?: string;
+  language?: "tr" | "en";
+  subtitleLanguage?: "tr" | "en" | null;
   priceNormal?: number | null;
   priceSale?: number | null;
   isEnrolled?: boolean;

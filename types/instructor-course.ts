@@ -21,6 +21,7 @@ export interface CoursesCache {
   sale_price: number | null;
   level: string;
   language: string;
+  subtitle_language: string | null;
   category: string | null;
   visibility: CourseVisibility;
   what_will_learn: string | null;
@@ -100,6 +101,7 @@ export interface CourseBasicsInput {
   sale_price?: number | null;
   level?: string;
   language?: string;
+  subtitle_language?: string | null;
   category?: string | null;
   visibility: CourseVisibility;
   seo_title?: string | null;

@@ -6,11 +6,11 @@ import {
   BookOpen,
   GraduationCap,
   LayoutDashboard,
-  LogOut,
   Settings,
   Star,
 } from "lucide-react";
 import { NewCourseButton } from "@/components/instructor/course-builder/new-course-button";
+import { SignOutButton } from "@/components/panel/sign-out-button";
 
 interface InstructorShellProps {
   children: React.ReactNode;
@@ -89,13 +89,7 @@ export function InstructorShell({
               <Settings className="h-4 w-4" />
               Ayarlar
             </Link>
-            <Link
-              href="/giris"
-              className="flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm text-primary-600 hover:bg-primary-50"
-            >
-              <LogOut className="h-4 w-4" />
-              Çıkış yap
-            </Link>
+            <SignOutButton />
           </div>
         </aside>
 

@@ -1,9 +1,10 @@
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useState, type FormEvent } from "react";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
-import { signIn, type AuthActionState } from "@/lib/actions/auth";
+import { safeRedirectTarget } from "@/lib/auth/app-url";
+import { clearStaleSupabaseAuthCookies } from "@/lib/supabase/auth-cookies";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,27 +18,72 @@ import {
 } from "@/components/ui/card";
 import { ForgotPasswordForm } from "@/components/auth/forgot-password-form";
 
-const initialState: AuthActionState = {};
-
-function SubmitButton() {
-  const { pending } = useFormStatus();
-  return (
-    <Button type="submit" variant="gold" className="w-full" disabled={pending}>
-      {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
-    </Button>
-  );
-}
-
 interface LoginFormProps {
   callbackError?: string;
 }
 
+function mapSignInError(message: string): string {
+  const normalized = message.toLowerCase();
+  if (normalized.includes("email not confirmed")) {
+    return "E-posta adresinizi henüz doğrulamadınız. Gelen kutunuzdaki bağlantıya tıklayın.";
+  }
+  if (
+    normalized.includes("invalid login credentials") ||
+    normalized.includes("invalid credentials")
+  ) {
+    return "E-posta veya parola hatalı. Kayıt sonrası doğrulama mailine tıkladıysanız aynı parolayı kullanın; gerekirse parola sıfırlayın.";
+  }
+  return "Giriş başarısız. Bilgilerinizi kontrol edin.";
+}
+
 export function LoginForm({ callbackError }: LoginFormProps) {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/panel";
-  const [state, formAction] = useFormState(signIn, initialState);
+  const redirectTo = safeRedirectTarget(searchParams.get("redirect"));
+  const [error, setError] = useState<string | null>(callbackError ?? null);
+  const [pending, setPending] = useState(false);
 
-  const displayError = state.error ?? callbackError;
+  async function handleSubmit(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setPending(true);
+
+    const formData = new FormData(event.currentTarget);
+    const email = formData.get("email");
+    const password = formData.get("password");
+
+    if (typeof email !== "string" || typeof password !== "string") {
+      setError("Geçerli e-posta ve parola girin.");
+      setPending(false);
+      return;
+    }
+
+    try {
+      clearStaleSupabaseAuthCookies();
+
+      const response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+        credentials: "include",
+      });
+
+      const payload = (await response.json().catch(() => null)) as {
+        error?: string;
+        ok?: boolean;
+      } | null;
+
+      if (!response.ok || !payload?.ok) {
+        setError(mapSignInError(payload?.error ?? "Giriş başarısız."));
+        setPending(false);
+        return;
+      }
+
+      window.location.assign(redirectTo);
+    } catch {
+      setError("Giriş sırasında beklenmeyen bir hata oluştu.");
+      setPending(false);
+    }
+  }
 
   return (
     <Card className="border-primary-100 shadow-lg">
@@ -49,17 +95,16 @@ export function LoginForm({ callbackError }: LoginFormProps) {
           senkronlanır.
         </CardDescription>
       </CardHeader>
-      <form action={formAction}>
-        <input type="hidden" name="redirect" value={redirectTo} />
+      <form onSubmit={handleSubmit} data-no-pending-cursor="true">
         <CardContent className="space-y-4">
-          {displayError && (
+          {error ? (
             <p
               className="rounded-lg bg-destructive/10 px-3 py-2 text-sm text-destructive"
               role="alert"
             >
-              {displayError}
+              {error}
             </p>
-          )}
+          ) : null}
           <div className="space-y-2">
             <Label htmlFor="email">E-posta</Label>
             <Input
@@ -81,7 +126,9 @@ export function LoginForm({ callbackError }: LoginFormProps) {
               autoComplete="current-password"
             />
           </div>
-          <SubmitButton />
+          <Button type="submit" variant="gold" className="w-full" disabled={pending}>
+            {pending ? "Giriş yapılıyor..." : "Giriş Yap"}
+          </Button>
         </CardContent>
         <CardFooter className="flex-col gap-0">
           <p className="text-sm text-muted-foreground">

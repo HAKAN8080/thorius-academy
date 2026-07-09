@@ -1,20 +1,10 @@
 import Link from "next/link";
-import {
-  BookOpen,
-  GraduationCap,
-  Globe,
-  Lightbulb,
-  MessageCircle,
-  Scale,
-  TrendingUp,
-  Trophy,
-  Users,
-} from "lucide-react";
+import { BookOpen, GraduationCap, Lightbulb, Scale, Users } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { InspirationBanner } from "@/components/marketing/inspiration-banner";
+import { CompanyAccreditationsSection } from "@/components/marketing/company-accreditations-section";
+import { CompanyProfileSection } from "@/components/marketing/company-profile-section";
 import {
-  COMPANY_FOUNDERS,
   COMPANY_HERO_SUBTITLE,
   COMPANY_LEGAL_NAME,
   COMPANY_TAGLINE,
@@ -29,16 +19,6 @@ const values = [
   { icon: Lightbulb, label: "Yenilikçilik" },
   { icon: Users, label: "Demokratik" },
 ] as const;
-
-const whyThorius = [
-  { icon: Globe, text: "%100 online erişim" },
-  { icon: GraduationCap, text: "Uzman eğitmen kadrosu" },
-  { icon: Trophy, text: "Katılım / başarı belgeleri" },
-  { icon: MessageCircle, text: "Eğitmenle etkileşimli öğrenme" },
-  { icon: TrendingUp, text: "Kurumsal çözümler ve özel eğitim paketleri" },
-] as const;
-
-const team = COMPANY_FOUNDERS;
 
 export function AboutPageView() {
   return (
@@ -58,7 +38,8 @@ export function AboutPageView() {
         </Container>
       </section>
 
-      <InspirationBanner compact />
+      <CompanyProfileSection />
+      <CompanyAccreditationsSection />
 
       <section className="py-16 md:py-20" aria-labelledby="mission-heading">
         <Container size="narrow">
@@ -166,60 +147,6 @@ export function AboutPageView() {
                   aria-hidden="true"
                 />
                 <span className="font-semibold text-primary-900">{label}</span>
-              </div>
-            ))}
-          </div>
-        </Container>
-      </section>
-
-      <section className="py-16 md:py-20" aria-labelledby="why-heading">
-        <Container size="narrow">
-          <h2
-            id="why-heading"
-            className="mb-4 text-center text-2xl font-bold text-primary-950"
-          >
-            Neden Thorius?
-          </h2>
-          <p className="mx-auto mb-10 max-w-2xl text-center text-primary-700">
-            Amacımız; bireylerin ve kurumların gelişimini destekleyen,
-            sürdürülebilir ve yüksek etkili öğrenme deneyimleri sunmaktır.
-          </p>
-          <ul className="grid gap-4 sm:grid-cols-2">
-            {whyThorius.map(({ icon: Icon, text }) => (
-              <li
-                key={text}
-                className="flex items-center gap-3 rounded-xl border border-primary-100 bg-white px-5 py-4 shadow-sm"
-              >
-                <Icon
-                  className="h-5 w-5 shrink-0 text-accent-600"
-                  aria-hidden="true"
-                />
-                <span className="font-medium text-primary-800">{text}</span>
-              </li>
-            ))}
-          </ul>
-        </Container>
-      </section>
-
-      <section
-        className="border-t border-primary-100 bg-primary-900 py-16 text-white"
-        aria-labelledby="team-heading"
-      >
-        <Container size="narrow">
-          <h2
-            id="team-heading"
-            className="mb-10 text-center text-2xl font-bold"
-          >
-            Ekibimiz
-          </h2>
-          <div className="grid gap-6 sm:grid-cols-2">
-            {team.map((member) => (
-              <div
-                key={member.name}
-                className="rounded-2xl border border-primary-700 bg-primary-800/50 p-8 text-center"
-              >
-                <p className="text-lg font-bold text-white">{member.name}</p>
-                <p className="mt-1 text-sm text-accent-400">{member.role}</p>
               </div>
             ))}
           </div>

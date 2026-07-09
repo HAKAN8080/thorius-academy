@@ -96,6 +96,8 @@ export interface Course {
   lessonCount?: number;
   duration?: string;
   durationSeconds?: number;
+  language?: "tr" | "en";
+  subtitleLanguage?: "tr" | "en" | null;
   rating?: number;
   ratingCount?: number;
 }

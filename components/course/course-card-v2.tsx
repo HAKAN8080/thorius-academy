@@ -5,6 +5,7 @@ import Image from "next/image";
 import { Star, BookOpen, Clock, Bookmark, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Badge } from "@/components/ui/badge";
+import { CourseLanguageBadges } from "@/components/course/course-language-badges";
 
 import type { CourseCardV2Props } from "@/types/course-card";
 
@@ -23,6 +24,8 @@ export function CourseCardV2({
   ratingCount = 0,
   lessonCount,
   duration,
+  language = "tr",
+  subtitleLanguage,
   priceNormal,
   priceSale,
   isEnrolled,
@@ -76,6 +79,14 @@ export function CourseCardV2({
             <span className="text-4xl font-bold text-primary-300">T</span>
           </div>
         )}
+
+        <div className="absolute bottom-3 left-3 z-10">
+          <CourseLanguageBadges
+            language={language}
+            subtitleLanguage={subtitleLanguage}
+            overlay
+          />
+        </div>
 
         <div className="absolute left-3 top-3 flex flex-wrap gap-2">
           {hasDiscount && (

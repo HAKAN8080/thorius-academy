@@ -10,6 +10,7 @@ import {
   buildCoursesCacheDraftPayload,
   buildCoursesCacheSlugFields,
 } from "@/lib/instructor/courses-cache-write";
+import { fromCoursesCacheSubtitleLanguageLabel } from "@/lib/course/course-language";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 
 export { slugifyCourseTitle, buildCoursesCacheDraftPayload, buildCoursesCacheSlugFields };
@@ -56,6 +57,13 @@ export function normalizeCoursesCacheRow(
     language: fromCoursesCacheLanguageLabel(
       row.language as string | null | undefined,
     ),
+    subtitle_language: fromCoursesCacheSubtitleLanguageLabel(
+      row.subtitle_language as string | null | undefined,
+    ) === "Yok"
+      ? null
+      : fromCoursesCacheLanguageLabel(
+          row.subtitle_language as string | null | undefined,
+        ),
     category: (row.category as string | null) ?? null,
     visibility:
       row.visibility === "private"

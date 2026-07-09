@@ -40,6 +40,16 @@ function sortCoursesForDisplay(courses: Course[]): Course[] {
   });
 }
 
+function courseMatchesAnyCategorySlug(
+  course: Course,
+  categorySlugs: string[],
+): boolean {
+  const targets = new Set(categorySlugs.map(canonicalizeCategorySlug));
+  return course.categories.some((category) =>
+    targets.has(canonicalizeCategorySlug(category.slug)),
+  );
+}
+
 function pickBestCourse(courses: Course[]): Course | undefined {
   if (courses.length === 0) {
     return undefined;
@@ -92,6 +102,46 @@ export function pickCoursesByCategorySlug(
   limit = 5,
 ): Course[] {
   return pickCoursesByCategorySlugs(courses, [categorySlug], limit);
+}
+
+/** Planlama ve İK dışı ücretli kurslar — önce öncelikli kategoriler, sonra diğerleri. */
+export function pickPaidCoursesExcludingCategories(
+  courses: Course[],
+  productBySlug: Map<string, CourseProduct>,
+  excludeCategorySlugs: string[],
+  priorityCategorySlugs: string[],
+  limit = 5,
+): Course[] {
+  const purchasable = filterPurchasableCourses(courses, productBySlug);
+  const eligible = purchasable.filter(
+    (course) =>
+      !courseMatchesAnyCategorySlug(course, excludeCategorySlugs),
+  );
+
+  const picked = pickCoursesByCategorySlugs(
+    eligible,
+    priorityCategorySlugs,
+    limit,
+  );
+
+  if (picked.length >= limit) {
+    return picked;
+  }
+
+  const usedIds = new Set(picked.map((course) => course.id));
+  const remaining = sortCoursesForDisplay(
+    eligible.filter((course) => !usedIds.has(course.id)),
+  );
+
+  for (const course of remaining) {
+    if (picked.length >= limit) {
+      break;
+    }
+    picked.push(course);
+    usedIds.add(course.id);
+  }
+
+  return picked;
 }
 
 /** Her kategoriden en fazla bir kurs — öne çıkan grid çeşitliliği için. */

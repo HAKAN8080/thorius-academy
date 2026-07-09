@@ -70,6 +70,7 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
     sale_price: course.sale_price ? Number(course.sale_price) : null,
     level: course.level ?? "Başlangıç",
     language: course.language ?? "Türkçe",
+    subtitle_language: course.subtitle_language ?? null,
     category: course.category ?? "",
     visibility: course.visibility ?? "public",
     seo_title: course.seo_title ?? seoDefaults.seo_title,
@@ -414,7 +415,7 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
                 </select>
               </div>
               <div className="space-y-2">
-                <Label htmlFor="language">Dil</Label>
+                <Label htmlFor="language">Kurs dili</Label>
                 <select
                   id="language"
                   value={form.language}
@@ -425,6 +426,28 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
                   <option>İngilizce</option>
                 </select>
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subtitle_language">Altyazı dili</Label>
+              <select
+                id="subtitle_language"
+                value={form.subtitle_language ?? "Yok"}
+                onChange={(e) =>
+                  update(
+                    "subtitle_language",
+                    e.target.value === "Yok" ? null : e.target.value,
+                  )
+                }
+                className="h-11 w-full rounded-md border border-primary-200 px-3 text-sm"
+              >
+                <option value="Yok">Yok</option>
+                <option value="Türkçe">Türkçe</option>
+                <option value="İngilizce">İngilizce</option>
+              </select>
+              <p className="text-xs text-muted-foreground">
+                Ders videolarında altyazı varsa buradan belirtin.
+              </p>
             </div>
           </CourseBuilderSection>
         </div>

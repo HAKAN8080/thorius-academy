@@ -1,0 +1,34 @@
+---
+description: DEFERRED — Tutor LMS / WordPress tam kopuş planı (kullanıcı ileride yapılacak dedi)
+alwaysApply: false
+---
+
+# Tutor / WordPress devreden çıkarma (ertelenmiş)
+
+Kullanıcı bu geçişi **şimdilik yapmıyor**; ileride devam edilecek. Sorulduğunda veya mimari/kurs silme konusu açıldığında bu planı hatırla.
+
+## Mevcut durum (hibrit)
+
+- **Academy kaynak:** `/kurslar` listesi, eğitmen paneli, course builder → Supabase `courses_cache` + `lessons`
+- **Hâlâ WP/Tutor:** ana sayfa vitrin, `/kurslar/[slug]`, oynatıcı, kayıt→WP sync, legacy üye sync, yayın→`syncCourseToWp`, WC/WP webhook’ları
+
+## Hedef
+
+Academy = tek kaynak (source of truth). `wp_course_id` ve Tutor API kaldırılacak.
+
+## Fazlar (özet)
+
+1. **Okuma taşı:** homepage, kurs detay, oynatıcı, OG/sitemap, footer kategorileri → `courses_cache` / `lessons` (Tutor sync yok)
+2. **Sync kapat:** `syncCourseToWp`, `syncEnrollmentToWp`, `syncLegacyUserData`, `sync-user-to-wp`, WP/WC webhook, `sync-stats`, `syncCourseFromTutor`
+3. **Şema:** `courses_cache.id` (UUID) birincil; `enrollments`, `lessons`, `instructor_course_stats` migrate
+4. **Ödeme:** WC webhook yerine Academy/PayTR; eski Tutor satın alımları one-time backfill
+5. **Temizlik:** `lib/tutor/*`, gereksiz WP kurs kodu; eklentiler devre dışı
+
+## Blog
+
+`lib/wordpress/blog.ts` Tutor değil — ayrı karar (WP’de kalabilir).
+
+## Kurs silme (MIT vb.) — kopuş bitene kadar
+
+- Eğitmen paneli + `/kurslar`: Supabase
+- Ana sayfa/detay hâlâ WP ise: WP’den de kaldır veya sync kapat (yoksa geri gelir)

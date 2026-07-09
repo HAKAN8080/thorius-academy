@@ -12,6 +12,7 @@ import {
   Map,
   Megaphone,
   MessageSquare,
+  PenLine,
   Route,
   Settings,
   ShoppingBag,
@@ -28,6 +29,7 @@ export type PanelNavItem = {
   icon: LucideIcon;
   requiresInstructor?: boolean;
   requiresCareerPathAdmin?: boolean;
+  requiresYayineviEditor?: boolean;
   hideForInstructor?: boolean;
   disabled?: boolean;
   disabledReason?: string;
@@ -98,6 +100,13 @@ export const studentPanelNav: PanelNavItem[] = [
 ];
 
 export const instructorPanelNav: PanelNavItem[] = [
+  {
+    id: "yayinevi",
+    label: "Yayınevi",
+    href: "/yayinevi",
+    icon: PenLine,
+    requiresYayineviEditor: true,
+  },
   {
     id: "instructor-dashboard",
     label: "Eğitmen Özeti",
@@ -179,6 +188,9 @@ export function isPanelNavActive(pathname: string, href: string): boolean {
   }
   if (href === "/panel/yonetim/kariyer-yollari") {
     return pathname.startsWith("/panel/yonetim/kariyer-yollari");
+  }
+  if (href === "/yayinevi") {
+    return pathname === "/yayinevi" || pathname.startsWith("/yayinevi/");
   }
   if (href === "/panel/yonetim/kurslar") {
     return pathname.startsWith("/panel/yonetim/kurslar");

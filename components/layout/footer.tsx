@@ -18,6 +18,8 @@ const staticColumns = [
     title: "Hakkımızda",
     links: [
       { href: "/hakkimizda", label: "Misyonumuz" },
+      { href: "/hakkimizda#sirket-kunyesi", label: "Şirket Künyesi" },
+      { href: "/hakkimizda#belgelerimiz", label: "Belgelerimiz" },
       { href: "/kariyer-yolu", label: "Kariyer Yolları" },
       // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
       { href: kitaplikPath("/"), label: "Kitaplık" },

@@ -31,19 +31,50 @@ export function AuthButtons({
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    supabase.auth.getUser().then(({ data }) => {
-      setUser(data.user);
-      setLoading(false);
-    });
+    let cancelled = false;
+
+    const timeout = window.setTimeout(() => {
+      if (!cancelled) {
+        setLoading(false);
+      }
+    }, 6000);
+
+    async function loadSession() {
+      try {
+        const { data, error } = await supabase.auth.getSession();
+        if (cancelled) return;
+
+        if (error) {
+          setUser(null);
+          setLoading(false);
+          return;
+        }
+
+        setUser(data.session?.user ?? null);
+        setLoading(false);
+      } catch {
+        if (!cancelled) {
+          setUser(null);
+          setLoading(false);
+        }
+      }
+    }
+
+    void loadSession();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (cancelled) return;
       setUser(session?.user ?? null);
       setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      cancelled = true;
+      window.clearTimeout(timeout);
+      subscription.unsubscribe();
+    };
   }, [supabase]);
 
   if (loading) {
@@ -64,7 +95,7 @@ export function AuthButtons({
     return (
       <div className={className}>
         <Button variant="gold" asChild>
-          <Link href={panelHref} onClick={onNavigate}>
+          <Link href={panelHref} onClick={onNavigate} prefetch={false}>
             Panelim
           </Link>
         </Button>

@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { CourseDetailPurchaseSection } from "@/components/course/course-detail-purchase-panel";
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
+import { getCourseLanguageMetaBySlug } from "@/lib/course/course-language";
+import { CourseLanguageBadges } from "@/components/course/course-language-badges";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
 import { getCourseProduct } from "@/lib/actions/course-products";
@@ -63,7 +65,10 @@ export default async function CourseDetailPage({
     courseWithCover.id,
     params.slug,
   );
-  const product = await getCourseProduct(params.slug);
+  const [product, languageMeta] = await Promise.all([
+    getCourseProduct(params.slug),
+    getCourseLanguageMetaBySlug(params.slug),
+  ]);
   const courseJsonLd = buildCourseJsonLd(
     courseWithCover,
     product,
@@ -107,6 +112,11 @@ export default async function CourseDetailPage({
               </p>
 
               <div className="mt-2 flex flex-wrap items-center gap-4 text-sm text-primary-100">
+                <CourseLanguageBadges
+                  language={languageMeta.language}
+                  subtitleLanguage={languageMeta.subtitleLanguage}
+                  overlay
+                />
                 {course.instructor && (
                   <div className="flex items-center gap-2">
                     <User className="h-4 w-4" aria-hidden="true" />
@@ -139,6 +149,13 @@ export default async function CourseDetailPage({
                   className="object-cover object-center"
                   priority
                 />
+                <div className="absolute bottom-3 left-3 z-10">
+                  <CourseLanguageBadges
+                    language={languageMeta.language}
+                    subtitleLanguage={languageMeta.subtitleLanguage}
+                    overlay
+                  />
+                </div>
               </div>
             )}
           </div>

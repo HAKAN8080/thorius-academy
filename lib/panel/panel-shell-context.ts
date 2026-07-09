@@ -4,6 +4,7 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { isCareerPathAdminForAccess } from "@/lib/career-path/admin-access";
 import { getInstructorAccess } from "@/lib/instructor/access";
 import { resolvePanelDisplayName } from "@/lib/instructor/display-name";
+import { canAccessYayinevi } from "@/lib/yayinevi/access";
 
 export interface PanelShellContext {
   userEmail: string | null;
@@ -11,6 +12,7 @@ export interface PanelShellContext {
   avatarUrl: string | null;
   isInstructor: boolean;
   isCareerPathAdmin: boolean;
+  canAccessYayinevi: boolean;
 }
 
 export const getPanelShellContext = cache(async (): Promise<PanelShellContext> => {
@@ -26,6 +28,7 @@ export const getPanelShellContext = cache(async (): Promise<PanelShellContext> =
       avatarUrl: null,
       isInstructor: false,
       isCareerPathAdmin: false,
+      canAccessYayinevi: false,
     };
   }
 
@@ -82,5 +85,6 @@ export const getPanelShellContext = cache(async (): Promise<PanelShellContext> =
     avatarUrl: profile?.avatar_url ?? avatarUrl,
     isInstructor: access.isInstructor,
     isCareerPathAdmin: careerPathAdmin,
+    canAccessYayinevi: canAccessYayinevi(loginEmail),
   };
 });

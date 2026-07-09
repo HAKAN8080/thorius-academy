@@ -1,0 +1,618 @@
+<!--
+  Thorius şirket ana sayfası — WordPress için yapıştırılabilir HTML
+  Kaynak: commit 6063e51 (company-home-page.tsx)
+
+  Kullanım:
+  1. WordPress → Sayfalar → Ana Sayfa → "Özel HTML" bloğu ekleyin
+  2. Bu dosyanın <style> … </style> + <div class="thorius-home"> … </div> + <script> kısımlarını kopyalayıp yapıştırın
+  3. Tema header/footer zaten varsa sadece içerik bloğunu kullanın (nav/footer burada yok)
+  4. Particle animasyonu için <script> bloğu da yapıştırılmalı
+
+  Not: Tema daraltıyorsa bu sürüm 100vw breakout kullanır — yine de sayfa şablonunu "Tam genişlik" seçin.
+  Güncelleme: WP tema renk ezmesi + tam genişlik düzeltmeleri uygulandı.
+-->
+<style>
+  /* WordPress tema konteynerinden tam genişliğe çık */
+  .thorius-home {
+    --t-navy-950: #060f24;
+    --t-navy-900: #0b1e3f;
+    --t-navy-800: #0f2347;
+    --t-navy-700: #142850;
+    --t-navy-500: #1e3a6f;
+    --t-navy-300: #8fa9cc;
+    --t-navy-200: #bccce3;
+    --t-navy-100: #dce5f1;
+    --t-navy-50: #f0f4fa;
+    --t-gold: #d4af37;
+    --t-gold-light: #e4c55a;
+    --t-gold-dark: #c9a02e;
+    --t-max: 1440px;
+    --t-text-light: #eef3fa;
+    --t-text-muted-light: #bccce3;
+    width: 100vw !important;
+    max-width: 100vw !important;
+    margin-left: calc(50% - 50vw) !important;
+    margin-right: calc(50% - 50vw) !important;
+    padding-left: 0 !important;
+    padding-right: 0 !important;
+    overflow-x: clip;
+    font-family: Inter, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+    color: var(--t-navy-900);
+    line-height: 1.6;
+    box-sizing: border-box;
+  }
+  .thorius-home *, .thorius-home *::before, .thorius-home *::after { box-sizing: inherit; }
+  .thorius-home .t-wrap {
+    width: 100%;
+    max-width: var(--t-max);
+    margin: 0 auto;
+    padding: 0 clamp(1.25rem, 4vw, 3rem);
+  }
+  /* WP temasının lacivert metin rengini ezmesini engelle */
+  .thorius-home .t-on-dark,
+  .thorius-home .t-on-dark h1,
+  .thorius-home .t-on-dark h2,
+  .thorius-home .t-on-dark h3,
+  .thorius-home .t-on-dark p,
+  .thorius-home .t-on-dark span,
+  .thorius-home .t-on-dark li,
+  .thorius-home .t-on-dark dt,
+  .thorius-home .t-on-dark dd {
+    color: var(--t-text-light) !important;
+  }
+  .thorius-home .t-on-dark .t-muted { color: var(--t-text-muted-light) !important; }
+  .thorius-home .t-on-dark .t-gold-text { color: var(--t-gold-light) !important; }
+  .thorius-home .t-on-dark .t-proof-label,
+  .thorius-home .t-on-dark .t-proof-desc,
+  .thorius-home .t-on-dark .t-pill {
+    color: var(--t-text-muted-light) !important;
+  }
+  .thorius-home .t-on-dark .t-proof-value strong { color: var(--t-gold-light) !important; }
+  .thorius-home .t-product-cta { color: var(--t-gold-light) !important; }
+  .thorius-home .t-on-light h1,
+  .thorius-home .t-on-light h2,
+  .thorius-home .t-on-light h3,
+  .thorius-home .t-section h2,
+  .thorius-home .t-cta h2 {
+    color: var(--t-navy-950) !important;
+  }
+  .thorius-home .t-section.t-on-light,
+  .thorius-home .t-cta.t-on-light {
+    background: #ffffff !important;
+    color: var(--t-navy-800) !important;
+  }
+  .thorius-home .t-section.t-on-light p,
+  .thorius-home .t-section.t-on-light li,
+  .thorius-home .t-section.t-on-light blockquote,
+  .thorius-home .t-section.t-on-light span:not(.t-badge):not(.t-tag),
+  .thorius-home .t-section.t-on-light dt,
+  .thorius-home .t-section.t-on-light dd,
+  .thorius-home .t-section.t-on-light strong,
+  .thorius-home .t-cta.t-on-light p {
+    color: var(--t-navy-700) !important;
+  }
+  .thorius-home .t-section.t-on-light .t-eyebrow {
+    color: var(--t-gold-dark) !important;
+  }
+  .thorius-home .t-section-lead,
+  .thorius-home .t-cta .t-section-lead {
+    color: var(--t-navy-700) !important;
+  }
+  .thorius-home .t-card {
+    border: 1px solid var(--t-navy-100); border-radius: 1rem;
+    background: #ffffff !important; padding: 1.75rem;
+    transition: transform 0.3s, box-shadow 0.3s, border-color 0.3s;
+    color: var(--t-navy-800) !important;
+  }
+  .thorius-home .t-card h3 { color: var(--t-navy-950) !important; }
+  .thorius-home .t-card p { color: var(--t-navy-700) !important; }
+  .thorius-home .t-badge,
+  .thorius-home .t-section.t-on-light .t-badge,
+  .thorius-home .t-card .t-badge {
+    display: inline-block; padding: 0.375rem 0.875rem; border-radius: 999px;
+    background: var(--t-navy-950) !important;
+    color: var(--t-gold-light) !important;
+    font-size: 0.75rem; font-weight: 600;
+  }
+  .thorius-home .t-case-problem strong { color: var(--t-navy-500) !important; }
+  .thorius-home .t-case-problem p { color: var(--t-navy-800) !important; }
+  .thorius-home .t-case-stats dd { color: var(--t-navy-950) !important; }
+  .thorius-home .t-case-stats dt { color: var(--t-navy-600, #183160) !important; }
+  .thorius-home blockquote { color: var(--t-navy-700) !important; }
+  .thorius-home .t-tag {
+    color: var(--t-navy-700) !important;
+    background: var(--t-navy-50) !important;
+  }
+  .thorius-home .t-eyebrow {
+    display: flex; align-items: center; gap: 0.75rem;
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase;
+    color: var(--t-gold-dark);
+  }
+  .thorius-home .t-eyebrow::before {
+    content: ""; width: 2rem; height: 1px; background: rgba(212, 175, 55, 0.8);
+  }
+  .thorius-home .t-eyebrow--center { justify-content: center; }
+  .thorius-home .t-eyebrow--dark { color: var(--t-gold-light); }
+  .thorius-home .t-eyebrow--dark::before { background: rgba(228, 197, 90, 0.7); }
+  .thorius-home .t-btn {
+    display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem;
+    padding: 0.875rem 1.75rem; border-radius: 0.5rem; font-weight: 600; font-size: 1rem;
+    text-decoration: none; transition: 0.2s; border: 1px solid transparent; cursor: pointer;
+  }
+  .thorius-home .t-btn-gold { background: var(--t-gold); color: var(--t-navy-950); }
+  .thorius-home .t-btn-gold:hover { background: var(--t-gold-light); }
+  .thorius-home .t-btn-ghost {
+    background: transparent; color: #fff; border-color: rgba(255,255,255,0.25);
+  }
+  .thorius-home .t-btn-ghost:hover { background: #fff; color: var(--t-navy-950); }
+  .thorius-home .t-btn-outline {
+    background: transparent; color: var(--t-navy-900); border-color: var(--t-navy-100);
+  }
+  .thorius-home .t-btn-outline:hover { background: var(--t-navy-50); }
+  .thorius-home .t-icon {
+    width: 2.75rem; height: 2.75rem; border-radius: 0.75rem;
+    display: inline-flex; align-items: center; justify-content: center;
+    background: var(--t-navy-950); color: var(--t-gold-light);
+  }
+  .thorius-home .t-icon svg { width: 1.25rem; height: 1.25rem; stroke: currentColor; fill: none; stroke-width: 2; }
+  .thorius-home .t-card:hover {
+    transform: translateY(-4px); border-color: rgba(212,175,55,0.5);
+    box-shadow: 0 10px 30px rgba(11,30,63,0.06);
+  }
+  .thorius-home .t-tag {
+    display: inline-block; padding: 0.25rem 0.75rem; border-radius: 999px;
+    border: 1px solid var(--t-navy-100); background: var(--t-navy-50);
+    font-size: 0.75rem; margin: 0.25rem 0.25rem 0 0;
+  }
+
+  /* Hero */
+  .thorius-home .t-hero {
+    position: relative; overflow: hidden; color: #fff !important;
+    background: linear-gradient(to bottom, #060b18, var(--t-navy-950) 50%, var(--t-navy-900));
+    padding: clamp(3rem, 8vw, 6rem) 0;
+    min-height: min(92vh, 900px); width: 100%;
+    display: flex; align-items: center;
+  }
+  .thorius-home .t-hero canvas {
+    position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none;
+  }
+  .thorius-home .t-hero-glow {
+    position: absolute; inset: 0; pointer-events: none;
+    background: radial-gradient(ellipse at top right, rgba(212,175,55,0.1), transparent 60%);
+  }
+  .thorius-home .t-hero-grid {
+    position: relative; display: grid; gap: 3.5rem; align-items: center;
+  }
+  @media (min-width: 1024px) {
+    .thorius-home .t-hero-grid { grid-template-columns: 1.1fr 0.9fr; gap: 5rem; }
+  }
+  .thorius-home .t-pill {
+    display: inline-flex; align-items: center; gap: 0.625rem;
+    padding: 0.375rem 1rem; border-radius: 999px;
+    border: 1px solid rgba(255,255,255,0.15); background: rgba(255,255,255,0.05);
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--t-navy-200);
+  }
+  .thorius-home .t-pill-dot {
+    width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--t-gold-light);
+    box-shadow: 0 0 0 0 rgba(228,197,90,0.6); animation: t-ping 1.5s infinite;
+  }
+  @keyframes t-ping {
+    0% { box-shadow: 0 0 0 0 rgba(228,197,90,0.6); }
+    70% { box-shadow: 0 0 0 8px rgba(228,197,90,0); }
+    100% { box-shadow: 0 0 0 0 rgba(228,197,90,0); }
+  }
+  .thorius-home .t-hero h1 {
+    margin: 2rem 0 0; font-size: clamp(2rem, 5vw, 3.75rem); font-weight: 700;
+    line-height: 1.06; letter-spacing: -0.02em; color: #ffffff !important;
+  }
+  .thorius-home .t-hero h1 em { font-style: normal; color: var(--t-gold-light) !important; }
+  .thorius-home .t-hero-lead {
+    margin-top: 1.5rem; max-width: 36rem; font-size: 1.125rem; color: var(--t-navy-200) !important;
+  }
+  .thorius-home .t-proof-value span { color: #ffffff !important; font-weight: 600; }
+  .thorius-home .t-hero-actions {
+    margin-top: 2.5rem; display: flex; flex-wrap: wrap; gap: 0.75rem;
+  }
+  .thorius-home .t-proof {
+    border: 1px solid rgba(255,255,255,0.1); border-radius: 1rem;
+    background: rgba(255,255,255,0.04); padding: 1.5rem; backdrop-filter: blur(8px);
+    margin-bottom: 1rem;
+  }
+  .thorius-home .t-proof-label {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--t-navy-300);
+  }
+  .thorius-home .t-proof-value {
+    margin-top: 0.75rem; display: flex; align-items: baseline; gap: 0.625rem;
+  }
+  .thorius-home .t-proof-value strong {
+    font-size: 1.875rem; font-weight: 700; color: var(--t-gold-light);
+  }
+  .thorius-home .t-proof-desc { margin-top: 0.375rem; font-size: 0.875rem; color: var(--t-navy-300); }
+
+  /* Sectors */
+  .thorius-home .t-sectors {
+    border-bottom: 1px solid var(--t-navy-100); background: rgba(240,244,250,0.6);
+    padding: 2rem 0; width: 100%;
+  }
+  .thorius-home .t-sectors-inner {
+    display: flex; flex-direction: column; align-items: center; gap: 1rem;
+  }
+  @media (min-width: 1024px) {
+    .thorius-home .t-sectors-inner { flex-direction: row; justify-content: space-between; }
+  }
+  .thorius-home .t-sectors-title {
+    font-size: 0.75rem; font-weight: 600; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--t-navy-500);
+  }
+  .thorius-home .t-sectors ul {
+    list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap;
+    justify-content: center; gap: 0.5rem 2rem;
+  }
+  .thorius-home .t-sectors li { font-size: 0.875rem; font-weight: 600; color: var(--t-navy-800); }
+
+  /* Sections */
+  .thorius-home .t-section { padding: clamp(3rem, 7vw, 5rem) 0; scroll-margin-top: 6rem; width: 100%; }
+  .thorius-home .t-section--muted {
+    border-top: 1px solid var(--t-navy-100); border-bottom: 1px solid var(--t-navy-100);
+    background: rgba(240,244,250,0.6);
+  }
+  .thorius-home .t-section h2 {
+    margin: 1rem 0 0; font-size: clamp(1.75rem, 3vw, 2.25rem); font-weight: 700;
+    letter-spacing: -0.02em; color: var(--t-navy-950);
+  }
+  .thorius-home .t-section-lead { margin-top: 1rem; font-size: 1.125rem; color: var(--t-navy-700); max-width: 48rem; }
+  .thorius-home .t-grid-3 {
+    margin-top: 3.5rem; display: grid; gap: 1.25rem;
+  }
+  @media (min-width: 640px) { .thorius-home .t-grid-3 { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1280px) { .thorius-home .t-grid-3 { grid-template-columns: repeat(3, 1fr); } }
+  .thorius-home .t-grid-4 { margin-top: 3.5rem; display: grid; gap: 1.25rem; }
+  @media (min-width: 768px) { .thorius-home .t-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1280px) { .thorius-home .t-grid-4 { grid-template-columns: repeat(4, 1fr); } }
+  .thorius-home .t-grid-2 { margin-top: 3.5rem; display: grid; gap: 1.25rem; }
+  @media (min-width: 1024px) { .thorius-home .t-grid-2 { grid-template-columns: repeat(2, 1fr); } }
+  .thorius-home .t-step-num { font-size: 0.875rem; font-weight: 700; color: var(--t-gold-dark) !important; }
+  .thorius-home .t-impact {
+    margin-top: 3.5rem; border-radius: 1.5rem; padding: 3rem 2rem;
+    background: linear-gradient(135deg, #060b18, var(--t-navy-950), var(--t-navy-900));
+    color: #fff !important;
+  }
+  .thorius-home .t-impact.t-on-dark dd { color: var(--t-gold-light) !important; }
+  .thorius-home .t-impact.t-on-dark dt { color: var(--t-navy-200) !important; }
+  .thorius-home .t-impact-grid {
+    display: grid; gap: 2.5rem; text-align: center;
+  }
+  @media (min-width: 640px) { .thorius-home .t-impact-grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (min-width: 1024px) { .thorius-home .t-impact-grid { grid-template-columns: repeat(4, 1fr); } }
+  .thorius-home .t-impact dd {
+    margin: 0; font-size: 2.25rem; font-weight: 700;
+  }
+  .thorius-home .t-impact dt {
+    margin: 0.5rem 0 0; font-size: 0.875rem;
+  }
+  .thorius-home .t-case-problem {
+    margin-top: 1.25rem; padding: 1rem; border-radius: 0.75rem;
+    border: 1px solid var(--t-navy-100); background: rgba(240,244,250,0.7);
+  }
+  .thorius-home .t-case-problem strong {
+    display: block; font-size: 0.75rem; letter-spacing: 0.16em; text-transform: uppercase;
+  }
+  .thorius-home .t-case-stats {
+    margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--t-navy-100);
+    display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem;
+  }
+  .thorius-home .t-case-stats dd { margin: 0; font-size: 1.25rem; font-weight: 700; }
+  .thorius-home .t-case-stats dt { margin: 0.25rem 0 0; font-size: 0.75rem; }
+  .thorius-home blockquote {
+    margin: 1.25rem 0 0; padding-left: 1rem; border-left: 2px solid var(--t-gold);
+    font-size: 0.875rem;
+  }
+
+  /* Products dark */
+  .thorius-home .t-products {
+    padding: clamp(3rem, 7vw, 5rem) 0; color: #fff !important; width: 100%;
+    background: linear-gradient(to bottom, #060b18, var(--t-navy-950), var(--t-navy-950));
+  }
+  .thorius-home .t-products h2 { color: #ffffff !important; }
+  .thorius-home .t-products .t-section-lead { color: var(--t-navy-200) !important; }
+  .thorius-home .t-product-link {
+    display: flex; flex-direction: column; height: 100%; padding: 1.75rem; border-radius: 1rem;
+    border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.04);
+    text-decoration: none; color: #eef3fa !important; transition: 0.3s;
+  }
+  .thorius-home .t-product-link h3 { color: #ffffff !important; }
+  .thorius-home .t-product-link p { color: var(--t-navy-200) !important; }
+  .thorius-home .t-product-link:hover {
+    transform: translateY(-4px); border-color: rgba(212,175,55,0.5); background: rgba(255,255,255,0.07);
+  }
+  .thorius-home .t-product-link .t-icon {
+    background: rgba(212,175,55,0.1); border: 1px solid rgba(212,175,55,0.3);
+  }
+  .thorius-home .t-product-cta {
+    margin-top: 1.5rem; font-size: 0.875rem; font-weight: 600; color: var(--t-gold-light);
+  }
+
+  /* CTA */
+  .thorius-home .t-cta {
+    padding: clamp(3rem, 7vw, 5rem) 0; border-top: 1px solid var(--t-navy-100);
+    background: #fff; text-align: center; width: 100%;
+  }
+  .thorius-home .t-cta-actions { margin-top: 2.25rem; display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; }
+
+  @media (prefers-reduced-motion: reduce) {
+    .thorius-home .t-pill-dot { animation: none; }
+    .thorius-home .t-card:hover, .thorius-home .t-product-link:hover { transform: none; }
+  }
+</style>
+
+<div class="thorius-home">
+
+  <!-- HERO -->
+  <section class="t-hero t-on-dark" aria-labelledby="t-hero-h1">
+    <canvas id="t-hero-network" aria-hidden="true"></canvas>
+    <div class="t-hero-glow" aria-hidden="true"></div>
+    <div class="t-wrap">
+      <div class="t-hero-grid">
+        <div>
+          <p class="t-pill"><span class="t-pill-dot"></span> Retail × AI Danışmanlık</p>
+          <h1 id="t-hero-h1">Veri Kararınızı, <em>Stok Geleceğinizi</em> Şekillendirsin</h1>
+          <p class="t-hero-lead">Karmaşık verileri, perakendenin nabzını tutan yapay zeka ile okunabilir içgörüye dönüştürüyoruz. Stokta kalmayın, talebi öngörün.</p>
+          <div class="t-hero-actions">
+            <a class="t-btn t-btn-gold" href="https://thorius.com.tr/kurumsal/#iletisim">Ücretsiz Keşif Görüşmesi →</a>
+            <a class="t-btn t-btn-ghost" href="#referanslar">Başarı Hikayeleri</a>
+          </div>
+        </div>
+        <div>
+          <div class="t-proof">
+            <p class="t-proof-label">Online Sipariş Karşılama</p>
+            <p class="t-proof-value"><strong>%70</strong> <span>Daha Hızlı Teslimat</span></p>
+            <p class="t-proof-desc">Yapay zeka destekli stok yönetim sistemi</p>
+          </div>
+          <div class="t-proof">
+            <p class="t-proof-label">Satış Verimliliği</p>
+            <p class="t-proof-value"><strong>+%15</strong> <span>Brüt Kâr İyileşmesi</span></p>
+            <p class="t-proof-desc">Otomatik stok dengeleme algoritması</p>
+          </div>
+          <div class="t-proof">
+            <p class="t-proof-label">Tahmin Doğruluğu</p>
+            <p class="t-proof-value"><strong>%92</strong> <span>İsabet Oranı</span></p>
+            <p class="t-proof-desc">Makine öğrenmesi destekli talep tahmini</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- SEKTÖRLER -->
+  <div class="t-sectors">
+    <div class="t-wrap t-sectors-inner">
+      <p class="t-sectors-title">Birlikte Çalıştığımız Sektörler</p>
+      <ul>
+        <li>Ev Tekstili</li>
+        <li>Kozmetik &amp; Güzellik</li>
+        <li>Hazır Giyim</li>
+        <li>Teknoloji Perakende</li>
+        <li>Çok Kanallı Perakende</li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- HİZMETLER -->
+  <section class="t-section t-on-light" id="hizmetler">
+    <div class="t-wrap">
+      <p class="t-eyebrow">Hizmetler</p>
+      <h2>Perakendenin Geleceğini Bugün İnşa Ediyoruz</h2>
+      <p class="t-section-lead">Operasyonel danışmanlıktan yapay zeka entegrasyonuna kadar perakendenin tüm planlama süreçlerinde yanınızdayız.</p>
+      <div class="t-grid-3">
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Ürün &amp; Stok Planlaması</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Satın alma bütçesini optimize edin, sezon planlamasını veriyle yapın, kategori bazlı karlılığı artırın.</p>
+          <span class="t-tag">Satın Alma Bütçesi</span><span class="t-tag">Karlılık</span><span class="t-tag">Sezon</span>
+        </article>
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"/><path d="M21 3v5h-5"/><path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16"/><path d="M8 16H3v5"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Stok Yenileme &amp; Dağıtım</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Hangi ürünün nerede, ne zaman ve ne kadar olacağını otomatik hesaplayan akıllı sistemler.</p>
+          <span class="t-tag">Otomatik İkmal</span><span class="t-tag">Mağaza Dağıtımı</span>
+        </article>
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M12 5a3 3 0 1 0-5.997.125 4 4 0 0 0-2.526 5.77 4 4 0 0 0 .556 6.588A4 4 0 1 0 12 18Z"/><path d="M12 5a3 3 0 1 1 5.997.125 4 4 0 0 1 2.526 5.77 4 4 0 0 1-.556 6.588A4 4 0 1 1 12 18Z"/><path d="M15 13a4.5 4.5 0 0 1-3-4 4.5 4.5 0 0 1-3 4"/><path d="M17.599 6.5a3 3 0 0 0 .399-1.375"/><path d="M6.003 5.125A3 3 0 0 0 6.401 6.5"/><path d="M3.477 10.896a4 4 0 0 1 .585-.396"/><path d="M19.938 10.5a4 4 0 0 1 .585.396"/><path d="M6 18a4 4 0 0 1-1.967-.516"/><path d="M19.967 17.484A4 4 0 0 1 18 18"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Yapay Zeka Entegrasyonu</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Mevcut sistemlerinize AI karar destek katmanı ekleyin. ERP değişimi gerekmez.</p>
+          <span class="t-tag">AI Karar Destek</span><span class="t-tag">Otomasyon</span>
+        </article>
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77 4 4 0 0 1 6.74 0 4 4 0 0 1 4.78 4.78 4 4 0 0 1 0 6.74 4 4 0 0 1-4.77 4.78 4 4 0 0 1-6.75 0 4 4 0 0 1-4.78-4.77 4 4 0 0 1 0-6.76Z"/><path d="m15 9-6 6"/><path d="M9 9h.01"/><path d="M15 15h.01"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">İndirim &amp; Fiyat Optimizasyonu</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Sezon sonu indirim kararlarını veriye dayandırarak marjı koruyun, fazla stoğu erken eritin.</p>
+          <span class="t-tag">İndirim Yönetimi</span><span class="t-tag">Marj Koruma</span>
+        </article>
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M2 7v10"/><path d="M22 7v10"/><path d="M6 7v10"/><path d="M18 7v10"/><path d="M10 7v10"/><path d="M14 7v10"/><path d="M2 12h20"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Çok Kanallı Satış Operasyonu</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Mağaza ve online kanallar arasında stok dengesini kurun, müşteriye her yerden ulaşın.</p>
+          <span class="t-tag">Mağaza + Online</span><span class="t-tag">Kanal Dengesi</span>
+        </article>
+        <article class="t-card">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Ekip Eğitimi &amp; Metodoloji</h3>
+          <p style="margin:0.625rem 0 1.25rem;font-size:0.875rem;color:var(--t-navy-700);">Planlama ekiplerinize özel eğitim programları. Proje sonunda bağımlılık değil, yetkinlik bırakıyoruz.</p>
+          <span class="t-tag">Workshop</span><span class="t-tag">Transfer</span>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- YAKLAŞIM -->
+  <section class="t-section t-section--muted t-on-light" id="yaklasim">
+    <div class="t-wrap">
+      <p class="t-eyebrow">Yaklaşım</p>
+      <h2>Teori Değil, Sonuç</h2>
+      <p class="t-section-lead">Her proje veri analiziyle başlar, ölçülebilir iyileşmeyle biter.</p>
+      <ol class="t-grid-4" style="list-style:none;margin:0;padding:0;">
+        <li class="t-card"><span class="t-step-num">01</span><h3 style="margin:0.75rem 0 0;font-size:1.125rem;font-weight:700;">Mevcut Durumu Anlayın</h3><p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-700);">Satış, stok ve karlılık verilerinizi birlikte inceliyoruz. Hangi süreç ne kadar kayıp yaratıyor, rakamlarla ortaya koyuyoruz.</p></li>
+        <li class="t-card"><span class="t-step-num">02</span><h3 style="margin:0.75rem 0 0;font-size:1.125rem;font-weight:700;">Size Özel Çözüm Tasarlayın</h3><p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-700);">İş modelinize ve sektörünüze özel planlama yöntemi ve yapay zeka mimarisi tasarlıyoruz. Hazır şablon yok.</p></li>
+        <li class="t-card"><span class="t-step-num">03</span><h3 style="margin:0.75rem 0 0;font-size:1.125rem;font-weight:700;">Sistemlere Entegre Edin</h3><p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-700);">Mevcut yazılımlarınızın üzerine çalışan çözümler kuruyoruz. Büyük altyapı yatırımı gerekmez.</p></li>
+        <li class="t-card"><span class="t-step-num">04</span><h3 style="margin:0.75rem 0 0;font-size:1.125rem;font-weight:700;">Sonuçları Ölçün, Ekibi Güçlendirin</h3><p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-700);">Hedef rakamlara ulaşıldığını birlikte doğruluyoruz. Metodoloji ekibinize geçer, proje bittikten sonra da kullanmaya devam edersiniz.</p></li>
+      </ol>
+      <div class="t-impact t-on-dark">
+        <dl class="t-impact-grid">
+          <div><dd>%70</dd><dt>Online sipariş karşılama süresinde iyileşme</dt></div>
+          <div><dd>+%15</dd><dt>Brüt kâr artışı</dt></div>
+          <div><dd>300+</dd><dt>Bağlı satış noktası</dt></div>
+          <div><dd>8 Hf</dd><dt>Ortalama proje tamamlama süresi</dt></div>
+        </dl>
+      </div>
+    </div>
+  </section>
+
+  <!-- REFERANSLAR -->
+  <section class="t-section t-on-light" id="referanslar">
+    <div class="t-wrap">
+      <p class="t-eyebrow">Referanslar</p>
+      <h2>Sonuçlar Konuşsun</h2>
+      <p class="t-section-lead">Müşteri gizliliği kapsamında paylaşılan gerçek proje çıktıları.</p>
+      <div class="t-grid-2">
+        <article class="t-card">
+          <span class="t-badge">Ev Tekstili · 300+ Satış Noktası</span>
+          <div class="t-case-problem"><strong>Sorun</strong><p style="margin:0.375rem 0 0;font-size:0.875rem;">Satış noktaları arasında stok dengesizliği; bir yanda fazla stok, diğer yanda sürekli eksiklik.</p></div>
+          <blockquote>Yapay zeka destekli stok yönetim sistemi kuruldu. Hangi ürünün nerede, ne zaman ve ne kadar olması gerektiği artık otomatik olarak hesaplanıyor.</blockquote>
+          <dl class="t-case-stats"><div><dd>%70</dd><dt>Online kapasite iyileşmesi</dt></div><div><dd>300+</dd><dt>Bağlı satış noktası</dt></div><div><dd>%87</dd><dt>Stok isabet oranı</dt></div></dl>
+        </article>
+        <article class="t-card">
+          <span class="t-badge">Kozmetik Perakende · Çok Kanallı</span>
+          <div class="t-case-problem"><strong>Sorun</strong><p style="margin:0.375rem 0 0;font-size:0.875rem;">Sipariş ve stok kararları manuel alınıyor, hata payı yüksek ve çok zaman alıyordu.</p></div>
+          <blockquote>Yapay zeka destekli planlama asistanı devreye alındı. Stok önerisi ve satış tahmini artık dakikalar içinde tamamlanıyor.</blockquote>
+          <dl class="t-case-stats"><div><dd>+%15</dd><dt>Brüt kâr iyileşmesi</dt></div><div><dd>2×</dd><dt>Ekip üretkenliği</dt></div><div><dd>%92</dd><dt>Tahmin doğruluğu</dt></div></dl>
+        </article>
+        <article class="t-card">
+          <span class="t-badge">Teknoloji Distribütörü · B2B</span>
+          <div class="t-case-problem"><strong>Sorun</strong><p style="margin:0.375rem 0 0;font-size:0.875rem;">Bayi ağında verimsizlik; karlı olmayan segmentlere aşırı kaynak ayrılıyordu.</p></div>
+          <blockquote>Bayi performans analizi ve yapay zeka destekli müşteri segmentasyonu yapıldı. Kaynaklar yüksek değerli segmentlere yönlendirildi.</blockquote>
+          <dl class="t-case-stats"><div><dd>%23</dd><dt>Brüt kâr artışı</dt></div><div><dd>5 Yıl</dd><dt>Stratejik ortaklık</dt></div><div><dd>3 Ay</dd><dt>Sonuç süresi</dt></div></dl>
+        </article>
+        <article class="t-card">
+          <span class="t-badge">Hazır Giyim · Sezon Planlaması</span>
+          <div class="t-case-problem"><strong>Sorun</strong><p style="margin:0.375rem 0 0;font-size:0.875rem;">Sezon sonu yüksek indirim oranları kârı eritiyor, alım miktarları gerçekçi tahmin edilemiyordu.</p></div>
+          <blockquote>Satın alma bütçesi modeli ve indirim optimizasyon sistemi kuruldu. Sezon planlaması veriye dayalı hale getirildi.</blockquote>
+          <dl class="t-case-stats"><div><dd>−18p</dd><dt>İndirim oranı düşüşü</dt></div><div><dd>+%9</dd><dt>Brüt kâr iyileşme</dt></div><div><dd>8 Hf</dd><dt>Proje süresi</dt></div></dl>
+        </article>
+      </div>
+    </div>
+  </section>
+
+  <!-- ÜRÜNLER -->
+  <section class="t-products t-on-dark" id="urunler">
+    <div class="t-wrap">
+      <p class="t-eyebrow t-eyebrow--dark">Ürünler &amp; Platformlar</p>
+      <h2>Danışmanlığı Ürüne Dönüştürdük</h2>
+      <p class="t-section-lead">Metodolojilerimizi yazılım, eğitim platformu ve koçluk hizmeti olarak da sunuyoruz.</p>
+      <div class="t-grid-3">
+        <a class="t-product-link" href="https://siriusabcx.com/" target="_blank" rel="noopener">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="2"/><rect x="9" y="9" width="6" height="6"/><path d="M15 2v2"/><path d="M15 20v2"/><path d="M2 15h2"/><path d="M2 9h2"/><path d="M20 15h2"/><path d="M20 9h2"/><path d="M9 2v2"/><path d="M9 20v2"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">AI-4U Platform</h3>
+          <p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-300);">Stok yönetimi, satış tahmini ve dağıtım optimizasyonu için yapay zeka yazılım paketi.</p>
+          <span class="t-product-cta">Platformu inceleyin ↗</span>
+        </a>
+        <a class="t-product-link" href="https://academy.thorius.com.tr/kurslar" target="_blank" rel="noopener">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><path d="M21.42 10.922a1 1 0 0 0-.019-1.838L12.83 5.18a2 2 0 0 0-1.66 0L2.6 9.08a1 1 0 0 0 0 1.832l8.57 3.908a2 2 0 0 0 1.66 0z"/><path d="M22 10v6"/><path d="M6 12.5V16a6 3 0 0 0 12 0v-3.5"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Thorius Academy</h3>
+          <p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-300);">Perakende profesyonelleri için online eğitim platformu. 24+ kurs, sertifika programları.</p>
+          <span class="t-product-cta">academy.thorius.com.tr ↗</span>
+        </a>
+        <a class="t-product-link" href="https://coaching.thorius.com.tr" target="_blank" rel="noopener">
+          <span class="t-icon"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76"/></svg></span>
+          <h3 style="margin:1.25rem 0 0;font-size:1.125rem;font-weight:700;">Thorius Coaching</h3>
+          <p style="margin:0.625rem 0 0;font-size:0.875rem;color:var(--t-navy-300);">Yöneticiler için yapay zeka destekli koçluk platformu. Uluslararası ICF standartlarında.</p>
+          <span class="t-product-cta">coaching.thorius.com.tr ↗</span>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- İLETİŞİM CTA -->
+  <section class="t-cta t-on-light" id="iletisim">
+    <div class="t-wrap">
+      <p class="t-eyebrow t-eyebrow--center">İletişim</p>
+      <h2>Perakende Stratejinizi Birlikte Yazalım</h2>
+      <p class="t-section-lead" style="margin-left:auto;margin-right:auto;">30 dakikalık ücretsiz keşif görüşmesiyle başlayalım. Size özel çözümümüzü rakamlarla gösterelim.</p>
+      <div class="t-cta-actions">
+        <a class="t-btn t-btn-gold" href="https://thorius.com.tr/kurumsal/#iletisim">Ücretsiz Keşif Görüşmesi →</a>
+        <a class="t-btn t-btn-outline" href="https://thorius.com.tr/iletisim/">Bize ulaşın</a>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<script>
+(function () {
+  var canvas = document.getElementById('t-hero-network');
+  if (!canvas) return;
+  var ctx = canvas.getContext('2d');
+  if (!ctx) return;
+  var reduced = window.matchMedia('(prefers-reduced-motion: reduce)');
+  var w = 0, h = 0, raf = 0, particles = [];
+  var COUNT = 55, LINK = 150;
+
+  function resize() {
+    var rect = canvas.parentElement.getBoundingClientRect();
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    w = rect.width; h = rect.height;
+    canvas.width = Math.round(w * dpr);
+    canvas.height = Math.round(h * dpr);
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  function seed() {
+    particles = [];
+    for (var i = 0; i < COUNT; i++) {
+      particles.push({
+        x: Math.random() * w, y: Math.random() * h,
+        vx: (Math.random() - 0.5) * 0.35, vy: (Math.random() - 0.5) * 0.35,
+        r: Math.random() * 1.6 + 0.8, gold: i % 4 === 0
+      });
+    }
+  }
+  function draw() {
+    ctx.clearRect(0, 0, w, h);
+    for (var i = 0; i < particles.length; i++) {
+      for (var j = i + 1; j < particles.length; j++) {
+        var a = particles[i], b = particles[j];
+        var dx = a.x - b.x, dy = a.y - b.y, dist = Math.hypot(dx, dy);
+        if (dist < LINK) {
+          var alpha = (1 - dist / LINK) * 0.12;
+          ctx.strokeStyle = (a.gold || b.gold) ? 'rgba(212,175,55,' + alpha + ')' : 'rgba(143,169,204,' + alpha + ')';
+          ctx.lineWidth = 1;
+          ctx.beginPath(); ctx.moveTo(a.x, a.y); ctx.lineTo(b.x, b.y); ctx.stroke();
+        }
+      }
+    }
+    for (var k = 0; k < particles.length; k++) {
+      var p = particles[k];
+      ctx.fillStyle = p.gold ? 'rgba(212,175,55,0.45)' : 'rgba(143,169,204,0.35)';
+      ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+    }
+  }
+  function step() {
+    for (var i = 0; i < particles.length; i++) {
+      var p = particles[i];
+      p.x += p.vx; p.y += p.vy;
+      if (p.x < -10) p.x = w + 10; if (p.x > w + 10) p.x = -10;
+      if (p.y < -10) p.y = h + 10; if (p.y > h + 10) p.y = -10;
+    }
+    draw();
+    raf = requestAnimationFrame(step);
+  }
+  function start() {
+    cancelAnimationFrame(raf);
+    resize(); seed();
+    if (reduced.matches) draw(); else raf = requestAnimationFrame(step);
+  }
+  start();
+  window.addEventListener('resize', start);
+  reduced.addEventListener('change', start);
+})();
+</script>

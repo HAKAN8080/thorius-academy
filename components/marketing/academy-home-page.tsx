@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { FeaturedCourseSpotlightSection } from "@/components/marketing/featured-course-spotlight-section";
 import { Hero } from "@/components/marketing/hero";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
@@ -15,12 +16,25 @@ import {
   filterPurchasableCourses,
   pickCoursesByCategorySlugs,
   pickFeaturedCoursesByCategory,
+  pickPaidCoursesExcludingCategories,
 } from "@/lib/course/pick-featured-courses";
 import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
-
-const FEATURED_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
 import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
 import type { CourseProduct } from "@/types/course-product";
+
+const FEATURED_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
+const HR_CATEGORY_SLUGS = ["insan-kaynaklari", "yoga"] as const;
+const PLANNING_CATEGORY_SLUGS = ["planlama", "ai"] as const;
+const OTHER_PAID_EXCLUDED_SLUGS = [
+  ...HR_CATEGORY_SLUGS,
+  "planlama",
+] as const;
+const OTHER_PAID_PRIORITY_SLUGS = [
+  "yapay-zeka",
+  "ai",
+  "tedarik-zinciri",
+  "kocluk",
+] as const;
 
 export async function AcademyHomePage() {
   const [{ courses: allCourses, categories, products, stats }, retailPath] =
@@ -50,12 +64,19 @@ export async function AcademyHomePage() {
   );
   const planningCourses = pickCoursesByCategorySlugs(
     allCourses,
-    ["planlama", "ai"],
+    [...PLANNING_CATEGORY_SLUGS],
+    5,
+  );
+  const otherPaidCourses = pickPaidCoursesExcludingCategories(
+    allCourses,
+    productBySlug,
+    [...OTHER_PAID_EXCLUDED_SLUGS],
+    [...OTHER_PAID_PRIORITY_SLUGS],
     5,
   );
   const hrCourses = pickCoursesByCategorySlugs(
     allCourses,
-    ["insan-kaynaklari", "yoga"],
+    [...HR_CATEGORY_SLUGS],
     5,
   );
   const retailPlanningSteps =
@@ -68,6 +89,7 @@ export async function AcademyHomePage() {
   return (
     <>
       <CategoryGrid categories={categories} />
+      <FeaturedCourseSpotlightSection />
       <Hero pathCourses={retailPlanningCourses} />
       <EcosystemCards />
 
@@ -102,6 +124,16 @@ export async function AcademyHomePage() {
         statsBySlug={statsBySlug}
         viewAllHref="/kurslar?kategori=insan-kaynaklari"
         className="bg-primary-50"
+      />
+
+      <CourseShowcaseSection
+        id="other-paid-heading"
+        title="Diğer Eğitimler"
+        description="Planlama ve İK dışındaki ücretli uzmanlık programları"
+        courses={otherPaidCourses}
+        productBySlug={productBySlug}
+        statsBySlug={statsBySlug}
+        viewAllHref="/kurslar"
       />
 
       <InspirationBanner compact />

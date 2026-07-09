@@ -3,6 +3,7 @@ import {
   canonicalizeCategorySlug,
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
+import { resolveCourseLanguageMeta } from "@/lib/course/course-language";
 import { resolveCategoryDisplayPriority } from "@/lib/course/sort-homepage-categories";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
@@ -14,7 +15,7 @@ export const COURSES_CATALOG_PER_PAGE = 24;
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
 
 export interface CatalogCourseItem {
   id: string;
@@ -25,6 +26,8 @@ export interface CatalogCourseItem {
   coverImageUrl: string | null;
   category: string | null;
   level: string;
+  language: "tr" | "en";
+  subtitleLanguage: "tr" | "en" | null;
   pricingModel: "free" | "paid";
   price: number;
   salePrice: number | null;
@@ -84,6 +87,11 @@ function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
       ? null
       : Number(row.sale_price);
 
+  const languageMeta = resolveCourseLanguageMeta(
+    row.language as string | null | undefined,
+    row.subtitle_language as string | null | undefined,
+  );
+
   return {
     id: String(row.id),
     slug,
@@ -96,6 +104,8 @@ function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
     coverImageUrl: (row.cover_image_url as string | null) ?? null,
     category: (row.category as string | null)?.trim() || null,
     level: fromCoursesCacheLevelLabel(row.level as string | null | undefined),
+    language: languageMeta.language,
+    subtitleLanguage: languageMeta.subtitleLanguage,
     pricingModel,
     price,
     salePrice,
@@ -336,7 +346,7 @@ export async function getCoursesCacheListingPage(params: {
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing-v6", categorySlug, String(page), search],
+    ["courses-cache-listing-v7", categorySlug, String(page), search],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
