@@ -11,6 +11,7 @@ import { CourseCurriculumPreview } from "@/components/course/course-curriculum-p
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { getCourseLanguageMetaBySlug } from "@/lib/course/course-language";
 import { CourseLanguageBadges } from "@/components/course/course-language-badges";
+import { CourseContentLanguageNotice } from "@/components/course/course-content-language-notice";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
 import { getCourseProduct } from "@/lib/actions/course-products";
@@ -112,6 +113,12 @@ export default async function CourseDetailPage({
               <h1 className="text-3xl font-bold leading-tight tracking-tight text-white md:text-4xl lg:text-5xl">
                 {course.title}
               </h1>
+
+              <CourseContentLanguageNotice
+                pageLocale={locale}
+                courseLanguage={languageMeta.language}
+                variant="dark"
+              />
 
               <p className="text-base leading-relaxed text-primary-100 md:text-lg">
                 {course.excerpt}

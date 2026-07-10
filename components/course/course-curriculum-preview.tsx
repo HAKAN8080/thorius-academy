@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { BookOpen, Clock, Eye, Lock, PlayCircle } from "lucide-react";
 import {
@@ -16,7 +16,11 @@ export async function CourseCurriculumPreview({
   curriculum,
 }: CourseCurriculumPreviewProps) {
   const t = await getTranslations("courses.curriculum");
-  const totalDuration = formatLessonDuration(curriculum.totalDurationSeconds);
+  const locale = await getLocale();
+  const totalDuration = formatLessonDuration(
+    curriculum.totalDurationSeconds,
+    locale,
+  );
 
   return (
     <section className="mt-0 rounded-2xl border border-primary-100 bg-white p-6 md:p-8">
@@ -47,7 +51,10 @@ export async function CourseCurriculumPreview({
             </h3>
             <ul className="divide-y divide-primary-100 rounded-xl border border-primary-100">
               {section.lessons.map((lesson, index) => {
-                const duration = formatLessonDuration(lesson.durationSeconds);
+                const duration = formatLessonDuration(
+                  lesson.durationSeconds,
+                  locale,
+                );
                 const previewHref =
                   `/kurslar/${courseSlug}/onizleme/${lesson.id}` as const;
 

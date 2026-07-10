@@ -24,17 +24,31 @@ export interface CourseCurriculumPreview {
   totalDurationSeconds: number;
 }
 
-function formatDuration(seconds: number | null): string | null {
+function formatDuration(
+  seconds: number | null,
+  locale: string = "tr",
+): string | null {
   if (!seconds || seconds <= 0) return null;
   const hours = Math.floor(seconds / 3600);
   const minutes = Math.floor((seconds % 3600) / 60);
+  const isEn = locale === "en";
+
   if (hours > 0) {
+    if (isEn) {
+      return `${hours} hr ${minutes} min`;
+    }
     return `${hours} sa ${minutes} dk`;
   }
-  return `${minutes} dk`;
+
+  return isEn ? `${minutes} min` : `${minutes} dk`;
 }
 
-export { formatDuration as formatLessonDuration };
+export function formatLessonDuration(
+  seconds: number | null,
+  locale: string = "tr",
+): string | null {
+  return formatDuration(seconds, locale);
+}
 
 function mapPreviewLesson(lesson: Lesson): CurriculumPreviewLesson {
   return {

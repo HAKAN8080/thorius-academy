@@ -42,6 +42,10 @@
     "unavailableBody": "Pricing may still be updating. Our support team can help.",
     "contactCta": "Contact us"
   },
+  "contentLanguage": {
+    "noticeTitle": "Course content is in {flag} {language}",
+    "noticeBody": "The title, description, curriculum, and videos are in the course's original language. Only the page interface is shown in English."
+  },
   "curriculum": {
     "title": "Curriculum",
     "subtitle": "Sections, lesson durations, and free previews",

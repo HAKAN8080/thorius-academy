@@ -42,6 +42,10 @@
     "unavailableBody": "Fiyat bilgisi güncelleniyor olabilir. Destek ekibimiz size yardımcı olur.",
     "contactCta": "İletişime geçin"
   },
+  "contentLanguage": {
+    "noticeTitle": "Kurs içeriği {flag} {language} dilindedir",
+    "noticeBody": "Başlık, açıklama, müfredat ve videolar kursun orijinal dilindedir. Yalnızca sayfa arayüzü Türkçe gösterilir."
+  },
   "curriculum": {
     "title": "Müfredat",
     "subtitle": "Bölümler, ders süreleri ve ücretsiz önizlemeler",
