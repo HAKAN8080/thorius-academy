@@ -329,7 +329,7 @@ export function FeaturedCourseSpotlightCarousel({
       className={cn(
         "relative w-full",
         variant === "hero"
-          ? "mx-auto max-w-[22rem] px-2 sm:max-w-[24rem] 2xl:max-w-none"
+          ? "mx-auto max-w-[26rem] px-2 sm:max-w-[30rem] md:max-w-[34rem] lg:max-w-[40rem]"
           : "mx-auto max-w-6xl px-1 sm:px-2",
       )}
       style={{ minHeight: `${minHeightRem}rem` }}
