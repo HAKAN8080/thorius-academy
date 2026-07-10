@@ -8,6 +8,13 @@
     "categoryAlt": "{name} category",
     "courseCount": "{count} courses"
   },
+  "stats": {
+    "ariaLabel": "Thorius Academy impact stats",
+    "countries": "Countries",
+    "students": "Students",
+    "hours": "Training Hours",
+    "courses": "Courses"
+  },
   "memberPromo": {
     "ariaLabel": "Membership promotions",
     "discountBadge": "New member offer",

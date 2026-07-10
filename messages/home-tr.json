@@ -8,6 +8,13 @@
     "categoryAlt": "{name} kategorisi",
     "courseCount": "{count} kurs"
   },
+  "stats": {
+    "ariaLabel": "Thorius Academy rakamları",
+    "countries": "Ülke",
+    "students": "Öğrenci",
+    "hours": "Saat Eğitim",
+    "courses": "Eğitim"
+  },
   "memberPromo": {
     "ariaLabel": "Üyelik kampanyaları",
     "discountBadge": "İlk üyelere özel",
