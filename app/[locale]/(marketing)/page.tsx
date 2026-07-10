@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { AcademyHomePage } from "@/components/marketing/academy-home-page";
 import { CompanyHomePage } from "@/components/marketing/company-home-page";
 import { ShopHomePage } from "@/components/shop/shop-home-page";
@@ -13,26 +14,6 @@ import {
 } from "@/lib/site/site-mode";
 
 export const revalidate = 3600;
-
-const ACADEMY_HOME_METADATA: Metadata = {
-  title: {
-    absolute: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
-  },
-  description:
-    "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.",
-  openGraph: {
-    title: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
-    description:
-      "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları.",
-    type: "website",
-  },
-  twitter: {
-    card: "summary_large_image",
-    title: "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
-    description:
-      "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar.",
-  },
-};
 
 const COMPANY_HOME_METADATA: Metadata = {
   title: "Thorius — Danışmanlık, AI4U Retail ve Academy",
@@ -87,11 +68,13 @@ function getConfiguredSiteMode(): "academy" | "company" | "shop" | "kitaplik" | 
   return null;
 }
 
-export async function generateMetadata(): Promise<Metadata> {
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
   const siteMode = getConfiguredSiteMode();
-  if (siteMode === "academy") {
-    return ACADEMY_HOME_METADATA;
-  }
   if (siteMode === "company") {
     return COMPANY_HOME_METADATA;
   }
@@ -113,7 +96,24 @@ export async function generateMetadata(): Promise<Metadata> {
     return COMPANY_HOME_METADATA;
   }
 
-  return ACADEMY_HOME_METADATA;
+  const t = await getTranslations({ locale, namespace: "home" });
+  const title = t("meta.title");
+  const description = t("meta.description");
+
+  return {
+    title: { absolute: title },
+    description,
+    openGraph: {
+      title,
+      description,
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description,
+    },
+  };
 }
 
 export default async function HomePage() {

@@ -1,41 +1,46 @@
 import { Building2, Landmark, Receipt, Shield } from "lucide-react";
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/layout/container";
 import { COMPANY_PROFILE } from "@/lib/content/company-credentials";
 
-const profileRows = [
-  {
-    id: "legal-name",
-    label: "Şirket Unvanı",
-    value: COMPANY_PROFILE.legalName,
-    icon: Building2,
-  },
-  {
-    id: "brand",
-    label: "Marka / Platform",
-    value: COMPANY_PROFILE.brandName,
-    icon: Shield,
-  },
-  {
-    id: "mersis",
-    label: "MERSİS No",
-    value: COMPANY_PROFILE.mersisNo,
-    icon: Landmark,
-  },
-  {
-    id: "trade-registry",
-    label: "Ticaret Sicil No",
-    value: COMPANY_PROFILE.tradeRegistryNo,
-    icon: Landmark,
-  },
-  {
-    id: "tax",
-    label: "Vergi Dairesi / No",
-    value: `${COMPANY_PROFILE.taxOffice} / ${COMPANY_PROFILE.taxNo}`,
-    icon: Receipt,
-  },
-] as const;
+export async function CompanyProfileSection() {
+  const t = await getTranslations("about.profile");
 
-export function CompanyProfileSection() {
+  const profileRows = [
+    {
+      id: "legal-name",
+      label: t("fields.legalName"),
+      value: COMPANY_PROFILE.legalName,
+      icon: Building2,
+    },
+    {
+      id: "brand",
+      label: t("fields.brand"),
+      value: COMPANY_PROFILE.brandName,
+      icon: Shield,
+    },
+    {
+      id: "mersis",
+      label: t("fields.mersis"),
+      value: COMPANY_PROFILE.mersisNo,
+      icon: Landmark,
+    },
+    {
+      id: "trade-registry",
+      label: t("fields.tradeRegistry"),
+      value: COMPANY_PROFILE.tradeRegistryNo,
+      icon: Landmark,
+    },
+    {
+      id: "tax",
+      label: t("fields.tax"),
+      value: `${COMPANY_PROFILE.taxOffice} / ${COMPANY_PROFILE.taxNo}`,
+      icon: Receipt,
+    },
+  ] as const;
+
+  const activityAreas = t.raw("activityAreas") as string[];
+
   return (
     <section
       id="sirket-kunyesi"
@@ -45,20 +50,16 @@ export function CompanyProfileSection() {
       <Container size="narrow">
         <header className="mx-auto mb-10 max-w-2xl text-center md:mb-12">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-primary-600">
-            Kurumsal şeffaflık
+            {t("eyebrow")}
           </p>
           <h2
             id="company-profile-heading"
             className="text-3xl font-bold tracking-tight text-primary-950 md:text-4xl"
           >
-            Şirket Künyesi
+            {t("title")}
           </h2>
           <p className="mt-4 text-base leading-relaxed text-primary-700">
-            Thorius Academy,{" "}
-            <span className="font-medium text-primary-900">
-              {COMPANY_PROFILE.legalName}
-            </span>{" "}
-            çatısı altında faaliyet gösteren dijital eğitim platformudur.
+            {t("intro", { legalName: COMPANY_PROFILE.legalName })}
           </p>
         </header>
 
@@ -80,11 +81,11 @@ export function CompanyProfileSection() {
 
           <div className="rounded-2xl border border-primary-100/80 bg-white p-5 shadow-sm sm:col-span-2 sm:p-6">
             <dt className="text-xs font-semibold uppercase tracking-wider text-primary-500">
-              Faaliyet Alanları
+              {t("fields.activityAreas")}
             </dt>
             <dd className="mt-4">
               <ul className="grid gap-2 sm:grid-cols-2">
-                {COMPANY_PROFILE.activityAreas.map((area) => (
+                {activityAreas.map((area) => (
                   <li
                     key={area}
                     className="flex items-start gap-2 rounded-lg bg-primary-50/80 px-3 py-2.5 text-sm font-medium text-primary-800"

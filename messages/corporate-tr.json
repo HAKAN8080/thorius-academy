@@ -1,0 +1,79 @@
+{
+  "meta": {
+    "title": "Kurumsal | Thorius Academy",
+    "description": "Kurumsal danışmanlık, AI4U Retail ve Thorius Academy ile sürdürülebilir yetkinlik."
+  },
+  "hero": {
+    "title": "Kurumsal danışmanlık & dönüşüm",
+    "subtitle": "Tedarik zinciri, planlama ve İK alanlarında audit ile başlayın; AI4U Retail yazılımı ve Thorius Academy eğitimleriyle sürdürülebilir yetkinlik inşa edin.",
+    "cta": "Demo Talep Et"
+  },
+  "benefits": {
+    "title": "Neden Thorius?",
+    "items": [
+      {
+        "title": "Ölçeklenebilir Eğitim",
+        "description": "Mağaza müdürlerinden genel müdürlüğe kadar tüm kademeler için özelleştirilmiş öğrenme yolları."
+      },
+      {
+        "title": "Ölçülebilir ROI",
+        "description": "Tamamlama oranları, sınav skorları ve KPI etkisi tek panelde raporlanır."
+      },
+      {
+        "title": "Kurumsal Güvenlik",
+        "description": "SSO, KVKK uyumlu veri işleme ve kurumsal sözleşme çerçevesinde destek."
+      }
+    ]
+  },
+  "packages": {
+    "title": "Paketler",
+    "requestQuote": "Teklif İste",
+    "items": [
+      {
+        "name": "Growth",
+        "description": "50–200 çalışanlı perakende markaları",
+        "features": [
+          "20 kursluk kütüphane erişimi",
+          "Aylık canlı Q&A oturumu",
+          "Yönetici özeti raporu"
+        ],
+        "price": "Teklif üzerine"
+      },
+      {
+        "name": "Enterprise",
+        "description": "200+ çalışan, çoklu format",
+        "features": [
+          "Sınırsız koltuk",
+          "Özel içerik üretimi",
+          "Dedicated Customer Success",
+          "LMS entegrasyonu"
+        ],
+        "price": "Özel fiyatlandırma",
+        "highlighted": true
+      }
+    ]
+  },
+  "formSection": {
+    "title": "Kurumsal İletişim Formu",
+    "subtitle": "Ekibimiz 1 iş günü içinde size dönüş yapacaktır."
+  },
+  "form": {
+    "company": "Şirket Adı",
+    "companyPlaceholder": "Marka / Şirket",
+    "contactName": "Ad Soyad",
+    "contactEmail": "Kurumsal E-posta",
+    "employees": "Çalışan Sayısı",
+    "employeesPlaceholder": "ör. 150",
+    "submit": "Gönder",
+    "submitting": "Gönderiliyor...",
+    "errorRequired": "Lütfen zorunlu alanları doldurun.",
+    "errorSend": "Form gönderilemedi. Lütfen info@thorius.com.tr adresine yazın.",
+    "success": "Talebiniz alındı. Ekibimiz 1 iş günü içinde size dönüş yapacaktır.",
+    "emailSubject": "Kurumsal teklif talebi — {company}",
+    "emailHeading": "Kurumsal İletişim Formu",
+    "emailCompany": "Şirket",
+    "emailName": "Ad Soyad",
+    "emailEmail": "E-posta",
+    "emailEmployees": "Çalışan sayısı"
+  }
+}

@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "title": "Sıkça Sorulan Sorular | Thorius Academy",
+    "description": "Kurs kayıt, süresiz erişim, sertifika, ödeme, iade ve kurumsal eğitim hakkında sık sorulan soruların cevapları."
+  },
+  "hero": {
+    "badge": "Yardım Merkezi",
+    "title": "Sıkça Sorulan Sorular",
+    "subtitle": "Kurslar, ödeme, sertifika ve kurumsal eğitim hakkında en çok sorulan konuların cevapları."
+  },
+  "categoryNav": "SSS kategorileri",
+  "cta": {
+    "title": "Cevabını bulamadınız mı?",
+    "subtitle": "Ekibimiz size yardımcı olmaktan memnuniyet duyar.",
+    "contact": "İletişime Geç",
+    "whatsapp": "WhatsApp",
+    "corporate": "Kurumsal Teklif"
+  },
+  "links": {
+    "/hakkimizda": "Hakkımızda",
+    "/hakkimizda#belgelerimiz": "Belgelerimiz",
+    "/kurslar": "Kurslar",
+    "/iletisim": "İletişim",
+    "/kurumsal": "Kurumsal",
+    "/kurumsal#iletisim": "Kurumsal iletişim formu",
+    "/kvkk": "KVKK Aydınlatma Metni",
+    "/mesafeli-satis": "Mesafeli Satış Sözleşmesi"
+  },
+  "categories": [
+    {
+      "id": "thorius",
+      "title": "Thorius Hakkında",
+      "items": [
+        {
+          "id": "thorius-nedir",
+          "question": "Thorius nedir?",
+          "answer": "Thorius Eğitim ve Danışmanlık; danışmanlık ve audit ile başlayan, AI4U Retail yazılımı, Thorius Academy eğitimleri, yayınevi & kitaplık ve coaching ile devam eden bütüncül bir dönüşüm modeli sunar. Detaylı bilgi için /hakkimizda sayfasını inceleyebilirsiniz."
+        },
+        {
+          "id": "academy-sirket",
+          "question": "Thorius Academy ile şirket aynı mı?",
+          "answer": "Evet. Thorius Academy, Thorius Eğitim ve Danışmanlık Ltd. Şti.'nin online eğitim platformudur. Şirket künyesi ve resmi belgeler /hakkimizda sayfasında yer alır."
+        },
+        {
+          "id": "alanlar",
+          "question": "Hangi alanlarda eğitim veriyorsunuz?",
+          "answer": "Perakende planlama, insan kaynakları ve yapay zeka odaklı kariyer eğitimleri sunuyoruz. Güncel kurs listesi /kurslar sayfasında yer alır."
+        },
+        {
+          "id": "online-yuzyuze",
+          "question": "Eğitimler online mı, yüz yüze mi?",
+          "answer": "Thorius Academy üzerindeki kurslar online ve kendi hızınızda izlenebilir. Kurumsal programlarda canlı oturumlar ve özelleştirilmiş içerikler de eklenebilir. Kurumsal müşterilerimiz için yüz yüze eğitimlerimiz bulunmaktadır."
+        }
+      ]
+    },
+    {
+      "id": "kurslar",
+      "title": "Kurslar ve Kayıt",
+      "items": [
+        {
+          "id": "kayit",
+          "question": "Kursa nasıl kayıt olurum?",
+          "answer": "Ücretsiz hesap oluşturun, istediğiniz kursu seçin ve ödeme adımını tamamlayın. Erişim onaylandıktan sonra Kurslarım bölümünden derse başlayabilirsiniz."
+        },
+        {
+          "id": "ucretsiz",
+          "question": "Ücretsiz kurs var mı?",
+          "answer": "Evet. Katalogda genel erişime açık ücretsiz kurslar bulunur. Ana sayfada öne çıkan seçkin kurslar ise Thorius ekibi tarafından özenle seçilmiş programlardır; ücretli veya ücretsiz olabilirler. Kurs kartında fiyat bilgisini görebilirsiniz."
+        },
+        {
+          "id": "erisim-suresi",
+          "question": "Kursa ne kadar süre erişirim?",
+          "answer": "Satın aldığınız veya kayıt olduğunuz kurslara süresiz erişim sağlanır. İstediğiniz zaman geri dönüp tekrar izleyebilirsiniz."
+        },
+        {
+          "id": "mobil",
+          "question": "Kursu telefondan izleyebilir miyim?",
+          "answer": "Evet. Platform modern tarayıcılarla mobil ve tablette de kullanılabilir."
+        },
+        {
+          "id": "indirme",
+          "question": "Dersleri indirebilir miyim?",
+          "answer": "Hayır. Video dersler ve materyaller platform üzerinden izlenir; dosya indirme özelliği sunulmaz."
+        },
+        {
+          "id": "ilerleme",
+          "question": "Kaldığım yerden devam edebilir miyim?",
+          "answer": "Evet. İzleme ilerlemeniz hesabınıza kaydedilir; dilediğiniz zaman kaldığınız dersten devam edebilirsiniz."
+        }
+      ]
+    },
+    {
+      "id": "odeme",
+      "title": "Ödeme, Fatura ve İade",
+      "items": [
+        {
+          "id": "odeme-yontemi",
+          "question": "Hangi ödeme yöntemlerini kabul ediyorsunuz?",
+          "answer": "Kredi ve banka kartı ile güvenli ödeme altyapısı üzerinden ödeme alınır."
+        },
+        {
+          "id": "kdv",
+          "question": "Fiyatlara KDV dahil mi?",
+          "answer": "Evet. Kurs fiyatları Türk Lirası (TRY) cinsinden gösterilir ve yasal vergiler dahildir."
+        },
+        {
+          "id": "fatura",
+          "question": "Kurumsal fatura alabilir miyim?",
+          "answer": "Evet. Satın alma sırasında veya sonrasında info@thorius.com.tr üzerinden fatura bilgilerinizi iletebilirsiniz."
+        },
+        {
+          "id": "erisim-zamani",
+          "question": "Ödeme sonrası kursa ne zaman erişirim?",
+          "answer": "Ödeme onayından sonra erişim açılır; çoğu durumda anında, en geç 24 saat içinde Kurslarım bölümünde görünür."
+        },
+        {
+          "id": "iade",
+          "question": "İade veya cayma hakkım var mı?",
+          "answer": "Dijital içeriklerde, kursa erişim başlamadan önce 14 gün içinde cayma hakkınız vardır. Erişim onayıyla birlikte ifaya başlanan hizmetlerde cayma hakkı kullanılamaz. Ayrıntılar /mesafeli-satis metninde yer alır."
+        },
+        {
+          "id": "kupon",
+          "question": "İndirim kodu nasıl kullanılırım?",
+          "answer": "Ödeme adımındaki kupon alanına kodunuzu girin. Geçerli kodlar otomatik uygulanır."
+        }
+      ]
+    },
+    {
+      "id": "sertifika",
+      "title": "Sertifika",
+      "items": [
+        {
+          "id": "sertifika-var-mi",
+          "question": "Sertifika veriyor musunuz?",
+          "answer": "Evet. Kursun tüm ders ve gerekliliklerini tamamlayan katılımcılara dijital tamamlama sertifikası gönderilir."
+        },
+        {
+          "id": "sertifika-nasil",
+          "question": "Sertifikayı nasıl alırım?",
+          "answer": "Kursu eksiksiz tamamladığınızda sertifikanız hazırlanır; e-posta ile bilgilendirilir ve hesabınızdan indirebilirsiniz."
+        },
+        {
+          "id": "sertifika-dogrulama",
+          "question": "Sertifika doğrulanabilir mi?",
+          "answer": "Evet. Sertifikadaki doğrulama kodu veya QR ile belgenin geçerliliği kontrol edilebilir."
+        }
+      ]
+    },
+    {
+      "id": "hesap",
+      "title": "Hesap ve Teknik Destek",
+      "items": [
+        {
+          "id": "hesap-ac",
+          "question": "Nasıl hesap açarım?",
+          "answer": "Kayıt Ol sayfasından e-posta adresinizle ücretsiz hesap oluşturabilirsiniz. E-posta doğrulamasından sonra giriş yapabilirsiniz."
+        },
+        {
+          "id": "sifre",
+          "question": "Şifremi unuttum, ne yapmalıyım?",
+          "answer": "Giriş sayfasındaki «Şifremi unuttum» bağlantısından sıfırlama e-postası isteyin. Gelen link ile yeni şifre belirleyebilirsiniz."
+        },
+        {
+          "id": "giris-sorunu",
+          "question": "Giriş yapamıyorum.",
+          "answer": "E-posta ve şifrenizi kontrol edin; farklı bir tarayıcı veya gizli pencere deneyin. Sorun devam ederse info@thorius.com.tr veya WhatsApp hattımızdan yazın."
+        },
+        {
+          "id": "video-sorunu",
+          "question": "Video oynatılmıyor.",
+          "answer": "İnternet bağlantınızı kontrol edin; Chrome, Safari veya Firefox'un güncel sürümünü kullanın. Reklam engelleyici veya VPN bazen oynatmayı etkileyebilir."
+        }
+      ]
+    },
+    {
+      "id": "kurumsal",
+      "title": "Kurumsal Eğitim",
+      "items": [
+        {
+          "id": "kurumsal-egitim",
+          "question": "Şirketim için toplu eğitim alabilir miyiz?",
+          "answer": "Evet. Kurumsal sayfadaki iletişim formu üzerinden ekibinizin ihtiyacını paylaşın; size özel teklif hazırlayalım. Form: /kurumsal#iletisim"
+        },
+        {
+          "id": "paketler",
+          "question": "Hangi kurumsal paketler var?",
+          "answer": "Growth (50–200 çalışan) ve Enterprise (200+ çalışan) paketleri sunuyoruz. Koltuk sayısı, canlı oturum ve özel içerik ihtiyaçlarına göre paket özelleştirilebilir."
+        },
+        {
+          "id": "danismanlik",
+          "question": "Sadece eğitim mi, danışmanlık da var mı?",
+          "answer": "Thorius modeli danışmanlık ve audit ile başlar; AI4U Retail yazılımı, Academy eğitimleri, Kitaplık ve Coaching ile devam eder. Detaylar /kurumsal sayfasında."
+        }
+      ]
+    },
+    {
+      "id": "kitaplik",
+      "title": "Kitaplık ve Yayınevi",
+      "items": [
+        {
+          "id": "kitaplik-nedir",
+          "question": "Kitaplık nedir?",
+          "answer": "Thorius Yayınevi'nin basılı kitap ve e-kitaplarını sunduğu ayrı bir platformdur (kitaplik.thorius.com.tr). Academy kurslarından farklıdır."
+        },
+        {
+          "id": "e-kitap-indirme",
+          "question": "E-kitabı indirebilir miyim?",
+          "answer": "Hayır. E-kitaplar güvenli okuyucu üzerinden okunur; dosya indirme sunulmaz."
+        },
+        {
+          "id": "yayinevi-belge",
+          "question": "Yayınevi faaliyet belgeniz var mı?",
+          "answer": "Evet. Kültür ve Turizm Bakanlığı onaylı yayınevi faaliyet belgemiz /hakkimizda#belgelerimiz bölümünde görüntülenir."
+        }
+      ]
+    },
+    {
+      "id": "yasal",
+      "title": "Gizlilik ve Yasal",
+      "items": [
+        {
+          "id": "kvkk",
+          "question": "Kişisel verilerim nasıl işleniyor?",
+          "answer": "KVKK Aydınlatma Metni'nde veri işleme amaçları, saklama süreleri ve haklarınız açıklanır: /kvkk"
+        },
+        {
+          "id": "mesafeli",
+          "question": "Mesafeli satış koşulları neler?",
+          "answer": "Online kurs satın alımları Mesafeli Satış Sözleşmesi kapsamındadır. Cayma hakkı, ödeme ve teslimat koşulları /mesafeli-satis metninde yer alır."
+        },
+        {
+          "id": "iletisim",
+          "question": "Size nasıl ulaşabilirim?",
+          "answer": "info@thorius.com.tr · +90 543 132 35 03 (telefon ve WhatsApp) · /iletisim sayfası."
+        }
+      ]
+    }
+  ]
+}

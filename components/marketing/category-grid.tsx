@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
@@ -11,7 +12,8 @@ interface CategoryGridProps {
   categories: WPCategory[];
 }
 
-export function CategoryGrid({ categories }: CategoryGridProps) {
+export async function CategoryGrid({ categories }: CategoryGridProps) {
+  const t = await getTranslations("home.categoryGrid");
   const visibleCategories = sortHomepageCategories(categories).slice(0, 10);
 
   if (visibleCategories.length === 0) {
@@ -21,7 +23,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
   return (
     <section
       className="border-b border-white/10 bg-[var(--thorius-logo-bg)] py-4 md:py-5"
-      aria-label="Kurs kategorileri"
+      aria-label={t("ariaLabel")}
     >
       <Container size="wide">
         <div className="grid grid-cols-2 gap-2 sm:grid-cols-5 lg:grid-cols-10 lg:gap-2.5">
@@ -44,7 +46,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                     // eslint-disable-next-line @next/next/no-img-element
                     <img
                       src={category.image}
-                      alt={`${category.name} kategorisi`}
+                      alt={t("categoryAlt", { name: category.name })}
                       loading="lazy"
                       decoding="async"
                       className="absolute inset-0 h-full w-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -58,7 +60,7 @@ export function CategoryGrid({ categories }: CategoryGridProps) {
                       {category.name}
                     </h3>
                     <p className="mt-0.5 text-[10px] text-primary-100 sm:text-xs lg:text-[9px] xl:text-[10px]">
-                      {category.count} kurs
+                      {t("courseCount", { count: category.count })}
                     </p>
                   </div>
                 </div>

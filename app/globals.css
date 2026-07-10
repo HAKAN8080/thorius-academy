@@ -597,7 +597,7 @@ html.navigation-pending::before {
   animation: ebook-page-turn-prev 0.36s ease-in-out;
 }
 
-/* Yeni eğitimler — sahne spot ışıkları */
+/* Popüler eğitimler — sahne spot ışıkları */
 @keyframes featured-stage-light-sway-left {
   0%,
   100% {
@@ -803,4 +803,89 @@ html.navigation-pending::before {
   .featured-stage-floor-glow {
     animation: none;
   }
+}
+
+/* Beyaz zemin — kırmızı / sarı / mavi sahne ışıkları */
+.featured-stage--light .featured-stage-light {
+  mix-blend-mode: multiply;
+  filter: blur(64px);
+  opacity: 0.55;
+}
+
+.featured-stage--light .featured-stage-light--red {
+  background: radial-gradient(
+    circle,
+    rgba(239, 68, 68, 0.42) 0%,
+    rgba(239, 68, 68, 0.14) 38%,
+    transparent 72%
+  );
+}
+
+.featured-stage--light .featured-stage-light--yellow {
+  background: radial-gradient(
+    circle,
+    rgba(250, 204, 21, 0.48) 0%,
+    rgba(250, 204, 21, 0.16) 36%,
+    transparent 70%
+  );
+}
+
+.featured-stage--light .featured-stage-light--blue {
+  background: radial-gradient(
+    circle,
+    rgba(59, 130, 246, 0.4) 0%,
+    rgba(59, 130, 246, 0.14) 38%,
+    transparent 72%
+  );
+}
+
+.featured-stage--light .featured-stage-beam {
+  mix-blend-mode: multiply;
+  opacity: 0.28;
+  filter: blur(40px);
+}
+
+.featured-stage--light .featured-stage-beam--red {
+  background: linear-gradient(
+    165deg,
+    rgba(239, 68, 68, 0.45) 0%,
+    rgba(239, 68, 68, 0.1) 42%,
+    transparent 72%
+  );
+}
+
+.featured-stage--light .featured-stage-beam--yellow {
+  background: linear-gradient(
+    180deg,
+    rgba(250, 204, 21, 0.5) 0%,
+    rgba(250, 204, 21, 0.12) 40%,
+    transparent 74%
+  );
+}
+
+.featured-stage--light .featured-stage-beam--blue {
+  background: linear-gradient(
+    195deg,
+    rgba(59, 130, 246, 0.42) 0%,
+    rgba(59, 130, 246, 0.1) 42%,
+    transparent 72%
+  );
+}
+
+.featured-stage-floor-glow--light {
+  background: radial-gradient(
+    ellipse 100% 100% at 50% 100%,
+    rgba(250, 204, 21, 0.22) 0%,
+    rgba(239, 68, 68, 0.1) 28%,
+    rgba(59, 130, 246, 0.1) 52%,
+    transparent 74%
+  );
+  mix-blend-mode: multiply;
+  opacity: 0.65;
+  animation: none;
+}
+
+.featured-stage--light .featured-stage-light,
+.featured-stage--light .featured-stage-beam {
+  animation: none;
 }

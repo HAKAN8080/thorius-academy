@@ -1,0 +1,239 @@
+{
+  "meta": {
+    "title": "Frequently Asked Questions | Thorius Academy",
+    "description": "Answers to common questions about course enrollment, lifetime access, certificates, payments, refunds, and corporate training."
+  },
+  "hero": {
+    "badge": "Help Center",
+    "title": "Frequently Asked Questions",
+    "subtitle": "Answers to the most common questions about courses, payments, certificates, and corporate training."
+  },
+  "categoryNav": "FAQ categories",
+  "cta": {
+    "title": "Couldn't find your answer?",
+    "subtitle": "Our team is happy to help.",
+    "contact": "Contact Us",
+    "whatsapp": "WhatsApp",
+    "corporate": "Corporate Quote"
+  },
+  "links": {
+    "/hakkimizda": "About",
+    "/hakkimizda#belgelerimiz": "Our Certificates",
+    "/kurslar": "Courses",
+    "/iletisim": "Contact",
+    "/kurumsal": "Corporate",
+    "/kurumsal#iletisim": "Corporate contact form",
+    "/kvkk": "KVKK Privacy Notice",
+    "/mesafeli-satis": "Distance Sales Agreement"
+  },
+  "categories": [
+    {
+      "id": "thorius",
+      "title": "About Thorius",
+      "items": [
+        {
+          "id": "thorius-nedir",
+          "question": "What is Thorius?",
+          "answer": "Thorius Education and Consulting offers an integrated transformation model that begins with consulting and audit, continues with AI4U Retail software, Thorius Academy training, publishing & library, and coaching. For details, visit /hakkimizda."
+        },
+        {
+          "id": "academy-sirket",
+          "question": "Is Thorius Academy the same as the company?",
+          "answer": "Yes. Thorius Academy is the online learning platform of Thorius Education and Consulting Ltd. Company credentials and official documents are on /hakkimizda."
+        },
+        {
+          "id": "alanlar",
+          "question": "What training areas do you cover?",
+          "answer": "We offer career-focused training in retail planning, human resources, and artificial intelligence. See the current catalog on /kurslar."
+        },
+        {
+          "id": "online-yuzyuze",
+          "question": "Are courses online or in person?",
+          "answer": "Courses on Thorius Academy are online and self-paced. Corporate programs can include live sessions and customized content. We also offer in-person training for corporate clients."
+        }
+      ]
+    },
+    {
+      "id": "kurslar",
+      "title": "Courses & Enrollment",
+      "items": [
+        {
+          "id": "kayit",
+          "question": "How do I enroll in a course?",
+          "answer": "Create a free account, choose your course, and complete checkout. Once access is confirmed, start from My Courses."
+        },
+        {
+          "id": "ucretsiz",
+          "question": "Are there free courses?",
+          "answer": "Yes. The catalog includes free courses open to everyone. Featured courses on the homepage are curated by the Thorius team and may be free or paid — check the price on each course card."
+        },
+        {
+          "id": "erisim-suresi",
+          "question": "How long do I have access to a course?",
+          "answer": "Purchased or enrolled courses come with lifetime access. You can return and rewatch anytime."
+        },
+        {
+          "id": "mobil",
+          "question": "Can I watch on my phone?",
+          "answer": "Yes. The platform works on modern mobile and tablet browsers."
+        },
+        {
+          "id": "indirme",
+          "question": "Can I download lessons?",
+          "answer": "No. Videos and materials are streamed on the platform; file downloads are not offered."
+        },
+        {
+          "id": "ilerleme",
+          "question": "Can I resume where I left off?",
+          "answer": "Yes. Your progress is saved to your account so you can continue from the last lesson."
+        }
+      ]
+    },
+    {
+      "id": "odeme",
+      "title": "Payment, Invoice & Refunds",
+      "items": [
+        {
+          "id": "odeme-yontemi",
+          "question": "What payment methods do you accept?",
+          "answer": "We accept credit and debit cards through a secure payment provider."
+        },
+        {
+          "id": "kdv",
+          "question": "Are prices inclusive of VAT?",
+          "answer": "Yes. Course prices are shown in Turkish Lira (TRY) and include applicable taxes."
+        },
+        {
+          "id": "fatura",
+          "question": "Can I get a corporate invoice?",
+          "answer": "Yes. Share your billing details at checkout or email info@thorius.com.tr afterward."
+        },
+        {
+          "id": "erisim-zamani",
+          "question": "When do I get access after payment?",
+          "answer": "Access opens after payment confirmation — usually instantly, and within 24 hours at the latest in My Courses."
+        },
+        {
+          "id": "iade",
+          "question": "Do I have a refund or withdrawal right?",
+          "answer": "For digital content, you have a 14-day withdrawal right before course access begins. Once access starts, the right of withdrawal cannot be used. Details are in /mesafeli-satis."
+        },
+        {
+          "id": "kupon",
+          "question": "How do I use a discount code?",
+          "answer": "Enter your code in the coupon field at checkout. Valid codes apply automatically."
+        }
+      ]
+    },
+    {
+      "id": "sertifika",
+      "title": "Certificates",
+      "items": [
+        {
+          "id": "sertifika-var-mi",
+          "question": "Do you issue certificates?",
+          "answer": "Yes. Participants who complete all lessons and requirements receive a digital completion certificate."
+        },
+        {
+          "id": "sertifika-nasil",
+          "question": "How do I get my certificate?",
+          "answer": "When you complete the course, your certificate is prepared; you'll be notified by email and can download it from your account."
+        },
+        {
+          "id": "sertifika-dogrulama",
+          "question": "Can certificates be verified?",
+          "answer": "Yes. Validity can be checked using the verification code or QR on the certificate."
+        }
+      ]
+    },
+    {
+      "id": "hesap",
+      "title": "Account & Technical Support",
+      "items": [
+        {
+          "id": "hesap-ac",
+          "question": "How do I create an account?",
+          "answer": "Sign up for free with your email on the registration page. After email verification, you can sign in."
+        },
+        {
+          "id": "sifre",
+          "question": "I forgot my password — what should I do?",
+          "answer": "Use the “Forgot password” link on the sign-in page to request a reset email, then set a new password from the link."
+        },
+        {
+          "id": "giris-sorunu",
+          "question": "I can't sign in.",
+          "answer": "Check your email and password; try another browser or a private window. If the issue persists, email info@thorius.com.tr or message us on WhatsApp."
+        },
+        {
+          "id": "video-sorunu",
+          "question": "Video won't play.",
+          "answer": "Check your internet connection; use an up-to-date Chrome, Safari, or Firefox. Ad blockers or VPNs can sometimes affect playback."
+        }
+      ]
+    },
+    {
+      "id": "kurumsal",
+      "title": "Corporate Training",
+      "items": [
+        {
+          "id": "kurumsal-egitim",
+          "question": "Can we get bulk training for our company?",
+          "answer": "Yes. Share your team's needs via the contact form on /kurumsal and we'll prepare a tailored proposal. Form: /kurumsal#iletisim"
+        },
+        {
+          "id": "paketler",
+          "question": "What corporate packages are available?",
+          "answer": "We offer Growth (50–200 employees) and Enterprise (200+ employees) packages. Seat count, live sessions, and custom content can be tailored."
+        },
+        {
+          "id": "danismanlik",
+          "question": "Is it training only, or consulting too?",
+          "answer": "The Thorius model starts with consulting and audit; it continues with AI4U Retail, Academy training, Library, and Coaching. See /kurumsal for details."
+        }
+      ]
+    },
+    {
+      "id": "kitaplik",
+      "title": "Library & Publishing",
+      "items": [
+        {
+          "id": "kitaplik-nedir",
+          "question": "What is the Library?",
+          "answer": "A separate platform (kitaplik.thorius.com.tr) for printed books and e-books from Thorius Publishing — distinct from Academy courses."
+        },
+        {
+          "id": "e-kitap-indirme",
+          "question": "Can I download e-books?",
+          "answer": "No. E-books are read in a secure reader; file downloads are not offered."
+        },
+        {
+          "id": "yayinevi-belge",
+          "question": "Do you have a publishing license?",
+          "answer": "Yes. Our Ministry of Culture and Tourism approved publishing license is shown at /hakkimizda#belgelerimiz."
+        }
+      ]
+    },
+    {
+      "id": "yasal",
+      "title": "Privacy & Legal",
+      "items": [
+        {
+          "id": "kvkk",
+          "question": "How is my personal data processed?",
+          "answer": "Purposes, retention periods, and your rights are explained in our KVKK notice: /kvkk"
+        },
+        {
+          "id": "mesafeli",
+          "question": "What are the distance sales terms?",
+          "answer": "Online course purchases are covered by our Distance Sales Agreement. Withdrawal, payment, and delivery terms are in /mesafeli-satis."
+        },
+        {
+          "id": "iletisim",
+          "question": "How can I reach you?",
+          "answer": "info@thorius.com.tr · +90 543 132 35 03 (phone & WhatsApp) · /iletisim"
+        }
+      ]
+    }
+  ]
+}

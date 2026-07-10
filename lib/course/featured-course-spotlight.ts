@@ -83,6 +83,45 @@ async function fetchSpotlightRows(limit: number) {
 
     return pinnedSlugs
       .map((slug) => bySlug.get(slug))
+      .filter((row): row is Record<string, unknown> => Boolean(row));
+  }
+
+  const { data: popularStats, error: statsError } = await supabase
+    .from("instructor_course_stats")
+    .select("course_slug, enrollment_count")
+    .order("enrollment_count", { ascending: false })
+    .limit(limit * 4);
+
+  if (statsError) {
+    console.error("[featured-course-spotlight] popularity fetch failed:", statsError.message);
+  }
+
+  const popularSlugs = (popularStats ?? [])
+    .map((row) => (row.course_slug as string | null)?.trim())
+    .filter((slug): slug is string => Boolean(slug));
+
+  if (popularSlugs.length > 0) {
+    const { data, error } = await supabase
+      .from("courses_cache")
+      .select(SPOTLIGHT_SELECT)
+      .eq("published", true)
+      .eq("visibility", "public")
+      .in("course_slug", popularSlugs);
+
+    if (error) {
+      console.error("[featured-course-spotlight] popular courses fetch failed:", error.message);
+      return [];
+    }
+
+    const bySlug = new Map(
+      (data ?? []).map((row) => [
+        row.course_slug as string,
+        row as Record<string, unknown>,
+      ]),
+    );
+
+    return popularSlugs
+      .map((slug) => bySlug.get(slug))
       .filter((row): row is Record<string, unknown> => Boolean(row))
       .slice(0, limit);
   }
@@ -301,12 +340,25 @@ function mapSpotlightRow(
   };
 }
 
+export function getConfiguredSpotlightLimit(): number {
+  const pinned = configuredSpotlightSlugs();
+  return pinned.length > 0 ? pinned.length : DEFAULT_LIMIT;
+}
+
 export async function getFeaturedCourseSpotlights(
-  limit = DEFAULT_LIMIT,
+  limit?: number,
 ): Promise<FeaturedCourseSpotlight[]> {
+  const pinned = configuredSpotlightSlugs();
+  const effectiveLimit =
+    pinned.length > 0 ? pinned.length : (limit ?? DEFAULT_LIMIT);
+
   return unstable_cache(
-    () => buildFeaturedCourseSpotlights(limit),
-    ["featured-course-spotlights-v1", String(limit), process.env.HOMEPAGE_SPOTLIGHT_SLUGS ?? ""],
+    () => buildFeaturedCourseSpotlights(effectiveLimit),
+    [
+      "featured-course-spotlights-v3",
+      String(effectiveLimit),
+      process.env.HOMEPAGE_SPOTLIGHT_SLUGS ?? "",
+    ],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog", "course-stats", "course-products"],

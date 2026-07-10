@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "Hakkımızda | Thorius Academy",
+    "description": "Thorius Academy misyon, vizyon ve değerleri. Resmi şirket künyesi, MERSIS ve kurumsal belgeler — erişilebilir, kaliteli dijital eğitimler."
+  },
+  "hero": {
+    "legalName": "Thorius Eğitim ve Danışmanlık Ltd. Şti.",
+    "title": "Thorius Hakkında",
+    "tagline": "Audit ile eksikleri buluyor, AI4U ile çözüyor, Academy ile sürdürülebilir kılıyoruz.",
+    "subtitle": "Dr. Elif Demir Uğur ve M. Hakan Uğur liderliğindeki Thorius Eğitim ve Danışmanlık; danışmanlık ve audit ile başlayan, AI4U Retail yazılımı ve Thorius Academy eğitimleriyle devam eden bütüncül bir dönüşüm modeli sunar."
+  },
+  "profile": {
+    "eyebrow": "Kurumsal şeffaflık",
+    "title": "Şirket Künyesi",
+    "intro": "Thorius Academy, {legalName} çatısı altında faaliyet gösteren dijital eğitim platformudur.",
+    "fields": {
+      "legalName": "Şirket Unvanı",
+      "brand": "Marka / Platform",
+      "mersis": "MERSİS No",
+      "tradeRegistry": "Ticaret Sicil No",
+      "tax": "Vergi Dairesi / No",
+      "activityAreas": "Faaliyet Alanları"
+    },
+    "activityAreas": [
+      "Kurumsal Perakende Danışmanlığı",
+      "Profesyonel Eğitim Yönetimi",
+      "Dijital Akademi",
+      "Stratejik Planlama ve AI Entegrasyonu"
+    ]
+  },
+  "accreditations": {
+    "eyebrow": "Resmi belgeler",
+    "title": "Belgelerimiz / Sertifikalarımız",
+    "subtitle": "Marka tescili, yayınevi faaliyeti ve vergi levhamız kamuya açık şekilde paylaşılmaktadır.",
+    "verified": "Doğrulanmış",
+    "viewDetails": "Detayları görüntüle",
+    "viewDocument": "{title} — belgeyi görüntüle",
+    "previewAlt": "{title} önizlemesi",
+    "items": {
+      "trademark-registration": {
+        "title": "Marka Tescil Belgesi",
+        "issuer": "Türk Patent ve Marka Kurumu",
+        "description": "Thorius markası 6769 sayılı Sınai Mülkiyet Kanunu kapsamında 17.10.2025 tarihinde tescil edilmiştir (Başvuru No: 2025/065193). Mal ve hizmet sınıfları: 09, 35, 41, 42."
+      },
+      "publishing-license": {
+        "title": "Yayınevi Faaliyet Belgesi",
+        "issuer": "Kültür ve Turizm Bakanlığı",
+        "description": "5846 sayılı Fikir ve Sanat Eserleri Kanunu uyarınca yayınevi faaliyet sertifikası (No: 83851). Geçerlilik: 9.07.2026 – 9.07.2030."
+      },
+      "tax-plate": {
+        "title": "Vergi Levhası",
+        "issuer": "Gelir İdaresi Başkanlığı",
+        "description": "Thorius Eğitim ve Danışmanlık Ltd. Şti. Beşiktaş Vergi Dairesi mükellefiyeti (VKN: 8430902023). Ana faaliyet: bilgisayar danışmanlığı ve sistem yönetimi."
+      }
+    }
+  },
+  "mission": {
+    "title": "Misyon",
+    "p1": "Beyaz yaka profesyonellerin bilgi ve deneyimlerini erişilebilir, kaliteli ve etki odaklı eğitimlere dönüştürerek bireylerin ve kurumların gelişimine katkı sağlamak.",
+    "p2": "Danışmanlık ve audit ile tedarik zinciri, planlama ve İK alanlarındaki eksikleri belirliyor; AI4U Retail yazılımı ile çözüm üretiyor; Thorius Academy ile eğitim vererek dönüşümü sürdürülebilir kılıyoruz. 25 yılı aşkın sektör deneyimimiz bu bütüncül modele dayanır."
+  },
+  "vision": {
+    "title": "Vizyon",
+    "p1": "Deneyimin ve bilginin sadece kurumlara değil, tüm topluma ait olduğu bir geleceği inşa etmek.",
+    "p2": "Dijital çağın getirdiği olanakları kullanarak, bilgiyi demokratikleştiren, etkileşimli ve sürdürülebilir bir eğitim ekosistemi kurmak vizyonumuzun temelidir."
+  },
+  "model": {
+    "title": "Dönüşüm modelimiz",
+    "steps": [
+      {
+        "title": "Danışmanlık & Audit",
+        "description": "Tedarik zinciri, planlama ve İK alanlarında süreçlerinizi birlikte inceliyor; yetkinlik ve operasyonel eksikleri netleştiriyoruz."
+      },
+      {
+        "title": "AI4U Retail",
+        "description": "Audit sonuçlarına dayalı çözümleri AI destekli perakende yazılımımız AI4U Retail ile hayata geçiriyoruz."
+      },
+      {
+        "title": "Thorius Academy",
+        "description": "Çözümün sürdürülebilir olması için ekiplerinizi Thorius-LMS üzerinde eğitiyor; bilgiyi kalıcı yetkinliğe dönüştürüyoruz."
+      },
+      {
+        "title": "Thorius Yayınevi & Kitaplık",
+        "description": "Kültür ve Turizm Bakanlığı onaylı yayınevi faaliyetimizle uzmanlık kitaplarını, e-kitapları ve basılı yayınları Thorius Kitaplık üzerinden sunuyoruz."
+      },
+      {
+        "title": "Thorius Coaching",
+        "description": "Bireysel kariyer ve liderlik gelişimi için koçluk ve mentorluk ile desteği tamamlıyoruz."
+      }
+    ],
+    "domains": [
+      "Tedarik zinciri",
+      "Perakende planlama",
+      "İnsan kaynakları"
+    ]
+  },
+  "values": {
+    "title": "Değerlerimiz",
+    "items": {
+      "accessibility": "Erişilebilirlik",
+      "instructorQuality": "Eğitmen Kalitesi",
+      "ethics": "Etik ve Şeffaflık",
+      "innovation": "Yenilikçilik",
+      "democratic": "Demokratik"
+    }
+  },
+  "cta": {
+    "title": "Sorularınız mı var?",
+    "subtitle": "Bize iletişim sayfasından kolayca ulaşabilirsiniz.",
+    "button": "İletişime Geçin"
+  }
+}

@@ -1,5 +1,6 @@
 "use server";
 
+import { getTranslations } from "next-intl/server";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
 
 export interface CorporateContactState {
@@ -12,6 +13,7 @@ export async function submitCorporateContact(
   _prevState: CorporateContactState,
   formData: FormData,
 ): Promise<CorporateContactState> {
+  const t = await getTranslations("corporate.form");
   const company = formData.get("company");
   const contactName = formData.get("contactName");
   const contactEmail = formData.get("contactEmail");
@@ -25,7 +27,7 @@ export async function submitCorporateContact(
     typeof contactEmail !== "string" ||
     !contactEmail.trim()
   ) {
-    return { error: "Lütfen zorunlu alanları doldurun." };
+    return { error: t("errorRequired") };
   }
 
   const employeeCount =
@@ -39,32 +41,27 @@ export async function submitCorporateContact(
       from: getResendFromAddress(),
       to,
       replyTo: contactEmail.trim(),
-      subject: `Kurumsal teklif talebi — ${company.trim()}`,
+      subject: t("emailSubject", { company: company.trim() }),
       html: `
-        <h2>Kurumsal İletişim Formu</h2>
-        <p><strong>Şirket:</strong> ${company.trim()}</p>
-        <p><strong>Ad Soyad:</strong> ${contactName.trim()}</p>
-        <p><strong>E-posta:</strong> ${contactEmail.trim()}</p>
-        <p><strong>Çalışan sayısı:</strong> ${employeeCount}</p>
+        <h2>${t("emailHeading")}</h2>
+        <p><strong>${t("emailCompany")}:</strong> ${company.trim()}</p>
+        <p><strong>${t("emailName")}:</strong> ${contactName.trim()}</p>
+        <p><strong>${t("emailEmail")}:</strong> ${contactEmail.trim()}</p>
+        <p><strong>${t("emailEmployees")}:</strong> ${employeeCount}</p>
       `,
     });
 
     if (error) {
       console.error("[Corporate Contact] Email failed:", error.message);
-      return {
-        error: "Form gönderilemedi. Lütfen info@thorius.com.tr adresine yazın.",
-      };
+      return { error: t("errorSend") };
     }
 
     return {
       success: true,
-      successMessage:
-        "Talebiniz alındı. Ekibimiz 1 iş günü içinde size dönüş yapacaktır.",
+      successMessage: t("success"),
     };
   } catch (err) {
     console.error("[Corporate Contact] Exception:", err);
-    return {
-      error: "Form gönderilemedi. Lütfen info@thorius.com.tr adresine yazın.",
-    };
+    return { error: t("errorSend") };
   }
 }

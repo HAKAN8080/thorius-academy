@@ -1,14 +1,25 @@
+import {
+  defaultLocale,
+  prefixWithLocale,
+  stripLocalePrefix,
+} from "@/lib/i18n/locale";
+
 /** Oturum gerektiren Academy uygulama yolları. */
 export function isProtectedAppPath(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
   return (
-    pathname === "/panel" ||
-    pathname.startsWith("/panel/") ||
-    pathname === "/instructor" ||
-    pathname.startsWith("/instructor/")
+    stripped === "/panel" ||
+    stripped.startsWith("/panel/") ||
+    stripped === "/instructor" ||
+    stripped.startsWith("/instructor/")
   );
 }
 
-export function buildLoginRedirectPath(pathname: string, search = ""): string {
+export function buildLoginRedirectPath(
+  pathname: string,
+  search = "",
+  locale = defaultLocale,
+): string {
   const target = `${pathname}${search}`;
-  return `/giris?redirect=${encodeURIComponent(target)}`;
+  return prefixWithLocale("/giris", locale) + `?redirect=${encodeURIComponent(target)}`;
 }

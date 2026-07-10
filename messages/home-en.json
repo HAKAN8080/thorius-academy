@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "title": "Thorius Academy — Retail & HR Expert Training",
+    "description": "Career-focused online courses in Retail Planning, Human Resources, and Artificial Intelligence. OTB, range planning, inventory, and AI-powered forecasting training with certificates and career paths."
+  },
+  "categoryGrid": {
+    "ariaLabel": "Course categories",
+    "categoryAlt": "{name} category",
+    "courseCount": "{count} courses"
+  },
+  "memberPromo": {
+    "ariaLabel": "Membership promotions",
+    "discountBadge": "New member offer",
+    "discountTitle": "Start with {percent}% off",
+    "discountBody": "New members get {percent}% off paid courses with a welcome coupon. Use code {code} at checkout after signing up.",
+    "discountCircleLabel": "New member",
+    "discountCircleSuffix": "off",
+    "discountCta": "Sign up free",
+    "freeBadge": "Free start",
+    "freeTitle": "Start learning with Chess, English & IT",
+    "freeBody": "Explore the platform with our free courses, then move on to paid programs that fit your career path.",
+    "freeCta": "Browse free courses"
+  },
+  "ecosystem": {
+    "coachingLinkAria": "Go to Thorius Coaching (opens in new tab)",
+    "eyebrow": "Thorius Ecosystem",
+    "title": "From Training to Coaching",
+    "body": "Gain knowledge through courses, then shape your career with Thorius Coaching. Plan your next step on our AI-powered coaching and mentoring platform.",
+    "featuresAria": "Thorius Coaching features",
+    "features": [
+      "24/7 On-Demand Access",
+      "Personalized Coaching Programs",
+      "Leadership & Career Development Assessments"
+    ],
+    "cta": "Go to Thorius Coaching",
+    "imageAlt": "Thorius Coaching — career coaching and mentoring platform",
+    "footerCatalog": "Browse the course catalog",
+    "footerOr": "or switch to the coaching platform."
+  },
+  "showcases": {
+    "viewAll": "View all →",
+    "viewAllCourses": "View all courses →",
+    "featured": {
+      "title": "Featured Courses",
+      "description": "Premium training curated for professionals"
+    },
+    "planning": {
+      "title": "Planning Courses",
+      "description": "Retail planning, budgeting, and demand management training"
+    },
+    "hr": {
+      "title": "HR Courses",
+      "description": "Human resources, talent management, and organizational development"
+    },
+    "expert": {
+      "title": "Expert Training"
+    }
+  },
+  "freeHub": {
+    "title": "Free courses",
+    "viewAll": "View all",
+    "freeLabel": "Free",
+    "empty": "Free courses for this area coming soon.",
+    "columns": {
+      "satranc": "Chess",
+      "ingilizce": "English",
+      "bilgi-teknolojileri": "Information Technology"
+    },
+    "fallbackCourseTitle": "Course"
+  },
+  "inspiration": {
+    "ariaLabel": "Atatürk quote on science and knowledge",
+    "imageAlt": "The truest guide in life is science — Mustafa Kemal Atatürk"
+  },
+  "b2b": {
+    "title": "Custom training solutions for your company",
+    "body": "Tailored learning paths, live workshops, and performance reporting for retail chains with 50+ stores.",
+    "cta": "Request a Corporate Quote"
+  },
+  "spotlight": {
+    "popular": "Popular course",
+    "lessons": "{count} lessons",
+    "whoFor": "Who is it for?",
+    "outcomes": "Learning outcomes",
+    "attachments": "{count} attachments",
+    "noAttachments": "No extra materials",
+    "free": "Free",
+    "priceOnDetail": "See price on detail page",
+    "view": "View",
+    "viewCourseAria": "View course: {title}"
+  }
+}

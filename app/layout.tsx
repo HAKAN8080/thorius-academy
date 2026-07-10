@@ -1,4 +1,6 @@
 import type { Metadata } from "next";
+import { headers } from "next/headers";
+import { routing } from "@/i18n/routing";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
@@ -79,8 +81,13 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const headerList = headers();
+  const locale =
+    headerList.get("x-next-intl-locale") ??
+    routing.defaultLocale;
+
   return (
-    <html lang="tr">
+    <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased`}>
         <Suspense fallback={null}>
           <NavigationPending />

@@ -1,0 +1,92 @@
+{
+  "meta": {
+    "title": "Thorius Academy — Perakende ve İK Uzmanlık Eğitimleri",
+    "description": "Retail Planning, İnsan Kaynakları ve Yapay Zeka alanlarında kariyer odaklı online kurslar. OTB, range plan, envanter ve AI destekli forecast eğitimleri; sertifika ve kariyer yolları."
+  },
+  "categoryGrid": {
+    "ariaLabel": "Kurs kategorileri",
+    "categoryAlt": "{name} kategorisi",
+    "courseCount": "{count} kurs"
+  },
+  "memberPromo": {
+    "ariaLabel": "Üyelik kampanyaları",
+    "discountBadge": "İlk üyelere özel",
+    "discountTitle": "{percent}% indirimle başlayın",
+    "discountBody": "Yeni üyelerimize özel kupon ile ücretli kurslarda %{percent} indirim. Kayıt sonrası ödeme adımında {code} kodunu kullanın.",
+    "discountCircleLabel": "İlk üye",
+    "discountCircleSuffix": "indirim",
+    "discountCta": "Ücretsiz kayıt ol",
+    "freeBadge": "Ücretsiz başlangıç",
+    "freeTitle": "Satranç, İngilizce ve BT ile öğrenmeye başlayın",
+    "freeBody": "Ücretsiz kurslarımızla platformu keşfedin; ardından kariyer yolunuza uygun ücretli programlara geçiş yapın.",
+    "freeCta": "Ücretsiz kursları gör"
+  },
+  "ecosystem": {
+    "coachingLinkAria": "Thorius Coaching'e git (yeni sekme)",
+    "eyebrow": "Thorius Ekosistemi",
+    "title": "Eğitimden Koçluğa Geçin",
+    "body": "Kurslarla bilgiyi edinin, Thorius Coaching ile kariyerinize yön verin. AI destekli koçluk ve mentorluk platformumuzda bir sonraki adımınızı planlayın.",
+    "featuresAria": "Thorius Coaching özellikleri",
+    "features": [
+      "7/24 Anlık Erişim",
+      "Kişiselleştirilmiş Koçluk Programları",
+      "Liderlik ve Kariyer Gelişimi Değerlendirmeleri"
+    ],
+    "cta": "Thorius Coaching'e Git",
+    "imageAlt": "Thorius Coaching — kariyer koçluğu ve mentorluk platformu",
+    "footerCatalog": "Kurs kataloğunu inceleyin",
+    "footerOr": "veya koçluk platformuna geçin."
+  },
+  "showcases": {
+    "viewAll": "Tümünü Görüntüle →",
+    "viewAllCourses": "Tüm Kursları Görüntüle →",
+    "featured": {
+      "title": "Öne Çıkan Kurslar",
+      "description": "Profesyoneller için seçilmiş premium eğitimler"
+    },
+    "planning": {
+      "title": "Planlama Kursları",
+      "description": "Perakende planlama, bütçe ve talep yönetimi eğitimleri"
+    },
+    "hr": {
+      "title": "İK Kursları",
+      "description": "İnsan kaynakları, yetenek yönetimi ve organizasyonel gelişim"
+    },
+    "expert": {
+      "title": "Uzman Eğitimler"
+    }
+  },
+  "freeHub": {
+    "title": "Ücretsiz kurslar",
+    "viewAll": "Tümünü gör",
+    "freeLabel": "Ücretsiz",
+    "empty": "Bu alan için ücretsiz kurs yakında.",
+    "columns": {
+      "satranc": "Satranç",
+      "ingilizce": "İngilizce",
+      "bilgi-teknolojileri": "Bilgi Teknolojileri"
+    },
+    "fallbackCourseTitle": "Kurs"
+  },
+  "inspiration": {
+    "ariaLabel": "Atatürk'ün ilim ve fen sözü",
+    "imageAlt": "Hayatta en hakiki mürşit ilimdir, fen'dir — Mustafa Kemal Atatürk"
+  },
+  "b2b": {
+    "title": "Şirketinize özel eğitim çözümleri",
+    "body": "50+ mağazalı perakende zincirleri için özelleştirilmiş öğrenme yolları, canlı atölyeler ve performans raporlama.",
+    "cta": "Kurumsal Teklif Alın"
+  },
+  "spotlight": {
+    "popular": "Popüler eğitim",
+    "lessons": "{count} ders",
+    "whoFor": "Kimler için?",
+    "outcomes": "Kazanımlar",
+    "attachments": "{count} ek",
+    "noAttachments": "Ek materyal yok",
+    "free": "Ücretsiz",
+    "priceOnDetail": "Detayda fiyat",
+    "view": "İncele",
+    "viewCourseAria": "{title} kursunu incele"
+  }
+}

@@ -1,6 +1,7 @@
 "use client";
 
 import { useFormState, useFormStatus } from "react-dom";
+import { useTranslations } from "next-intl";
 import {
   submitCorporateContact,
   type CorporateContactState,
@@ -13,14 +14,17 @@ const initialState: CorporateContactState = {};
 
 function SubmitButton() {
   const { pending } = useFormStatus();
+  const t = useTranslations("corporate.form");
+
   return (
     <Button type="submit" variant="gold" className="w-full" disabled={pending}>
-      {pending ? "Gönderiliyor..." : "Gönder"}
+      {pending ? t("submitting") : t("submit")}
     </Button>
   );
 }
 
 export function CorporateContactForm() {
+  const t = useTranslations("corporate.form");
   const [state, formAction] = useFormState(submitCorporateContact, initialState);
 
   return (
@@ -36,25 +40,30 @@ export function CorporateContactForm() {
         </p>
       )}
       <div className="space-y-2">
-        <Label htmlFor="company">Şirket Adı</Label>
-        <Input id="company" name="company" required placeholder="Marka / Şirket" />
+        <Label htmlFor="company">{t("company")}</Label>
+        <Input
+          id="company"
+          name="company"
+          required
+          placeholder={t("companyPlaceholder")}
+        />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="contact-name">Ad Soyad</Label>
+        <Label htmlFor="contact-name">{t("contactName")}</Label>
         <Input id="contact-name" name="contactName" required />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="contact-email">Kurumsal E-posta</Label>
+        <Label htmlFor="contact-email">{t("contactEmail")}</Label>
         <Input id="contact-email" name="contactEmail" type="email" required />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="employees">Çalışan Sayısı</Label>
+        <Label htmlFor="employees">{t("employees")}</Label>
         <Input
           id="employees"
           name="employees"
           type="number"
           min={1}
-          placeholder="ör. 150"
+          placeholder={t("employeesPlaceholder")}
         />
       </div>
       <SubmitButton />

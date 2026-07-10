@@ -1,8 +1,10 @@
 "use client";
 
-import Link from "next/link";
 import { useState } from "react";
+import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { Menu } from "lucide-react";
+import { Link as LocaleLink } from "@/i18n/navigation";
 import { Button } from "@/components/ui/button";
 import {
   Sheet,
@@ -13,6 +15,7 @@ import {
 } from "@/components/ui/sheet";
 import { Container } from "@/components/layout/container";
 import { AuthButtons } from "@/components/layout/auth-buttons";
+import { LanguageSwitcher } from "@/components/layout/language-switcher";
 import { Logo } from "@/components/layout/logo";
 
 export interface HeaderNavLink {
@@ -30,16 +33,20 @@ export interface HeaderAuthUrls {
 interface HeaderProps {
   navLinks: HeaderNavLink[];
   authUrls?: HeaderAuthUrls;
+  localized?: boolean;
+  showLocaleSwitcher?: boolean;
 }
 
 function HeaderNavItem({
   link,
   className,
   onNavigate,
+  localized,
 }: {
   link: HeaderNavLink;
   className: string;
   onNavigate?: () => void;
+  localized?: boolean;
 }) {
   if (link.external || link.href.startsWith("http")) {
     return (
@@ -55,6 +62,18 @@ function HeaderNavItem({
     );
   }
 
+  if (localized) {
+    return (
+      <LocaleLink
+        href={link.href as "/"}
+        className={className}
+        onClick={onNavigate}
+      >
+        {link.label}
+      </LocaleLink>
+    );
+  }
+
   return (
     <Link href={link.href} className={className} onClick={onNavigate}>
       {link.label}
@@ -62,42 +81,52 @@ function HeaderNavItem({
   );
 }
 
-export function Header({ navLinks, authUrls }: HeaderProps) {
+export function Header({
+  navLinks,
+  authUrls,
+  localized = false,
+  showLocaleSwitcher = false,
+}: HeaderProps) {
+  const t = useTranslations("common");
   const [open, setOpen] = useState(false);
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[var(--thorius-logo-bg)]">
       <Container size="wide" className="flex h-16 items-center justify-between gap-4">
-        <Logo variant="compact" />
+        <Logo variant="compact" localized={localized} />
 
         <nav
           className="hidden items-center gap-6 lg:gap-8 xl:flex"
-          aria-label="Ana menü"
+          aria-label={t("mainMenu")}
         >
           {navLinks.map((link) => (
             <HeaderNavItem
               key={link.href}
               link={link}
               className="text-sm font-medium text-primary-100 transition-colors hover:text-white"
+              localized={localized}
             />
           ))}
         </nav>
 
-        <div className="hidden md:flex">
+        <div className="hidden items-center gap-3 md:flex">
+          {showLocaleSwitcher ? <LanguageSwitcher /> : null}
           <AuthButtons
             className="flex items-center gap-3"
             authUrls={authUrls}
             tone="dark"
+            localized={localized}
           />
         </div>
 
         <div className="flex items-center gap-2 md:hidden">
+          {showLocaleSwitcher ? <LanguageSwitcher /> : null}
           <Sheet open={open} onOpenChange={setOpen}>
             <SheetTrigger asChild>
               <Button
                 variant="ghost"
                 size="icon"
-                aria-label="Menüyü aç"
+                aria-label={t("openMenu")}
                 className="text-primary-100 hover:bg-white/10 hover:text-white"
               >
                 <Menu className="h-5 w-5" />
@@ -106,16 +135,17 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
             <SheetContent side="right" className="w-[300px]">
               <SheetHeader>
                 <SheetTitle>
-                  <Logo />
+                  <Logo localized={localized} />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 flex flex-col gap-4" aria-label="Mobil menü">
+              <nav className="mt-8 flex flex-col gap-4" aria-label={t("mobileMenu")}>
                 {navLinks.map((link) => (
                   <HeaderNavItem
                     key={link.href}
                     link={link}
                     className="text-base font-medium text-primary-800"
                     onNavigate={() => setOpen(false)}
+                    localized={localized}
                   />
                 ))}
                 <hr className="my-2 border-primary-100" />
@@ -123,6 +153,7 @@ export function Header({ navLinks, authUrls }: HeaderProps) {
                   className="flex flex-col gap-2"
                   authUrls={authUrls}
                   onNavigate={() => setOpen(false)}
+                  localized={localized}
                 />
               </nav>
             </SheetContent>

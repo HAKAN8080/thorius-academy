@@ -1,0 +1,71 @@
+{
+  "nav": {
+    "academy": "Academy",
+    "careerPath": "Career Path",
+    "library": "Library",
+    "shop": "Shop",
+    "coaching": "Coaching",
+    "corporate": "Corporate",
+    "about": "About",
+    "faq": "FAQ",
+    "blog": "Blog"
+  },
+  "auth": {
+    "login": "Sign In",
+    "register": "Sign Up",
+    "panel": "My Dashboard"
+  },
+  "common": {
+    "mainMenu": "Main menu",
+    "mobileMenu": "Mobile menu",
+    "openMenu": "Open menu"
+  },
+  "promo": {
+    "ariaLabel": "Membership promotion",
+    "text": "Sign up and get {percent}% off your first purchase!",
+    "cta": "Sign Up Now"
+  },
+  "hero": {
+    "popularCourses": "Most popular courses",
+    "titleBefore": "Not just a course — a",
+    "titleHighlight": "strategic investment",
+    "titleAfter": " in your professional future.",
+    "subtitle": "Not about watching videos — about becoming job-ready.",
+    "step1": "Choose a career path — each path is a sequence of courses.",
+    "step2": "Progress step by step — every step is a real Thorius course.",
+    "step3": "Complete a course — the next step unlocks automatically.",
+    "careerRetail": "Retail Planning",
+    "careerHr": "Human Resources",
+    "careerAi": "Artificial Intelligence",
+    "viewCareerPaths": "Explore career paths",
+    "allCourses": "All courses"
+  },
+  "footer": {
+    "about": "About",
+    "mission": "Our Mission",
+    "companyInfo": "Company Profile",
+    "documents": "Certificates",
+    "careerPaths": "Career Paths",
+    "library": "Library",
+    "coaching": "Coaching",
+    "blog": "Blog",
+    "corporate": "Corporate",
+    "corporateTraining": "Corporate Training",
+    "packages": "Packages",
+    "getQuote": "Request a Quote",
+    "useful": "Resources",
+    "faq": "Frequently Asked Questions",
+    "instructorGuide": "Instructor Support Guide",
+    "blogPosts": "Blog Posts",
+    "legal": "Legal",
+    "privacy": "Privacy Policy",
+    "kvkk": "KVKK Notice",
+    "terms": "Terms of Use",
+    "contact": "Contact",
+    "location": "Istanbul, Turkey",
+    "courses": "Courses",
+    "allCourses": "All Courses",
+    "copyright": "© 2026 Thorius Education and Consulting Ltd.",
+    "distanceSales": "Distance Sales Agreement"
+  }
+}

@@ -1,0 +1,325 @@
+{
+  "lastUpdatedLabel": "Last updated:",
+  "kvkk": {
+    "meta": {
+      "title": "KVKK Privacy Notice",
+      "description": "Privacy notice under Turkish Personal Data Protection Law No. 6698."
+    },
+    "title": "KVKK Privacy Notice",
+    "lastUpdated": "May 24, 2026",
+    "sections": [
+      {
+        "heading": "1. Data Controller",
+        "paragraphs": [
+          "Under Law No. 6698 on the Protection of Personal Data (\"KVKK\"), your personal data may be processed by Thorius Education and Consulting Ltd. as data controller within the scope described below."
+        ]
+      },
+      {
+        "heading": "2. Personal Data Processed",
+        "paragraphs": [
+          "Personal data categories we process through the platform:"
+        ],
+        "list": [
+          "Identity Data: First and last name",
+          "Contact Data: Email address, phone number (optional)",
+          "Customer Transaction Data: Course enrollment history, progress data",
+          "Transaction Security Data: IP address, session information",
+          "Financial Data: Payment information (processed by third-party providers)"
+        ]
+      },
+      {
+        "heading": "3. Purposes of Processing",
+        "paragraphs": [
+          "Your personal data is processed for the following purposes:"
+        ],
+        "list": [
+          "Creating membership and managing accounts",
+          "Providing educational services",
+          "Course enrollment, tracking, and certification processes",
+          "Improving customer satisfaction and service quality",
+          "Fulfilling legal obligations",
+          "Marketing and promotional activities (with explicit consent)"
+        ]
+      },
+      {
+        "heading": "4. Transfer of Personal Data",
+        "paragraphs": [
+          "Your personal data may be transferred to technology providers we use (Supabase, Vercel, Resend), payment institutions, and authorized public authorities as required by law, within the conditions set out in Articles 8 and 9 of the KVKK."
+        ]
+      },
+      {
+        "heading": "5. Collection Method and Legal Basis",
+        "paragraphs": [
+          "Your personal data is collected through membership forms, contact forms on the platform, and automatically during use. Processing is based on contract establishment and performance, legal obligations, legitimate interest, and explicit consent where applicable."
+        ]
+      },
+      {
+        "heading": "6. Your Rights as Data Subject",
+        "paragraphs": [
+          "Under Article 11 of the KVKK, you have the following rights:"
+        ],
+        "list": [
+          "To learn whether your personal data is processed",
+          "To request information if your data has been processed",
+          "To learn the purpose of processing and whether data is used accordingly",
+          "To know third parties to whom data is transferred domestically or abroad",
+          "To request correction of incomplete or inaccurate data",
+          "To request deletion or destruction of data under Article 7 of the KVKK",
+          "To object to results against you arising solely from automated analysis",
+          "To claim compensation for damages due to unlawful processing"
+        ]
+      },
+      {
+        "heading": "7. How to Apply",
+        "paragraphs": [
+          "To exercise your rights above, you may contact us via:",
+          "Email: info@thorius.com.tr",
+          "Address: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - Istanbul",
+          "Your requests will be evaluated and responded to within 30 (thirty) days at the latest from the request date."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "meta": {
+      "title": "Privacy Policy",
+      "description": "Thorius Academy privacy policy and personal data protection information."
+    },
+    "title": "Privacy Policy",
+    "lastUpdated": "May 24, 2026",
+    "sections": [
+      {
+        "heading": "1. Introduction",
+        "paragraphs": [
+          "At Thorius Academy, we value your privacy. This privacy policy explains how your personal data is collected, used, and protected."
+        ]
+      },
+      {
+        "heading": "2. Data Collected",
+        "paragraphs": [
+          "We may collect the following data through our platform:"
+        ],
+        "list": [
+          "First name, last name, and email address",
+          "Information shared during course enrollment",
+          "Course progress and assessment data",
+          "Usage statistics and preferences",
+          "Payment information (processed by third-party payment providers)"
+        ]
+      },
+      {
+        "heading": "3. Use of Data",
+        "paragraphs": [
+          "Collected data is used to:"
+        ],
+        "list": [
+          "Provide personalized educational services",
+          "Manage accounts and communication",
+          "Improve service quality",
+          "Fulfill legal obligations"
+        ]
+      },
+      {
+        "heading": "4. Data Security",
+        "paragraphs": [
+          "We apply industry-standard security measures to protect your data. All data is transmitted over encrypted connections and stored on secure servers."
+        ]
+      },
+      {
+        "heading": "5. Third Parties",
+        "paragraphs": [
+          "Your data may be shared with trusted third-party providers we use to deliver our services (payment processors, hosting services, email services, etc.)."
+        ]
+      },
+      {
+        "heading": "6. Cookies",
+        "paragraphs": [
+          "Our website uses cookies to improve user experience. You can manage cookie preferences in your browser settings."
+        ]
+      },
+      {
+        "heading": "7. Your Rights",
+        "paragraphs": [
+          "Under KVKK, you have the right to:"
+        ],
+        "list": [
+          "Learn whether your personal data is processed",
+          "Request access to your data",
+          "Request correction of your data",
+          "Request deletion of your data",
+          "Object to processing"
+        ]
+      },
+      {
+        "heading": "8. Contact",
+        "paragraphs": [
+          "For privacy-related questions, contact us:",
+          "Email: info@thorius.com.tr",
+          "Address: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - Istanbul"
+        ]
+      }
+    ]
+  },
+  "distanceSales": {
+    "meta": {
+      "title": "Distance Sales Agreement",
+      "description": "Thorius Academy distance sales agreement."
+    },
+    "title": "Distance Sales Agreement",
+    "lastUpdated": "May 26, 2026",
+    "intro": [
+      "This Distance Sales Agreement is prepared in accordance with the Turkish Consumer Protection Law No. 6502 and the Regulation on Distance Contracts."
+    ],
+    "sections": [
+      {
+        "heading": "1. Parties",
+        "paragraphs": [
+          "Seller: Thorius Education and Consulting Ltd.",
+          "Address: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş, Istanbul",
+          "Email: info@thorius.com.tr",
+          "Phone / WhatsApp: +90 543 132 35 03",
+          "Buyer: Natural or legal person purchasing digital training services through the Thorius Academy platform."
+        ]
+      },
+      {
+        "heading": "2. Subject of the Agreement",
+        "paragraphs": [
+          "This agreement defines the rights and obligations of the parties regarding the sale and delivery of digital training / course services ordered electronically by the Buyer on academy.thorius.com.tr."
+        ]
+      },
+      {
+        "heading": "3. Product / Service Information",
+        "paragraphs": [
+          "The purchased service consists of online training packages including video lessons, digital materials, exams, and certificates. Essential characteristics are listed on the relevant course page. All prices are in Turkish Lira (TRY) and include applicable taxes."
+        ]
+      },
+      {
+        "heading": "4. Payment and Delivery",
+        "list": [
+          "Payment is made by credit/debit card through a secure payment infrastructure.",
+          "The digital service is delivered via access credentials sent to the Buyer's registered email after payment confirmation.",
+          "Delivery time is within 24 hours at the latest from payment confirmation."
+        ]
+      },
+      {
+        "heading": "5. Right of Withdrawal",
+        "paragraphs": [
+          "For digital content services, the right of withdrawal may be exercised within 14 days from the contract date provided service performance (course/lesson access) has not begun. Withdrawal cannot be used once performance has begun with the Buyer's consent.",
+          "Withdrawal notice is sent by email to info@thorius.com.tr."
+        ]
+      },
+      {
+        "heading": "6. General Provisions",
+        "list": [
+          "The Buyer confirms having read and accepted the pre-information form and this agreement electronically before ordering.",
+          "Consumer Arbitration Committees and Consumer Courts have jurisdiction in disputes.",
+          "The Seller may temporarily suspend service for technical reasons; the Buyer will be informed."
+        ]
+      },
+      {
+        "heading": "7. Effectiveness",
+        "paragraphs": [
+          "By completing payment on the platform, the Buyer declares that they have read, understood, and accepted all provisions of this agreement."
+        ]
+      }
+    ],
+    "footerNote": "This text is for preliminary information. For the current binding agreement, contact us at info@thorius.com.tr."
+  },
+  "terms": {
+    "meta": {
+      "title": "Terms of Use",
+      "description": "Thorius Academy terms of service and usage conditions."
+    },
+    "title": "Terms of Use",
+    "lastUpdated": "May 24, 2026",
+    "sections": [
+      {
+        "heading": "1. General Provisions",
+        "paragraphs": [
+          "These terms govern your use of the Thorius Academy platform (\"Platform\"). By accessing the Platform or using our services, you are deemed to have accepted these terms."
+        ]
+      },
+      {
+        "heading": "2. Service Description",
+        "paragraphs": [
+          "Thorius Academy is a platform providing online training and certification in retail, human resources, artificial intelligence, leadership, and other professional development areas. Our services include course content, video lessons, assignments, certificates, and instructor support."
+        ]
+      },
+      {
+        "heading": "3. Membership and Account Security",
+        "list": [
+          "You must be 18 years or older to use the Platform.",
+          "You are responsible for keeping your membership information accurate and up to date.",
+          "You are solely responsible for account security and password confidentiality.",
+          "You must contact us immediately if you notice unauthorized access to your account."
+        ]
+      },
+      {
+        "heading": "4. Payment and Billing",
+        "list": [
+          "Payment for paid courses is collected at enrollment.",
+          "All prices are in Turkish Lira (TRY) and include VAT.",
+          "Payments are processed through secure third-party payment providers.",
+          "Invoice information is retained as required by law."
+        ]
+      },
+      {
+        "heading": "5. Refunds and Withdrawal",
+        "paragraphs": [
+          "For digital courses, you may exercise your right of withdrawal within 14 days of purchase provided course access has not been granted. After access is granted (e.g. first lesson viewed), withdrawal cannot be used."
+        ]
+      },
+      {
+        "heading": "6. Intellectual Property",
+        "paragraphs": [
+          "All content on the Platform (videos, text, images, slides, course materials, etc.) is the intellectual property of Thorius Education and Consulting Ltd. or the relevant instructors. Unauthorized reproduction, distribution, or commercial use is prohibited."
+        ]
+      },
+      {
+        "heading": "7. Prohibited Conduct",
+        "paragraphs": [
+          "The following conduct is prohibited on the Platform:"
+        ],
+        "list": [
+          "Sharing account credentials with others",
+          "Recording and distributing course content",
+          "Any technical interference that harms the Platform",
+          "Aggressive behavior toward other users, instructors, or staff",
+          "Sharing content that violates the law"
+        ]
+      },
+      {
+        "heading": "8. Termination of Service",
+        "paragraphs": [
+          "Accounts of users who violate these terms may be suspended or closed without prior notice. No compensation may be claimed for loss of access in such cases."
+        ]
+      },
+      {
+        "heading": "9. Limitation of Liability",
+        "paragraphs": [
+          "The Platform is provided \"as is.\" Our liability for service interruptions, technical issues, or content errors is limited to the maximum extent permitted by law."
+        ]
+      },
+      {
+        "heading": "10. Changes",
+        "paragraphs": [
+          "We reserve the right to update these terms at any time. You will be notified of material changes via your registered email address."
+        ]
+      },
+      {
+        "heading": "11. Dispute Resolution",
+        "paragraphs": [
+          "Istanbul Courts and Enforcement Offices have jurisdiction over disputes arising from this agreement. Consumer Arbitration Committees and Consumer Courts have jurisdiction within monetary limits."
+        ]
+      },
+      {
+        "heading": "12. Contact",
+        "paragraphs": [
+          "Company: Thorius Education and Consulting Ltd.",
+          "Email: info@thorius.com.tr",
+          "Address: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - Istanbul"
+        ]
+      }
+    ]
+  }
+}

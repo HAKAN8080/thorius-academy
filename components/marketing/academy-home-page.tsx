@@ -1,16 +1,17 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { FeaturedCourseSpotlightSection } from "@/components/marketing/featured-course-spotlight-section";
+import { FreeCoursesHubSection } from "@/components/marketing/free-courses-hub-section";
 import { Hero } from "@/components/marketing/hero";
+import { MemberPromoSection } from "@/components/marketing/member-promo-section";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
-import { loadCareerPathBySlug } from "@/lib/course/load-career-path-by-slug";
-import { pickCareerPathCourses } from "@/lib/course/pick-career-path-courses";
+import { getFeaturedCourseSpotlights } from "@/lib/course/featured-course-spotlight";
 import {
   filterCoursesByCategorySlugs,
   filterPurchasableCourses,
@@ -18,7 +19,6 @@ import {
   pickFeaturedCoursesByCategory,
   pickPaidCoursesExcludingCategories,
 } from "@/lib/course/pick-featured-courses";
-import { RETAIL_PLANNING_PATH } from "@/lib/content/career-paths";
 import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
 import type { CourseProduct } from "@/types/course-product";
 
@@ -37,10 +37,11 @@ const OTHER_PAID_PRIORITY_SLUGS = [
 ] as const;
 
 export async function AcademyHomePage() {
-  const [{ courses: allCourses, categories, products, stats }, retailPath] =
+  const t = await getTranslations("home");
+  const [{ courses: allCourses, categories, products, stats }, spotlightCourses] =
     await Promise.all([
       getHomepageCatalog(),
-      loadCareerPathBySlug("retail-planning", RETAIL_PLANNING_PATH),
+      getFeaturedCourseSpotlights(),
     ]);
 
   const productBySlug = new Map<string, CourseProduct>(
@@ -79,62 +80,60 @@ export async function AcademyHomePage() {
     [...HR_CATEGORY_SLUGS],
     5,
   );
-  const retailPlanningSteps =
-    retailPath?.path.steps ?? RETAIL_PLANNING_PATH.steps;
-  const retailPlanningCourses = pickCareerPathCourses(
-    allCourses,
-    retailPlanningSteps,
-  );
 
   return (
     <>
       <CategoryGrid categories={categories} />
-      <FeaturedCourseSpotlightSection />
-      <Hero pathCourses={retailPlanningCourses} />
+      <Hero spotlightCourses={spotlightCourses} />
+      <MemberPromoSection />
       <EcosystemCards />
 
       <CourseShowcaseSection
         id="featured-heading"
-        title="Öne Çıkan Kurslar"
-        description="Profesyoneller için seçilmiş premium eğitimler"
+        title={t("showcases.featured.title")}
+        description={t("showcases.featured.description")}
         courses={featuredCourses}
         productBySlug={productBySlug}
         statsBySlug={statsBySlug}
         viewAllHref="/kurslar"
-        viewAllLabel="Tüm Kursları Görüntüle →"
+        viewAllLabel={t("showcases.viewAllCourses")}
         className="bg-gradient-to-b from-white to-primary-50"
       />
 
       <CourseShowcaseSection
         id="planning-heading"
-        title="Planlama Kursları"
-        description="Perakende planlama, bütçe ve talep yönetimi eğitimleri"
+        title={t("showcases.planning.title")}
+        description={t("showcases.planning.description")}
         courses={planningCourses}
         productBySlug={productBySlug}
         statsBySlug={statsBySlug}
         viewAllHref="/kurslar?kategori=planlama"
+        viewAllLabel={t("showcases.viewAll")}
       />
 
       <CourseShowcaseSection
         id="hr-heading"
-        title="İK Kursları"
-        description="İnsan kaynakları, yetenek yönetimi ve organizasyonel gelişim"
+        title={t("showcases.hr.title")}
+        description={t("showcases.hr.description")}
         courses={hrCourses}
         productBySlug={productBySlug}
         statsBySlug={statsBySlug}
         viewAllHref="/kurslar?kategori=insan-kaynaklari"
+        viewAllLabel={t("showcases.viewAll")}
         className="bg-primary-50"
       />
 
       <CourseShowcaseSection
         id="other-paid-heading"
-        title="Diğer Eğitimler"
-        description="Planlama ve İK dışındaki ücretli uzmanlık programları"
+        title={t("showcases.expert.title")}
         courses={otherPaidCourses}
         productBySlug={productBySlug}
         statsBySlug={statsBySlug}
         viewAllHref="/kurslar"
+        viewAllLabel={t("showcases.viewAll")}
       />
+
+      <FreeCoursesHubSection />
 
       <InspirationBanner compact />
 
@@ -149,15 +148,12 @@ export async function AcademyHomePage() {
           <div className="flex max-w-2xl flex-col items-center gap-4 lg:items-start">
             <Building2 className="h-12 w-12 text-accent-500" aria-hidden="true" />
             <h2 id="b2b-heading" className="text-2xl font-bold sm:text-3xl">
-              Şirketinize özel eğitim çözümleri
+              {t("b2b.title")}
             </h2>
-            <p className="text-primary-100">
-              50+ mağazalı perakende zincirleri için özelleştirilmiş öğrenme
-              yolları, canlı atölyeler ve performans raporlama.
-            </p>
+            <p className="text-primary-100">{t("b2b.body")}</p>
           </div>
           <Button variant="gold" size="lg" asChild>
-            <Link href="/kurumsal">Kurumsal Teklif Alın</Link>
+            <Link href="/kurumsal">{t("b2b.cta")}</Link>
           </Button>
         </Container>
       </section>

@@ -1,29 +1,28 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const CAREER_PATH_LINKS = [
-  {
-    href: "/kariyer-yolu/retail-planning",
-    label: "Retail Planning",
-  },
-  {
-    href: "/kariyer-yolu/insan-kaynaklari",
-    label: "İnsan Kaynakları",
-  },
-  {
-    href: "/kariyer-yolu/yapay-zeka",
-    label: "Yapay Zeka",
-  },
-] as const;
+export async function HeroMarketingCopy() {
+  const t = await getTranslations("hero");
 
-const PATH_STEPS = [
-  "Bir kariyer yolu seçin — her yol sıralı kurslardan oluşur.",
-  "Adım adım ilerleyin — her adım gerçek bir Thorius kursu.",
-  "Kursu bitirin — sonraki adım otomatik açılır.",
-] as const;
+  const careerPathLinks = [
+    {
+      href: "/kariyer-yolu/retail-planning",
+      label: t("careerRetail"),
+    },
+    {
+      href: "/kariyer-yolu/insan-kaynaklari",
+      label: t("careerHr"),
+    },
+    {
+      href: "/kariyer-yolu/yapay-zeka",
+      label: t("careerAi"),
+    },
+  ] as const;
 
-export function HeroMarketingCopy() {
+  const pathSteps = [t("step1"), t("step2"), t("step3")] as const;
+
   return (
     <div className="order-2 flex flex-col gap-5 sm:gap-6 xl:order-1">
       <div className="space-y-4">
@@ -31,20 +30,23 @@ export function HeroMarketingCopy() {
           id="hero-heading"
           className="text-balance text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-[2.65rem]"
         >
-          Sadece bir kurs değil; profesyonel geleceğiniz için{" "}
+          {t("titleBefore")}{" "}
           <span className="bg-gradient-to-r from-accent-300 via-amber-200 to-accent-400 bg-clip-text text-transparent">
-            stratejik bir yatırım
+            {t("titleHighlight")}
           </span>
-          .
+          {t("titleAfter") ? t("titleAfter") : null}
         </h1>
 
         <p className="max-w-xl text-base text-primary-100/95 sm:text-lg">
-          Video izlemek değil — iş yapabilir hale gelmek.
+          {t("subtitle")}
         </p>
 
         <ol className="max-w-xl space-y-2.5">
-          {PATH_STEPS.map((step, index) => (
-            <li key={step} className="flex gap-3 text-sm leading-snug text-primary-100 sm:text-base">
+          {pathSteps.map((step, index) => (
+            <li
+              key={step}
+              className="flex gap-3 text-sm leading-snug text-primary-100 sm:text-base"
+            >
               <span
                 className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-bold text-accent-300"
                 aria-hidden="true"
@@ -57,10 +59,10 @@ export function HeroMarketingCopy() {
         </ol>
 
         <div className="flex flex-wrap gap-2 pt-1">
-          {CAREER_PATH_LINKS.map((item) => (
+          {careerPathLinks.map((item) => (
             <Link
               key={item.href}
-              href={item.href}
+              href={item.href as "/"}
               className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-medium text-primary-50 transition-colors hover:border-accent-500/50 hover:bg-accent-500/10"
             >
               {item.label}
@@ -76,7 +78,7 @@ export function HeroMarketingCopy() {
           asChild
         >
           <Link href="/kariyer-yolu">
-            Kariyer yollarını gör
+            {t("viewCareerPaths")}
             <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
           </Link>
         </Button>
@@ -86,7 +88,7 @@ export function HeroMarketingCopy() {
           className="w-full rounded-xl border-2 border-white/80 bg-transparent text-white hover:bg-white hover:text-primary-950 sm:w-auto"
           asChild
         >
-          <Link href="/kurslar">Tüm kurslar</Link>
+          <Link href="/kurslar">{t("allCourses")}</Link>
         </Button>
       </div>
     </div>

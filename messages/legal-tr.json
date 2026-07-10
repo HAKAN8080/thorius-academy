@@ -1,0 +1,325 @@
+{
+  "lastUpdatedLabel": "Son güncelleme:",
+  "kvkk": {
+    "meta": {
+      "title": "KVKK Aydınlatma Metni",
+      "description": "6698 Sayılı Kişisel Verilerin Korunması Kanunu kapsamında aydınlatma metni."
+    },
+    "title": "KVKK Aydınlatma Metni",
+    "lastUpdated": "24 Mayıs 2026",
+    "sections": [
+      {
+        "heading": "1. Veri Sorumlusu",
+        "paragraphs": [
+          "6698 sayılı Kişisel Verilerin Korunması Kanunu (\"KVKK\") uyarınca, kişisel verileriniz; veri sorumlusu olarak Thorius Eğitim ve Danışmanlık Ltd. Şti. tarafından aşağıda açıklanan kapsamda işlenebilecektir."
+        ]
+      },
+      {
+        "heading": "2. İşlenen Kişisel Veriler",
+        "paragraphs": [
+          "Platform üzerinden işlediğimiz kişisel veri kategorileri:"
+        ],
+        "list": [
+          "Kimlik Bilgileri: Ad, soyad",
+          "İletişim Bilgileri: E-posta adresi, telefon numarası (opsiyonel)",
+          "Müşteri İşlem Bilgileri: Kurs kayıt geçmişi, ilerleme verileri",
+          "İşlem Güvenliği Bilgileri: IP adresi, oturum bilgileri",
+          "Finansal Bilgiler: Ödeme bilgileri (üçüncü taraf sağlayıcılar tarafından işlenir)"
+        ]
+      },
+      {
+        "heading": "3. Kişisel Verilerin İşlenme Amaçları",
+        "paragraphs": [
+          "Kişisel verileriniz aşağıdaki amaçlarla işlenmektedir:"
+        ],
+        "list": [
+          "Üyelik kaydı oluşturma ve hesap yönetimi",
+          "Eğitim hizmetlerinin sunulması",
+          "Kurs kayıt, takip ve sertifikalandırma süreçleri",
+          "Müşteri memnuniyeti ve hizmet kalitesinin artırılması",
+          "Yasal yükümlülüklerin yerine getirilmesi",
+          "Pazarlama ve tanıtım faaliyetleri (açık rıza halinde)"
+        ]
+      },
+      {
+        "heading": "4. Kişisel Verilerin Aktarılması",
+        "paragraphs": [
+          "Kişisel verileriniz, KVKK'nın 8. ve 9. maddelerinde belirtilen şartlar dahilinde; hizmet aldığımız teknoloji sağlayıcılarına (Supabase, Vercel, Resend), ödeme kuruluşlarına, yasal yükümlülüklerimizin gereği olarak yetkili kamu kurumlarına aktarılabilir."
+        ]
+      },
+      {
+        "heading": "5. Kişisel Verilerin Toplanma Yöntemi ve Hukuki Sebebi",
+        "paragraphs": [
+          "Kişisel verileriniz; platform üzerinden üyelik formu, iletişim formu ve kullanım sırasında otomatik olarak toplanmaktadır. Bu veriler; sözleşmenin kurulması ve ifası, yasal yükümlülüklerin yerine getirilmesi, meşru menfaat ve açık rıza hukuki sebeplerine dayanarak işlenmektedir."
+        ]
+      },
+      {
+        "heading": "6. Veri Sahibi Olarak Haklarınız",
+        "paragraphs": [
+          "KVKK'nın 11. maddesi uyarınca veri sahibi olarak aşağıdaki haklara sahipsiniz:"
+        ],
+        "list": [
+          "Kişisel verilerinizin işlenip işlenmediğini öğrenme",
+          "Kişisel verileriniz işlenmişse buna ilişkin bilgi talep etme",
+          "Kişisel verilerin işlenme amacını ve bunların amacına uygun kullanılıp kullanılmadığını öğrenme",
+          "Yurt içinde veya yurt dışında kişisel verilerin aktarıldığı üçüncü kişileri bilme",
+          "Kişisel verilerin eksik veya yanlış işlenmiş olması hâlinde bunların düzeltilmesini isteme",
+          "KVKK'nın 7. maddesinde öngörülen şartlar çerçevesinde kişisel verilerin silinmesini veya yok edilmesini isteme",
+          "İşlenen verilerin münhasıran otomatik sistemler vasıtasıyla analiz edilmesi suretiyle kişinin kendisi aleyhine bir sonucun ortaya çıkmasına itiraz etme",
+          "Kişisel verilerin kanuna aykırı olarak işlenmesi sebebiyle zarara uğraması hâlinde zararın giderilmesini talep etme"
+        ]
+      },
+      {
+        "heading": "7. Başvuru Yöntemi",
+        "paragraphs": [
+          "Yukarıda belirtilen haklarınızı kullanmak için aşağıdaki kanallar üzerinden bizimle iletişime geçebilirsiniz:",
+          "E-posta: info@thorius.com.tr",
+          "Adres: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - İstanbul",
+          "Başvurularınız, talep tarihinden itibaren en geç 30 (otuz) gün içinde değerlendirilerek tarafınıza geri dönüş yapılacaktır."
+        ]
+      }
+    ]
+  },
+  "privacy": {
+    "meta": {
+      "title": "Gizlilik Politikası",
+      "description": "Thorius Academy gizlilik politikası ve kişisel verilerin korunması hakkında bilgilendirme."
+    },
+    "title": "Gizlilik Politikası",
+    "lastUpdated": "24 Mayıs 2026",
+    "sections": [
+      {
+        "heading": "1. Giriş",
+        "paragraphs": [
+          "Thorius Academy olarak, kullanıcılarımızın gizliliğine önem veriyoruz. Bu gizlilik politikası, kişisel verilerinizin nasıl toplandığı, kullanıldığı ve korunduğu hakkında bilgi vermektedir."
+        ]
+      },
+      {
+        "heading": "2. Toplanan Veriler",
+        "paragraphs": [
+          "Platformumuz üzerinden aşağıdaki verileri toplayabiliriz:"
+        ],
+        "list": [
+          "Ad, soyad ve e-posta adresi",
+          "Kurslara kayıt sırasında paylaşılan bilgiler",
+          "Kurs ilerlemesi ve değerlendirme verileri",
+          "Kullanım istatistikleri ve tercihler",
+          "Ödeme bilgileri (üçüncü parti ödeme sağlayıcıları tarafından işlenir)"
+        ]
+      },
+      {
+        "heading": "3. Verilerin Kullanımı",
+        "paragraphs": [
+          "Toplanan veriler aşağıdaki amaçlarla kullanılır:"
+        ],
+        "list": [
+          "Kişiselleştirilmiş eğitim hizmeti sunmak",
+          "Hesap yönetimi ve iletişim",
+          "Hizmet kalitesini iyileştirmek",
+          "Yasal yükümlülükleri yerine getirmek"
+        ]
+      },
+      {
+        "heading": "4. Veri Güvenliği",
+        "paragraphs": [
+          "Verilerinizi korumak için endüstri standartlarında güvenlik önlemleri uyguluyoruz. Tüm veriler şifrelenmiş bağlantı üzerinden iletilir ve güvenli sunucularda saklanır."
+        ]
+      },
+      {
+        "heading": "5. Üçüncü Taraflar",
+        "paragraphs": [
+          "Verileriniz, hizmetlerimizi sunmak için kullandığımız güvenilir üçüncü taraf hizmet sağlayıcılarıyla paylaşılabilir (ödeme işlemcileri, hosting hizmetleri, e-posta servisleri vb.)."
+        ]
+      },
+      {
+        "heading": "6. Çerezler",
+        "paragraphs": [
+          "Web sitemiz, kullanıcı deneyimini iyileştirmek için çerezler kullanmaktadır. Çerez tercihlerinizi tarayıcı ayarlarınızdan yönetebilirsiniz."
+        ]
+      },
+      {
+        "heading": "7. Haklarınız",
+        "paragraphs": [
+          "KVKK kapsamında aşağıdaki haklara sahipsiniz:"
+        ],
+        "list": [
+          "Kişisel verilerinizin işlenmesini öğrenme",
+          "Verilerinize erişim talep etme",
+          "Verilerinizin düzeltilmesini isteme",
+          "Verilerinizin silinmesini talep etme",
+          "Veri işlemesine itiraz etme"
+        ]
+      },
+      {
+        "heading": "8. İletişim",
+        "paragraphs": [
+          "Gizlilik ile ilgili sorularınız için bizimle iletişime geçebilirsiniz:",
+          "E-posta: info@thorius.com.tr",
+          "Adres: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - İstanbul"
+        ]
+      }
+    ]
+  },
+  "distanceSales": {
+    "meta": {
+      "title": "Mesafeli Satış Sözleşmesi",
+      "description": "Thorius Academy mesafeli satış sözleşmesi."
+    },
+    "title": "Mesafeli Satış Sözleşmesi",
+    "lastUpdated": "26 Mayıs 2026",
+    "intro": [
+      "İşbu Mesafeli Satış Sözleşmesi, 6502 sayılı Tüketicinin Korunması Hakkında Kanun ve Mesafeli Sözleşmeler Yönetmeliği hükümleri uyarınca düzenlenmiştir."
+    ],
+    "sections": [
+      {
+        "heading": "1. Taraflar",
+        "paragraphs": [
+          "Satıcı: Thorius Eğitim ve Danışmanlık Ltd. Şti.",
+          "Adres: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş, İstanbul",
+          "E-posta: info@thorius.com.tr",
+          "Telefon / WhatsApp: +90 543 132 35 03",
+          "Alıcı: Thorius Academy platformu üzerinden dijital eğitim hizmeti satın alan gerçek veya tüzel kişi."
+        ]
+      },
+      {
+        "heading": "2. Sözleşmenin Konusu",
+        "paragraphs": [
+          "İşbu sözleşmenin konusu, Alıcı'nın Satıcı'ya ait academy.thorius.com.tr internet sitesi üzerinden elektronik ortamda sipariş verdiği, aşağıda nitelikleri ve satış fiyatı belirtilen dijital eğitim / kurs hizmetinin satışı ve teslimine ilişkin tarafların hak ve yükümlülüklerinin belirlenmesidir."
+        ]
+      },
+      {
+        "heading": "3. Ürün / Hizmet Bilgileri",
+        "paragraphs": [
+          "Satın alınan hizmet; video dersler, dijital materyaller, sınavlar ve sertifika içeren online eğitim paketlerinden oluşur. Hizmetin temel nitelikleri ilgili kurs sayfasında yer almaktadır. Tüm fiyatlar Türk Lirası (TRY) cinsinden olup yasal vergiler dahildir."
+        ]
+      },
+      {
+        "heading": "4. Ödeme ve Teslimat",
+        "list": [
+          "Ödeme, güvenli ödeme altyapısı üzerinden kredi/banka kartı ile gerçekleştirilir.",
+          "Dijital hizmet, ödemenin onaylanmasının ardından Alıcı'nın kayıtlı e-posta adresine gönderilen erişim bilgileri ile teslim edilir.",
+          "Teslimat süresi, ödeme onayından itibaren en geç 24 saat içindedir."
+        ]
+      },
+      {
+        "heading": "5. Cayma Hakkı",
+        "paragraphs": [
+          "Dijital içerik niteliğindeki hizmetlerde, hizmetin ifasına (kursa/derse erişimin sağlanmasına) başlanmamış olması koşuluyla sözleşme tarihinden itibaren 14 gün içinde cayma hakkı kullanılabilir. Alıcı'nın onayı ile ifaya başlanan hizmetlerde cayma hakkı kullanılamaz.",
+          "Cayma bildirimi info@thorius.com.tr adresine e-posta yoluyla iletilir."
+        ]
+      },
+      {
+        "heading": "6. Genel Hükümler",
+        "list": [
+          "Alıcı, sipariş öncesinde ön bilgilendirme formunu ve işbu sözleşmeyi elektronik ortamda teyit ettiğini kabul eder.",
+          "Uyuşmazlıklarda Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri yetkilidir.",
+          "Satıcı, teknik nedenlerle hizmet sunumunu geçici olarak durdurabilir; bu durumda Alıcı bilgilendirilir."
+        ]
+      },
+      {
+        "heading": "7. Yürürlük",
+        "paragraphs": [
+          "Alıcı, platform üzerinden ödeme yaparak işbu sözleşmenin tüm hükümlerini okuduğunu, anladığını ve kabul ettiğini beyan eder."
+        ]
+      }
+    ],
+    "footerNote": "Bu metin ön bilgilendirme amaçlıdır. Güncel ve bağlayıcı sözleşme metni için info@thorius.com.tr adresinden bizimle iletişime geçebilirsiniz."
+  },
+  "terms": {
+    "meta": {
+      "title": "Kullanım Koşulları",
+      "description": "Thorius Academy hizmet kullanım koşulları ve sözleşmesi."
+    },
+    "title": "Kullanım Koşulları",
+    "lastUpdated": "24 Mayıs 2026",
+    "sections": [
+      {
+        "heading": "1. Genel Hükümler",
+        "paragraphs": [
+          "Bu kullanım koşulları, Thorius Academy platformunu (\"Platform\") kullanımınızı düzenler. Platforma erişerek veya hizmetlerimizi kullanarak, bu koşulları kabul etmiş sayılırsınız."
+        ]
+      },
+      {
+        "heading": "2. Hizmet Tanımı",
+        "paragraphs": [
+          "Thorius Academy; perakende, insan kaynakları, yapay zeka, liderlik ve diğer profesyonel gelişim alanlarında online eğitim ve sertifika hizmeti sunan bir platformdur. Hizmetlerimiz; kurs içerikleri, video dersler, ödevler, sertifikalar ve eğitmen desteğini kapsamaktadır."
+        ]
+      },
+      {
+        "heading": "3. Üyelik ve Hesap Güvenliği",
+        "list": [
+          "Platformu kullanabilmek için 18 yaşını doldurmuş olmanız gerekmektedir.",
+          "Üyelik bilgilerinizin doğru ve güncel olmasından sorumlusunuz.",
+          "Hesap güvenliğinizden ve şifrenizin gizliliğinden tek başınıza sorumlusunuz.",
+          "Hesabınızda yetkisiz erişim fark ettiğinizde derhal bizimle iletişime geçmelisiniz."
+        ]
+      },
+      {
+        "heading": "4. Ödeme ve Faturalandırma",
+        "list": [
+          "Ücretli kurslarımız için ödeme, kayıt sırasında alınır.",
+          "Tüm fiyatlar Türk Lirası (TL) cinsinden olup KDV dahildir.",
+          "Ödemeler güvenli üçüncü parti ödeme sağlayıcıları üzerinden gerçekleştirilir.",
+          "Fatura bilgileriniz yasal yükümlülükler gereği saklanır."
+        ]
+      },
+      {
+        "heading": "5. İade ve Cayma Hakkı",
+        "paragraphs": [
+          "Dijital içerikli kurslar için, kursa erişim sağlanmamış olması koşuluyla satın alma tarihinden itibaren 14 gün içinde cayma hakkınızı kullanabilirsiniz. Kursa erişim sağlandıktan sonra (ilk dersin izlenmesi vb.) cayma hakkı kullanılamaz."
+        ]
+      },
+      {
+        "heading": "6. Fikri Mülkiyet Hakları",
+        "paragraphs": [
+          "Platform üzerindeki tüm içerikler (videolar, metinler, görseller, slaytlar, kurs materyalleri vb.) Thorius Eğitim ve Danışmanlık Ltd. Şti. veya ilgili eğitmenlerin fikri mülkiyetidir. Bu içeriklerin izinsiz çoğaltılması, dağıtılması, ticari amaçlarla kullanılması yasaktır."
+        ]
+      },
+      {
+        "heading": "7. Yasaklı Davranışlar",
+        "paragraphs": [
+          "Platform kullanımında aşağıdaki davranışlar yasaktır:"
+        ],
+        "list": [
+          "Hesap bilgilerinin başkalarıyla paylaşılması",
+          "Kurs içeriklerinin kayıt altına alınması ve dağıtılması",
+          "Platforma zarar verecek herhangi bir teknik müdahale",
+          "Diğer kullanıcılara, eğitmenlere veya personele yönelik saldırgan davranışlar",
+          "Yasalara aykırı içerik paylaşımı"
+        ]
+      },
+      {
+        "heading": "8. Hizmetin Sonlandırılması",
+        "paragraphs": [
+          "Bu koşulları ihlal eden kullanıcıların hesapları, önceden bildirim yapılmaksızın askıya alınabilir veya kapatılabilir. Bu durumda kullanım hakkından doğan herhangi bir tazminat talep edilemez."
+        ]
+      },
+      {
+        "heading": "9. Sorumluluğun Sınırlandırılması",
+        "paragraphs": [
+          "Platform \"olduğu gibi\" sunulmaktadır. Hizmet kesintileri, teknik aksaklıklar veya içerik hataları durumunda sorumluluğumuz, yasal düzenlemelerin izin verdiği azami sınırla sınırlıdır."
+        ]
+      },
+      {
+        "heading": "10. Değişiklikler",
+        "paragraphs": [
+          "Bu kullanım koşullarını dilediğimiz zaman güncelleme hakkımızı saklı tutarız. Önemli değişiklikler hakkında kayıtlı e-posta adresiniz üzerinden bilgilendirileceksiniz."
+        ]
+      },
+      {
+        "heading": "11. Uyuşmazlıkların Çözümü",
+        "paragraphs": [
+          "Bu sözleşmeden kaynaklanan uyuşmazlıklarda İstanbul Mahkemeleri ve İcra Daireleri yetkilidir. Tüketici Hakem Heyetleri ve Tüketici Mahkemeleri parasal sınırları dahilinde yetkilidir."
+        ]
+      },
+      {
+        "heading": "12. İletişim",
+        "paragraphs": [
+          "Şirket Adı: Thorius Eğitim ve Danışmanlık Ltd. Şti.",
+          "E-posta: info@thorius.com.tr",
+          "Adres: Sandalcı Mecit Cd. No 9/1 Ortaköy / Beşiktaş - İstanbul"
+        ]
+      }
+    ]
+  }
+}

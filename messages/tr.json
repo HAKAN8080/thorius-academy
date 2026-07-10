@@ -1,0 +1,71 @@
+{
+  "nav": {
+    "academy": "Academy",
+    "careerPath": "Kariyer Yolu",
+    "library": "Kitaplık",
+    "shop": "Mağaza",
+    "coaching": "Koçluk",
+    "corporate": "Kurumsal",
+    "about": "Hakkımızda",
+    "faq": "SSS",
+    "blog": "Blog"
+  },
+  "auth": {
+    "login": "Giriş Yap",
+    "register": "Üye Ol",
+    "panel": "Panelim"
+  },
+  "common": {
+    "mainMenu": "Ana menü",
+    "mobileMenu": "Mobil menü",
+    "openMenu": "Menüyü aç"
+  },
+  "promo": {
+    "ariaLabel": "Üyelik kampanyası",
+    "text": "Üye olun, ilk alışverişinizde {percent} indirim kazanın!",
+    "cta": "Hemen Üye Ol"
+  },
+  "hero": {
+    "popularCourses": "En çok rağbet gören eğitimler",
+    "titleBefore": "Sadece bir kurs değil; profesyonel geleceğiniz için",
+    "titleHighlight": "stratejik bir yatırım",
+    "titleAfter": ".",
+    "subtitle": "Video izlemek değil — iş yapabilir hale gelmek.",
+    "step1": "Bir kariyer yolu seçin — her yol sıralı kurslardan oluşur.",
+    "step2": "Adım adım ilerleyin — her adım gerçek bir Thorius kursu.",
+    "step3": "Kursu bitirin — sonraki adım otomatik açılır.",
+    "careerRetail": "Retail Planning",
+    "careerHr": "İnsan Kaynakları",
+    "careerAi": "Yapay Zeka",
+    "viewCareerPaths": "Kariyer yollarını gör",
+    "allCourses": "Tüm kurslar"
+  },
+  "footer": {
+    "about": "Hakkımızda",
+    "mission": "Misyonumuz",
+    "companyInfo": "Şirket Künyesi",
+    "documents": "Belgelerimiz",
+    "careerPaths": "Kariyer Yolları",
+    "library": "Kitaplık",
+    "coaching": "Koçluk",
+    "blog": "Blog",
+    "corporate": "Kurumsal",
+    "corporateTraining": "Kurumsal Eğitim",
+    "packages": "Paketler",
+    "getQuote": "Teklif Alın",
+    "useful": "Yararlı Bilgiler",
+    "faq": "Sıkça Sorulan Sorular",
+    "instructorGuide": "Eğitmen Destek Kılavuzu",
+    "blogPosts": "Blog Yazıları",
+    "legal": "Yasal",
+    "privacy": "Gizlilik Politikası",
+    "kvkk": "KVKK Aydınlatma Metni",
+    "terms": "Kullanım Koşulları",
+    "contact": "İletişim",
+    "location": "İstanbul, Türkiye",
+    "courses": "Kurslar",
+    "allCourses": "Tüm Kurslar",
+    "copyright": "© 2026 Thorius Eğitim ve Danışmanlık Ltd. Şti.",
+    "distanceSales": "Mesafeli Satış Sözleşmesi"
+  }
+}

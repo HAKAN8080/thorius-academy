@@ -1,7 +1,8 @@
 "use client";
 
-import { useState } from "react";
+import { useMemo, useState } from "react";
 import Image from "next/image";
+import { useTranslations } from "next-intl";
 import { Award, BookMarked, Info, Receipt, Stamp } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import {
@@ -23,12 +24,26 @@ const accreditationIcons = {
   "tax-plate": Receipt,
 } as const;
 
+type LocalizedAccreditation = CompanyAccreditation & {
+  title: string;
+  issuer: string;
+  description: string;
+};
+
 function AccreditationCard({
   accreditation,
   onSelect,
+  viewDetailsLabel,
+  viewDocumentLabel,
+  previewAlt,
+  verifiedLabel,
 }: {
-  accreditation: CompanyAccreditation;
-  onSelect: (item: CompanyAccreditation) => void;
+  accreditation: LocalizedAccreditation;
+  onSelect: (item: LocalizedAccreditation) => void;
+  viewDetailsLabel: string;
+  viewDocumentLabel: string;
+  previewAlt: string;
+  verifiedLabel: string;
 }) {
   const Icon =
     accreditationIcons[accreditation.id as keyof typeof accreditationIcons] ??
@@ -44,13 +59,13 @@ function AccreditationCard({
           "hover:-translate-y-0.5 hover:border-primary-200 hover:shadow-lg",
           "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2",
         )}
-        aria-label={`${accreditation.title} — belgeyi görüntüle`}
+        aria-label={viewDocumentLabel}
       >
         {accreditation.previewImageUrl ? (
           <div className="relative aspect-[4/3] overflow-hidden border-b border-primary-100 bg-slate-100">
             <Image
               src={accreditation.previewImageUrl}
-              alt={`${accreditation.title} önizlemesi`}
+              alt={previewAlt}
               fill
               className="object-cover object-top transition-transform duration-500 group-hover:scale-[1.02]"
               sizes="(max-width: 768px) 100vw, 420px"
@@ -69,7 +84,7 @@ function AccreditationCard({
             </div>
             {accreditation.status === "verified" ? (
               <span className="rounded-full bg-emerald-50 px-2.5 py-1 text-[10px] font-semibold uppercase tracking-wider text-emerald-700">
-                Doğrulanmış
+                {verifiedLabel}
               </span>
             ) : null}
           </div>
@@ -85,7 +100,7 @@ function AccreditationCard({
           </p>
           <p className="mt-4 flex items-center gap-2 text-xs font-semibold text-accent-700">
             <Info className="h-3.5 w-3.5" aria-hidden />
-            Detayları görüntüle
+            {viewDetailsLabel}
           </p>
         </div>
       </button>
@@ -94,7 +109,19 @@ function AccreditationCard({
 }
 
 export function CompanyAccreditationsSection() {
-  const [selected, setSelected] = useState<CompanyAccreditation | null>(null);
+  const t = useTranslations("about.accreditations");
+  const [selected, setSelected] = useState<LocalizedAccreditation | null>(null);
+
+  const accreditations = useMemo(
+    () =>
+      COMPANY_ACCREDITATIONS.map((accreditation) => ({
+        ...accreditation,
+        title: t(`items.${accreditation.id}.title`),
+        issuer: t(`items.${accreditation.id}.issuer`),
+        description: t(`items.${accreditation.id}.description`),
+      })),
+    [t],
+  );
 
   return (
     <>
@@ -106,26 +133,31 @@ export function CompanyAccreditationsSection() {
         <Container size="narrow">
           <header className="mx-auto mb-10 max-w-2xl text-center md:mb-12">
             <p className="mb-2 text-xs font-semibold uppercase tracking-[0.24em] text-accent-400">
-              Resmi belgeler
+              {t("eyebrow")}
             </p>
             <h2
               id="accreditations-heading"
               className="text-3xl font-bold tracking-tight md:text-4xl"
             >
-              Belgelerimiz / Sertifikalarımız
+              {t("title")}
             </h2>
             <p className="mt-4 text-base leading-relaxed text-primary-100/90">
-              Marka tescili, yayınevi faaliyeti ve vergi levhamız kamuya açık
-              şekilde paylaşılmaktadır.
+              {t("subtitle")}
             </p>
           </header>
 
           <ul className="mx-auto grid max-w-5xl list-none gap-6 sm:grid-cols-2 lg:grid-cols-3">
-            {COMPANY_ACCREDITATIONS.map((accreditation) => (
+            {accreditations.map((accreditation) => (
               <li key={accreditation.id} className="h-full">
                 <AccreditationCard
                   accreditation={accreditation}
                   onSelect={setSelected}
+                  viewDetailsLabel={t("viewDetails")}
+                  viewDocumentLabel={t("viewDocument", {
+                    title: accreditation.title,
+                  })}
+                  previewAlt={t("previewAlt", { title: accreditation.title })}
+                  verifiedLabel={t("verified")}
                 />
               </li>
             ))}

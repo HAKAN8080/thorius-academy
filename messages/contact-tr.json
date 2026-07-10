@@ -1,0 +1,18 @@
+{
+  "meta": {
+    "title": "İletişim",
+    "description": "Thorius Academy ile iletişime geçin. Sorularınız için bize ulaşın."
+  },
+  "title": "İletişim",
+  "subtitle": "Sorularınız, önerileriniz veya işbirliği teklifleriniz için bize ulaşın",
+  "email": "E-posta",
+  "address": "Adres",
+  "whatsapp": "WhatsApp",
+  "phone": "Telefon",
+  "companyInfoTitle": "Şirket Bilgileri",
+  "legalNameLabel": "Ticari Unvan:",
+  "legalName": "Thorius Eğitim ve Danışmanlık Ltd. Şti.",
+  "taxOfficeLabel": "Vergi Dairesi:",
+  "taxOffice": "Beşiktaş Vergi Dairesi",
+  "addressLines": "Sandalcı Mecit Cd. No 9/1\nOrtaköy / Beşiktaş - İstanbul"
+}

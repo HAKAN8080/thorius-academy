@@ -1,5 +1,10 @@
 import { safeRedirectTarget } from "@/lib/auth/app-url";
 import { isProtectedAppPath } from "@/lib/auth/protected-paths";
+import {
+  defaultLocale,
+  getLocaleFromPathname,
+  stripLocalePrefix,
+} from "@/lib/i18n/locale";
 import { mergeAuthCookieOptions } from "@/lib/supabase/auth-cookies";
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
@@ -8,16 +13,16 @@ const AUTH_ROUTES = ["/giris", "/kayit"] as const;
 const PUBLIC_PREFIXES = ["/auth/callback"] as const;
 
 function isPublicPath(pathname: string): boolean {
-  if (AUTH_ROUTES.some((route) => pathname === route)) {
+  const stripped = stripLocalePrefix(pathname);
+
+  if (AUTH_ROUTES.some((route) => stripped === route)) {
     return true;
   }
-  return PUBLIC_PREFIXES.some((prefix) => pathname.startsWith(prefix));
+
+  return PUBLIC_PREFIXES.some((prefix) => stripped.startsWith(prefix));
 }
 
-function applySessionCookies(
-  source: NextResponse,
-  target: NextResponse,
-) {
+function applySessionCookies(source: NextResponse, target: NextResponse) {
   source.cookies.getAll().forEach(({ name, value }) => {
     target.cookies.set(name, value, mergeAuthCookieOptions());
   });
@@ -26,15 +31,22 @@ function applySessionCookies(
 /**
  * Middleware oturum yenileme — Supabase auth cookie'lerini günceller.
  */
-export async function updateSession(request: NextRequest) {
+export async function updateSession(
+  request: NextRequest,
+  initialResponse?: NextResponse,
+) {
   const { pathname, search } = request.nextUrl;
+  const strippedPath = stripLocalePrefix(pathname);
+  const locale = getLocaleFromPathname(pathname) ?? defaultLocale;
 
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set("x-pathname", pathname);
 
-  let supabaseResponse = NextResponse.next({
-    request: { headers: requestHeaders },
-  });
+  const supabaseResponse =
+    initialResponse ??
+    NextResponse.next({
+      request: { headers: requestHeaders },
+    });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -48,9 +60,6 @@ export async function updateSession(request: NextRequest) {
         setAll(cookiesToSet) {
           cookiesToSet.forEach(({ name, value }) => {
             request.cookies.set(name, value);
-          });
-          supabaseResponse = NextResponse.next({
-            request: { headers: requestHeaders },
           });
           cookiesToSet.forEach(({ name, value, options }) => {
             supabaseResponse.cookies.set(
@@ -68,7 +77,10 @@ export async function updateSession(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (user && AUTH_ROUTES.includes(pathname as (typeof AUTH_ROUTES)[number])) {
+  if (
+    user &&
+    AUTH_ROUTES.includes(strippedPath as (typeof AUTH_ROUTES)[number])
+  ) {
     const redirectTo = safeRedirectTarget(
       request.nextUrl.searchParams.get("redirect"),
     );
@@ -78,7 +90,9 @@ export async function updateSession(request: NextRequest) {
       return redirectResponse;
     }
     const destination = request.nextUrl.clone();
-    destination.pathname = redirectTo;
+    destination.pathname = redirectTo.startsWith("/")
+      ? redirectTo
+      : `/${redirectTo}`;
     destination.search = "";
     const redirectResponse = NextResponse.redirect(destination);
     applySessionCookies(supabaseResponse, redirectResponse);
@@ -89,9 +103,9 @@ export async function updateSession(request: NextRequest) {
     return supabaseResponse;
   }
 
-  if (isProtectedAppPath(pathname) && !user) {
+  if (isProtectedAppPath(strippedPath) && !user) {
     const loginUrl = request.nextUrl.clone();
-    loginUrl.pathname = "/giris";
+    loginUrl.pathname = `/${locale}/giris`;
     loginUrl.search = "";
     loginUrl.searchParams.set("redirect", `${pathname}${search}`);
     loginUrl.searchParams.delete("error");

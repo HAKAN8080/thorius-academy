@@ -1,15 +1,17 @@
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/layout/container";
-import { HeroCarouselSection } from "@/components/marketing/hero-carousel-section";
+import { FeaturedCourseSpotlightCarousel } from "@/components/marketing/featured-course-spotlight-carousel";
 import { HeroMarketingCopy } from "@/components/marketing/hero-marketing-copy";
-import { HeroNeonTagline } from "@/components/marketing/hero-neon-tagline";
 import { HeroRetailBackground } from "@/components/marketing/hero-retail-background";
-import type { Course } from "@/types/wordpress";
+import type { FeaturedCourseSpotlight } from "@/types/featured-course-spotlight";
 
 interface HeroProps {
-  pathCourses: Course[];
+  spotlightCourses: FeaturedCourseSpotlight[];
 }
 
-export function Hero({ pathCourses }: HeroProps) {
+export async function Hero({ spotlightCourses }: HeroProps) {
+  const t = await getTranslations("hero");
+
   return (
     <section
       className="relative overflow-hidden bg-gradient-to-br from-[#060b18] via-primary-950 to-[#0a1228] py-12 sm:py-16 md:py-20 lg:py-24"
@@ -27,23 +29,20 @@ export function Hero({ pathCourses }: HeroProps) {
       </div>
 
       <Container size="wide" className="relative z-10">
-        <div className="grid grid-cols-1 items-start gap-8 xl:grid-cols-[1.05fr_1fr] xl:gap-10">
+        <div className="grid grid-cols-1 items-start gap-10 xl:grid-cols-[minmax(0,0.95fr)_1.05fr] xl:gap-12">
           <HeroMarketingCopy />
 
-          <div className="order-1 xl:order-2">
-            <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,1fr)_13rem] lg:gap-5 xl:grid-cols-[minmax(0,1fr)_14.5rem]">
-              <div className="relative min-w-0">
-                <HeroCarouselSection
-                  courses={pathCourses}
-                  heading="Retail Planning · Kariyer Yolu"
-                  ariaLabel="Retail Planning kariyer yolu kursları"
-                />
-              </div>
-              <div className="mx-auto w-full max-w-[17rem] sm:max-w-xs lg:mx-0 lg:max-w-none lg:pt-8">
-                <HeroNeonTagline />
-              </div>
+          {spotlightCourses.length > 0 ? (
+            <div className="order-1 min-w-0 xl:order-2">
+              <h2 className="mb-5 text-xl font-bold tracking-tight text-white sm:mb-6 sm:text-2xl">
+                {t("popularCourses")}
+              </h2>
+              <FeaturedCourseSpotlightCarousel
+                courses={spotlightCourses}
+                variant="hero"
+              />
             </div>
-          </div>
+          ) : null}
         </div>
       </Container>
     </section>

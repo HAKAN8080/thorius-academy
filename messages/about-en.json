@@ -1,0 +1,112 @@
+{
+  "meta": {
+    "title": "About | Thorius Academy",
+    "description": "Thorius Academy mission, vision, and values. Official company profile, MERSIS, and corporate documents — accessible, quality digital education."
+  },
+  "hero": {
+    "legalName": "Thorius Education and Consulting Ltd.",
+    "title": "About Thorius",
+    "tagline": "We find gaps through audit, solve with AI4U, and sustain with Academy.",
+    "subtitle": "Led by Dr. Elif Demir Uğur and M. Hakan Uğur, Thorius Education and Consulting offers an integrated transformation model that begins with consulting and audit and continues with AI4U Retail software and Thorius Academy training."
+  },
+  "profile": {
+    "eyebrow": "Corporate transparency",
+    "title": "Company Profile",
+    "intro": "Thorius Academy is a digital learning platform operating under {legalName}.",
+    "fields": {
+      "legalName": "Legal Name",
+      "brand": "Brand / Platform",
+      "mersis": "MERSIS No",
+      "tradeRegistry": "Trade Registry No",
+      "tax": "Tax Office / No",
+      "activityAreas": "Areas of Activity"
+    },
+    "activityAreas": [
+      "Corporate Retail Consulting",
+      "Professional Training Management",
+      "Digital Academy",
+      "Strategic Planning & AI Integration"
+    ]
+  },
+  "accreditations": {
+    "eyebrow": "Official documents",
+    "title": "Our Certificates & Licenses",
+    "subtitle": "Our trademark registration, publishing license, and tax plate are shared publicly.",
+    "verified": "Verified",
+    "viewDetails": "View details",
+    "viewDocument": "{title} — view document",
+    "previewAlt": "{title} preview",
+    "items": {
+      "trademark-registration": {
+        "title": "Trademark Registration Certificate",
+        "issuer": "Turkish Patent and Trademark Office",
+        "description": "The Thorius trademark was registered on 17.10.2025 under Industrial Property Law No. 6769 (Application No: 2025/065193). Goods and services classes: 09, 35, 41, 42."
+      },
+      "publishing-license": {
+        "title": "Publishing Activity Certificate",
+        "issuer": "Ministry of Culture and Tourism",
+        "description": "Publishing activity certificate under Law No. 5846 on Intellectual and Artistic Works (No: 83851). Valid: 9.07.2026 – 9.07.2030."
+      },
+      "tax-plate": {
+        "title": "Tax Plate",
+        "issuer": "Revenue Administration",
+        "description": "Thorius Education and Consulting Ltd. taxpayer registration at Beşiktaş Tax Office (VKN: 8430902023). Main activity: computer consulting and systems management."
+      }
+    }
+  },
+  "mission": {
+    "title": "Mission",
+    "p1": "To contribute to individual and organizational growth by turning the knowledge and experience of white-collar professionals into accessible, high-quality, impact-driven training.",
+    "p2": "Through consulting and audit we identify gaps in supply chain, planning, and HR; we solve them with AI4U Retail software; and we make transformation sustainable through Thorius Academy training. Our integrated model is built on more than 25 years of industry experience."
+  },
+  "vision": {
+    "title": "Vision",
+    "p1": "To build a future where experience and knowledge belong not only to institutions, but to society as a whole.",
+    "p2": "Our vision is to create an interactive, sustainable learning ecosystem that democratizes knowledge using the opportunities of the digital age."
+  },
+  "model": {
+    "title": "Our transformation model",
+    "steps": [
+      {
+        "title": "Consulting & Audit",
+        "description": "We review your processes in supply chain, planning, and HR together and clarify competency and operational gaps."
+      },
+      {
+        "title": "AI4U Retail",
+        "description": "We implement audit-driven solutions with our AI-powered retail software, AI4U Retail."
+      },
+      {
+        "title": "Thorius Academy",
+        "description": "We train your teams on Thorius-LMS so solutions become lasting capability."
+      },
+      {
+        "title": "Thorius Publishing & Library",
+        "description": "Through our Ministry-approved publishing activity, we offer expert books, e-books, and print editions via Thorius Library."
+      },
+      {
+        "title": "Thorius Coaching",
+        "description": "We complete the journey with coaching and mentoring for individual career and leadership development."
+      }
+    ],
+    "domains": [
+      "Supply chain",
+      "Retail planning",
+      "Human resources"
+    ]
+  },
+  "values": {
+    "title": "Our Values",
+    "items": {
+      "accessibility": "Accessibility",
+      "instructorQuality": "Instructor Quality",
+      "ethics": "Ethics & Transparency",
+      "innovation": "Innovation",
+      "democratic": "Democratic"
+    }
+  },
+  "cta": {
+    "title": "Have questions?",
+    "subtitle": "You can reach us easily through our contact page.",
+    "button": "Contact Us"
+  }
+}

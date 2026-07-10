@@ -1,5 +1,7 @@
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
 import { Header } from "@/components/layout/header";
+import { defaultLocale, prefixWithLocale } from "@/lib/i18n/locale";
 import {
   academyPath,
   isCompanySiteHost,
@@ -7,21 +9,22 @@ import {
   resolveAcademyHref,
 } from "@/lib/site/site-mode";
 
-const baseNavLinks = [
-  { href: "/kurslar", label: "Academy" },
-  { href: "/kariyer-yolu", label: "Kariyer Yolu" },
-  { href: kitaplikPath("/"), label: "Kitaplık", external: true },
-  // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
-  { href: "/magaza", label: "Mağaza" },
-  { href: "/#ecosystem", label: "Koçluk" },
-  { href: "/kurumsal", label: "Kurumsal" },
-  { href: "/hakkimizda", label: "Hakkımızda" },
-  { href: "/blog", label: "Blog" },
-] as const;
-
-export function MarketingHeader() {
+export async function MarketingHeader() {
+  const t = await getTranslations("nav");
   const host = headers().get("host");
   const isCompany = isCompanySiteHost(host);
+
+  const baseNavLinks = [
+    { href: "/kurslar", label: t("academy") },
+    { href: "/kariyer-yolu", label: t("careerPath") },
+    { href: kitaplikPath("/"), label: t("library"), external: true },
+    { href: "/magaza", label: t("shop") },
+    { href: "/#ecosystem", label: t("coaching") },
+    { href: "/kurumsal", label: t("corporate") },
+    { href: "/hakkimizda", label: t("about") },
+    { href: "/sss", label: t("faq") },
+    { href: "/blog", label: t("blog") },
+  ] as const;
 
   const navLinks = baseNavLinks.map((link) => ({
     href:
@@ -34,11 +37,18 @@ export function MarketingHeader() {
 
   const authUrls = isCompany
     ? {
-        loginHref: academyPath("/giris"),
-        registerHref: academyPath("/kayit"),
+        loginHref: academyPath(prefixWithLocale("/giris", defaultLocale)),
+        registerHref: academyPath(prefixWithLocale("/kayit", defaultLocale)),
         panelHref: academyPath("/panel"),
       }
     : undefined;
 
-  return <Header navLinks={navLinks} authUrls={authUrls} />;
+  return (
+    <Header
+      navLinks={navLinks}
+      authUrls={authUrls}
+      localized={!isCompany}
+      showLocaleSwitcher={!isCompany}
+    />
+  );
 }

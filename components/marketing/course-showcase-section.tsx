@@ -1,4 +1,4 @@
-import Link from "next/link";
+import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { CourseCard } from "@/components/marketing/course-card";
 import { cn } from "@/lib/utils";
@@ -8,7 +8,7 @@ import type { Course } from "@/types/wordpress";
 interface CourseShowcaseSectionProps {
   id: string;
   title: string;
-  description: string;
+  description?: string;
   courses: Course[];
   productBySlug: Map<string, CourseProduct>;
   statsBySlug: Map<
@@ -48,13 +48,18 @@ export function CourseShowcaseSection({
           />
           <h2
             id={id}
-            className="mb-3 text-3xl font-bold tracking-tight text-primary-950 md:text-4xl"
+            className={cn(
+              "text-3xl font-bold tracking-tight text-primary-950 md:text-4xl",
+              description ? "mb-3" : "mb-0",
+            )}
           >
             {title}
           </h2>
-          <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
-            {description}
-          </p>
+          {description ? (
+            <p className="mx-auto max-w-2xl text-lg text-muted-foreground">
+              {description}
+            </p>
+          ) : null}
         </div>
 
         <div className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-5 lg:gap-4 xl:gap-5">

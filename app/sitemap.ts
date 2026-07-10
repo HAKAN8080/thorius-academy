@@ -1,4 +1,5 @@
 import type { MetadataRoute } from "next";
+import { routing } from "@/i18n/routing";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import {
   fetchBlogSitemapEntries,
@@ -33,6 +34,7 @@ const staticRoutes: Array<{
     changeFrequency: "monthly",
     priority: 0.8,
   },
+  { path: "/sss", changeFrequency: "monthly", priority: 0.7 },
   { path: "/iletisim", changeFrequency: "monthly", priority: 0.6 },
   {
     path: "/egitmen-destek-kilavuzu",
@@ -45,6 +47,33 @@ const staticRoutes: Array<{
   { path: "/mesafeli-satis", changeFrequency: "yearly", priority: 0.3 },
 ];
 
+function localizedPath(locale: string, path: string) {
+  if (path === "/") {
+    return `/${locale}`;
+  }
+
+  return `/${locale}${path}`;
+}
+
+function buildLocalizedEntry(
+  siteUrl: string,
+  path: string,
+  options: Omit<MetadataRoute.Sitemap[number], "url" | "alternates">,
+): MetadataRoute.Sitemap {
+  return routing.locales.map((locale) => ({
+    url: `${siteUrl}${localizedPath(locale, path)}`,
+    alternates: {
+      languages: Object.fromEntries(
+        routing.locales.map((item) => [
+          item,
+          `${siteUrl}${localizedPath(item, path)}`,
+        ]),
+      ),
+    },
+    ...options,
+  }));
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const siteUrl = getSiteUrl();
   const [courses, blogPosts] = await Promise.all([
@@ -52,25 +81,28 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     fetchBlogSitemapEntries(),
   ]);
 
-  const staticEntries: MetadataRoute.Sitemap = staticRoutes.map((route) => ({
-    url: `${siteUrl}${route.path}`,
-    changeFrequency: route.changeFrequency,
-    priority: route.priority,
-  }));
+  const staticEntries = staticRoutes.flatMap((route) =>
+    buildLocalizedEntry(siteUrl, route.path, {
+      changeFrequency: route.changeFrequency,
+      priority: route.priority,
+    }),
+  );
 
-  const courseEntries: MetadataRoute.Sitemap = courses.map((course) => ({
-    url: `${siteUrl}/kurslar/${course.slug}`,
-    lastModified: course.lastModified,
-    changeFrequency: "weekly",
-    priority: 0.7,
-  }));
+  const courseEntries = courses.flatMap((course) =>
+    buildLocalizedEntry(siteUrl, `/kurslar/${course.slug}`, {
+      lastModified: course.lastModified,
+      changeFrequency: "weekly",
+      priority: 0.7,
+    }),
+  );
 
-  const blogEntries: MetadataRoute.Sitemap = blogPosts.map((post) => ({
-    url: `${siteUrl}/blog/${post.slug}`,
-    lastModified: post.lastModified,
-    changeFrequency: "monthly",
-    priority: 0.6,
-  }));
+  const blogEntries = blogPosts.flatMap((post) =>
+    buildLocalizedEntry(siteUrl, `/blog/${post.slug}`, {
+      lastModified: post.lastModified,
+      changeFrequency: "monthly",
+      priority: 0.6,
+    }),
+  );
 
   return [...staticEntries, ...courseEntries, ...blogEntries];
 }

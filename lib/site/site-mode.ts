@@ -1,3 +1,9 @@
+import {
+  defaultLocale,
+  prefixWithLocale,
+  stripLocalePrefix,
+} from "@/lib/i18n/locale";
+
 export type SiteMode = "company" | "academy" | "shop" | "kitaplik";
 
 const COMPANY_HOSTS = new Set(["thorius.com.tr", "www.thorius.com.tr"]);
@@ -112,8 +118,9 @@ export const ACADEMY_ONLY_PATH_PREFIXES = [
 ] as const;
 
 export function isAcademyOnlyPath(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
   return ACADEMY_ONLY_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
 }
 
@@ -132,7 +139,12 @@ export function resolveAcademyHref(
     return href;
   }
 
-  return academyPath(href);
+  const localizedHref = prefixWithLocale(pathname, defaultLocale);
+  return academyPath(
+    href.includes("#")
+      ? localizedHref + href.slice(href.indexOf("#"))
+      : localizedHref,
+  );
 }
 
 /** WordPress (WooCommerce checkout, REST API) — apex taşındıktan sonra alt domain. */
@@ -181,19 +193,21 @@ export const COMPANY_REDIRECT_TO_ACADEMY_PREFIXES = [
 ] as const;
 
 export function isCompanyAllowedPath(pathname: string): boolean {
-  if (pathname === "/") {
+  const stripped = stripLocalePrefix(pathname);
+  if (stripped === "/") {
     return true;
   }
 
   return COMPANY_ALLOWED_PATH_PREFIXES.some(
     (prefix) =>
-      pathname === prefix || pathname.startsWith(`${prefix}/`),
+      stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
 }
 
 export function isCompanyRedirectToAcademyPath(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
   return COMPANY_REDIRECT_TO_ACADEMY_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
 }
 
@@ -244,12 +258,13 @@ export function resolveCompanyNavHref(
 export const SHOP_ALLOWED_PATH_PREFIXES = ["/kitap"] as const;
 
 export function isShopAllowedPath(pathname: string): boolean {
-  if (pathname === "/") {
+  const stripped = stripLocalePrefix(pathname);
+  if (stripped === "/") {
     return true;
   }
 
   return SHOP_ALLOWED_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
 }
 
@@ -265,11 +280,12 @@ export const KITAPLIK_ALLOWED_PATH_PREFIXES = [
 ] as const;
 
 export function isKitaplikAllowedPath(pathname: string): boolean {
-  if (pathname === "/") {
+  const stripped = stripLocalePrefix(pathname);
+  if (stripped === "/") {
     return true;
   }
 
   return KITAPLIK_ALLOWED_PATH_PREFIXES.some(
-    (prefix) => pathname === prefix || pathname.startsWith(`${prefix}/`),
+    (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
 }

@@ -1,5 +1,6 @@
-import Link from "next/link";
 import { headers } from "next/headers";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { KitaplikLogo } from "@/components/kitaplik/kitaplik-logo";
 import { Logo } from "@/components/layout/logo";
@@ -13,61 +14,15 @@ import {
 } from "@/lib/site/site-mode";
 import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
 
-const staticColumns = [
-  {
-    title: "Hakkımızda",
-    links: [
-      { href: "/hakkimizda", label: "Misyonumuz" },
-      { href: "/hakkimizda#sirket-kunyesi", label: "Şirket Künyesi" },
-      { href: "/hakkimizda#belgelerimiz", label: "Belgelerimiz" },
-      { href: "/kariyer-yolu", label: "Kariyer Yolları" },
-      // Shop subdomain canlıya alınınca shopPath("/") olarak güncellenecek
-      { href: kitaplikPath("/"), label: "Kitaplık" },
-      { href: "/#ecosystem", label: "Koçluk" },
-      { href: "/blog", label: "Blog" },
-    ],
-  },
-  {
-    title: "Kurumsal",
-    links: [
-      { href: "/kurumsal", label: "Kurumsal Eğitim" },
-      { href: "/kurumsal#paketler", label: "Paketler" },
-      { href: "/kurumsal#iletisim", label: "Teklif Alın" },
-    ],
-  },
-  {
-    title: "Yararlı Bilgiler",
-    links: [
-      {
-        href: "/egitmen-destek-kilavuzu",
-        label: "Eğitmen Destek Kılavuzu",
-      },
-      { href: "/blog", label: "Blog Yazıları" },
-    ],
-  },
-  {
-    title: "Yasal",
-    links: [
-      { href: "/gizlilik", label: "Gizlilik Politikası" },
-      { href: "/kvkk", label: "KVKK Aydınlatma Metni" },
-      { href: "/kullanim-kosullari", label: "Kullanım Koşulları" },
-      { href: "/iletisim", label: "İletişim" },
-    ],
-  },
-  {
-    title: "İletişim",
-    links: [
-      { href: "mailto:info@thorius.com.tr", label: "info@thorius.com.tr" },
-      {
-        href: "https://wa.me/905431323503",
-        label: "+90 543 132 35 03 (WhatsApp)",
-      },
-      { href: "/kurumsal#iletisim", label: "İstanbul, Türkiye" },
-    ],
-  },
-] as const;
-
-function FooterLink({ href, label }: { href: string; label: string }) {
+function FooterLink({
+  href,
+  label,
+  localized,
+}: {
+  href: string;
+  label: string;
+  localized: boolean;
+}) {
   const isExternal =
     href.startsWith("http") ||
     href.startsWith("mailto:") ||
@@ -87,20 +42,33 @@ function FooterLink({ href, label }: { href: string; label: string }) {
     );
   }
 
+  if (localized) {
+    return (
+      <Link
+        href={href as "/"}
+        className="text-sm text-primary-100 transition-colors hover:text-white"
+      >
+        {label}
+      </Link>
+    );
+  }
+
   return (
-    <Link
+    <a
       href={href}
       className="text-sm text-primary-100 transition-colors hover:text-white"
     >
       {label}
-    </Link>
+    </a>
   );
 }
 
 export async function Footer() {
+  const t = await getTranslations("footer");
   const host = headers().get("host");
   const isCompany = isCompanySiteHost(host);
   const siteMode = getSiteModeFromHost(host);
+  const localized = !isCompany;
   const resolveHref = (href: string) => resolveAcademyHref(href, isCompany);
 
   const categories = await getFooterCategoriesFromCache();
@@ -109,10 +77,61 @@ export async function Footer() {
     .sort((a, b) => b.count - a.count)
     .slice(0, 4);
 
+  const staticColumns = [
+    {
+      title: t("about"),
+      links: [
+        { href: "/hakkimizda", label: t("mission") },
+        { href: "/hakkimizda#sirket-kunyesi", label: t("companyInfo") },
+        { href: "/hakkimizda#belgelerimiz", label: t("documents") },
+        { href: "/kariyer-yolu", label: t("careerPaths") },
+        { href: kitaplikPath("/"), label: t("library") },
+        { href: "/#ecosystem", label: t("coaching") },
+        { href: "/blog", label: t("blog") },
+      ],
+    },
+    {
+      title: t("corporate"),
+      links: [
+        { href: "/kurumsal", label: t("corporateTraining") },
+        { href: "/kurumsal#paketler", label: t("packages") },
+        { href: "/kurumsal#iletisim", label: t("getQuote") },
+      ],
+    },
+    {
+      title: t("useful"),
+      links: [
+        { href: "/sss", label: t("faq") },
+        { href: "/egitmen-destek-kilavuzu", label: t("instructorGuide") },
+        { href: "/blog", label: t("blogPosts") },
+      ],
+    },
+    {
+      title: t("legal"),
+      links: [
+        { href: "/gizlilik", label: t("privacy") },
+        { href: "/kvkk", label: t("kvkk") },
+        { href: "/kullanim-kosullari", label: t("terms") },
+        { href: "/iletisim", label: t("contact") },
+      ],
+    },
+    {
+      title: t("contact"),
+      links: [
+        { href: "mailto:info@thorius.com.tr", label: "info@thorius.com.tr" },
+        {
+          href: "https://wa.me/905431323503",
+          label: "+90 543 132 35 03 (WhatsApp)",
+        },
+        { href: "/kurumsal#iletisim", label: t("location") },
+      ],
+    },
+  ] as const;
+
   const courseColumn = {
-    title: "Kurslar",
+    title: t("courses"),
     links: [
-      { href: resolveHref("/kurslar"), label: "Tüm Kurslar" },
+      { href: resolveHref("/kurslar"), label: t("allCourses") },
       ...topCategories.map((category) => ({
         href: resolveHref(
           buildKurslarUrl({
@@ -145,7 +164,7 @@ export async function Footer() {
           {siteMode === "kitaplik" ? (
             <KitaplikLogo variant="full" />
           ) : (
-            <Logo variant="full" />
+            <Logo variant="full" localized={localized} />
           )}
         </div>
 
@@ -158,7 +177,11 @@ export async function Footer() {
               <ul className="space-y-2">
                 {column.links.map((link) => (
                   <li key={`${column.title}-${link.label}`}>
-                    <FooterLink href={link.href} label={link.label} />
+                    <FooterLink
+                      href={link.href}
+                      label={link.label}
+                      localized={localized && !link.href.startsWith("http")}
+                    />
                   </li>
                 ))}
               </ul>
@@ -167,14 +190,30 @@ export async function Footer() {
         </div>
 
         <div className="mt-12 flex flex-col items-center justify-between gap-4 border-t border-primary-700 pt-8 text-center text-xs text-primary-100 sm:flex-row sm:text-left">
-          <p>© 2026 Thorius Eğitim ve Danışmanlık Ltd. Şti.</p>
+          <p>{t("copyright")}</p>
           <div className="flex flex-wrap justify-center gap-4 sm:justify-end">
-            <Link href="/kvkk" className="hover:text-accent-500">
-              KVKK
-            </Link>
-            <Link href="/mesafeli-satis" className="hover:text-accent-500">
-              Mesafeli Satış Sözleşmesi
-            </Link>
+            {localized ? (
+              <>
+                <Link href="/kvkk" className="hover:text-accent-500">
+                  {t("kvkk")}
+                </Link>
+                <Link href="/mesafeli-satis" className="hover:text-accent-500">
+                  {t("distanceSales")}
+                </Link>
+              </>
+            ) : (
+              <>
+                <a href={resolveHref("/kvkk")} className="hover:text-accent-500">
+                  {t("kvkk")}
+                </a>
+                <a
+                  href={resolveHref("/mesafeli-satis")}
+                  className="hover:text-accent-500"
+                >
+                  {t("distanceSales")}
+                </a>
+              </>
+            )}
           </div>
         </div>
       </Container>

@@ -1,23 +1,34 @@
 import type { Metadata } from "next";
+import { getTranslations } from "next-intl/server";
 import { Mail, MapPin, Phone, MessageCircle } from "lucide-react";
 
-export const metadata: Metadata = {
-  title: "İletişim",
-  description:
-    "Thorius Academy ile iletişime geçin. Sorularınız için bize ulaşın.",
+type PageProps = {
+  params: Promise<{ locale: string }>;
 };
 
-export default function IletisimPage() {
+export async function generateMetadata({
+  params,
+}: PageProps): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "contact" });
+
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
+}
+
+export default async function IletisimPage() {
+  const t = await getTranslations("contact");
+  const addressLines = t("addressLines").split("\n");
+
   return (
     <div className="container mx-auto max-w-4xl px-4 py-12 sm:px-6 md:py-16 lg:px-8">
       <header className="mb-12 text-center">
         <h1 className="mb-3 text-3xl font-bold text-primary-950 md:text-4xl">
-          İletişim
+          {t("title")}
         </h1>
-        <p className="text-lg text-muted-foreground">
-          Sorularınız, önerileriniz veya işbirliği teklifleriniz için bize
-          ulaşın
-        </p>
+        <p className="text-lg text-muted-foreground">{t("subtitle")}</p>
       </header>
 
       <div className="mb-12 grid grid-cols-1 gap-6 md:grid-cols-2">
@@ -26,7 +37,7 @@ export default function IletisimPage() {
             <div className="rounded-lg bg-accent-500/10 p-2">
               <Mail className="h-5 w-5 text-accent-600" />
             </div>
-            <h3 className="font-semibold text-primary-950">E-posta</h3>
+            <h3 className="font-semibold text-primary-950">{t("email")}</h3>
           </div>
           <a
             href="mailto:info@thorius.com.tr"
@@ -41,12 +52,15 @@ export default function IletisimPage() {
             <div className="rounded-lg bg-accent-500/10 p-2">
               <MapPin className="h-5 w-5 text-accent-600" />
             </div>
-            <h3 className="font-semibold text-primary-950">Adres</h3>
+            <h3 className="font-semibold text-primary-950">{t("address")}</h3>
           </div>
           <p className="text-primary-700">
-            Sandalcı Mecit Cd. No 9/1
-            <br />
-            Ortaköy / Beşiktaş - İstanbul
+            {addressLines.map((line, index) => (
+              <span key={line}>
+                {line}
+                {index < addressLines.length - 1 ? <br /> : null}
+              </span>
+            ))}
           </p>
         </div>
 
@@ -55,7 +69,7 @@ export default function IletisimPage() {
             <div className="rounded-lg bg-accent-500/10 p-2">
               <MessageCircle className="h-5 w-5 text-accent-600" />
             </div>
-            <h3 className="font-semibold text-primary-950">WhatsApp</h3>
+            <h3 className="font-semibold text-primary-950">{t("whatsapp")}</h3>
           </div>
           <a
             href="https://wa.me/905431323503"
@@ -72,7 +86,7 @@ export default function IletisimPage() {
             <div className="rounded-lg bg-accent-500/10 p-2">
               <Phone className="h-5 w-5 text-accent-600" />
             </div>
-            <h3 className="font-semibold text-primary-950">Telefon</h3>
+            <h3 className="font-semibold text-primary-950">{t("phone")}</h3>
           </div>
           <a
             href="tel:+905431323503"
@@ -85,13 +99,12 @@ export default function IletisimPage() {
 
       <div className="rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6">
         <h3 className="mb-2 font-semibold text-primary-950">
-          Şirket Bilgileri
+          {t("companyInfoTitle")}
         </h3>
         <p className="text-sm text-primary-700">
-          <strong>Ticari Unvan:</strong> Thorius Eğitim ve Danışmanlık Ltd.
-          Şti.
+          <strong>{t("legalNameLabel")}</strong> {t("legalName")}
           <br />
-          <strong>Vergi Dairesi:</strong> Beşiktaş Vergi Dairesi
+          <strong>{t("taxOfficeLabel")}</strong> {t("taxOffice")}
         </p>
       </div>
     </div>

@@ -1,39 +1,42 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { BookOpen, GraduationCap, Lightbulb, Scale, Users } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
 import { CompanyAccreditationsSection } from "@/components/marketing/company-accreditations-section";
 import { CompanyProfileSection } from "@/components/marketing/company-profile-section";
-import {
-  COMPANY_HERO_SUBTITLE,
-  COMPANY_LEGAL_NAME,
-  COMPANY_TAGLINE,
-  CONSULTING_DOMAINS,
-  VALUE_CHAIN_STEPS,
-} from "@/lib/content/company-model";
 
-const values = [
-  { icon: BookOpen, label: "Erişilebilirlik" },
-  { icon: GraduationCap, label: "Eğitmen Kalitesi" },
-  { icon: Scale, label: "Etik ve Şeffaflık" },
-  { icon: Lightbulb, label: "Yenilikçilik" },
-  { icon: Users, label: "Demokratik" },
-] as const;
+const valueIcons = {
+  accessibility: BookOpen,
+  instructorQuality: GraduationCap,
+  ethics: Scale,
+  innovation: Lightbulb,
+  democratic: Users,
+} as const;
 
-export function AboutPageView() {
+type ModelStep = {
+  title: string;
+  description: string;
+};
+
+export async function AboutPageView() {
+  const t = await getTranslations("about");
+  const modelSteps = t.raw("model.steps") as ModelStep[];
+  const domains = t.raw("model.domains") as string[];
+
   return (
     <>
       <section className="bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-16 text-white md:py-20">
         <Container size="narrow" className="text-center">
           <p className="mb-3 text-sm font-semibold uppercase tracking-[0.2em] text-accent-400">
-            {COMPANY_LEGAL_NAME}
+            {t("hero.legalName")}
           </p>
-          <h1 className="text-4xl font-bold sm:text-5xl">Thorius Hakkında</h1>
+          <h1 className="text-4xl font-bold sm:text-5xl">{t("hero.title")}</h1>
           <p className="mt-4 text-base font-medium text-accent-200/90">
-            {COMPANY_TAGLINE}
+            {t("hero.tagline")}
           </p>
           <p className="mt-6 text-lg leading-relaxed text-primary-100">
-            {COMPANY_HERO_SUBTITLE}
+            {t("hero.subtitle")}
           </p>
         </Container>
       </section>
@@ -49,34 +52,21 @@ export function AboutPageView() {
                 id="mission-heading"
                 className="mb-4 text-2xl font-bold text-primary-950"
               >
-                Misyon
+                {t("mission.title")}
               </h2>
-              <p className="leading-relaxed text-primary-700">
-                Beyaz yaka profesyonellerin bilgi ve deneyimlerini erişilebilir,
-                kaliteli ve etki odaklı eğitimlere dönüştürerek bireylerin ve
-                kurumların gelişimine katkı sağlamak.
-              </p>
+              <p className="leading-relaxed text-primary-700">{t("mission.p1")}</p>
               <p className="mt-4 leading-relaxed text-primary-700">
-                Danışmanlık ve audit ile tedarik zinciri, planlama ve İK
-                alanlarındaki eksikleri belirliyor; AI4U Retail yazılımı ile
-                çözüm üretiyor; Thorius Academy ile eğitim vererek dönüşümü
-                sürdürülebilir kılıyoruz. 25 yılı aşkın sektör deneyimimiz bu
-                bütüncül modele dayanır.
+                {t("mission.p2")}
               </p>
             </div>
 
             <div>
               <h2 className="mb-4 text-2xl font-bold text-primary-950">
-                Vizyon
+                {t("vision.title")}
               </h2>
-              <p className="leading-relaxed text-primary-700">
-                Deneyimin ve bilginin sadece kurumlara değil, tüm topluma ait
-                olduğu bir geleceği inşa etmek.
-              </p>
+              <p className="leading-relaxed text-primary-700">{t("vision.p1")}</p>
               <p className="mt-4 leading-relaxed text-primary-700">
-                Dijital çağın getirdiği olanakları kullanarak, bilgiyi
-                demokratikleştiren, etkileşimli ve sürdürülebilir bir eğitim
-                ekosistemi kurmak vizyonumuzun temelidir.
+                {t("vision.p2")}
               </p>
             </div>
           </div>
@@ -92,16 +82,16 @@ export function AboutPageView() {
             id="model-heading"
             className="mb-8 text-center text-2xl font-bold text-primary-950"
           >
-            Dönüşüm modelimiz
+            {t("model.title")}
           </h2>
           <ol className="space-y-4">
-            {VALUE_CHAIN_STEPS.map((item) => (
+            {modelSteps.map((item, index) => (
               <li
                 key={item.title}
                 className="flex gap-4 rounded-xl border border-primary-100 bg-primary-50/50 p-5"
               >
                 <span className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-[#0B1E3F] text-sm font-bold text-[#D4AF37]">
-                  {item.step}
+                  {index + 1}
                 </span>
                 <div>
                   <p className="font-bold text-primary-950">{item.title}</p>
@@ -113,7 +103,7 @@ export function AboutPageView() {
             ))}
           </ol>
           <ul className="mt-8 flex flex-wrap justify-center gap-2">
-            {CONSULTING_DOMAINS.map((domain) => (
+            {domains.map((domain) => (
               <li
                 key={domain}
                 className="rounded-full border border-primary-200 bg-white px-4 py-1.5 text-sm font-medium text-primary-800"
@@ -134,21 +124,28 @@ export function AboutPageView() {
             id="values-heading"
             className="mb-10 text-center text-2xl font-bold text-primary-950"
           >
-            Değerlerimiz
+            {t("values.title")}
           </h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-            {values.map(({ icon: Icon, label }) => (
-              <div
-                key={label}
-                className="flex flex-col items-center rounded-2xl border border-primary-100 bg-white p-6 text-center shadow-sm"
-              >
-                <Icon
-                  className="mb-3 h-8 w-8 text-accent-600"
-                  aria-hidden="true"
-                />
-                <span className="font-semibold text-primary-900">{label}</span>
-              </div>
-            ))}
+            {(
+              Object.keys(valueIcons) as Array<keyof typeof valueIcons>
+            ).map((key) => {
+              const Icon = valueIcons[key];
+              return (
+                <div
+                  key={key}
+                  className="flex flex-col items-center rounded-2xl border border-primary-100 bg-white p-6 text-center shadow-sm"
+                >
+                  <Icon
+                    className="mb-3 h-8 w-8 text-accent-600"
+                    aria-hidden="true"
+                  />
+                  <span className="font-semibold text-primary-900">
+                    {t(`values.items.${key}`)}
+                  </span>
+                </div>
+              );
+            })}
           </div>
         </Container>
       </section>
@@ -156,13 +153,11 @@ export function AboutPageView() {
       <section className="py-16">
         <Container size="narrow" className="text-center">
           <h2 className="text-2xl font-bold text-primary-950">
-            Sorularınız mı var?
+            {t("cta.title")}
           </h2>
-          <p className="mt-4 text-primary-700">
-            Bize iletişim sayfasından kolayca ulaşabilirsiniz.
-          </p>
+          <p className="mt-4 text-primary-700">{t("cta.subtitle")}</p>
           <Button variant="gold" size="lg" className="mt-8" asChild>
-            <Link href="/iletisim">İletişime Geçin</Link>
+            <Link href="/iletisim">{t("cta.button")}</Link>
           </Button>
         </Container>
       </section>
