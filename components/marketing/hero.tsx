@@ -33,7 +33,7 @@ export async function Hero({ spotlightCourses }: HeroProps) {
           <HeroMarketingCopy />
 
           {spotlightCourses.length > 0 ? (
-            <div className="order-1 min-w-0 xl:order-2">
+            <div className="order-2 min-w-0 overflow-hidden xl:order-2 xl:pl-2">
               <h2 className="mb-5 text-xl font-bold tracking-tight text-white sm:mb-6 sm:text-2xl">
                 {t("popularCourses")}
               </h2>

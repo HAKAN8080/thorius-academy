@@ -26,6 +26,19 @@ interface FeaturedCourseSpotlightCarouselProps {
   variant?: "hero" | "section";
 }
 
+function getHeroStackMinHeight(courseCount: number): number {
+  if (courseCount <= 0) {
+    return 0;
+  }
+
+  const cardHeightRem = 32.5;
+  const lastIndex = courseCount - 1;
+  const lastTopRem =
+    lastIndex * 4.75 + (lastIndex % 2 === 0 ? 0 : 2);
+
+  return lastTopRem + cardHeightRem + 2.5;
+}
+
 function getStackPlacement(
   index: number,
   total: number,
@@ -36,13 +49,13 @@ function getStackPlacement(
 } {
   if (variant === "hero") {
     const step = total > 1 ? index / (total - 1) : 0.5;
-    const leftPercent = 2 + step * 96;
-    const topRem = index * 5.25 + (index % 2 === 0 ? 0 : 2.5);
-    const rotateDeg = -8 + step * 16;
+    const leftPercent = 48 + step * 44;
+    const topRem = index * 4.75 + (index % 2 === 0 ? 0 : 2);
+    const rotateDeg = -6 + step * 12;
 
     return {
       className:
-        "absolute w-[min(74vw,14.5rem)] sm:w-[15rem] lg:w-[15.5rem]",
+        "absolute w-[min(68vw,13.25rem)] sm:w-[13.75rem] lg:w-[14.25rem]",
       style: {
         left: `${leftPercent}%`,
         top: `${topRem}rem`,
@@ -288,7 +301,7 @@ export function FeaturedCourseSpotlightCarousel({
 
   const minHeightRem =
     variant === "hero"
-      ? 12 + courses.length * 6.2
+      ? getHeroStackMinHeight(courses.length)
       : courses.length <= 3
         ? 42
         : courses.length === 4

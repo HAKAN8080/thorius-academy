@@ -24,7 +24,7 @@ export async function HeroMarketingCopy() {
   const pathSteps = [t("step1"), t("step2"), t("step3")] as const;
 
   return (
-    <div className="order-2 flex flex-col gap-5 sm:gap-6 xl:order-1">
+    <div className="order-1 flex flex-col gap-5 sm:gap-6 xl:order-1">
       <div className="space-y-4">
         <h1
           id="hero-heading"
