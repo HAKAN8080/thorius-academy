@@ -14,6 +14,9 @@ export interface CoursesCache {
   title: string;
   subtitle: string | null;
   description_md: string | null;
+  title_en: string | null;
+  subtitle_en: string | null;
+  description_md_en: string | null;
   cover_image_url: string | null;
   intro_video_url: string | null;
   pricing_model: CoursePricingModel;
@@ -26,8 +29,12 @@ export interface CoursesCache {
   visibility: CourseVisibility;
   what_will_learn: string | null;
   target_audience: string | null;
+  what_will_learn_en: string | null;
+  target_audience_en: string | null;
   seo_title: string | null;
   seo_description: string | null;
+  seo_title_en: string | null;
+  seo_description_en: string | null;
   seo_focus_keyword: string | null;
   published: boolean;
   created_at: string;
@@ -94,6 +101,9 @@ export interface CourseBasicsInput {
   course_slug?: string | null;
   subtitle?: string | null;
   description_md?: string | null;
+  title_en?: string | null;
+  subtitle_en?: string | null;
+  description_md_en?: string | null;
   cover_image_url?: string | null;
   intro_video_url?: string | null;
   pricing_model: CoursePricingModel;
@@ -113,6 +123,8 @@ export interface CourseBasicsInput {
 export interface CourseAdditionalInput {
   what_will_learn?: string | null;
   target_audience?: string | null;
+  what_will_learn_en?: string | null;
+  target_audience_en?: string | null;
 }
 
 export interface BuilderLessonInput {

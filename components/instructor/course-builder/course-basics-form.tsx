@@ -63,6 +63,9 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
     course_slug: course.course_slug ?? "",
     subtitle: course.subtitle ?? "",
     description_md: course.description_md ?? "",
+    title_en: course.title_en ?? "",
+    subtitle_en: course.subtitle_en ?? "",
+    description_md_en: course.description_md_en ?? "",
     cover_image_url: course.cover_image_url ?? "",
     intro_video_url: course.intro_video_url ?? "",
     pricing_model: course.pricing_model ?? "free",
@@ -248,6 +251,48 @@ export function CourseBasicsForm({ course, categories }: CourseBasicsFormProps) 
                 onChange={(value) => update("description_md", value ?? "")}
                 height={280}
               />
+            </div>
+          </CourseBuilderSection>
+
+          <CourseBuilderSection
+            title="English Content (optional)"
+            description="Shown on academy.thorius.com.tr/en when filled. Turkish fields remain the primary source."
+            icon={FileText}
+          >
+            <div className="space-y-2">
+              <Label htmlFor="title_en">Course Title (EN)</Label>
+              <Input
+                id="title_en"
+                value={form.title_en ?? ""}
+                onChange={(e) => update("title_en", e.target.value)}
+                className="h-11 border-primary-200"
+                placeholder="English course title"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="subtitle_en">Subtitle (EN)</Label>
+              <Input
+                id="subtitle_en"
+                value={form.subtitle_en ?? ""}
+                onChange={(e) => update("subtitle_en", e.target.value)}
+                className="h-11 border-primary-200"
+                placeholder="Short catalog excerpt in English"
+              />
+            </div>
+
+            <div className="space-y-2">
+              <Label htmlFor="description_md_en">Description (EN)</Label>
+              <div
+                data-color-mode="light"
+                className="overflow-hidden rounded-xl border border-primary-100"
+              >
+                <MarkdownEditor
+                  value={form.description_md_en ?? ""}
+                  onChange={(value) => update("description_md_en", value ?? "")}
+                  height={220}
+                />
+              </div>
             </div>
           </CourseBuilderSection>
 

@@ -4,6 +4,8 @@ import {
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
 import { resolveCourseLanguageMeta } from "@/lib/course/course-language";
+import { pickLocalized } from "@/lib/course/resolve-course-content";
+import type { AppLocale } from "@/i18n/routing";
 import { resolveCategoryDisplayPriority } from "@/lib/course/sort-homepage-categories";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
@@ -15,7 +17,7 @@ export const COURSES_CATALOG_PER_PAGE = 24;
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,description_md,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,title_en,description_md,description_md_en,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
 
 export interface CatalogCourseItem {
   id: string;
@@ -74,7 +76,10 @@ function excerptFromMarkdown(markdown: string | null | undefined, max = 120): st
     .slice(0, max);
 }
 
-function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
+function mapRow(
+  row: Record<string, unknown>,
+  locale: AppLocale = "tr",
+): CatalogCourseItem | null {
   const slug = (row.course_slug as string | null)?.trim();
   if (!slug) {
     return null;
@@ -99,8 +104,19 @@ function mapRow(row: Record<string, unknown>): CatalogCourseItem | null {
       row.wp_course_id == null || row.wp_course_id === ""
         ? null
         : Number(row.wp_course_id),
-    title: (row.title as string) || "Kurs",
-    description: excerptFromMarkdown(row.description_md as string | null),
+    title:
+      pickLocalized(
+        locale,
+        row.title as string | null,
+        row.title_en as string | null,
+      ) || "Kurs",
+    description: excerptFromMarkdown(
+      pickLocalized(
+        locale,
+        row.description_md as string | null,
+        row.description_md_en as string | null,
+      ) || (row.description_md as string | null),
+    ),
     coverImageUrl: (row.cover_image_url as string | null) ?? null,
     category: (row.category as string | null)?.trim() || null,
     level: fromCoursesCacheLevelLabel(row.level as string | null | undefined),
@@ -231,9 +247,11 @@ async function buildCoursesCacheListingPage(params: {
   page?: number;
   categorySlug?: string;
   search?: string;
+  locale?: AppLocale;
 }): Promise<CoursesCacheListingPage> {
   const page = Math.max(1, params.page ?? 1);
   const perPage = COURSES_CATALOG_PER_PAGE;
+  const locale = params.locale ?? "tr";
   const searchQuery = params.search?.trim() || undefined;
   const categorySlug = params.categorySlug
     ? canonicalizeCategorySlug(params.categorySlug)
@@ -283,7 +301,7 @@ async function buildCoursesCacheListingPage(params: {
   if (searchQuery) {
     const escaped = escapeIlike(searchQuery);
     query = query.or(
-      `title.ilike.%${escaped}%,description_md.ilike.%${escaped}%`,
+      `title.ilike.%${escaped}%,description_md.ilike.%${escaped}%,title_en.ilike.%${escaped}%,description_md_en.ilike.%${escaped}%`,
     );
   }
 
@@ -313,7 +331,7 @@ async function buildCoursesCacheListingPage(params: {
     ? sortCatalogRowsByDisplayPriority(rawRows).slice(from, to + 1)
     : rawRows;
   const courses = pageRows
-    .map((row) => mapRow(row))
+    .map((row) => mapRow(row, locale))
     .filter((course): course is CatalogCourseItem => course !== null);
 
   await enrichCatalogCoverImages(courses);
@@ -337,16 +355,18 @@ export async function getCoursesCacheListingPage(params: {
   page?: number;
   categorySlug?: string;
   search?: string;
+  locale?: AppLocale;
 }): Promise<CoursesCacheListingPage> {
   const page = params.page ?? 1;
   const categorySlug = params.categorySlug
     ? canonicalizeCategorySlug(params.categorySlug)
     : "all";
   const search = params.search?.trim() ?? "";
+  const locale = params.locale ?? "tr";
 
   const listing = await unstable_cache(
-    () => buildCoursesCacheListingPage(params),
-    ["courses-cache-listing-v7", categorySlug, String(page), search],
+    () => buildCoursesCacheListingPage({ ...params, locale }),
+    ["courses-cache-listing-v8", categorySlug, String(page), search, locale],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],

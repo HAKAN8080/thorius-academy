@@ -38,15 +38,18 @@ async function KurslarCatalogSection({
   page,
   categorySlug,
   searchQuery,
+  locale,
 }: {
   page: number;
   categorySlug?: string;
   searchQuery?: string;
+  locale: string;
 }) {
   const listing = await getCoursesCacheListingPage({
     page,
     categorySlug,
     search: searchQuery,
+    locale: locale === "en" ? "en" : "tr",
   });
 
   if (
@@ -74,7 +77,11 @@ async function KurslarCatalogSection({
   );
 }
 
-export default async function KurslarPage({ searchParams }: PageProps) {
+export default async function KurslarPage({
+  params,
+  searchParams,
+}: PageProps) {
+  const { locale } = await params;
   const t = await getTranslations("courses.catalog");
   const page = parseKurslarPage(searchParams.sayfa);
   const rawCategorySlug = searchParams.kategori?.trim() || undefined;
@@ -116,6 +123,7 @@ export default async function KurslarPage({ searchParams }: PageProps) {
             page={page}
             categorySlug={categorySlug}
             searchQuery={searchQuery}
+            locale={locale}
           />
         </Suspense>
       </Container>

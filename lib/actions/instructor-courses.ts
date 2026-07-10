@@ -570,6 +570,9 @@ export async function saveCourseBasics(
       seo_title: input.seo_title?.trim() || null,
       seo_description: input.seo_description?.trim() || null,
       seo_focus_keyword: input.seo_focus_keyword?.trim() || null,
+      title_en: input.title_en?.trim() || null,
+      subtitle_en: input.subtitle_en?.trim() || null,
+      description_md_en: input.description_md_en?.trim() || null,
       published,
       ...buildCoursesCacheSlugFields(resolvedSlug),
       updated_at: new Date().toISOString(),
@@ -636,6 +639,8 @@ export async function saveCourseAdditional(
       .update({
         what_will_learn: input.what_will_learn ?? null,
         target_audience: input.target_audience ?? null,
+        what_will_learn_en: input.what_will_learn_en?.trim() || null,
+        target_audience_en: input.target_audience_en?.trim() || null,
         updated_at: new Date().toISOString(),
       })
       .eq("id", courseCacheId);

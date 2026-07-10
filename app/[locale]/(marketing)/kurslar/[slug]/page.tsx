@@ -12,7 +12,7 @@ import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { getCourseLanguageMetaBySlug } from "@/lib/course/course-language";
 import { CourseLanguageBadges } from "@/components/course/course-language-badges";
 import { CourseContentLanguageNotice } from "@/components/course/course-content-language-notice";
-import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import { fetchLocalizedCourseBySlug } from "@/lib/course/fetch-localized-course-by-slug";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
 import { getCourseProduct } from "@/lib/actions/course-products";
 import { JsonLd } from "@/lib/seo/json-ld";
@@ -28,8 +28,9 @@ export const dynamicParams = true;
 export async function generateMetadata({
   params,
 }: CourseDetailPageProps): Promise<Metadata> {
+  const locale = await getLocale();
   const t = await getTranslations("courses.detail");
-  const course = await fetchCourseBySlug(params.slug);
+  const course = await fetchLocalizedCourseBySlug(params.slug, locale);
   if (!course) return { title: t("notFound") };
 
   const description = course.excerpt.slice(0, 160);
@@ -57,7 +58,7 @@ export default async function CourseDetailPage({
   const locale = await getLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
 
-  const course = await fetchCourseBySlug(params.slug);
+  const course = await fetchLocalizedCourseBySlug(params.slug, locale);
   if (!course) notFound();
 
   const coverImageUrl = await resolveCourseCoverImageUrl({
@@ -117,6 +118,7 @@ export default async function CourseDetailPage({
               <CourseContentLanguageNotice
                 pageLocale={locale}
                 courseLanguage={languageMeta.language}
+                hasLocaleContent={course.hasLocaleContent}
                 variant="dark"
               />
 

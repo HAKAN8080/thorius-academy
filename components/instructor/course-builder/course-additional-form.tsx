@@ -18,6 +18,8 @@ export function CourseAdditionalForm({ course }: CourseAdditionalFormProps) {
   const [form, setForm] = useState<CourseAdditionalInput>({
     what_will_learn: course.what_will_learn ?? "",
     target_audience: course.target_audience ?? "",
+    what_will_learn_en: course.what_will_learn_en ?? "",
+    target_audience_en: course.target_audience_en ?? "",
   });
   const [isPending, startTransition] = useTransition();
 
@@ -70,6 +72,47 @@ export function CourseAdditionalForm({ course }: CourseAdditionalFormProps) {
               placeholder="Her satıra bir hedef kitle maddesi yazın"
               className="w-full rounded-md border border-primary-200 px-3 py-2 text-sm"
             />
+          </div>
+
+          <div className="rounded-xl border border-dashed border-primary-200 bg-primary-50/40 p-4">
+            <p className="mb-4 text-sm font-semibold text-primary-900">
+              English (optional)
+            </p>
+            <div className="space-y-5">
+              <div className="space-y-2">
+                <Label htmlFor="learn_en">What You Will Learn (EN)</Label>
+                <textarea
+                  id="learn_en"
+                  rows={6}
+                  value={form.what_will_learn_en ?? ""}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      what_will_learn_en: e.target.value,
+                    }))
+                  }
+                  placeholder="One benefit per line"
+                  className="w-full rounded-md border border-primary-200 px-3 py-2 text-sm"
+                />
+              </div>
+
+              <div className="space-y-2">
+                <Label htmlFor="audience_en">Target Audience (EN)</Label>
+                <textarea
+                  id="audience_en"
+                  rows={6}
+                  value={form.target_audience_en ?? ""}
+                  onChange={(e) =>
+                    setForm((current) => ({
+                      ...current,
+                      target_audience_en: e.target.value,
+                    }))
+                  }
+                  placeholder="One audience segment per line"
+                  className="w-full rounded-md border border-primary-200 px-3 py-2 text-sm"
+                />
+              </div>
+            </div>
           </div>
         </div>
 

@@ -9,15 +9,17 @@ import {
 interface CourseContentLanguageNoticeProps {
   pageLocale: string;
   courseLanguage: CourseLanguageCode;
+  hasLocaleContent?: boolean;
   variant?: "light" | "dark";
 }
 
 export async function CourseContentLanguageNotice({
   pageLocale,
   courseLanguage,
+  hasLocaleContent = false,
   variant = "light",
 }: CourseContentLanguageNoticeProps) {
-  if (pageLocale === courseLanguage) {
+  if (pageLocale === courseLanguage || hasLocaleContent) {
     return null;
   }
 
