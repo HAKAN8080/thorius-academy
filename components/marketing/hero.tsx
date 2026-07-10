@@ -29,12 +29,14 @@ export async function Hero({ spotlightCourses }: HeroProps) {
       </div>
 
       <Container size="wide" className="relative z-10">
-        <div className="grid grid-cols-1 items-start gap-10 xl:grid-cols-[minmax(0,0.95fr)_1.05fr] xl:gap-12">
-          <HeroMarketingCopy />
+        <div className="flex flex-col gap-12 2xl:grid 2xl:grid-cols-[minmax(0,0.92fr)_1.08fr] 2xl:items-start 2xl:gap-14">
+          <div className="relative z-20 min-w-0">
+            <HeroMarketingCopy />
+          </div>
 
           {spotlightCourses.length > 0 ? (
-            <div className="order-2 min-w-0 overflow-hidden xl:order-2 xl:pl-2">
-              <h2 className="mb-5 text-xl font-bold tracking-tight text-white sm:mb-6 sm:text-2xl">
+            <div className="relative isolate min-w-0 2xl:pt-2">
+              <h2 className="mb-5 text-center text-xl font-bold tracking-tight text-white sm:mb-6 sm:text-2xl 2xl:text-left">
                 {t("popularCourses")}
               </h2>
               <FeaturedCourseSpotlightCarousel

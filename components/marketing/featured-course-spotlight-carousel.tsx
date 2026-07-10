@@ -31,12 +31,17 @@ function getHeroStackMinHeight(courseCount: number): number {
     return 0;
   }
 
-  const cardHeightRem = 32.5;
-  const lastIndex = courseCount - 1;
-  const lastTopRem =
-    lastIndex * 4.75 + (lastIndex % 2 === 0 ? 0 : 2);
+  const cardHeightRem = 28;
+  const center = (courseCount - 1) / 2;
+  let maxTopRem = 0;
 
-  return lastTopRem + cardHeightRem + 2.5;
+  for (let index = 0; index < courseCount; index += 1) {
+    const offset = Math.abs(index - center);
+    const topRem = 0.5 + offset * 2.25 + index * 0.65;
+    maxTopRem = Math.max(maxTopRem, topRem);
+  }
+
+  return maxTopRem + cardHeightRem + 2;
 }
 
 function getStackPlacement(
@@ -48,19 +53,19 @@ function getStackPlacement(
   style: CSSProperties;
 } {
   if (variant === "hero") {
-    const step = total > 1 ? index / (total - 1) : 0.5;
-    const leftPercent = 48 + step * 44;
-    const topRem = index * 4.75 + (index % 2 === 0 ? 0 : 2);
-    const rotateDeg = -6 + step * 12;
+    const center = (total - 1) / 2;
+    const offset = index - center;
+    const spreadRem = total <= 2 ? 4.75 : total === 3 ? 5.25 : 4.5;
+    const rotateDeg = offset * 3.5;
+    const topRem = 0.5 + Math.abs(offset) * 2.25 + index * 0.65;
 
     return {
       className:
-        "absolute w-[min(68vw,13.25rem)] sm:w-[13.75rem] lg:w-[14.25rem]",
+        "absolute left-1/2 w-[min(78vw,11.75rem)] sm:w-[12.25rem] 2xl:w-[13rem]",
       style: {
-        left: `${leftPercent}%`,
         top: `${topRem}rem`,
         zIndex: 10 + index,
-        transform: `translateX(-50%) rotate(${rotateDeg}deg)`,
+        transform: `translateX(calc(-50% + ${offset * spreadRem}rem)) rotate(${rotateDeg}deg)`,
       },
     };
   }
@@ -86,7 +91,13 @@ function formatPrice(value: number, locale: string): string {
   return `${value.toLocaleString(locale === "en" ? "en-US" : "tr-TR")}₺`;
 }
 
-function SpotlightCard({ course }: { course: FeaturedCourseSpotlight }) {
+function SpotlightCard({
+  course,
+  variant = "section",
+}: {
+  course: FeaturedCourseSpotlight;
+  variant?: "hero" | "section";
+}) {
   const t = useTranslations("home.spotlight");
   const locale = useLocale();
   const finalPrice = course.priceSale ?? course.priceNormal;
@@ -102,7 +113,12 @@ function SpotlightCard({ course }: { course: FeaturedCourseSpotlight }) {
       className="group/card block h-full rounded-2xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-accent-500 focus-visible:ring-offset-2"
       aria-label={t("viewCourseAria", { title: course.title })}
     >
-      <article className="flex h-full min-h-[520px] w-full flex-col overflow-hidden rounded-2xl border border-primary-100 bg-white shadow-[0_22px_55px_-28px_rgba(15,23,42,0.45)] transition-transform duration-200 group-hover/card:-translate-y-1 group-hover/card:shadow-[0_28px_60px_-24px_rgba(15,23,42,0.5)]">
+      <article
+        className={cn(
+          "flex h-full w-full flex-col overflow-hidden rounded-2xl border border-primary-100 bg-white shadow-[0_22px_55px_-28px_rgba(15,23,42,0.45)] transition-transform duration-200 group-hover/card:-translate-y-1 group-hover/card:shadow-[0_28px_60px_-24px_rgba(15,23,42,0.5)]",
+          variant === "hero" ? "min-h-[440px]" : "min-h-[520px]",
+        )}
+      >
         <div className="relative h-48 w-full shrink-0 overflow-hidden bg-primary-100 sm:h-52">
           {course.coverImageUrl ? (
             <Image
@@ -311,8 +327,10 @@ export function FeaturedCourseSpotlightCarousel({
   return (
     <div
       className={cn(
-        "relative w-full px-1 sm:px-2",
-        variant === "hero" ? "max-w-none" : "mx-auto max-w-6xl",
+        "relative w-full",
+        variant === "hero"
+          ? "mx-auto max-w-[22rem] px-2 sm:max-w-[24rem] 2xl:max-w-none"
+          : "mx-auto max-w-6xl px-1 sm:px-2",
       )}
       style={{ minHeight: `${minHeightRem}rem` }}
     >
@@ -329,7 +347,7 @@ export function FeaturedCourseSpotlightCarousel({
             )}
             style={placement.style}
           >
-            <SpotlightCard course={course} />
+            <SpotlightCard course={course} variant={variant} />
           </div>
         );
       })}
