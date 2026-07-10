@@ -14,7 +14,7 @@ interface HeroCarouselHydratedProps {
 /** İlk paint: gerçek kurs slaytı (SSR). Hydration sonrası tam carousel. */
 export function HeroCarouselHydrated({
   courses,
-  heading = "Öne Çıkan Kurslar",
+  heading,
   ariaLabel = "Öne çıkan kurslar",
 }: HeroCarouselHydratedProps) {
   const [ready, setReady] = useState(false);

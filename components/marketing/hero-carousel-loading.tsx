@@ -10,7 +10,7 @@ import type { Course } from "@/types/wordpress";
 export function HeroCarouselLoading({
   slideCount = 5,
   firstCourse,
-  heading = "Öne Çıkan Kurslar",
+  heading,
 }: {
   slideCount?: number;
   firstCourse?: Course;
@@ -18,7 +18,7 @@ export function HeroCarouselLoading({
 }) {
   return (
     <div className="w-full" aria-busy="true" aria-label="Kurs carousel yükleniyor">
-      <HeroCarouselHeading title={heading} />
+      {heading ? <HeroCarouselHeading title={heading} /> : null}
       <HeroCarouselShell>
         {firstCourse ? (
           <HeroCourseSlide course={firstCourse} priority />

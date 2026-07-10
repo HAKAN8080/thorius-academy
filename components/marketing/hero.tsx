@@ -36,7 +36,6 @@ export async function Hero({ carouselCourses }: HeroProps) {
             <div className="w-full min-w-0">
               <HeroCarouselSection
                 courses={carouselCourses}
-                heading={t("popularCourses")}
                 ariaLabel={t("popularCoursesAria")}
               />
             </div>

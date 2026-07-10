@@ -32,7 +32,7 @@ function scheduleIdleWork(callback: () => void): () => void {
 
 export function HeroCourseCarouselInner({
   courses,
-  heading = "Öne Çıkan Kurslar",
+  heading,
   ariaLabel = "Öne çıkan kurslar",
 }: HeroCourseCarouselInnerProps) {
   const [index, setIndex] = useState(0);
@@ -92,7 +92,7 @@ export function HeroCourseCarouselInner({
       aria-roledescription="carousel"
       aria-label={ariaLabel}
     >
-      <HeroCarouselHeading title={heading} />
+      {heading ? <HeroCarouselHeading title={heading} /> : null}
       <HeroCarouselShell>
         <ScreenFlicker trigger={index}>
           <div className="overflow-hidden">

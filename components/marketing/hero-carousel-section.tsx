@@ -9,7 +9,7 @@ interface HeroCarouselSectionProps {
 
 export function HeroCarouselSection({
   courses,
-  heading = "Öne Çıkan Kurslar",
+  heading,
   ariaLabel = "Öne çıkan kurslar",
 }: HeroCarouselSectionProps) {
   if (courses.length === 0) {
@@ -17,7 +17,7 @@ export function HeroCarouselSection({
   }
 
   return (
-    <div className="mx-auto w-[80%] min-w-0 lg:ml-auto lg:mr-0">
+    <div className="mx-auto w-[80%] min-w-0 -mt-2 lg:-mt-8 lg:ml-auto lg:mr-0">
       <HeroCarouselHydrated
         courses={courses}
         heading={heading}

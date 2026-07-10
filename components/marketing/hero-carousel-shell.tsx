@@ -1,6 +1,10 @@
 import type { ReactNode } from "react";
 
-export function HeroCarouselHeading({ title = "Öne Çıkan Kurslar" }: { title?: string }) {
+export function HeroCarouselHeading({ title }: { title?: string }) {
+  if (!title?.trim()) {
+    return null;
+  }
+
   return (
     <p className="mb-3 text-center text-sm font-semibold tracking-wide text-accent-400 lg:text-left">
       {title}
