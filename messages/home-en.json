@@ -77,7 +77,9 @@
   },
   "inspiration": {
     "ariaLabel": "Atatürk quote on science and knowledge",
-    "imageAlt": "The truest guide in life is science — Mustafa Kemal Atatürk"
+    "quote": "The truest guide in life is science and knowledge. To seek guidance outside science and knowledge is heedlessness, ignorance, and a departure from the right path.",
+    "attribution": "Mustafa Kemal Atatürk",
+    "imageAlt": "Mustafa Kemal Atatürk observing a lesson in a classroom"
   },
   "b2b": {
     "title": "Custom training solutions for your company",

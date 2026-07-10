@@ -38,7 +38,10 @@
     "careerHr": "İnsan Kaynakları",
     "careerAi": "Yapay Zeka",
     "viewCareerPaths": "Kariyer yollarını gör",
-    "allCourses": "Tüm kurslar"
+    "allCourses": "Tüm kurslar",
+    "popularCoursesAria": "En çok rağbet gören eğitimler carousel",
+    "carouselFeatured": "Öne çıkan kurs",
+    "carouselView": "İncele →"
   },
   "footer": {
     "about": "Hakkımızda",

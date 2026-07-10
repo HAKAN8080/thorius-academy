@@ -38,7 +38,10 @@
     "careerHr": "Human Resources",
     "careerAi": "Artificial Intelligence",
     "viewCareerPaths": "Explore career paths",
-    "allCourses": "All courses"
+    "allCourses": "All courses",
+    "popularCoursesAria": "Most popular courses carousel",
+    "carouselFeatured": "Featured course",
+    "carouselView": "View →"
   },
   "footer": {
     "about": "About",

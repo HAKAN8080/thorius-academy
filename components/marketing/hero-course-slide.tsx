@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { User } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
@@ -11,6 +14,8 @@ interface HeroCourseSlideProps {
 }
 
 export function HeroCourseSlide({ course, priority = false }: HeroCourseSlideProps) {
+  const t = useTranslations("hero");
+
   return (
     <Link
       href={`/kurslar/${course.slug}`}
@@ -40,7 +45,7 @@ export function HeroCourseSlide({ course, priority = false }: HeroCourseSlidePro
             </Badge>
           ) : null}
           <p className="relative z-10 text-xs font-medium uppercase tracking-wider text-accent-400">
-            Öne çıkan kurs
+            {t("carouselFeatured")}
           </p>
           <h3 className="relative z-10 mt-1 line-clamp-2 text-lg font-bold text-white md:text-xl">
             {course.title}
@@ -57,7 +62,7 @@ export function HeroCourseSlide({ course, priority = false }: HeroCourseSlidePro
         </CardContent>
         <CardFooter className="border-t border-primary-50 px-5 py-4">
           <span className="text-sm font-medium text-accent-700 group-hover:underline">
-            İncele →
+            {t("carouselView")}
           </span>
         </CardFooter>
       </Card>

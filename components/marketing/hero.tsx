@@ -1,15 +1,15 @@
 import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/layout/container";
-import { FeaturedCourseSpotlightCarousel } from "@/components/marketing/featured-course-spotlight-carousel";
+import { HeroCarouselSection } from "@/components/marketing/hero-carousel-section";
 import { HeroMarketingCopy } from "@/components/marketing/hero-marketing-copy";
 import { HeroRetailBackground } from "@/components/marketing/hero-retail-background";
-import type { FeaturedCourseSpotlight } from "@/types/featured-course-spotlight";
+import type { Course } from "@/types/wordpress";
 
 interface HeroProps {
-  spotlightCourses: FeaturedCourseSpotlight[];
+  carouselCourses: Course[];
 }
 
-export async function Hero({ spotlightCourses }: HeroProps) {
+export async function Hero({ carouselCourses }: HeroProps) {
   const t = await getTranslations("hero");
 
   return (
@@ -29,17 +29,15 @@ export async function Hero({ spotlightCourses }: HeroProps) {
       </div>
 
       <Container size="wide" className="relative z-10">
-        <div className="flex flex-col gap-12 lg:gap-14">
+        <div className="grid grid-cols-1 items-start gap-10 lg:grid-cols-2 lg:gap-12 xl:gap-14">
           <HeroMarketingCopy />
 
-          {spotlightCourses.length > 0 ? (
-            <div className="w-full">
-              <h2 className="mb-6 text-center text-xl font-bold tracking-tight text-white sm:mb-8 sm:text-2xl">
-                {t("popularCourses")}
-              </h2>
-              <FeaturedCourseSpotlightCarousel
-                courses={spotlightCourses}
-                variant="hero"
+          {carouselCourses.length > 0 ? (
+            <div className="w-full min-w-0">
+              <HeroCarouselSection
+                courses={carouselCourses}
+                heading={t("popularCourses")}
+                ariaLabel={t("popularCoursesAria")}
               />
             </div>
           ) : null}

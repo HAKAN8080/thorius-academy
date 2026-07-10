@@ -12,7 +12,7 @@ import { CourseShowcaseSection } from "@/components/marketing/course-showcase-se
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
-import { getFeaturedCourseSpotlights } from "@/lib/course/featured-course-spotlight";
+import { pickHomepageSpotlightCourses } from "@/lib/course/homepage-spotlight-courses";
 import {
   filterCoursesByCategorySlugs,
   filterPurchasableCourses,
@@ -39,11 +39,10 @@ const OTHER_PAID_PRIORITY_SLUGS = [
 
 export async function AcademyHomePage() {
   const t = await getTranslations("home");
-  const [{ courses: allCourses, categories, products, stats }, spotlightCourses] =
-    await Promise.all([
-      getHomepageCatalog(),
-      getFeaturedCourseSpotlights(),
-    ]);
+  const [{ courses: allCourses, categories, products, stats }] =
+    await Promise.all([getHomepageCatalog()]);
+
+  const carouselCourses = pickHomepageSpotlightCourses(allCourses);
 
   const productBySlug = new Map<string, CourseProduct>(
     products.map((p) => [p.course_slug, p]),
@@ -84,9 +83,9 @@ export async function AcademyHomePage() {
 
   return (
     <>
-      <CategoryGrid categories={categories} />
-      <Hero spotlightCourses={spotlightCourses} />
       <AcademyStatsSection />
+      <CategoryGrid categories={categories} />
+      <Hero carouselCourses={carouselCourses} />
       <MemberPromoSection />
       <EcosystemCards />
 
@@ -137,7 +136,7 @@ export async function AcademyHomePage() {
 
       <FreeCoursesHubSection />
 
-      <InspirationBanner compact />
+      <InspirationBanner />
 
       <section
         className="border-y border-primary-100 bg-primary-900 py-16 text-white"

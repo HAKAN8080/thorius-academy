@@ -77,7 +77,9 @@
   },
   "inspiration": {
     "ariaLabel": "Atatürk'ün ilim ve fen sözü",
-    "imageAlt": "Hayatta en hakiki mürşit ilimdir, fen'dir — Mustafa Kemal Atatürk"
+    "quote": "Hayatta en hakiki mürşit ilimdir, fendir. İlim ve fennin haricinde mürşit aramak gaflettir, cehalettir, dalalettir.",
+    "attribution": "M. Kemal ATATÜRK",
+    "imageAlt": "Mustafa Kemal Atatürk bir sınıfta dersi izlerken"
   },
   "b2b": {
     "title": "Şirketinize özel eğitim çözümleri",
