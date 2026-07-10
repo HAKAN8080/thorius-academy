@@ -1,6 +1,7 @@
 "use client";
 
-import { useRouter } from "next/navigation";
+import { useLocale, useTranslations } from "next-intl";
+import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { Zap } from "lucide-react";
@@ -28,7 +29,10 @@ export function BuyButton({
   customer,
   theme = "light",
 }: Props) {
+  const t = useTranslations("courses.purchase");
+  const locale = useLocale();
   const router = useRouter();
+  const priceLocale = locale === "en" ? "en-US" : "tr-TR";
   const finalPrice = priceSale || priceNormal;
   const hasDiscount =
     priceSale !== null &&
@@ -37,7 +41,7 @@ export function BuyButton({
 
   function handleBuy() {
     if (!isLoggedIn || !customer?.email) {
-      toast.info("Satın almak için lütfen giriş yapın");
+      toast.info(t("loginToBuy"));
       router.push(`/giris?redirect=/kurslar/${courseSlug}`);
       return;
     }
@@ -50,6 +54,8 @@ export function BuyButton({
     return null;
   }
 
+  const formattedPrice = `${finalPrice.toLocaleString(priceLocale)}₺`;
+
   return (
     <div className="flex w-full flex-col gap-2 sm:w-auto">
       <Button
@@ -58,7 +64,7 @@ export function BuyButton({
         className="w-full bg-accent-500 text-base font-bold text-primary-950 hover:bg-accent-600 sm:w-auto"
       >
         <Zap className="mr-2 h-5 w-5" />
-        Hemen Satın Al — {finalPrice.toLocaleString("tr-TR")}₺
+        {t("buyNow", { price: formattedPrice })}
       </Button>
 
       {hasDiscount && (
@@ -70,7 +76,7 @@ export function BuyButton({
                 : "text-muted-foreground line-through"
             }
           >
-            {priceNormal!.toLocaleString("tr-TR")}₺
+            {priceNormal!.toLocaleString(priceLocale)}₺
           </span>
           <span
             className={
@@ -79,11 +85,11 @@ export function BuyButton({
                 : "rounded bg-red-100 px-2 py-0.5 text-xs font-semibold text-red-700"
             }
           >
-            %
-            {Math.round(
-              ((priceNormal! - priceSale!) / priceNormal!) * 100,
-            )}{" "}
-            indirim
+            {t("discount", {
+              percent: Math.round(
+                ((priceNormal! - priceSale!) / priceNormal!) * 100,
+              ),
+            })}
           </span>
         </div>
       )}
@@ -95,7 +101,7 @@ export function BuyButton({
             : "text-center text-xs text-muted-foreground sm:text-left"
         }
       >
-        Güvenli ödeme · PayTR · Ömür boyu erişim
+        {t("securePayment")}
       </p>
     </div>
   );

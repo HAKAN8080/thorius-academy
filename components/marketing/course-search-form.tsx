@@ -1,4 +1,7 @@
-import Link from "next/link";
+"use client";
+
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -16,11 +19,13 @@ export function CourseSearchForm({
   categorySlug,
   variant = "light",
 }: CourseSearchFormProps) {
+  const t = useTranslations("courses.catalog");
+  const locale = useLocale();
   const hasQuery = Boolean(defaultQuery?.trim());
   const isDark = variant === "dark";
 
   return (
-    <form action="/kurslar" method="get" className="w-full">
+    <form action={`/${locale}/kurslar`} method="get" className="w-full">
       {categorySlug ? (
         <input type="hidden" name="kategori" value={categorySlug} />
       ) : null}
@@ -38,14 +43,14 @@ export function CourseSearchForm({
             type="search"
             name="ara"
             defaultValue={defaultQuery ?? ""}
-            placeholder="Kurs adı veya konu ara..."
+            placeholder={t("searchPlaceholder")}
             className={cn(
               "h-11 rounded-xl pl-10 pr-4 text-base shadow-sm",
               isDark
                 ? "border-white/15 bg-white/10 text-white placeholder:text-white/50"
                 : "border-primary-100 bg-white",
             )}
-            aria-label="Kurs ara"
+            aria-label={t("searchAria")}
           />
         </div>
 
@@ -59,7 +64,7 @@ export function CourseSearchForm({
                 : "bg-primary-950 text-white hover:bg-primary-900",
             )}
           >
-            Ara
+            {t("searchButton")}
           </Button>
 
           {hasQuery ? (
@@ -76,7 +81,7 @@ export function CourseSearchForm({
             >
               <Link
                 href={buildKurslarUrl({ categorySlug })}
-                aria-label="Aramayı temizle"
+                aria-label={t("clearSearchAria")}
               >
                 <X className="h-4 w-4" />
               </Link>

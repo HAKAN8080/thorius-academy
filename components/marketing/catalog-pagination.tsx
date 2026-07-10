@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import { cn } from "@/lib/utils";
@@ -41,7 +42,7 @@ function getVisiblePages(
   return result;
 }
 
-export function CatalogPagination({
+export async function CatalogPagination({
   page,
   totalPages,
   total,
@@ -53,6 +54,7 @@ export function CatalogPagination({
     return null;
   }
 
+  const t = await getTranslations("courses.catalog");
   const isDark = variant === "dark";
   const visiblePages = getVisiblePages(page, totalPages);
   const prevHref =
@@ -71,10 +73,10 @@ export function CatalogPagination({
   return (
     <nav
       className="mt-10 flex flex-col items-center gap-4"
-      aria-label="Kurs sayfaları"
+      aria-label={t("paginationAria")}
     >
       <p className={cn("text-sm", isDark ? "text-white/70" : "text-muted-foreground")}>
-        Toplam {total} kurs · Sayfa {page} / {totalPages}
+        {t("paginationSummary", { total, page, totalPages })}
       </p>
 
       <div className="flex flex-wrap items-center justify-center gap-2">
@@ -87,10 +89,10 @@ export function CatalogPagination({
                 ? "border-white/20 text-white hover:bg-white/10"
                 : "border-primary-100 text-primary-900 hover:bg-primary-50",
             )}
-            aria-label="Önceki sayfa"
+            aria-label={t("prevPageAria")}
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            Önceki
+            {t("prevPage")}
           </Link>
         ) : (
           <span
@@ -102,7 +104,7 @@ export function CatalogPagination({
             )}
           >
             <ChevronLeft className="h-4 w-4" aria-hidden="true" />
-            Önceki
+            {t("prevPage")}
           </span>
         )}
 
@@ -123,7 +125,7 @@ export function CatalogPagination({
                 categorySlug,
                 search: searchQuery,
               })}
-              aria-label={`Sayfa ${item}`}
+              aria-label={t("pageAria", { page: item })}
               aria-current={item === page ? "page" : undefined}
               className={cn(
                 "inline-flex h-10 min-w-10 items-center justify-center rounded-lg px-3 text-sm font-medium transition-colors",
@@ -150,9 +152,9 @@ export function CatalogPagination({
                 ? "border-white/20 text-white hover:bg-white/10"
                 : "border-primary-100 text-primary-900 hover:bg-primary-50",
             )}
-            aria-label="Sonraki sayfa"
+            aria-label={t("nextPageAria")}
           >
-            Sonraki
+            {t("nextPage")}
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </Link>
         ) : (
@@ -164,7 +166,7 @@ export function CatalogPagination({
                 : "border-primary-50 text-muted-foreground",
             )}
           >
-            Sonraki
+            {t("nextPage")}
             <ChevronRight className="h-4 w-4" aria-hidden="true" />
           </span>
         )}

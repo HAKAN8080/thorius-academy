@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
 import { cn } from "@/lib/utils";
 
@@ -17,13 +18,14 @@ interface CategoryFilterProps {
   variant?: "light" | "dark";
 }
 
-export function CategoryFilter({
+export async function CategoryFilter({
   categories,
   selectedSlug,
   totalCount,
   searchQuery,
   variant = "light",
 }: CategoryFilterProps) {
+  const t = await getTranslations("courses.catalog");
   const isDark = variant === "dark";
 
   return (
@@ -34,7 +36,7 @@ export function CategoryFilter({
           isDark ? "text-[#D4AF37]" : "text-muted-foreground",
         )}
       >
-        Kategoriler
+        {t("categories")}
       </h3>
 
       <Link
@@ -50,7 +52,7 @@ export function CategoryFilter({
               : "text-primary-900 hover:bg-primary-50",
         )}
       >
-        Tümü ({totalCount})
+        {t("all")} ({totalCount})
       </Link>
 
       {categories.map((cat) => (

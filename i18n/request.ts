@@ -16,6 +16,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     contact,
     corporate,
     legal,
+    courses,
   ] = await Promise.all([
     import(`../messages/${locale}.json`),
     import(`../messages/faq-${locale}.json`),
@@ -24,6 +25,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
     import(`../messages/contact-${locale}.json`),
     import(`../messages/corporate-${locale}.json`),
     import(`../messages/legal-${locale}.json`),
+    import(`../messages/courses-${locale}.json`),
   ]);
 
   return {
@@ -36,6 +38,7 @@ export default getRequestConfig(async ({ requestLocale }) => {
       contact: contact.default,
       corporate: corporate.default,
       legal: legal.default,
+      courses: courses.default,
     },
   };
 });

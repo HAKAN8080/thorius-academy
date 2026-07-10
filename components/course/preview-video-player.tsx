@@ -1,5 +1,6 @@
 "use client";
 
+import { useTranslations } from "next-intl";
 import {
   ProtectedHtml5Video,
   ProtectedVideoIframe,
@@ -21,6 +22,7 @@ export function PreviewVideoPlayer({
   videoUrl,
   embedUrl,
 }: PreviewVideoPlayerProps) {
+  const t = useTranslations("courses.preview");
   const bunnyEmbedUrl =
     buildBunnyEmbedUrl(embedUrl) ?? buildBunnyEmbedUrl(videoUrl);
 
@@ -28,7 +30,7 @@ export function PreviewVideoPlayer({
     return (
       <ProtectedVideoIframe
         src={bunnyEmbedUrl}
-        title="Ders önizlemesi"
+        title={t("videoTitle")}
       />
     );
   }
@@ -37,24 +39,24 @@ export function PreviewVideoPlayer({
     const source = embedUrl || videoUrl;
     const youtubeEmbedUrl = source ? buildYouTubeEmbedUrl(source) : null;
     if (!youtubeEmbedUrl) {
-      return <MissingVideoMessage />;
+      return <MissingVideoMessage message={t("noVideo")} />;
     }
 
     return (
-      <ProtectedVideoIframe src={youtubeEmbedUrl} title="Ders önizlemesi" />
+      <ProtectedVideoIframe src={youtubeEmbedUrl} title={t("videoTitle")} />
     );
   }
 
   if (videoType === "vimeo" && videoUrl) {
     const vimeoEmbedUrl = buildVimeoEmbedUrl(videoUrl);
     if (!vimeoEmbedUrl) {
-      return <MissingVideoMessage />;
+      return <MissingVideoMessage message={t("noVideo")} />;
     }
 
     return (
       <ProtectedVideoIframe
         src={vimeoEmbedUrl}
-        title="Ders önizlemesi"
+        title={t("videoTitle")}
         allow="autoplay; fullscreen; picture-in-picture"
       />
     );
@@ -62,7 +64,7 @@ export function PreviewVideoPlayer({
 
   const source = embedUrl || videoUrl;
   if (!source) {
-    return <MissingVideoMessage />;
+    return <MissingVideoMessage message={t("noVideo")} />;
   }
 
   if (videoType === "html5" || videoType === "external_url" || !videoType) {
@@ -70,14 +72,14 @@ export function PreviewVideoPlayer({
   }
 
   return (
-    <ProtectedVideoIframe src={source} title="Ders önizlemesi" />
+    <ProtectedVideoIframe src={source} title={t("videoTitle")} />
   );
 }
 
-function MissingVideoMessage() {
+function MissingVideoMessage({ message }: { message: string }) {
   return (
     <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50 px-6 py-10 text-center text-sm text-muted-foreground">
-      Bu ders için oynatılabilir video bulunamadı.
+      {message}
     </div>
   );
 }

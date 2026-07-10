@@ -1,9 +1,9 @@
 "use client";
 
 import { useTransition } from "react";
-import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link, useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
-import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, CheckCircle, Loader2 } from "lucide-react";
 import { enrollInCourse } from "@/lib/actions/enrollment";
@@ -29,6 +29,7 @@ export function EnrollButton({
   isLoggedIn,
   isAlreadyEnrolled,
 }: EnrollButtonProps) {
+  const t = useTranslations("courses.enroll");
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -41,7 +42,7 @@ export function EnrollButton({
       >
         <Link href={`/panel/kurslarim/${courseSlug}`}>
           <CheckCircle className="mr-2 h-4 w-4" />
-          Kursa Devam Et
+          {t("continue")}
         </Link>
       </Button>
     );
@@ -49,7 +50,7 @@ export function EnrollButton({
 
   function handleEnroll() {
     if (!isLoggedIn) {
-      toast.info("Kayıt olmak için lütfen giriş yapın");
+      toast.info(t("loginToEnroll"));
       router.push(`/giris?redirect=/kurslar/${courseSlug}`);
       return;
     }
@@ -65,17 +66,17 @@ export function EnrollButton({
       });
 
       if (result.success) {
-        toast.success("Kursa başarıyla kayıt oldunuz!");
+        toast.success(t("success"));
         router.refresh();
         router.push(`/panel/kurslarim/${courseSlug}`);
       } else if (result.alreadyEnrolled) {
-        toast.info("Bu kursa zaten kayıtlısınız");
+        toast.info(t("alreadyEnrolled"));
         router.refresh();
         router.push(`/panel/kurslarim/${courseSlug}`);
       } else if (result.needsLogin) {
         router.push(`/giris?redirect=/kurslar/${courseSlug}`);
       } else {
-        toast.error(result.error ?? "Bir hata oluştu");
+        toast.error(result.error ?? t("error"));
       }
     });
   }
@@ -90,11 +91,11 @@ export function EnrollButton({
       {isPending ? (
         <>
           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Kaydediliyor...
+          {t("enrolling")}
         </>
       ) : (
         <>
-          Kursa Katıl
+          {t("join")}
           <ArrowRight className="ml-2 h-4 w-4" />
         </>
       )}

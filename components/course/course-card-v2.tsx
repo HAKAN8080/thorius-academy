@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useLocale, useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import Image from "next/image";
 import { Star, BookOpen, Clock, Bookmark, ArrowRight } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -32,6 +33,9 @@ export function CourseCardV2({
   className,
   size = "default",
 }: CourseCardV2Props) {
+  const t = useTranslations("courses.card");
+  const locale = useLocale();
+  const priceLocale = locale === "en" ? "en-US" : "tr-TR";
   const finalPrice = priceSale || priceNormal;
   const hasDiscount =
     priceSale != null &&
@@ -96,12 +100,12 @@ export function CourseCardV2({
                 isCompact && "px-1.5 py-0 text-[10px]",
               )}
             >
-              %{discountPercent} İndirim
+              {t("discount", { percent: discountPercent })}
             </Badge>
           )}
           {isEnrolled && (
             <Badge className="border-0 bg-emerald-500 text-white shadow-md">
-              ✓ Kayıtlı
+              {t("enrolled")}
             </Badge>
           )}
         </div>
@@ -116,7 +120,7 @@ export function CourseCardV2({
             "absolute right-3 top-3 rounded-full bg-white/90 p-2 shadow-md transition-all hover:scale-110 hover:bg-accent-50",
             isCompact && "hidden sm:flex",
           )}
-          aria-label="Kursu kaydet"
+          aria-label={t("bookmarkAria")}
         >
           <Bookmark className="h-4 w-4 text-primary-700" />
         </button>
@@ -218,7 +222,7 @@ export function CourseCardV2({
                 )}
                 <div className="flex items-center gap-1">
                   <BookOpen className="h-4 w-4" aria-hidden="true" />
-                  <span>{lessonCount} ders</span>
+                  <span>{t("lessons", { count: lessonCount })}</span>
                 </div>
               </>
             )}
@@ -254,7 +258,7 @@ export function CourseCardV2({
                   isCompact ? "text-[10px]" : "text-sm",
                 )}
               >
-                {priceNormal!.toLocaleString("tr-TR")}₺
+                {priceNormal!.toLocaleString(priceLocale)}₺
               </span>
             )}
             {finalPrice ? (
@@ -264,7 +268,7 @@ export function CourseCardV2({
                   isCompact ? "text-base" : "text-2xl",
                 )}
               >
-                {finalPrice.toLocaleString("tr-TR")}₺
+                {finalPrice.toLocaleString(priceLocale)}₺
               </span>
             ) : (
               <span
@@ -273,7 +277,7 @@ export function CourseCardV2({
                   isCompact ? "text-xs" : "text-sm",
                 )}
               >
-                Ücretsiz
+                {t("free")}
               </span>
             )}
           </div>

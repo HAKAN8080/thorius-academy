@@ -1,4 +1,5 @@
-import Link from "next/link";
+import { getTranslations } from "next-intl/server";
+import { Link } from "@/i18n/navigation";
 import { BookOpen, Clock, Eye, Lock, PlayCircle } from "lucide-react";
 import {
   formatLessonDuration,
@@ -10,25 +11,24 @@ interface CourseCurriculumPreviewProps {
   curriculum: CourseCurriculumPreview;
 }
 
-export function CourseCurriculumPreview({
+export async function CourseCurriculumPreview({
   courseSlug,
   curriculum,
 }: CourseCurriculumPreviewProps) {
+  const t = await getTranslations("courses.curriculum");
   const totalDuration = formatLessonDuration(curriculum.totalDurationSeconds);
 
   return (
     <section className="mt-0 rounded-2xl border border-primary-100 bg-white p-6 md:p-8">
       <div className="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-primary-950">Müfredat</h2>
-          <p className="mt-1 text-sm text-muted-foreground">
-            Bölümler, ders süreleri ve ücretsiz önizlemeler
-          </p>
+          <h2 className="text-2xl font-bold text-primary-950">{t("title")}</h2>
+          <p className="mt-1 text-sm text-muted-foreground">{t("subtitle")}</p>
         </div>
         <div className="flex flex-wrap gap-4 text-sm text-primary-700">
           <span className="inline-flex items-center gap-1.5">
             <BookOpen className="h-4 w-4 text-accent-600" />
-            {curriculum.totalLessons} ders
+            {t("lessons", { count: curriculum.totalLessons })}
           </span>
           {totalDuration ? (
             <span className="inline-flex items-center gap-1.5">
@@ -48,7 +48,8 @@ export function CourseCurriculumPreview({
             <ul className="divide-y divide-primary-100 rounded-xl border border-primary-100">
               {section.lessons.map((lesson, index) => {
                 const duration = formatLessonDuration(lesson.durationSeconds);
-                const previewHref = `/kurslar/${courseSlug}/onizleme/${lesson.id}`;
+                const previewHref =
+                  `/kurslar/${courseSlug}/onizleme/${lesson.id}` as const;
 
                 return (
                   <li
@@ -80,12 +81,12 @@ export function CourseCurriculumPreview({
                           className="inline-flex items-center gap-1 rounded-full bg-emerald-50 px-2 py-1 text-[11px] font-semibold uppercase tracking-wide text-emerald-700 hover:bg-emerald-100"
                         >
                           <Eye className="h-3.5 w-3.5" aria-hidden="true" />
-                          Önizleme
+                          {t("preview")}
                         </Link>
                       ) : (
                         <>
                           <Lock className="h-3.5 w-3.5" aria-hidden="true" />
-                          <span className="sr-only">Kayıt sonrası erişim</span>
+                          <span className="sr-only">{t("lockedAria")}</span>
                         </>
                       )}
                     </div>
@@ -102,7 +103,7 @@ export function CourseCurriculumPreview({
       ) ? (
         <p className="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
           <PlayCircle className="h-4 w-4 text-emerald-600" aria-hidden="true" />
-          Önizleme etiketli dersleri kayıt olmadan izleyebilirsiniz.
+          {t("previewHint")}
         </p>
       ) : null}
     </section>

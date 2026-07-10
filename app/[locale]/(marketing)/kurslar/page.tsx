@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { redirect } from "next/navigation";
 import { Suspense } from "react";
+import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/layout/container";
 import { CourseGridSkeleton } from "@/components/marketing/course-card-skeleton";
 import { KurslarCatalog } from "@/components/marketing/kurslar-catalog";
@@ -12,16 +13,25 @@ import {
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import { getCoursesCacheListingPage } from "@/lib/course/courses-cache-catalog";
 
-export const metadata: Metadata = {
-  title: "Tüm Kurslar",
-  description:
-    "Perakende, AI, liderlik ve daha fazlası. Thorius Academy'nin premium kurs kataloğu.",
-};
-
 export const revalidate = 3600;
 
-interface KurslarPageProps {
+type PageProps = {
+  params: Promise<{ locale: string }>;
   searchParams: { kategori?: string; sayfa?: string; ara?: string };
+};
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ locale: string }>;
+}): Promise<Metadata> {
+  const { locale } = await params;
+  const t = await getTranslations({ locale, namespace: "courses.catalog" });
+
+  return {
+    title: t("meta.title"),
+    description: t("meta.description"),
+  };
 }
 
 async function KurslarCatalogSection({
@@ -64,7 +74,8 @@ async function KurslarCatalogSection({
   );
 }
 
-export default function KurslarPage({ searchParams }: KurslarPageProps) {
+export default async function KurslarPage({ searchParams }: PageProps) {
+  const t = await getTranslations("courses.catalog");
   const page = parseKurslarPage(searchParams.sayfa);
   const rawCategorySlug = searchParams.kategori?.trim() || undefined;
   const categorySlug = rawCategorySlug
@@ -89,14 +100,12 @@ export default function KurslarPage({ searchParams }: KurslarPageProps) {
       <Container className="py-12 md:py-16">
         <div className="mb-8 md:mb-12">
           <p className="mb-2 text-xs font-semibold uppercase tracking-[0.2em] text-[#D4AF37]">
-            Thorius Academy
+            {t("eyebrow")}
           </p>
           <h1 className="mb-3 text-3xl font-bold text-white md:text-4xl">
-            Tüm Kurslar
+            {t("title")}
           </h1>
-          <p className="text-lg text-white/70">
-            Perakende profesyonelleri için seçilmiş eğitim programları
-          </p>
+          <p className="text-lg text-white/70">{t("subtitle")}</p>
         </div>
 
         <Suspense

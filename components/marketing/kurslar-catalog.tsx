@@ -1,3 +1,4 @@
+import { getTranslations } from "next-intl/server";
 import { CourseCardV2 } from "@/components/course/course-card-v2";
 import { CategoryFilter } from "@/components/marketing/category-filter";
 import { CatalogPagination } from "@/components/marketing/catalog-pagination";
@@ -43,34 +44,7 @@ function mapCourseToCardProps(course: CatalogCourseItem) {
   };
 }
 
-function EmptyStateMessage({
-  searchQuery,
-  selectedCategory,
-}: {
-  searchQuery?: string;
-  selectedCategory?: string;
-}) {
-  if (searchQuery) {
-    return (
-      <p className="text-white/70">
-        <span className="font-medium text-[#D4AF37]">
-          &ldquo;{searchQuery}&rdquo;
-        </span>{" "}
-        ile eşleşen kurs bulunamadı.
-      </p>
-    );
-  }
-
-  if (selectedCategory) {
-    return (
-      <p className="text-white/70">Bu kategoride henüz kurs bulunmuyor.</p>
-    );
-  }
-
-  return <p className="text-white/70">Henüz kurs yok.</p>;
-}
-
-export function KurslarCatalog({
+export async function KurslarCatalog({
   courses,
   categories,
   pagination,
@@ -78,17 +52,19 @@ export function KurslarCatalog({
   selectedCategory,
   searchQuery,
 }: KurslarCatalogProps) {
+  const t = await getTranslations("courses.catalog");
+
   if (totalPublished === 0 && courses.length === 0 && !searchQuery) {
     return (
       <div className="py-16 text-center">
-        <p className="text-white/70">Henüz kurs yok.</p>
+        <p className="text-white/70">{t("noCourses")}</p>
       </div>
     );
   }
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
-      <aside aria-label="Kategori filtresi">
+      <aside aria-label={t("categoryFilterAria")}>
         <CategoryFilter
           categories={categories}
           selectedSlug={selectedCategory}
@@ -107,19 +83,24 @@ export function KurslarCatalog({
 
         {searchQuery ? (
           <p className="text-sm text-white/70">
-            <span className="font-medium text-[#D4AF37]">
-              &ldquo;{searchQuery}&rdquo;
-            </span>{" "}
-            için {pagination.total} sonuç bulundu
+            {t("searchResults", {
+              query: searchQuery,
+              total: pagination.total,
+            })}
           </p>
         ) : null}
 
         {courses.length === 0 ? (
           <div className="py-16 text-center">
-            <EmptyStateMessage
-              searchQuery={searchQuery}
-              selectedCategory={selectedCategory}
-            />
+            {searchQuery ? (
+              <p className="text-white/70">
+                {t("noSearchResults", { query: searchQuery })}
+              </p>
+            ) : selectedCategory ? (
+              <p className="text-white/70">{t("noCoursesInCategory")}</p>
+            ) : (
+              <p className="text-white/70">{t("noCourses")}</p>
+            )}
           </div>
         ) : (
           <>

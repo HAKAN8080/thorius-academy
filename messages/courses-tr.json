@@ -1,0 +1,85 @@
+{
+  "catalog": {
+    "meta": {
+      "title": "Tüm Kurslar",
+      "description": "Perakende, AI, liderlik ve daha fazlası. Thorius Academy'nin premium kurs kataloğu."
+    },
+    "eyebrow": "Thorius Academy",
+    "title": "Tüm Kurslar",
+    "subtitle": "Perakende profesyonelleri için seçilmiş eğitim programları",
+    "categoryFilterAria": "Kategori filtresi",
+    "categories": "Kategoriler",
+    "all": "Tümü",
+    "searchPlaceholder": "Kurs adı veya konu ara...",
+    "searchAria": "Kurs ara",
+    "searchButton": "Ara",
+    "clearSearchAria": "Aramayı temizle",
+    "noCourses": "Henüz kurs yok.",
+    "noCoursesInCategory": "Bu kategoride henüz kurs bulunmuyor.",
+    "noSearchResults": "\"{query}\" ile eşleşen kurs bulunamadı.",
+    "searchResults": "\"{query}\" için {total} sonuç bulundu",
+    "paginationAria": "Kurs sayfaları",
+    "paginationSummary": "Toplam {total} kurs · Sayfa {page} / {totalPages}",
+    "prevPage": "Önceki",
+    "nextPage": "Sonraki",
+    "prevPageAria": "Önceki sayfa",
+    "nextPageAria": "Sonraki sayfa",
+    "pageAria": "Sayfa {page}"
+  },
+  "card": {
+    "discount": "{percent}% İndirim",
+    "enrolled": "✓ Kayıtlı",
+    "bookmarkAria": "Kursu kaydet",
+    "lessons": "{count} ders",
+    "free": "Ücretsiz"
+  },
+  "detail": {
+    "notFound": "Kurs Bulunamadı",
+    "backToCatalog": "Tüm Kurslar",
+    "interestTitle": "Bu kursla ilgileniyor musunuz?",
+    "interestBody": "Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.",
+    "unavailableTitle": "Bu kurs şu an satın alınamıyor",
+    "unavailableBody": "Fiyat bilgisi güncelleniyor olabilir. Destek ekibimiz size yardımcı olur.",
+    "contactCta": "İletişime geçin"
+  },
+  "curriculum": {
+    "title": "Müfredat",
+    "subtitle": "Bölümler, ders süreleri ve ücretsiz önizlemeler",
+    "lessons": "{count} ders",
+    "preview": "Önizleme",
+    "lockedAria": "Kayıt sonrası erişim",
+    "previewHint": "Önizleme etiketli dersleri kayıt olmadan izleyebilirsiniz."
+  },
+  "preview": {
+    "metaTitle": "Önizleme",
+    "metaTitleWithLesson": "{lesson} — Önizleme | {course}",
+    "metaTitleCourse": "Önizleme | {course}",
+    "backToCourse": "Kurs sayfasına dön",
+    "badge": "Ücretsiz önizleme",
+    "videoTitle": "Ders önizlemesi",
+    "noVideo": "Bu ders için oynatılabilir video bulunamadı."
+  },
+  "purchase": {
+    "buyNow": "Hemen Satın Al — {price}",
+    "discount": "{percent}% indirim",
+    "securePayment": "Güvenli ödeme · PayTR · Ömür boyu erişim",
+    "loginToBuy": "Satın almak için lütfen giriş yapın"
+  },
+  "enroll": {
+    "continue": "Kursa Devam Et",
+    "join": "Kursa Katıl",
+    "enrolling": "Kaydediliyor...",
+    "loginToEnroll": "Kayıt olmak için lütfen giriş yapın",
+    "success": "Kursa başarıyla kayıt oldunuz!",
+    "alreadyEnrolled": "Bu kursa zaten kayıtlısınız",
+    "error": "Bir hata oluştu"
+  },
+  "language": {
+    "courseLanguageAria": "Kurs dili {language}",
+    "courseWithSubtitlesAria": "Kurs dili {language}, altyazılı",
+    "courseWithSubtitleLangAria": "Kurs dili {language}, altyazı {subtitle}",
+    "courseLanguageTitle": "Kurs dili: {language}",
+    "subtitled": "Altyazılı",
+    "subtitleTitle": "Altyazı: {subtitle}"
+  }
+}

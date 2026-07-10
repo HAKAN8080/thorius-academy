@@ -1,0 +1,85 @@
+{
+  "catalog": {
+    "meta": {
+      "title": "All Courses",
+      "description": "Retail, AI, leadership, and more. Thorius Academy's premium course catalog."
+    },
+    "eyebrow": "Thorius Academy",
+    "title": "All Courses",
+    "subtitle": "Curated training programs for retail professionals",
+    "categoryFilterAria": "Category filter",
+    "categories": "Categories",
+    "all": "All",
+    "searchPlaceholder": "Search by course name or topic...",
+    "searchAria": "Search courses",
+    "searchButton": "Search",
+    "clearSearchAria": "Clear search",
+    "noCourses": "No courses yet.",
+    "noCoursesInCategory": "No courses in this category yet.",
+    "noSearchResults": "No courses match \"{query}\".",
+    "searchResults": "{total} results for \"{query}\"",
+    "paginationAria": "Course pages",
+    "paginationSummary": "{total} courses total · Page {page} / {totalPages}",
+    "prevPage": "Previous",
+    "nextPage": "Next",
+    "prevPageAria": "Previous page",
+    "nextPageAria": "Next page",
+    "pageAria": "Page {page}"
+  },
+  "card": {
+    "discount": "{percent}% Off",
+    "enrolled": "✓ Enrolled",
+    "bookmarkAria": "Save course",
+    "lessons": "{count} lessons",
+    "free": "Free"
+  },
+  "detail": {
+    "notFound": "Course Not Found",
+    "backToCatalog": "All Courses",
+    "interestTitle": "Interested in this course?",
+    "interestBody": "Click the button below to enroll and start learning.",
+    "unavailableTitle": "This course is not available for purchase",
+    "unavailableBody": "Pricing may still be updating. Our support team can help.",
+    "contactCta": "Contact us"
+  },
+  "curriculum": {
+    "title": "Curriculum",
+    "subtitle": "Sections, lesson durations, and free previews",
+    "lessons": "{count} lessons",
+    "preview": "Preview",
+    "lockedAria": "Available after enrollment",
+    "previewHint": "You can watch lessons marked Preview without enrolling."
+  },
+  "preview": {
+    "metaTitle": "Preview",
+    "metaTitleWithLesson": "{lesson} — Preview | {course}",
+    "metaTitleCourse": "Preview | {course}",
+    "backToCourse": "Back to course page",
+    "badge": "Free preview",
+    "videoTitle": "Lesson preview",
+    "noVideo": "No playable video found for this lesson."
+  },
+  "purchase": {
+    "buyNow": "Buy Now — {price}",
+    "discount": "{percent}% off",
+    "securePayment": "Secure checkout · PayTR · Lifetime access",
+    "loginToBuy": "Please sign in to purchase"
+  },
+  "enroll": {
+    "continue": "Continue Course",
+    "join": "Enroll Now",
+    "enrolling": "Enrolling...",
+    "loginToEnroll": "Please sign in to enroll",
+    "success": "You have successfully enrolled!",
+    "alreadyEnrolled": "You are already enrolled in this course",
+    "error": "Something went wrong"
+  },
+  "language": {
+    "courseLanguageAria": "Course language {language}",
+    "courseWithSubtitlesAria": "Course language {language}, subtitled",
+    "courseWithSubtitleLangAria": "Course language {language}, subtitles {subtitle}",
+    "courseLanguageTitle": "Course language: {language}",
+    "subtitled": "Subtitled",
+    "subtitleTitle": "Subtitles: {subtitle}"
+  }
+}

@@ -1,8 +1,9 @@
 import type { Metadata } from "next";
 import Image from "next/image";
-import Link from "next/link";
 import { notFound } from "next/navigation";
+import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft, Calendar, User } from "lucide-react";
+import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
 import { CourseDetailPurchaseSection } from "@/components/course/course-detail-purchase-panel";
@@ -26,8 +27,9 @@ export const dynamicParams = true;
 export async function generateMetadata({
   params,
 }: CourseDetailPageProps): Promise<Metadata> {
+  const t = await getTranslations("courses.detail");
   const course = await fetchCourseBySlug(params.slug);
-  if (!course) return { title: "Kurs Bulunamadı" };
+  if (!course) return { title: t("notFound") };
 
   const description = course.excerpt.slice(0, 160);
 
@@ -50,6 +52,10 @@ export async function generateMetadata({
 export default async function CourseDetailPage({
   params,
 }: CourseDetailPageProps) {
+  const t = await getTranslations("courses.detail");
+  const locale = await getLocale();
+  const dateLocale = locale === "en" ? "en-US" : "tr-TR";
+
   const course = await fetchCourseBySlug(params.slug);
   if (!course) notFound();
 
@@ -85,7 +91,7 @@ export default async function CourseDetailPage({
             className="mb-6 inline-flex items-center gap-2 text-sm font-medium text-primary-100 hover:text-accent-400"
           >
             <ArrowLeft className="h-4 w-4" aria-hidden="true" />
-            Tüm Kurslar
+            {t("backToCatalog")}
           </Link>
 
           <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[1fr_400px] lg:gap-12">
@@ -126,10 +132,13 @@ export default async function CourseDetailPage({
                 <div className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" aria-hidden="true" />
                   <span>
-                    {new Date(course.publishedDate).toLocaleDateString("tr-TR", {
-                      year: "numeric",
-                      month: "long",
-                    })}
+                    {new Date(course.publishedDate).toLocaleDateString(
+                      dateLocale,
+                      {
+                        year: "numeric",
+                        month: "long",
+                      },
+                    )}
                   </span>
                 </div>
               </div>
@@ -182,11 +191,9 @@ export default async function CourseDetailPage({
 
           <div className="mt-12 rounded-2xl bg-gradient-to-br from-primary-50 to-accent-50 p-8 text-center">
             <h3 className="mb-3 text-xl font-bold text-primary-950 md:text-2xl">
-              Bu kursla ilgileniyor musunuz?
+              {t("interestTitle")}
             </h3>
-            <p className="mb-6 text-muted-foreground">
-              Kayıt olmak ve kursa başlamak için aşağıdaki butona tıklayın.
-            </p>
+            <p className="mb-6 text-muted-foreground">{t("interestBody")}</p>
             <CourseDetailPurchaseSection course={courseWithCover} />
           </div>
         </Container>

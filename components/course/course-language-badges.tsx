@@ -1,3 +1,6 @@
+"use client";
+
+import { useTranslations } from "next-intl";
 import { Captions } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
@@ -19,9 +22,11 @@ export function CourseLanguageBadges({
   className,
   overlay = false,
 }: CourseLanguageBadgesProps) {
+  const t = useTranslations("courses.language");
   const hasSubtitle = subtitleLanguage != null;
   const subtitleDiffers =
     hasSubtitle && subtitleLanguage !== language;
+  const languageLabel = courseLanguageShortLabel(language);
 
   return (
     <div
@@ -33,9 +38,12 @@ export function CourseLanguageBadges({
       aria-label={
         hasSubtitle
           ? subtitleDiffers
-            ? `Kurs dili ${courseLanguageShortLabel(language)}, altyazı ${courseLanguageShortLabel(subtitleLanguage)}`
-            : `Kurs dili ${courseLanguageShortLabel(language)}, altyazılı`
-          : `Kurs dili ${courseLanguageShortLabel(language)}`
+            ? t("courseWithSubtitleLangAria", {
+                language: languageLabel,
+                subtitle: courseLanguageShortLabel(subtitleLanguage),
+              })
+            : t("courseWithSubtitlesAria", { language: languageLabel })
+          : t("courseLanguageAria", { language: languageLabel })
       }
     >
       <span
@@ -45,10 +53,10 @@ export function CourseLanguageBadges({
             ? "border border-white/20 bg-primary-950/85 px-2 py-1 text-[11px] text-white backdrop-blur-sm"
             : "border border-primary-100 bg-white px-2 py-1 text-[11px] text-primary-900",
         )}
-        title={`Kurs dili: ${courseLanguageShortLabel(language)}`}
+        title={t("courseLanguageTitle", { language: languageLabel })}
       >
         <span aria-hidden="true">{courseLanguageFlag(language)}</span>
-        <span>{courseLanguageShortLabel(language)}</span>
+        <span>{languageLabel}</span>
       </span>
 
       {hasSubtitle ? (
@@ -61,8 +69,10 @@ export function CourseLanguageBadges({
           )}
           title={
             subtitleDiffers
-              ? `Altyazı: ${courseLanguageShortLabel(subtitleLanguage)}`
-              : "Altyazılı"
+              ? t("subtitleTitle", {
+                  subtitle: courseLanguageShortLabel(subtitleLanguage),
+                })
+              : t("subtitled")
           }
         >
           <Captions className="h-3 w-3" aria-hidden="true" />
@@ -74,7 +84,7 @@ export function CourseLanguageBadges({
               <span>{courseLanguageShortLabel(subtitleLanguage)}</span>
             </>
           ) : (
-            <span>Altyazılı</span>
+            <span>{t("subtitled")}</span>
           )}
         </span>
       ) : null}

@@ -1,6 +1,7 @@
 "use client";
 
-import Link from "next/link";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { EnrollButton } from "@/components/enrollment/enroll-button";
 import { BuyButton } from "@/components/course/buy-button";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,8 @@ export function CoursePurchaseCta({
   isFreeYoutubeCourse = false,
   theme = "light",
 }: CoursePurchaseCtaProps) {
+  const t = useTranslations("courses.detail");
+
   if (isAlreadyEnrolled) {
     return (
       <EnrollButton
@@ -99,14 +102,13 @@ export function CoursePurchaseCta({
   return (
     <div className="rounded-xl border border-primary-100 bg-primary-50/80 p-4 text-center">
       <p className="text-sm font-medium text-primary-900">
-        Bu kurs şu an satın alınamıyor
+        {t("unavailableTitle")}
       </p>
       <p className="mt-1 text-xs text-primary-600">
-        Fiyat bilgisi güncelleniyor olabilir. Destek ekibimiz size yardımcı
-        olur.
+        {t("unavailableBody")}
       </p>
       <Button asChild variant="outline" size="sm" className="mt-3">
-        <Link href="/iletisim">İletişime geçin</Link>
+        <Link href="/iletisim">{t("contactCta")}</Link>
       </Button>
     </div>
   );
