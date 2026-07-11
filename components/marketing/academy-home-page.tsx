@@ -5,7 +5,6 @@ import { Container } from "@/components/layout/container";
 import { FreeCoursesHubSection } from "@/components/marketing/free-courses-hub-section";
 import { Hero } from "@/components/marketing/hero";
 import { AcademyStatsSection } from "@/components/marketing/academy-stats-section";
-import { AcademyKitaplikPromoSection } from "@/components/marketing/academy-kitaplik-promo-section";
 import { MemberPromoSection } from "@/components/marketing/member-promo-section";
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
@@ -110,7 +109,6 @@ export async function AcademyHomePage() {
       />
 
       <MemberPromoSection />
-      <AcademyKitaplikPromoSection />
       <EcosystemCards />
 
       <CourseShowcaseSection

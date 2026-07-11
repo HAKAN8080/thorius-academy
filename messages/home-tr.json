@@ -48,15 +48,15 @@
     "linkAria": "Thorius Kitaplık'a git (yeni sekme)",
     "eyebrow": "Thorius Kitaplığı",
     "title": "Kitaplar",
-    "body": "Perakende, planlama ve liderlik alanında uzmanlık kitaplarımız — basılı sipariş veya tarayıcıda okunan e-kitap olarak.",
+    "body": "Her konuda bağımsız kitaplar — çocuk kitapları dahil birçok alanda Thorius Kitaplığı.",
     "featuresAria": "Kitaplık özellikleri",
     "features": [
       "Basılı kitap — kargo ile kapınıza",
       "E-kitap — güvenli okuyucuda, indirilemez",
-      "Thorius Yayınevi uzmanlık seçkisi"
+      "Thorius Yayınevi"
     ],
     "cta": "Kitapları Keşfet",
-    "coverAlt": "{title} kapak görseli",
+    "bookLinkAria": "{title} kitap sayfasını aç (yeni sekme)",
     "stackLabel": "Thorius kitap kapakları"
   },
   "showcases": {
