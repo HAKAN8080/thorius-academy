@@ -22,6 +22,9 @@ const nextConfig = {
   compress: true,
   experimental: {
     serverComponentsExternalPackages: ["@react-pdf/renderer"],
+    serverActions: {
+      bodySizeLimit: "105mb",
+    },
   },
   images: {
     /** Vercel Image Optimization kotası (402) — görseller kaynaktan doğrudan yüklenir. */

@@ -16,7 +16,12 @@ import { createClient } from "@/lib/supabase/server";
 import { validateLessonPdfBuffer } from "@/lib/upload/file-guard";
 import type { LibraryBook } from "@/lib/kitaplik/types";
 
+const EBOOK_BUCKET = "ebook-files";
 const EBOOK_MAX_BYTES = 100 * 1024 * 1024;
+
+function buildEbookStoragePath(slug: string): string {
+  return `${slug}/${slug}.pdf`;
+}
 
 async function requireKitaplikAdminAction(): Promise<
   { userId: string; email: string } | { error: string }
@@ -76,7 +81,13 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
 }
 
 function validateEbookPdfMeta(file: File): string | null {
-  if (file.type !== "application/pdf") {
+  const allowedTypes = new Set([
+    "application/pdf",
+    "application/octet-stream",
+    "",
+  ]);
+
+  if (!allowedTypes.has(file.type)) {
     return "Yalnizca PDF dosyasi yukleyebilirsiniz.";
   }
   if (file.size <= 0) {
@@ -84,9 +95,6 @@ function validateEbookPdfMeta(file: File): string | null {
   }
   if (file.size > EBOOK_MAX_BYTES) {
     return "E-kitap PDF en fazla 100 MB olabilir.";
-  }
-  if (!file.name.toLowerCase().endsWith(".pdf")) {
-    return "Dosya uzantisi .pdf olmalidir.";
   }
   return null;
 }
@@ -185,6 +193,65 @@ export async function saveKitaplikBook(
   return { book: mapBookRow(data as Record<string, unknown>) };
 }
 
+export async function prepareKitaplikBookPdfUpload(
+  bookId: string,
+): Promise<{ path: string; token: string } | { error: string }> {
+  const access = await requireKitaplikAdminAction();
+  if ("error" in access) return access;
+
+  const book = await getLibraryBookByIdForAdmin(bookId);
+  if (!book) {
+    return { error: "Kitap bulunamadi." };
+  }
+
+  const storagePath = buildEbookStoragePath(book.slug);
+  const admin = getSupabaseAdmin();
+  const { data, error } = await admin.storage
+    .from(EBOOK_BUCKET)
+    .createSignedUploadUrl(storagePath, { upsert: true });
+
+  if (error || !data?.token || !data.path) {
+    return {
+      error: error?.message ?? "PDF yukleme oturumu acilamadi.",
+    };
+  }
+
+  return { path: data.path, token: data.token };
+}
+
+export async function finalizeKitaplikBookPdfUpload(
+  bookId: string,
+): Promise<{ storagePath: string } | { error: string }> {
+  const access = await requireKitaplikAdminAction();
+  if ("error" in access) return access;
+
+  const book = await getLibraryBookByIdForAdmin(bookId);
+  if (!book) {
+    return { error: "Kitap bulunamadi." };
+  }
+
+  const storagePath = buildEbookStoragePath(book.slug);
+  const admin = getSupabaseAdmin();
+
+  const { error: updateError } = await admin
+    .from("library_books")
+    .update({
+      ebook_storage_path: storagePath,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", bookId);
+
+  if (updateError) {
+    return { error: updateError.message };
+  }
+
+  revalidatePath("/");
+  revalidatePath("/kitaplik-yonetim");
+  revalidatePath(`/kitap/${book.slug}`);
+
+  return { storagePath };
+}
+
 export async function uploadKitaplikBookPdf(
   bookId: string,
   formData: FormData,
@@ -213,11 +280,11 @@ export async function uploadKitaplikBookPdf(
     return { error: bufferError };
   }
 
-  const storagePath = `${book.slug}/${book.slug}.pdf`;
+  const storagePath = buildEbookStoragePath(book.slug);
   const admin = getSupabaseAdmin();
 
   const { error: uploadError } = await admin.storage
-    .from("ebook-files")
+    .from(EBOOK_BUCKET)
     .upload(storagePath, buffer, {
       contentType: "application/pdf",
       upsert: true,

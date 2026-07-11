@@ -1,14 +1,17 @@
 "use client";
 
-import { useMemo, useRef, useState, useTransition } from "react";
+import { useRef, useState, useTransition } from "react";
 import Link from "next/link";
 import { BookPlus, FileUp, Pencil, RotateCcw } from "lucide-react";
 import { toast } from "sonner";
 import {
+  finalizeKitaplikBookPdfUpload,
+  prepareKitaplikBookPdfUpload,
   saveKitaplikBook,
-  uploadKitaplikBookPdf,
 } from "@/lib/actions/kitaplik-admin";
+import { validateEbookPdfFileClient } from "@/lib/kitaplik/ebook-pdf-upload";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
+import { createClient } from "@/lib/supabase/client";
 import { libraryBookLanguageLabel } from "@/lib/kitaplik/book-language";
 import type { LibraryBook, LibraryBookLanguageCode } from "@/lib/kitaplik/types";
 import { Badge } from "@/components/ui/badge";
@@ -34,6 +37,7 @@ interface BookFormState {
   language: LibraryBookLanguageCode;
   sort_order: string;
   is_published: boolean;
+  ebook_storage_path: string;
 }
 
 const emptyForm = (): BookFormState => ({
@@ -50,6 +54,7 @@ const emptyForm = (): BookFormState => ({
   language: "tr",
   sort_order: "0",
   is_published: false,
+  ebook_storage_path: "",
 });
 
 function bookToForm(book: LibraryBook): BookFormState {
@@ -69,6 +74,7 @@ function bookToForm(book: LibraryBook): BookFormState {
     language: book.language,
     sort_order: String(book.sort_order ?? 0),
     is_published: book.is_published,
+    ebook_storage_path: book.ebook_storage_path ?? "",
   };
 }
 
@@ -78,14 +84,12 @@ export function KitaplikBookAdminPanel({
   const [books, setBooks] = useState(initialBooks);
   const [form, setForm] = useState<BookFormState>(emptyForm);
   const [slugTouched, setSlugTouched] = useState(false);
+  const [selectedPdfName, setSelectedPdfName] = useState("");
   const pdfInputRef = useRef<HTMLInputElement>(null);
   const [isSaving, startSave] = useTransition();
   const [isUploadingPdf, startUploadPdf] = useTransition();
 
-  const editingBook = useMemo(
-    () => books.find((book) => book.id === form.id) ?? null,
-    [books, form.id],
-  );
+  const uploadedPdfPath = form.ebook_storage_path.trim();
 
   function updateField<K extends keyof BookFormState>(
     key: K,
@@ -103,32 +107,66 @@ export function KitaplikBookAdminPanel({
   function loadBook(book: LibraryBook) {
     setForm(bookToForm(book));
     setSlugTouched(true);
+    setSelectedPdfName("");
+    if (pdfInputRef.current) {
+      pdfInputRef.current.value = "";
+    }
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
   function resetForm() {
     setForm(emptyForm());
     setSlugTouched(false);
+    setSelectedPdfName("");
     if (pdfInputRef.current) {
       pdfInputRef.current.value = "";
     }
   }
 
   async function uploadPdfForBook(bookId: string, file: File): Promise<boolean> {
-    const pdfForm = new FormData();
-    pdfForm.set("file", file);
-    const uploadResult = await uploadKitaplikBookPdf(bookId, pdfForm);
-    if ("error" in uploadResult) {
-      toast.error(`PDF yuklenemedi: ${uploadResult.error}`);
+    const validationError = await validateEbookPdfFileClient(file);
+    if (validationError) {
+      toast.error(validationError);
       return false;
     }
+
+    const prepResult = await prepareKitaplikBookPdfUpload(bookId);
+    if ("error" in prepResult) {
+      toast.error(`PDF yuklenemedi: ${prepResult.error}`);
+      return false;
+    }
+
+    const supabase = createClient();
+    const { error: uploadError } = await supabase.storage
+      .from("ebook-files")
+      .uploadToSignedUrl(prepResult.path, prepResult.token, file, {
+        contentType: "application/pdf",
+      });
+
+    if (uploadError) {
+      toast.error(`PDF yuklenemedi: ${uploadError.message}`);
+      return false;
+    }
+
+    const finalizeResult = await finalizeKitaplikBookPdfUpload(bookId);
+    if ("error" in finalizeResult) {
+      toast.error(`PDF kaydedilemedi: ${finalizeResult.error}`);
+      return false;
+    }
+
     setBooks((current) =>
       current.map((book) =>
         book.id === bookId
-          ? { ...book, ebook_storage_path: uploadResult.storagePath }
+          ? { ...book, ebook_storage_path: finalizeResult.storagePath }
           : book,
       ),
     );
+    setForm((current) =>
+      current.id === bookId
+        ? { ...current, ebook_storage_path: finalizeResult.storagePath }
+        : current,
+    );
+    setSelectedPdfName("");
     if (pdfInputRef.current) {
       pdfInputRef.current.value = "";
     }
@@ -137,6 +175,8 @@ export function KitaplikBookAdminPanel({
   }
 
   function handleSave() {
+    const pdfFile = pdfInputRef.current?.files?.[0] ?? null;
+
     startSave(async () => {
       const payload = new FormData();
       if (form.id) payload.set("id", form.id);
@@ -172,9 +212,13 @@ export function KitaplikBookAdminPanel({
       setSlugTouched(true);
       toast.success(form.id ? "Kitap guncellendi." : "Kitap olusturuldu.");
 
-      const pdfFile = pdfInputRef.current?.files?.[0];
       if (pdfFile) {
-        await uploadPdfForBook(result.book.id, pdfFile);
+        const uploaded = await uploadPdfForBook(result.book.id, pdfFile);
+        if (!uploaded) {
+          toast.message(
+            "Kitap kaydedildi ancak PDF yuklenemedi. Tekrar secip yukleyin.",
+          );
+        }
       }
     });
   }
@@ -363,13 +407,23 @@ export function KitaplikBookAdminPanel({
               type="file"
               accept="application/pdf,.pdf"
               className="block w-full text-sm"
+              onChange={(event) => {
+                const file = event.target.files?.[0];
+                setSelectedPdfName(file?.name ?? "");
+              }}
             />
             <p className="text-xs text-muted-foreground">
               PDF en fazla 100 MB. Kayit sirasinda secerseniz otomatik yuklenir.
+              Dosya adinin .pdf ile bitmesi gerekmez.
             </p>
-            {editingBook?.ebook_storage_path ? (
+            {selectedPdfName ? (
+              <p className="text-xs text-primary-800">
+                Secilen dosya: {selectedPdfName}
+              </p>
+            ) : null}
+            {uploadedPdfPath ? (
               <p className="text-xs text-green-700">
-                Mevcut dosya: {editingBook.ebook_storage_path}
+                Mevcut dosya: {uploadedPdfPath}
               </p>
             ) : (
               <p className="text-xs text-amber-700">
@@ -392,8 +446,14 @@ export function KitaplikBookAdminPanel({
         </div>
 
         <div className="mt-6 flex flex-wrap gap-3">
-          <Button type="button" onClick={handleSave} disabled={isSaving}>
-            {isSaving ? "Kaydediliyor..." : form.id ? "Guncelle" : "Kitabi olustur"}
+          <Button type="button" onClick={handleSave} disabled={isSaving || isUploadingPdf}>
+            {isSaving
+              ? selectedPdfName
+                ? "Kaydediliyor ve PDF yukleniyor..."
+                : "Kaydediliyor..."
+              : form.id
+                ? "Guncelle"
+                : "Kitabi olustur"}
           </Button>
           {form.id && form.is_published ? (
             <Button asChild variant="outline">
