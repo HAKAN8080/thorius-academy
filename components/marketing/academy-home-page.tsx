@@ -1,4 +1,4 @@
-import { getTranslations } from "next-intl/server";
+import { getTranslations, getLocale } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { Building2 } from "lucide-react";
 import { Container } from "@/components/layout/container";
@@ -39,8 +39,10 @@ const OTHER_PAID_PRIORITY_SLUGS = [
 
 export async function AcademyHomePage() {
   const t = await getTranslations("home");
+  const locale = await getLocale();
+  const appLocale = locale === "en" ? "en" : "tr";
   const [{ courses: allCourses, categories, products, stats }] =
-    await Promise.all([getHomepageCatalog()]);
+    await Promise.all([getHomepageCatalog(appLocale)]);
 
   const carouselCourses = pickHomepageSpotlightCourses(allCourses);
 

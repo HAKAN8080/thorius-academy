@@ -1,0 +1,6 @@
+-- Pilot EN content for 3 planning courses (already applied via npm run backfill:pilot-en)
+-- Re-run script if needed: npm run backfill:pilot-en
+-- Slugs:
+--   musteri-taleplerini-verilere-dokmenin-yolu-stock-option-plan-tasarim-option-plan-ve-range-plan
+--   sgs
+--   aitools4planners

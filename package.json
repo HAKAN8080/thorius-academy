@@ -10,6 +10,7 @@
     "day1:check": "node scripts/day1-instructor-check.mjs",
     "import:tutor": "node scripts/import-tutor-courses.mjs",
     "backfill:covers": "node scripts/backfill-course-covers.mjs",
+    "backfill:pilot-en": "npx tsx scripts/run-backfill-pilot-course-content-en.ts",
     "pilot:retail-planning-product": "node scripts/activate-retail-planning-career-product.mjs",
     "migrate:wp-users": "node scripts/migrate-wp-users.mjs",
     "audit:wc-tutor-gap": "node scripts/audit-wc-tutor-gap.mjs",
