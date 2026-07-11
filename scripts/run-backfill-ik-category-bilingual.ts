@@ -1,11 +1,9 @@
 import { existsSync, readFileSync } from "node:fs";
 import { resolve } from "node:path";
-import {
-  PLANLAMA_CATEGORY_CONTENT,
-  type PlanlamaCategoryCourseContent,
-} from "@/lib/course/planlama-category-content";
-import { toCoursesCacheSubtitleLanguageDbValue } from "@/lib/course/course-language";
 import { getCategoryCurriculumI18n } from "@/lib/course/category-curriculum-registry";
+import { toCoursesCacheSubtitleLanguageDbValue } from "@/lib/course/course-language";
+import { IK_CATEGORY_CONTENT } from "@/lib/course/ik-category-content";
+import type { PlanlamaCategoryCourseContent } from "@/lib/course/planlama-category-content";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
   getSupabaseServiceRoleKey,
@@ -96,12 +94,7 @@ async function ensureCurriculumColumns(): Promise<boolean> {
   const admin = getSupabaseAdmin();
   const { error } = await admin.from("sections").select("title_en").limit(1);
   if (error?.message?.includes("title_en")) {
-    console.warn(
-      "sections/lessons title_en columns missing — course content will update; curriculum DB writes skipped (read-time maps still apply).",
-    );
-    console.warn(
-      "Run supabase/manual/20260711110000_curriculum_content_i18n_phase2.sql to persist curriculum EN.",
-    );
+    console.warn("title_en columns missing — curriculum DB writes skipped.");
     return false;
   }
   return true;
@@ -125,7 +118,7 @@ async function main(): Promise<void> {
   let sectionUpdates = 0;
   let lessonUpdates = 0;
 
-  for (const content of PLANLAMA_CATEGORY_CONTENT) {
+  for (const content of IK_CATEGORY_CONTENT) {
     const { data: row, error: fetchError } = await admin
       .from("courses_cache")
       .select(
@@ -145,10 +138,6 @@ async function main(): Promise<void> {
     if (fieldCount > 0) {
       if (dryRun) {
         console.log(`[dry-run] course ${content.course_slug}: ${fieldCount} fields`);
-        for (const [key, value] of Object.entries(payload)) {
-          if (key === "updated_at") continue;
-          console.log(`  ${key}: ${(value ?? "").slice(0, 80)}...`);
-        }
       } else {
         const { error: updateError } = await admin
           .from("courses_cache")
@@ -164,86 +153,57 @@ async function main(): Promise<void> {
 
     const curriculum = getCategoryCurriculumI18n(content.course_slug);
     if (curriculum && curriculumColumnsReady) {
+      const { data: sections } = await admin
+        .from("sections")
+        .select("id, title, title_en")
+        .eq("course_id", row.id);
 
-    const { data: sections } = await admin
-      .from("sections")
-      .select("id, title, title_en")
-      .eq("course_id", row.id);
+      for (const section of sections ?? []) {
+        const title = section.title?.trim();
+        if (!title) continue;
 
-    for (const section of sections ?? []) {
-      const title = section.title?.trim();
-      if (!title) continue;
+        const titleEn = curriculum.sections[title];
+        if (!titleEn) {
+          console.warn(`  section missing EN map: "${title}"`);
+          continue;
+        }
 
-      let titleTr: string | undefined;
-      let titleEn: string | undefined;
-
-      if (curriculum.sections[title]) {
-        titleEn = curriculum.sections[title];
-        titleTr = title;
-      } else if (curriculum.sections_tr?.[title]) {
-        titleEn = title;
-        titleTr = curriculum.sections_tr[title];
+        if (dryRun) {
+          console.log(`[dry-run] section: ${title} → ${titleEn}`);
+        } else {
+          await admin
+            .from("sections")
+            .update({ title_en: titleEn })
+            .eq("id", section.id);
+        }
+        sectionUpdates += 1;
       }
 
-      if (!titleEn && !titleTr) continue;
+      const { data: lessons } = await admin
+        .from("lessons")
+        .select("id, title, title_en")
+        .eq("courses_cache_id", row.id);
 
-      const sectionPayload: Record<string, string> = {};
-      if (titleEn && (isEmpty(section.title_en) || section.title_en !== titleEn)) {
-        sectionPayload.title_en = titleEn;
+      for (const lesson of lessons ?? []) {
+        const title = lesson.title?.trim();
+        if (!title) continue;
+
+        const titleEn = curriculum.lessons[title];
+        if (!titleEn) {
+          console.warn(`  lesson missing EN map: "${title}"`);
+          continue;
+        }
+
+        if (dryRun) {
+          console.log(`[dry-run] lesson: ${title} → ${titleEn}`);
+        } else {
+          await admin
+            .from("lessons")
+            .update({ title_en: titleEn })
+            .eq("id", lesson.id);
+        }
+        lessonUpdates += 1;
       }
-      if (titleTr && (isEmpty(section.title) || looksEnglish(section.title))) {
-        sectionPayload.title = titleTr;
-      }
-
-      if (Object.keys(sectionPayload).length === 0) continue;
-
-      if (dryRun) {
-        console.log(`[dry-run] section: ${title} →`, sectionPayload);
-      } else {
-        await admin.from("sections").update(sectionPayload).eq("id", section.id);
-      }
-      sectionUpdates += 1;
-    }
-
-    const { data: lessons } = await admin
-      .from("lessons")
-      .select("id, title, title_en")
-      .eq("courses_cache_id", row.id);
-
-    for (const lesson of lessons ?? []) {
-      const title = lesson.title?.trim();
-      if (!title) continue;
-
-      let titleTr: string | undefined;
-      let titleEn: string | undefined;
-
-      if (curriculum.lessons[title]) {
-        titleEn = curriculum.lessons[title];
-        titleTr = title;
-      } else if (curriculum.lessons_tr?.[title]) {
-        titleEn = title;
-        titleTr = curriculum.lessons_tr[title];
-      }
-
-      if (!titleEn && !titleTr) continue;
-
-      const lessonPayload: Record<string, string> = {};
-      if (titleEn && (isEmpty(lesson.title_en) || lesson.title_en !== titleEn)) {
-        lessonPayload.title_en = titleEn;
-      }
-      if (titleTr && (isEmpty(lesson.title) || looksEnglish(lesson.title))) {
-        lessonPayload.title = titleTr;
-      }
-
-      if (Object.keys(lessonPayload).length === 0) continue;
-
-      if (dryRun) {
-        console.log(`[dry-run] lesson: ${title} →`, lessonPayload);
-      } else {
-        await admin.from("lessons").update(lessonPayload).eq("id", lesson.id);
-      }
-      lessonUpdates += 1;
-    }
     }
 
     console.log(`✓ ${content.course_slug}`);

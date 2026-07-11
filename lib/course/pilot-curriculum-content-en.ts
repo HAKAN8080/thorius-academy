@@ -1,16 +1,16 @@
 import type { AppLocale } from "@/i18n/routing";
 import { pickLocalized } from "@/lib/course/resolve-course-content";
 import {
-  getPlanlamaCurriculumI18n,
-  PLANLAMA_CURRICULUM_I18N,
-  type PlanlamaCurriculumI18n,
-} from "@/lib/course/planlama-curriculum-content";
+  getCategoryCurriculumI18n,
+  ALL_CATEGORY_CURRICULUM_I18N,
+  type CategoryCurriculumI18n,
+} from "@/lib/course/category-curriculum-registry";
 
-/** @deprecated Use PLANLAMA_CURRICULUM_I18N — kept for backfill script compat */
-export type PilotCurriculumContentEn = PlanlamaCurriculumI18n;
+/** @deprecated Use CategoryCurriculumI18n */
+export type PilotCurriculumContentEn = CategoryCurriculumI18n;
 
-/** @deprecated Use PLANLAMA_CURRICULUM_I18N */
-export const PILOT_CURRICULUM_CONTENT_EN = PLANLAMA_CURRICULUM_I18N;
+/** @deprecated Use ALL_CATEGORY_CURRICULUM_I18N */
+export const PILOT_CURRICULUM_CONTENT_EN = ALL_CATEGORY_CURRICULUM_I18N;
 
 function resolveFromMaps(
   locale: AppLocale,
@@ -23,7 +23,7 @@ function resolveFromMaps(
     return localized;
   }
 
-  const maps = getPlanlamaCurriculumI18n(courseSlug);
+  const maps = getCategoryCurriculumI18n(courseSlug);
   if (!maps) {
     return title;
   }
