@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { canAccessKitaplikAdmin } from "@/lib/kitaplik/access";
 import {
+  fromLibraryBookLanguageDbValue,
+  toLibraryBookLanguageDbValue,
+} from "@/lib/kitaplik/book-language";
+import {
   getLibraryBookByIdForAdmin,
   listAllLibraryBooksForAdmin,
 } from "@/lib/kitaplik/admin-repository";
@@ -65,6 +69,7 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
         : Number(data.ebook_wc_product_id),
     ebook_storage_path: (data.ebook_storage_path as string | null) ?? null,
     page_count: data.page_count === null ? null : Number(data.page_count),
+    language: fromLibraryBookLanguageDbValue(data.language as string | null),
     is_published: Boolean(data.is_published),
     sort_order: Number(data.sort_order ?? 0),
   };
@@ -130,6 +135,9 @@ export async function saveKitaplikBook(
     printed_wc_product_id: parseOptionalInt(formData.get("printed_wc_product_id")),
     ebook_wc_product_id: parseOptionalInt(formData.get("ebook_wc_product_id")),
     page_count: parseOptionalInt(formData.get("page_count")),
+    language: toLibraryBookLanguageDbValue(
+      parseOptionalText(formData.get("language")),
+    ),
     sort_order: parseOptionalInt(formData.get("sort_order")) ?? 0,
     is_published: formData.get("is_published") === "true",
     updated_at: new Date().toISOString(),

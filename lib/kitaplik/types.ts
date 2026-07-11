@@ -1,3 +1,5 @@
+export type LibraryBookLanguageCode = "tr" | "en";
+
 export interface LibraryBook {
   id: string;
   slug: string;
@@ -10,6 +12,7 @@ export interface LibraryBook {
   ebook_wc_product_id: number | null;
   ebook_storage_path: string | null;
   page_count: number | null;
+  language: LibraryBookLanguageCode;
   is_published: boolean;
   sort_order: number;
 }

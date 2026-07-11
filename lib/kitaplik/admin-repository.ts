@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { fromLibraryBookLanguageDbValue } from "@/lib/kitaplik/book-language";
 import type { LibraryBook } from "@/lib/kitaplik/types";
 
 function mapBookRow(row: Record<string, unknown>): LibraryBook {
@@ -21,6 +22,7 @@ function mapBookRow(row: Record<string, unknown>): LibraryBook {
     ebook_storage_path: (row.ebook_storage_path as string | null) ?? null,
     page_count:
       row.page_count === null ? null : Number(row.page_count),
+    language: fromLibraryBookLanguageDbValue(row.language as string | null),
     is_published: Boolean(row.is_published),
     sort_order: Number(row.sort_order ?? 0),
   };

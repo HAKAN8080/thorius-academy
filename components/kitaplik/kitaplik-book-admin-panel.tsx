@@ -9,7 +9,8 @@ import {
   uploadKitaplikBookPdf,
 } from "@/lib/actions/kitaplik-admin";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
-import type { LibraryBook } from "@/lib/kitaplik/types";
+import { libraryBookLanguageLabel } from "@/lib/kitaplik/book-language";
+import type { LibraryBook, LibraryBookLanguageCode } from "@/lib/kitaplik/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -30,6 +31,7 @@ interface BookFormState {
   printed_wc_product_id: string;
   ebook_wc_product_id: string;
   page_count: string;
+  language: LibraryBookLanguageCode;
   sort_order: string;
   is_published: boolean;
 }
@@ -45,6 +47,7 @@ const emptyForm = (): BookFormState => ({
   printed_wc_product_id: "",
   ebook_wc_product_id: "",
   page_count: "",
+  language: "tr",
   sort_order: "0",
   is_published: false,
 });
@@ -63,6 +66,7 @@ function bookToForm(book: LibraryBook): BookFormState {
     ebook_wc_product_id:
       book.ebook_wc_product_id != null ? String(book.ebook_wc_product_id) : "",
     page_count: book.page_count != null ? String(book.page_count) : "",
+    language: book.language,
     sort_order: String(book.sort_order ?? 0),
     is_published: book.is_published,
   };
@@ -145,6 +149,7 @@ export function KitaplikBookAdminPanel({
       payload.set("printed_wc_product_id", form.printed_wc_product_id);
       payload.set("ebook_wc_product_id", form.ebook_wc_product_id);
       payload.set("page_count", form.page_count);
+      payload.set("language", form.language);
       payload.set("sort_order", form.sort_order);
       payload.set("is_published", form.is_published ? "true" : "false");
 
@@ -245,6 +250,21 @@ export function KitaplikBookAdminPanel({
               value={form.author}
               onChange={(event) => updateField("author", event.target.value)}
             />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="language">Dil</Label>
+            <select
+              id="language"
+              value={form.language}
+              onChange={(event) =>
+                updateField("language", event.target.value as LibraryBookLanguageCode)
+              }
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="tr">TR - Turkce</option>
+              <option value="en">EN - Ingilizce</option>
+            </select>
           </div>
 
           <div className="space-y-2 md:col-span-2">
@@ -402,6 +422,9 @@ export function KitaplikBookAdminPanel({
                   <p className="font-medium text-primary-950">{book.title}</p>
                   <p className="text-xs text-muted-foreground">{book.slug}</p>
                   <div className="mt-1 flex flex-wrap gap-2">
+                    <Badge variant="outline">
+                      {libraryBookLanguageLabel(book.language)}
+                    </Badge>
                     <Badge variant={book.is_published ? "default" : "secondary"}>
                       {book.is_published ? "Yayinda" : "Taslak"}
                     </Badge>

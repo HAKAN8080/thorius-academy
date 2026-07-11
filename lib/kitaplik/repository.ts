@@ -3,6 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import {
   enrichLibraryBookPricing,
 } from "@/lib/kitaplik/fetch-wc-pricing";
+import { fromLibraryBookLanguageDbValue } from "@/lib/kitaplik/book-language";
 import type {
   LibraryBook,
   LibraryBookWithPricing,
@@ -29,6 +30,7 @@ function mapBookRow(row: Record<string, unknown>): LibraryBook {
     ebook_storage_path: (row.ebook_storage_path as string | null) ?? null,
     page_count:
       row.page_count === null ? null : Number(row.page_count),
+    language: fromLibraryBookLanguageDbValue(row.language as string | null),
     is_published: Boolean(row.is_published),
     sort_order: Number(row.sort_order ?? 0),
   };
@@ -127,7 +129,7 @@ export async function listUserOwnedEbooks(): Promise<OwnedLibraryBook[]> {
   const { data, error } = await supabase
     .from("ebook_entitlements")
     .select(
-      "granted_at, library_books!inner(id, slug, title, subtitle, description, author, cover_image_url, printed_wc_product_id, ebook_wc_product_id, ebook_storage_path, page_count, is_published, sort_order)",
+      "granted_at, library_books!inner(id, slug, title, subtitle, description, author, cover_image_url, printed_wc_product_id, ebook_wc_product_id, ebook_storage_path, page_count, language, is_published, sort_order)",
     )
     .eq("user_id", user.id)
     .order("granted_at", { ascending: false });
