@@ -23,6 +23,7 @@ export function mapCourseToCardProps(
   const languageMeta = resolveCourseLanguageMeta(
     options.language ?? course.language,
     options.subtitleLanguage ?? course.subtitleLanguage,
+    { subtitle: course.excerpt },
   );
 
   return {

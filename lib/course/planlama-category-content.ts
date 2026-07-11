@@ -10,6 +10,7 @@ export interface PlanlamaCategoryCourseContent {
   description_md_en?: string;
   what_will_learn_en?: string;
   target_audience_en?: string;
+  subtitle_language?: string | null;
 }
 
 /** Planlama kategorisi — 5 yayınlanmış kurs, çift yönlü TR/EN */
@@ -91,6 +92,7 @@ Design and R&D teams contributing to collections`,
   },
   {
     course_slug: "sgs",
+    subtitle_language: "Türkçe",
     description_md: `**Türkçe altyazılı.** Bu eğitim, ürün yönetimi ile stok finansmanına dair finansal bakışı bir araya getirir.
 
 Çoğu stok eğitimi stok fazlasını bir tedarik zinciri bulmacası olarak ele alır. Bu eğitim ise konuyu gerçekte olduğu gibi ele alır: **bir nakit problemi**. Stoktaki her ek gün, satılsa da satılmasa da bilançonuzda donmuş para demektir ve yılda %20–30 maliyet yaratır.
@@ -122,7 +124,7 @@ Finans ve operasyon yöneticileri
 Stok sağlığına odaklanan kategori yöneticileri`,
     title_en: "Improve Days of Supply: Inventory Financing",
     subtitle_en:
-      "Analyse excess stock by channel and category, then build a 90-day reduction plan using the Days of Inventory (DIO) framework.",
+      "Turkish subtitles. Analyse excess stock by channel and category, then build a 90-day reduction plan using the Days of Inventory (DIO) framework.",
     description_md_en: `**Turkish subtitles.** This course connects product management with a financial view of inventory.
 
 Most inventory programmes treat overstock as a supply-chain puzzle. This course treats it as what it really is—a **cash problem**. Every extra day of stock is money frozen on your balance sheet, costing you 20–30% per year whether it sells or not.

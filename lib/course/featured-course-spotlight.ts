@@ -281,6 +281,10 @@ function mapSpotlightRow(
   const languageMeta = resolveCourseLanguageMeta(
     row.language as string | null | undefined,
     row.subtitle_language as string | null | undefined,
+    {
+      subtitle: row.subtitle as string | null | undefined,
+      descriptionMd: row.description_md as string | null | undefined,
+    },
   );
 
   const instructorId = Number(row.instructor_wp_user_id ?? 0);

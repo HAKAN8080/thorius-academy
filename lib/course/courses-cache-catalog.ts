@@ -23,7 +23,7 @@ export const COURSES_CATALOG_PER_PAGE = 24;
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,title_en,description_md,description_md_en,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,title_en,subtitle,description_md,description_md_en,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
 
 export interface CatalogCourseItem {
   id: string;
@@ -108,6 +108,10 @@ function mapRow(
   const languageMeta = resolveCourseLanguageMeta(
     row.language as string | null | undefined,
     row.subtitle_language as string | null | undefined,
+    {
+      subtitle: row.subtitle as string | null | undefined,
+      descriptionMd: row.description_md as string | null | undefined,
+    },
   );
 
   return {
@@ -422,7 +426,7 @@ export async function getCoursesCacheListingPage(params: {
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage({ ...params, locale }),
-    ["courses-cache-listing-v9", categorySlug, language, String(page), search, locale],
+    ["courses-cache-listing-v10", categorySlug, language, String(page), search, locale],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],

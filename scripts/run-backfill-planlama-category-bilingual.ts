@@ -4,6 +4,7 @@ import {
   PLANLAMA_CATEGORY_CONTENT,
   type PlanlamaCategoryCourseContent,
 } from "@/lib/course/planlama-category-content";
+import { toCoursesCacheSubtitleLanguageDbValue } from "@/lib/course/course-language";
 import { getPlanlamaCurriculumI18n } from "@/lib/course/planlama-curriculum-content";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
@@ -79,6 +80,15 @@ function buildCoursePayload(
     }
   }
 
+  if (content.subtitle_language?.trim()) {
+    const current = row.subtitle_language;
+    if (isEmpty(current)) {
+      payload.subtitle_language = toCoursesCacheSubtitleLanguageDbValue(
+        content.subtitle_language,
+      );
+    }
+  }
+
   return payload;
 }
 
@@ -119,7 +129,7 @@ async function main(): Promise<void> {
     const { data: row, error: fetchError } = await admin
       .from("courses_cache")
       .select(
-        "id,course_slug,title,subtitle,description_md,what_will_learn,target_audience,title_en,subtitle_en,description_md_en,what_will_learn_en,target_audience_en",
+        "id,course_slug,title,subtitle,description_md,what_will_learn,target_audience,title_en,subtitle_en,description_md_en,what_will_learn_en,target_audience_en,subtitle_language",
       )
       .eq("course_slug", content.course_slug)
       .maybeSingle();
