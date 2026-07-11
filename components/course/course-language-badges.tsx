@@ -1,7 +1,6 @@
 "use client";
 
 import { useTranslations } from "next-intl";
-import { Captions } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   courseLanguageFlag,
@@ -41,17 +40,20 @@ export function CourseLanguageBadges({
       : "border border-primary-100 bg-white text-primary-900",
   );
 
+  const prefixClass = cn(
+    "font-medium opacity-90",
+    resolvedSize === "lg" ? "text-sm" : "text-xs",
+  );
+
   const flagClass = cn(
     "shrink-0 leading-none",
     resolvedSize === "lg" ? "text-[1.45rem]" : "text-lg",
   );
 
-  const labelClass = cn(
+  const codeClass = cn(
     "font-bold tracking-wide",
     resolvedSize === "lg" ? "text-sm" : "text-xs",
   );
-
-  const captionClass = resolvedSize === "lg" ? "h-4 w-4" : "h-3.5 w-3.5";
 
   return (
     <div
@@ -76,10 +78,11 @@ export function CourseLanguageBadges({
         className={badgeClass}
         title={t("courseLanguageTitle", { language: languageLabel })}
       >
+        <span className={prefixClass}>{t("languageLabel")}</span>
         <span className={flagClass} aria-hidden="true">
           {courseLanguageFlag(language)}
         </span>
-        <span className={labelClass}>{languageLabel}</span>
+        <span className={codeClass}>{languageLabel}</span>
       </span>
 
       {hasSubtitle ? (
@@ -93,18 +96,18 @@ export function CourseLanguageBadges({
               : t("subtitled")
           }
         >
-          <Captions className={captionClass} aria-hidden="true" />
+          <span className={prefixClass}>{t("subtitleLabel")}</span>
           {subtitleDiffers ? (
             <>
               <span className={flagClass} aria-hidden="true">
                 {courseLanguageFlag(subtitleLanguage)}
               </span>
-              <span className={labelClass}>
+              <span className={codeClass}>
                 {courseLanguageShortLabel(subtitleLanguage)}
               </span>
             </>
           ) : (
-            <span className={labelClass}>{t("subtitled")}</span>
+            <span className={codeClass}>{t("subtitled")}</span>
           )}
         </span>
       ) : null}

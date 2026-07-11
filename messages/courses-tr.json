@@ -83,6 +83,8 @@
     "error": "Bir hata oluştu"
   },
   "language": {
+    "languageLabel": "Dil:",
+    "subtitleLabel": "Altyazı:",
     "courseLanguageAria": "Kurs dili {language}",
     "courseWithSubtitlesAria": "Kurs dili {language}, altyazılı",
     "courseWithSubtitleLangAria": "Kurs dili {language}, altyazı {subtitle}",

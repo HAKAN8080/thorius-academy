@@ -83,6 +83,8 @@
     "error": "Something went wrong"
   },
   "language": {
+    "languageLabel": "Language:",
+    "subtitleLabel": "Subtitles:",
     "courseLanguageAria": "Course language {language}",
     "courseWithSubtitlesAria": "Course language {language}, subtitled",
     "courseWithSubtitleLangAria": "Course language {language}, subtitles {subtitle}",
