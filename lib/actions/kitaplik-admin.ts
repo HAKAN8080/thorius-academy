@@ -80,6 +80,86 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
   };
 }
 
+type LibraryBookWritePayload = {
+  title: string;
+  slug: string;
+  subtitle: string | null;
+  description: string | null;
+  author: string | null;
+  cover_image_url: string | null;
+  printed_wc_product_id: number | null;
+  ebook_wc_product_id: number | null;
+  page_count: number | null;
+  language?: "turkish" | "english";
+  sort_order: number;
+  is_published: boolean;
+  updated_at: string;
+};
+
+function isMissingLanguageColumnError(message: string): boolean {
+  return (
+    message.includes("Could not find the 'language' column") ||
+    (message.includes("language") && message.includes("schema cache"))
+  );
+}
+
+function mapKitaplikDbError(message: string): string {
+  if (isMissingLanguageColumnError(message)) {
+    return "Supabase'de library_books.language kolonu henuz yok. SQL Editor'da supabase/manual/20260711180000_library_books_language_prod_apply.sql dosyasini calistirin, sonra API schema cache'i yenileyin.";
+  }
+  return message;
+}
+
+async function writeLibraryBook(
+  admin: ReturnType<typeof getSupabaseAdmin>,
+  payload: LibraryBookWritePayload,
+  id?: string,
+): Promise<
+  | { book: LibraryBook; languageColumnSkipped: boolean }
+  | { error: string }
+> {
+  const attempt = async (body: LibraryBookWritePayload) => {
+    if (id) {
+      return admin
+        .from("library_books")
+        .update(body)
+        .eq("id", id)
+        .select("*")
+        .single();
+    }
+
+    return admin.from("library_books").insert(body).select("*").single();
+  };
+
+  let { data, error } = await attempt(payload);
+
+  if (
+    error &&
+    isMissingLanguageColumnError(error.message) &&
+    payload.language !== undefined
+  ) {
+    const { language: _language, ...withoutLanguage } = payload;
+    ({ data, error } = await attempt(withoutLanguage));
+    if (!error && data) {
+      return {
+        book: mapBookRow(data as Record<string, unknown>),
+        languageColumnSkipped: true,
+      };
+    }
+  }
+
+  if (error || !data) {
+    return {
+      error: mapKitaplikDbError(error?.message ?? "Kitap kaydedilemedi."),
+    };
+  }
+
+  return {
+    book: mapBookRow(data as Record<string, unknown>),
+    languageColumnSkipped: false,
+  };
+}
+
 function validateEbookPdfMeta(file: File): string | null {
   const allowedTypes = new Set([
     "application/pdf",
@@ -117,7 +197,7 @@ export async function listKitaplikAdminBooks(): Promise<
 
 export async function saveKitaplikBook(
   formData: FormData,
-): Promise<{ book: LibraryBook } | { error: string }> {
+): Promise<{ book: LibraryBook; warning?: string } | { error: string }> {
   const access = await requireKitaplikAdminAction();
   if ("error" in access) return access;
 
@@ -133,7 +213,7 @@ export async function saveKitaplikBook(
     return { error: "URL slug zorunludur." };
   }
 
-  const payload = {
+  const payload: LibraryBookWritePayload = {
     title,
     slug,
     subtitle: parseOptionalText(formData.get("subtitle")),
@@ -159,38 +239,37 @@ export async function saveKitaplikBook(
       return { error: "Kitap bulunamadi." };
     }
 
-    const { data, error } = await admin
-      .from("library_books")
-      .update(payload)
-      .eq("id", id)
-      .select("*")
-      .single();
-
-    if (error || !data) {
-      return { error: error?.message ?? "Kitap guncellenemedi." };
+    const result = await writeLibraryBook(admin, payload, id);
+    if ("error" in result) {
+      return result;
     }
 
     revalidatePath("/");
     revalidatePath("/kitaplik-yonetim");
     revalidatePath(`/kitap/${slug}`);
 
-    return { book: mapBookRow(data as Record<string, unknown>) };
+    return {
+      book: result.book,
+      warning: result.languageColumnSkipped
+        ? "Kitap kaydedildi ancak dil alani Supabase migration'i bekliyor (varsayilan TR)."
+        : undefined,
+    };
   }
 
-  const { data, error } = await admin
-    .from("library_books")
-    .insert(payload)
-    .select("*")
-    .single();
-
-  if (error || !data) {
-    return { error: error?.message ?? "Kitap olusturulamadi." };
+  const result = await writeLibraryBook(admin, payload);
+  if ("error" in result) {
+    return result;
   }
 
   revalidatePath("/");
   revalidatePath("/kitaplik-yonetim");
 
-  return { book: mapBookRow(data as Record<string, unknown>) };
+  return {
+    book: result.book,
+    warning: result.languageColumnSkipped
+      ? "Kitap kaydedildi ancak dil alani Supabase migration'i bekliyor (varsayilan TR)."
+      : undefined,
+  };
 }
 
 export async function prepareKitaplikBookPdfUpload(

@@ -211,6 +211,9 @@ export function KitaplikBookAdminPanel({
       setForm(bookToForm(result.book));
       setSlugTouched(true);
       toast.success(form.id ? "Kitap guncellendi." : "Kitap olusturuldu.");
+      if (result.warning) {
+        toast.warning(result.warning);
+      }
 
       if (pdfFile) {
         const uploaded = await uploadPdfForBook(result.book.id, pdfFile);
