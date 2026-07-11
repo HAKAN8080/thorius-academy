@@ -1,7 +1,12 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { getCourseSlugLookupVariants } from "@/lib/course/course-slug-lookup";
+import {
+  resolveCurriculumSectionTitle,
+  resolveCurriculumTitle,
+} from "@/lib/course/pilot-curriculum-content-en";
 import { getLessonsForCourse } from "@/lib/actions/lesson-sync";
 import { extractVideoUrl, fetchCourseFullStructure } from "@/lib/tutor/api";
+import type { AppLocale } from "@/i18n/routing";
 import type { Lesson } from "@/types/lesson";
 
 export interface CurriculumPreviewLesson {
@@ -50,17 +55,28 @@ export function formatLessonDuration(
   return formatDuration(seconds, locale);
 }
 
-function mapPreviewLesson(lesson: Lesson): CurriculumPreviewLesson {
+function mapPreviewLesson(
+  lesson: Lesson & { title_en?: string | null },
+  locale: AppLocale,
+  courseSlug: string,
+): CurriculumPreviewLesson {
   return {
     id: lesson.id,
-    title: lesson.title,
+    title: resolveCurriculumTitle(
+      locale,
+      courseSlug,
+      lesson.title,
+      lesson.title_en,
+    ),
     durationSeconds: lesson.duration_seconds,
     isFreePreview: lesson.is_free,
   };
 }
 
 function buildSectionsFromLessons(
-  lessons: Lesson[],
+  lessons: Array<Lesson & { title_en?: string | null }>,
+  locale: AppLocale,
+  courseSlug: string,
 ): CurriculumPreviewSection[] {
   const grouped = new Map<string, CurriculumPreviewSection>();
   let fallbackOrder = 999;
@@ -68,14 +84,21 @@ function buildSectionsFromLessons(
   for (const lesson of lessons) {
     const sectionKey = lesson.section_id ?? lesson.topic_title ?? "genel";
     if (!grouped.has(sectionKey)) {
+      const trSectionTitle = lesson.topic_title?.trim() || "Müfredat";
       grouped.set(sectionKey, {
         id: sectionKey,
-        title: lesson.topic_title?.trim() || "Müfredat",
+        title: resolveCurriculumSectionTitle(
+          locale,
+          courseSlug,
+          trSectionTitle,
+        ),
         sortOrder: lesson.topic_order ?? fallbackOrder++,
         lessons: [],
       });
     }
-    grouped.get(sectionKey)!.lessons.push(mapPreviewLesson(lesson));
+    grouped.get(sectionKey)!.lessons.push(
+      mapPreviewLesson(lesson, locale, courseSlug),
+    );
   }
 
   return Array.from(grouped.values()).sort((a, b) => a.sortOrder - b.sortOrder);
@@ -83,7 +106,8 @@ function buildSectionsFromLessons(
 
 async function buildSectionsFromSupabase(
   courseSlug: string,
-  lessons: Lesson[],
+  lessons: Array<Lesson & { title_en?: string | null }>,
+  locale: AppLocale,
 ): Promise<CurriculumPreviewSection[]> {
   const admin = getSupabaseAdmin();
   const slugVariants = getCourseSlugLookupVariants(courseSlug);
@@ -95,7 +119,7 @@ async function buildSectionsFromSupabase(
     .maybeSingle();
 
   if (!cacheRow?.id) {
-    return buildSectionsFromLessons(lessons);
+    return buildSectionsFromLessons(lessons, locale, courseSlug);
   }
 
   const { data: sections } = await admin
@@ -105,14 +129,14 @@ async function buildSectionsFromSupabase(
     .order("sort_order", { ascending: true });
 
   if (!sections?.length) {
-    return buildSectionsFromLessons(lessons);
+    return buildSectionsFromLessons(lessons, locale, courseSlug);
   }
 
   const lessonsBySection = new Map<string, CurriculumPreviewLesson[]>();
   const unsectioned: CurriculumPreviewLesson[] = [];
 
   for (const lesson of lessons) {
-    const mapped = mapPreviewLesson(lesson);
+    const mapped = mapPreviewLesson(lesson, locale, courseSlug);
     if (lesson.section_id) {
       const bucket = lessonsBySection.get(lesson.section_id) ?? [];
       bucket.push(mapped);
@@ -124,7 +148,7 @@ async function buildSectionsFromSupabase(
 
   const result: CurriculumPreviewSection[] = sections.map((section) => ({
     id: section.id,
-    title: section.title,
+    title: resolveCurriculumSectionTitle(locale, courseSlug, section.title),
     sortOrder: section.sort_order,
     lessons: lessonsBySection.get(section.id) ?? [],
   }));
@@ -132,7 +156,7 @@ async function buildSectionsFromSupabase(
   if (unsectioned.length > 0) {
     result.push({
       id: "other",
-      title: "Diğer",
+      title: resolveCurriculumSectionTitle(locale, courseSlug, "Diğer"),
       sortOrder: 9999,
       lessons: unsectioned,
     });
@@ -144,11 +168,16 @@ async function buildSectionsFromSupabase(
 export async function getCourseCurriculumPreview(
   courseId: number,
   courseSlug: string,
+  locale: AppLocale = "tr",
 ): Promise<CourseCurriculumPreview | null> {
   const lessons = await getLessonsForCourse(courseSlug, courseId);
 
   if (lessons.length > 0) {
-    const sections = await buildSectionsFromSupabase(courseSlug, lessons);
+    const sections = await buildSectionsFromSupabase(
+      courseSlug,
+      lessons,
+      locale,
+    );
     const totalDurationSeconds = lessons.reduce(
       (sum, lesson) => sum + (lesson.duration_seconds ?? 0),
       0,
@@ -168,13 +197,21 @@ export async function getCourseCurriculumPreview(
     const sections: CurriculumPreviewSection[] = tutorTopics.map(
       (topic, index) => ({
         id: String(topic.topic_id),
-        title: topic.topic_title,
+        title: resolveCurriculumSectionTitle(
+          locale,
+          courseSlug,
+          topic.topic_title,
+        ),
         sortOrder: index + 1,
         lessons: topic.lessons.map((lesson) => {
           const video = extractVideoUrl(lesson.video);
           return {
             id: String(lesson.ID),
-            title: lesson.post_title,
+            title: resolveCurriculumTitle(
+              locale,
+              courseSlug,
+              lesson.post_title,
+            ),
             durationSeconds: video.duration > 0 ? video.duration : null,
             isFreePreview: false,
           };

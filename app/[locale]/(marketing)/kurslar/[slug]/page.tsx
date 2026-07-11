@@ -72,6 +72,7 @@ export default async function CourseDetailPage({
   const curriculum = await getCourseCurriculumPreview(
     courseWithCover.id,
     params.slug,
+    locale === "en" ? "en" : "tr",
   );
   const [product, languageMeta] = await Promise.all([
     getCourseProduct(params.slug),
