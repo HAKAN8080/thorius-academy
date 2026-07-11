@@ -14,6 +14,7 @@
     "backfill:pilot-curriculum-en": "npx tsx scripts/run-backfill-pilot-curriculum-content-en.ts",
     "backfill:planlama-bilingual": "npx tsx scripts/run-backfill-planlama-category-bilingual.ts",
     "backfill:ik-bilingual": "npx tsx scripts/run-backfill-ik-category-bilingual.ts",
+    "backfill:kocluk-wellness-bilingual": "npx tsx scripts/run-backfill-kocluk-wellness-bilingual.ts",
     "pilot:retail-planning-product": "node scripts/activate-retail-planning-career-product.mjs",
     "migrate:wp-users": "node scripts/migrate-wp-users.mjs",
     "audit:wc-tutor-gap": "node scripts/audit-wc-tutor-gap.mjs",

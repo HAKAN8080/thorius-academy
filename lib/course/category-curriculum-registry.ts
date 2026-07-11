@@ -1,4 +1,5 @@
 import { IK_CURRICULUM_I18N } from "@/lib/course/ik-curriculum-content";
+import { KOCLUK_WELLNESS_CURRICULUM_I18N } from "@/lib/course/kocluk-wellness-curriculum-content";
 import {
   PLANLAMA_CURRICULUM_I18N,
   type PlanlamaCurriculumI18n,
@@ -9,6 +10,7 @@ export type CategoryCurriculumI18n = PlanlamaCurriculumI18n;
 export const ALL_CATEGORY_CURRICULUM_I18N: CategoryCurriculumI18n[] = [
   ...PLANLAMA_CURRICULUM_I18N,
   ...IK_CURRICULUM_I18N,
+  ...KOCLUK_WELLNESS_CURRICULUM_I18N,
 ];
 
 const curriculumBySlug = new Map(
