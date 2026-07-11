@@ -138,7 +138,8 @@ async function writeLibraryBook(
     isMissingLanguageColumnError(error.message) &&
     payload.language !== undefined
   ) {
-    const { language: _language, ...withoutLanguage } = payload;
+    const withoutLanguage = { ...payload };
+    delete withoutLanguage.language;
     ({ data, error } = await attempt(withoutLanguage));
     if (!error && data) {
       return {

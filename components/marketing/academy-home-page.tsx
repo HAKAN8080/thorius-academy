@@ -20,7 +20,10 @@ import {
   pickFeaturedCoursesByCategory,
   pickPaidCoursesExcludingCategories,
 } from "@/lib/course/pick-featured-courses";
-import { getHomepageCatalog } from "@/lib/wordpress/homepage-data";
+import {
+  getHomepageCatalog,
+  getRecentlyAddedHomepageCourses,
+} from "@/lib/wordpress/homepage-data";
 import type { CourseProduct } from "@/types/course-product";
 
 const FEATURED_CATEGORY_SLUGS = ["planlama", "insan-kaynaklari"] as const;
@@ -41,8 +44,11 @@ export async function AcademyHomePage() {
   const t = await getTranslations("home");
   const locale = await getLocale();
   const appLocale = locale === "en" ? "en" : "tr";
-  const [{ courses: allCourses, categories, products, stats }] =
-    await Promise.all([getHomepageCatalog(appLocale)]);
+  const [{ courses: allCourses, categories, products, stats }, recentCourses] =
+    await Promise.all([
+      getHomepageCatalog(appLocale),
+      getRecentlyAddedHomepageCourses(appLocale),
+    ]);
 
   const carouselCourses = pickHomepageSpotlightCourses(allCourses);
 
@@ -88,6 +94,20 @@ export async function AcademyHomePage() {
       <AcademyStatsSection />
       <CategoryGrid categories={categories} />
       <Hero carouselCourses={carouselCourses} />
+
+      <CourseShowcaseSection
+        id="recent-heading"
+        title={t("showcases.recent.title")}
+        description={t("showcases.recent.description")}
+        courses={recentCourses}
+        productBySlug={productBySlug}
+        statsBySlug={statsBySlug}
+        viewAllHref="/kurslar"
+        viewAllLabel={t("showcases.viewAllCourses")}
+        compact
+        className="bg-gradient-to-b from-primary-50 to-white"
+      />
+
       <MemberPromoSection />
       <EcosystemCards />
 

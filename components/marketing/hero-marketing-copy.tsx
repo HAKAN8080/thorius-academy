@@ -24,11 +24,11 @@ export async function HeroMarketingCopy() {
   const pathSteps = [t("step1"), t("step2"), t("step3")] as const;
 
   return (
-    <div className="flex flex-col gap-5 sm:gap-6">
-      <div className="space-y-4">
+    <div className="flex flex-col gap-3 sm:gap-4">
+      <div className="space-y-2.5">
         <h1
           id="hero-heading"
-          className="text-balance text-2xl font-bold leading-tight text-white sm:text-3xl md:text-4xl lg:text-[2.65rem]"
+          className="text-balance text-xl font-bold leading-tight text-white sm:text-2xl md:text-3xl lg:text-[2rem]"
         >
           {t("titleBefore")}{" "}
           <span className="bg-gradient-to-r from-accent-300 via-amber-200 to-accent-400 bg-clip-text text-transparent">
@@ -37,18 +37,18 @@ export async function HeroMarketingCopy() {
           {t("titleAfter") ? t("titleAfter") : null}
         </h1>
 
-        <p className="max-w-xl text-base text-primary-100/95 sm:text-lg">
+        <p className="max-w-xl text-sm text-primary-100/95 sm:text-base">
           {t("subtitle")}
         </p>
 
-        <ol className="max-w-xl space-y-2.5">
+        <ol className="max-w-xl space-y-1.5">
           {pathSteps.map((step, index) => (
             <li
               key={step}
-              className="flex gap-3 text-sm leading-snug text-primary-100 sm:text-base"
+              className="flex gap-2.5 text-xs leading-snug text-primary-100 sm:text-sm"
             >
               <span
-                className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-xs font-bold text-accent-300"
+                className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-accent-500/20 text-[10px] font-bold text-accent-300"
                 aria-hidden="true"
               >
                 {index + 1}
@@ -58,12 +58,12 @@ export async function HeroMarketingCopy() {
           ))}
         </ol>
 
-        <div className="flex flex-wrap gap-2 pt-1">
+        <div className="flex flex-wrap gap-1.5 pt-0.5">
           {careerPathLinks.map((item) => (
             <Link
               key={item.href}
               href={item.href as "/"}
-              className="rounded-full border border-white/15 bg-white/5 px-3 py-1.5 text-sm font-medium text-primary-50 transition-colors hover:border-accent-500/50 hover:bg-accent-500/10"
+              className="rounded-full border border-white/15 bg-white/5 px-2.5 py-1 text-xs font-medium text-primary-50 transition-colors hover:border-accent-500/50 hover:bg-accent-500/10"
             >
               {item.label}
             </Link>
@@ -71,19 +71,19 @@ export async function HeroMarketingCopy() {
         </div>
       </div>
 
-      <div className="flex flex-col gap-3 sm:flex-row sm:flex-wrap sm:gap-4">
+      <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:gap-3">
         <Button
-          size="lg"
+          size="default"
           className="w-full rounded-xl bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600 sm:w-auto"
           asChild
         >
           <Link href="/kariyer-yolu">
             {t("viewCareerPaths")}
-            <ArrowRight className="ml-2 h-4 w-4" aria-hidden="true" />
+            <ArrowRight className="ml-2 h-3.5 w-3.5" aria-hidden="true" />
           </Link>
         </Button>
         <Button
-          size="lg"
+          size="default"
           variant="outline"
           className="w-full rounded-xl border-2 border-white/80 bg-transparent text-white hover:bg-white hover:text-primary-950 sm:w-auto"
           asChild

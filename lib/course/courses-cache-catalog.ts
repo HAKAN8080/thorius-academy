@@ -39,6 +39,7 @@ export interface CatalogCourseItem {
   pricingModel: "free" | "paid";
   price: number;
   salePrice: number | null;
+  createdAt?: string | null;
 }
 
 export interface CatalogLanguageItem {

@@ -100,8 +100,8 @@ export function AcademyStatsCounter({
         className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_center,_rgba(212,175,55,0.08)_0%,_transparent_70%)]"
         aria-hidden="true"
       />
-      <div className="relative mx-auto w-full max-w-7xl px-4 py-6 sm:px-6 md:py-8 lg:px-8">
-        <ul className="grid grid-cols-2 gap-y-6 gap-x-4 md:grid-cols-4 md:gap-0">
+      <div className="relative mx-auto w-full max-w-7xl px-4 py-3 sm:px-6 md:py-4 lg:px-8">
+        <ul className="grid grid-cols-2 gap-y-3 gap-x-3 md:grid-cols-4 md:gap-0">
           {STATS.map(({ key, value, suffix }, index) => {
             const Icon = ICONS[key];
             const animated = displayValues.get(key) ?? 0;
@@ -117,20 +117,20 @@ export function AcademyStatsCounter({
                     "max-md:border-r max-md:border-white/10",
                 )}
               >
-                <div className="mb-2 flex h-10 w-10 items-center justify-center rounded-full border border-accent-500/30 bg-accent-500/10 md:mb-3 md:h-11 md:w-11">
+                <div className="mb-1.5 flex h-8 w-8 items-center justify-center rounded-full border border-accent-500/30 bg-accent-500/10 md:mb-2 md:h-9 md:w-9">
                   <Icon
-                    className="h-4 w-4 text-accent-400 md:h-5 md:w-5"
+                    className="h-3.5 w-3.5 text-accent-400 md:h-4 md:w-4"
                     aria-hidden="true"
                   />
                 </div>
                 <p
-                  className="text-2xl font-extrabold tracking-tight text-accent-400 sm:text-3xl md:text-4xl"
+                  className="text-xl font-extrabold tracking-tight text-accent-400 sm:text-2xl md:text-3xl"
                   aria-label={value}
                 >
                   {animated}
                   {suffix}
                 </p>
-                <p className="mt-1 text-xs font-medium text-primary-100/90 sm:text-sm md:text-base">
+                <p className="mt-0.5 text-[10px] font-medium text-primary-100/90 sm:text-xs md:text-sm">
                   {labels[key]}
                 </p>
               </li>

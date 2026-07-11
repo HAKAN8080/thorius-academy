@@ -51,6 +51,10 @@
       "title": "Öne Çıkan Kurslar",
       "description": "Profesyoneller için seçilmiş premium eğitimler"
     },
+    "recent": {
+      "title": "Son Eklenen Eğitimler",
+      "description": "Platforma en son eklenen kurslar"
+    },
     "planning": {
       "title": "Planlama Kursları",
       "description": "Perakende planlama, bütçe ve talep yönetimi eğitimleri"

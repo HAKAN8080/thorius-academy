@@ -51,6 +51,10 @@
       "title": "Featured Courses",
       "description": "Premium training curated for professionals"
     },
+    "recent": {
+      "title": "Recently Added Courses",
+      "description": "The latest courses added to the platform"
+    },
     "planning": {
       "title": "Planning Courses",
       "description": "Retail planning, budgeting, and demand management training"

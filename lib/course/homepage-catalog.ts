@@ -28,7 +28,9 @@ import type { Course, WPCategory } from "@/types/wordpress";
 const REVALIDATE_SECONDS = 3600;
 
 const LISTING_SELECT =
-  "id,course_slug,wp_course_id,title,title_en,subtitle,description_md,description_md_en,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at";
+  "id,course_slug,wp_course_id,title,title_en,subtitle,description_md,description_md_en,cover_image_url,category,level,language,subtitle_language,pricing_model,price,sale_price,updated_at,created_at";
+
+const RECENT_COURSES_LIMIT = 5;
 
 function stableNumericId(value: string): number {
   let hash = 0;
@@ -110,6 +112,7 @@ function mapCatalogRow(
     pricingModel,
     price,
     salePrice,
+    createdAt: (row.created_at as string | null | undefined) ?? null,
   };
 }
 
@@ -142,7 +145,8 @@ function mapToCourse(item: CatalogCourseItem): Course {
     categories: item.category ? [mapCourseCategory(item.category)] : [],
     tags: [],
     wpLink: `/kurslar/${item.slug}`,
-    publishedDate: new Date().toISOString(),
+    publishedDate:
+      item.createdAt ?? new Date().toISOString(),
     level: item.level,
     language: item.language,
     subtitleLanguage: item.subtitleLanguage,
@@ -266,4 +270,53 @@ export async function getHomepageCatalogFromCache(
   )();
 
   return finalizeHomepageCatalog(raw);
+}
+
+async function buildRecentlyAddedCourses(
+  locale: AppLocale,
+): Promise<Course[]> {
+  const supabase = getSupabasePublicClient();
+  const { data, error } = await supabase
+    .from("courses_cache")
+    .select(LISTING_SELECT)
+    .eq("published", true)
+    .eq("visibility", "public")
+    .not("course_slug", "is", null)
+    .order("created_at", { ascending: false })
+    .limit(RECENT_COURSES_LIMIT);
+
+  if (error) {
+    console.error(
+      "[homepage-catalog] recent courses fetch failed:",
+      error.message,
+    );
+    return [];
+  }
+
+  const catalogItems = (data ?? [])
+    .map((row) => mapCatalogRow(row as Record<string, unknown>, locale))
+    .filter((course): course is CatalogCourseItem => course !== null);
+
+  const enrichedCatalogItems = await enrichCatalogWithCourseProducts(
+    catalogItems,
+  );
+
+  return enrichedCatalogItems.map(mapToCourse);
+}
+
+export async function getRecentlyAddedHomepageCoursesFromCache(
+  locale: AppLocale = "tr",
+): Promise<Course[]> {
+  return unstable_cache(
+    () => buildRecentlyAddedCourses(locale),
+    ["homepage-recent-courses-v1", locale],
+    {
+      revalidate: REVALIDATE_SECONDS,
+      tags: [
+        COURSE_CACHE_TAG,
+        COURSE_PRODUCTS_CACHE_TAG,
+        "courses-cache-catalog",
+      ],
+    },
+  )();
 }

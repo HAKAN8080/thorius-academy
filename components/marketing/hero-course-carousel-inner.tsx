@@ -117,7 +117,7 @@ export function HeroCourseCarouselInner({
                     />
                   ) : (
                     <div
-                      className="aspect-[16/10] w-full bg-primary-950"
+                      className="aspect-[16/5] w-full bg-primary-950"
                       aria-hidden="true"
                     />
                   )}
@@ -130,7 +130,7 @@ export function HeroCourseCarouselInner({
 
       {count > 1 && extraSlidesReady ? (
         <div
-          className="mt-4 flex items-center justify-between gap-2 px-1"
+          className="mt-2 flex items-center justify-between gap-2 px-1"
           onMouseEnter={() => setPaused(true)}
           onMouseLeave={() => setPaused(false)}
           onFocusCapture={() => setPaused(true)}
@@ -140,7 +140,7 @@ export function HeroCourseCarouselInner({
             type="button"
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0 rounded-full border-accent-500/40 bg-primary-950/90 text-white hover:bg-primary-900 hover:text-accent-400"
+            className="h-8 w-8 shrink-0 rounded-full border-accent-500/40 bg-primary-950/90 text-white hover:bg-primary-900 hover:text-accent-400"
             onClick={() => goTo(index - 1)}
             aria-label="Önceki kurs"
           >
@@ -174,7 +174,7 @@ export function HeroCourseCarouselInner({
             type="button"
             variant="outline"
             size="icon"
-            className="h-9 w-9 shrink-0 rounded-full border-accent-500/40 bg-primary-950/90 text-white hover:bg-primary-900 hover:text-accent-400"
+            className="h-8 w-8 shrink-0 rounded-full border-accent-500/40 bg-primary-950/90 text-white hover:bg-primary-900 hover:text-accent-400"
             onClick={() => goTo(index + 1)}
             aria-label="Sonraki kurs"
           >

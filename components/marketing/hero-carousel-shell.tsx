@@ -15,8 +15,8 @@ export function HeroCarouselHeading({ title }: { title?: string }) {
 export function HeroCarouselShell({ children }: { children: ReactNode }) {
   return (
     <div className="relative mx-auto w-full">
-      <div className="rounded-[1.35rem] border border-white/[0.12] bg-gradient-to-b from-[#3d3d40] via-[#2e2e31] to-[#252528] p-2 shadow-[0_28px_70px_-12px_rgba(0,0,0,0.65)] sm:rounded-[1.5rem] sm:p-2.5">
-        <div className="flex items-center gap-3 rounded-t-[0.85rem] border-b border-white/[0.06] bg-[#1a1a1c]/95 px-3 py-2 sm:px-3.5 sm:py-2.5">
+      <div className="rounded-[1.1rem] border border-white/[0.12] bg-gradient-to-b from-[#3d3d40] via-[#2e2e31] to-[#252528] p-1.5 shadow-[0_16px_40px_-8px_rgba(0,0,0,0.65)] sm:rounded-[1.25rem] sm:p-2">
+        <div className="flex items-center gap-2 rounded-t-[0.75rem] border-b border-white/[0.06] bg-[#1a1a1c]/95 px-2.5 py-1.5 sm:px-3 sm:py-2">
           <div className="flex shrink-0 items-center gap-1.5" aria-hidden="true">
             <span className="h-2.5 w-2.5 rounded-full bg-[#ff5f57] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.15)] sm:h-3 sm:w-3" />
             <span className="h-2.5 w-2.5 rounded-full bg-[#febc2e] shadow-[inset_0_0_0_1px_rgba(0,0,0,0.12)] sm:h-3 sm:w-3" />
