@@ -273,6 +273,7 @@ export const KITAPLIK_ALLOWED_PATH_PREFIXES = [
   "/kitap",
   "/kitaplarim",
   "/oku",
+  "/kitaplik-yonetim",
   "/giris",
   "/kayit",
   "/yeni-parola",

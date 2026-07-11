@@ -7,6 +7,7 @@ import {
   getCompanyOrigin,
   kitaplikPath,
 } from "@/lib/site/site-mode";
+import { canAccessKitaplikAdmin } from "@/lib/kitaplik/access";
 import { createClient } from "@/lib/supabase/server";
 
 const kitaplikNavLinks = [
@@ -26,6 +27,7 @@ export async function KitaplikHeader() {
   const {
     data: { user },
   } = await supabase.auth.getUser();
+  const showAdminLink = canAccessKitaplikAdmin(user?.email);
 
   return (
     <header className="sticky top-0 z-50 border-b border-primary-100/80 bg-white/90 backdrop-blur-md">
@@ -52,6 +54,14 @@ export async function KitaplikHeader() {
           </nav>
 
           <div className="flex shrink-0 items-center gap-2">
+            {showAdminLink ? (
+              <Link
+                href="/kitaplik-yonetim"
+                className="hidden rounded-full border border-[#D4AF37]/50 px-3 py-1.5 text-sm font-medium text-primary-900 hover:bg-[#D4AF37]/10 md:inline-flex"
+              >
+                Kitap yükle
+              </Link>
+            ) : null}
             <Link
               href="/kitaplarim"
               className="inline-flex items-center gap-1.5 rounded-full border border-primary-100 px-3 py-1.5 text-sm font-medium text-primary-800 hover:bg-primary-50 md:hidden"
