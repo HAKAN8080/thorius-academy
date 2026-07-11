@@ -1,20 +1,31 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import {
+  hasKitaplikAdminReadAllAccess,
+  userCanReadKitaplikEbook,
+} from "@/lib/kitaplik/ebook-read-access";
+import {
   getLibraryBookBySlug,
-  userHasEbookEntitlement,
 } from "@/lib/kitaplik/repository";
 import type { LibraryBook } from "@/lib/kitaplik/types";
 
 export async function assertEbookReadAccess(
   userId: string,
+  userEmail: string | null | undefined,
   slug: string,
 ): Promise<{ book: LibraryBook; pdfBytes: Uint8Array } | null> {
-  const book = await getLibraryBookBySlug(slug);
+  const includeUnpublished = hasKitaplikAdminReadAllAccess(userEmail);
+  const book = await getLibraryBookBySlug(slug, {
+    includeUnpublished,
+  });
   if (!book?.ebook_storage_path) {
     return null;
   }
 
-  const entitled = await userHasEbookEntitlement(userId, book.id);
+  const entitled = await userCanReadKitaplikEbook(
+    userId,
+    userEmail,
+    book.id,
+  );
   if (!entitled) {
     return null;
   }

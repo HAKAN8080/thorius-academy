@@ -4,6 +4,7 @@ import {
   enrichLibraryBookPricing,
 } from "@/lib/kitaplik/fetch-wc-pricing";
 import { fromLibraryBookLanguageDbValue } from "@/lib/kitaplik/book-language";
+import { canAccessKitaplikAdmin } from "@/lib/kitaplik/access";
 import type {
   LibraryBook,
   LibraryBookWithPricing,
@@ -61,17 +62,22 @@ export async function listPublishedLibraryBooksWithPricing(): Promise<
 
 export async function getLibraryBookBySlug(
   slug: string,
+  options?: { includeUnpublished?: boolean },
 ): Promise<LibraryBook | null> {
   const normalized = slug.trim().toLowerCase();
   if (!normalized) return null;
 
   const supabase = getSupabaseAdmin();
-  const { data, error } = await supabase
+  let query = supabase
     .from("library_books")
     .select("*")
-    .eq("slug", normalized)
-    .eq("is_published", true)
-    .maybeSingle();
+    .eq("slug", normalized);
+
+  if (!options?.includeUnpublished) {
+    query = query.eq("is_published", true);
+  }
+
+  const { data, error } = await query.maybeSingle();
 
   if (error) {
     throw new Error(error.message);
@@ -144,4 +150,35 @@ export async function listUserOwnedEbooks(): Promise<OwnedLibraryBook[]> {
       granted_at: String(row.granted_at),
     };
   });
+}
+
+export async function listUserReadableEbooks(): Promise<OwnedLibraryBook[]> {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  if (!user) {
+    return [];
+  }
+
+  if (canAccessKitaplikAdmin(user.email)) {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin
+      .from("library_books")
+      .select("*")
+      .not("ebook_storage_path", "is", null)
+      .order("updated_at", { ascending: false });
+
+    if (error) {
+      throw new Error(error.message);
+    }
+
+    return (data ?? []).map((row) => ({
+      ...mapBookRow(row as Record<string, unknown>),
+      granted_at: String(row.updated_at ?? row.created_at ?? new Date().toISOString()),
+    }));
+  }
+
+  return listUserOwnedEbooks();
 }

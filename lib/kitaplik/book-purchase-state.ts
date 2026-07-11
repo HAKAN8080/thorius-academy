@@ -1,11 +1,12 @@
 import { cache } from "react";
 import { splitFullName } from "@/lib/course/checkout-url";
 import type { CheckoutCustomer } from "@/lib/course/checkout-url";
-import { enrichLibraryBookPricing } from "@/lib/kitaplik/fetch-wc-pricing";
 import {
-  getLibraryBookBySlug,
-  userHasEbookEntitlement,
-} from "@/lib/kitaplik/repository";
+  hasKitaplikAdminReadAllAccess,
+  userCanReadKitaplikEbook,
+} from "@/lib/kitaplik/ebook-read-access";
+import { enrichLibraryBookPricing } from "@/lib/kitaplik/fetch-wc-pricing";
+import { getLibraryBookBySlug } from "@/lib/kitaplik/repository";
 import type { LibraryBookWithPricing } from "@/lib/kitaplik/types";
 import { createClient } from "@/lib/supabase/server";
 
@@ -18,13 +19,16 @@ export interface KitaplikBookPurchaseState {
 
 export const getKitaplikBookPurchaseState = cache(
   async (slug: string): Promise<KitaplikBookPurchaseState> => {
-    const bookRow = await getLibraryBookBySlug(slug);
-    const book = bookRow ? await enrichLibraryBookPricing(bookRow) : null;
-
     const supabase = await createClient();
     const {
       data: { user },
     } = await supabase.auth.getUser();
+
+    const isAdminReader = hasKitaplikAdminReadAllAccess(user?.email);
+    const bookRow = await getLibraryBookBySlug(slug, {
+      includeUnpublished: isAdminReader,
+    });
+    const book = bookRow ? await enrichLibraryBookPricing(bookRow) : null;
 
     let customer: CheckoutCustomer | null = null;
     if (user?.email) {
@@ -51,8 +55,8 @@ export const getKitaplikBookPurchaseState = cache(
     }
 
     const hasEbookAccess =
-      Boolean(user && book) &&
-      (await userHasEbookEntitlement(user!.id, book!.id));
+      Boolean(user && book?.ebook_storage_path) &&
+      (await userCanReadKitaplikEbook(user!.id, user!.email, book!.id));
 
     return {
       isLoggedIn: Boolean(user),

@@ -126,6 +126,22 @@ export function KitaplikPurchaseButtons({
             </Button>
           )}
         </div>
+      ) : hasEbookAccess ? (
+        <div className="rounded-2xl border border-accent-200/60 bg-accent-50/40 p-5 sm:col-span-2">
+          <div className="mb-3 flex items-center gap-2 text-primary-900">
+            <BookOpen className="h-5 w-5 text-accent-600" />
+            <span className="font-semibold">E-kitap okuyucu</span>
+          </div>
+          <Button
+            asChild
+            className="w-full bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
+          >
+            <a href={`/oku/${bookSlug}`}>
+              <BookMarked className="mr-2 h-4 w-4" />
+              Oku
+            </a>
+          </Button>
+        </div>
       ) : null}
     </div>
   );

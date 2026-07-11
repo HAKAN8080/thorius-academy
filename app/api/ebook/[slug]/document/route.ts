@@ -17,7 +17,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
-  const access = await assertEbookReadAccess(user.id, slug);
+  const access = await assertEbookReadAccess(user.id, user.email, slug);
   if (!access) {
     return NextResponse.json({ error: "Forbidden" }, { status: 403 });
   }

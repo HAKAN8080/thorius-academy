@@ -2,7 +2,8 @@ import Link from "next/link";
 import { BookOpen } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
-import { listUserOwnedEbooks } from "@/lib/kitaplik/repository";
+import { listUserReadableEbooks } from "@/lib/kitaplik/repository";
+import { hasKitaplikAdminReadAllAccess } from "@/lib/kitaplik/ebook-read-access";
 import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
 import { createClient } from "@/lib/supabase/server";
 
@@ -34,7 +35,8 @@ export async function KitaplikMyBooksPage() {
     );
   }
 
-  const owned = await listUserOwnedEbooks().catch(() => null);
+  const isAdminReader = hasKitaplikAdminReadAllAccess(user.email);
+  const owned = await listUserReadableEbooks().catch(() => null);
 
   if (!owned) {
     return (
@@ -58,7 +60,9 @@ export async function KitaplikMyBooksPage() {
       <Container size="wide">
         <h1 className="text-3xl font-bold text-primary-950">Kitaplarım</h1>
         <p className="mt-2 text-primary-700">
-          Satın aldığınız e-kitaplar — yalnızca burada okunabilir.
+          {isAdminReader
+            ? "Yonetici erisimi — PDF yuklu tum e-kitaplar okunabilir."
+            : "Satin aldiginiz e-kitaplar — yalnizca burada okunabilir."}
         </p>
 
         {owned.length === 0 ? (
