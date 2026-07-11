@@ -44,6 +44,21 @@
     "footerCatalog": "Browse the course catalog",
     "footerOr": "or switch to the coaching platform."
   },
+  "kitaplikPromo": {
+    "linkAria": "Go to Thorius Library (opens in new tab)",
+    "eyebrow": "Thorius Library",
+    "title": "Books",
+    "body": "Expert books on retail, planning, and leadership — printed with delivery or e-books read securely in your browser.",
+    "featuresAria": "Library features",
+    "features": [
+      "Printed books — shipped to your door",
+      "E-books — secure in-browser reader, no downloads",
+      "Curated titles from Thorius Publishing"
+    ],
+    "cta": "Explore Books",
+    "coverAlt": "{title} cover",
+    "stackLabel": "Thorius book covers"
+  },
   "showcases": {
     "viewAll": "View all →",
     "viewAllCourses": "View all courses →",

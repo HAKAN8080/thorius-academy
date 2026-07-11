@@ -44,6 +44,21 @@
     "footerCatalog": "Kurs kataloğunu inceleyin",
     "footerOr": "veya koçluk platformuna geçin."
   },
+  "kitaplikPromo": {
+    "linkAria": "Thorius Kitaplık'a git (yeni sekme)",
+    "eyebrow": "Thorius Kitaplığı",
+    "title": "Kitaplar",
+    "body": "Perakende, planlama ve liderlik alanında uzmanlık kitaplarımız — basılı sipariş veya tarayıcıda okunan e-kitap olarak.",
+    "featuresAria": "Kitaplık özellikleri",
+    "features": [
+      "Basılı kitap — kargo ile kapınıza",
+      "E-kitap — güvenli okuyucuda, indirilemez",
+      "Thorius Yayınevi uzmanlık seçkisi"
+    ],
+    "cta": "Kitapları Keşfet",
+    "coverAlt": "{title} kapak görseli",
+    "stackLabel": "Thorius kitap kapakları"
+  },
   "showcases": {
     "viewAll": "Tümünü Görüntüle →",
     "viewAllCourses": "Tüm Kursları Görüntüle →",
