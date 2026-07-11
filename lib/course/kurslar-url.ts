@@ -1,12 +1,19 @@
+import type { CourseLanguageCode } from "@/lib/course/course-language";
+
 export function buildKurslarUrl(options?: {
   page?: number;
   categorySlug?: string;
   search?: string;
+  language?: CourseLanguageCode;
 }): string {
   const params = new URLSearchParams();
 
   if (options?.categorySlug) {
     params.set("kategori", options.categorySlug);
+  }
+
+  if (options?.language) {
+    params.set("dil", options.language);
   }
 
   const search = options?.search?.trim();
@@ -30,4 +37,17 @@ export function parseKurslarPage(value: string | undefined): number {
 export function parseKurslarSearch(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   return trimmed ? trimmed : undefined;
+}
+
+export function parseKurslarLanguage(
+  value: string | undefined,
+): CourseLanguageCode | undefined {
+  const normalized = value?.trim().toLowerCase();
+  if (normalized === "tr" || normalized === "turkce" || normalized === "türkçe") {
+    return "tr";
+  }
+  if (normalized === "en" || normalized === "english" || normalized === "ingilizce") {
+    return "en";
+  }
+  return undefined;
 }

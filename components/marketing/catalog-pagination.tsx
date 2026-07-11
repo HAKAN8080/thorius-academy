@@ -2,6 +2,7 @@ import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import type { CourseLanguageCode } from "@/lib/course/course-language";
 import { cn } from "@/lib/utils";
 
 interface CatalogPaginationProps {
@@ -9,6 +10,7 @@ interface CatalogPaginationProps {
   totalPages: number;
   total: number;
   categorySlug?: string;
+  language?: CourseLanguageCode;
   searchQuery?: string;
   variant?: "light" | "dark";
 }
@@ -47,6 +49,7 @@ export async function CatalogPagination({
   totalPages,
   total,
   categorySlug,
+  language,
   searchQuery,
   variant = "light",
 }: CatalogPaginationProps) {
@@ -59,13 +62,14 @@ export async function CatalogPagination({
   const visiblePages = getVisiblePages(page, totalPages);
   const prevHref =
     page > 1
-      ? buildKurslarUrl({ page: page - 1, categorySlug, search: searchQuery })
+      ? buildKurslarUrl({ page: page - 1, categorySlug, language, search: searchQuery })
       : null;
   const nextHref =
     page < totalPages
       ? buildKurslarUrl({
           page: page + 1,
           categorySlug,
+          language,
           search: searchQuery,
         })
       : null;
@@ -123,6 +127,7 @@ export async function CatalogPagination({
               href={buildKurslarUrl({
                 page: item,
                 categorySlug,
+                language,
                 search: searchQuery,
               })}
               aria-label={t("pageAria", { page: item })}

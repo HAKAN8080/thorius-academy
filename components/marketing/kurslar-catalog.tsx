@@ -1,16 +1,20 @@
 import { getTranslations } from "next-intl/server";
 import { CourseCardV2 } from "@/components/course/course-card-v2";
 import { CategoryFilter } from "@/components/marketing/category-filter";
+import { LanguageFilter } from "@/components/marketing/language-filter";
 import { CatalogPagination } from "@/components/marketing/catalog-pagination";
 import { CourseSearchForm } from "@/components/marketing/course-search-form";
 import type {
   CatalogCategoryItem,
   CatalogCourseItem,
+  CatalogLanguageItem,
 } from "@/lib/course/courses-cache-catalog";
+import type { CourseLanguageCode } from "@/lib/course/course-language";
 
 interface KurslarCatalogProps {
   courses: CatalogCourseItem[];
   categories: CatalogCategoryItem[];
+  languages: CatalogLanguageItem[];
   pagination: {
     page: number;
     totalPages: number;
@@ -19,6 +23,7 @@ interface KurslarCatalogProps {
   };
   totalPublished: number;
   selectedCategory?: string;
+  selectedLanguage?: CourseLanguageCode;
   searchQuery?: string;
 }
 
@@ -47,9 +52,11 @@ function mapCourseToCardProps(course: CatalogCourseItem) {
 export async function KurslarCatalog({
   courses,
   categories,
+  languages,
   pagination,
   totalPublished,
   selectedCategory,
+  selectedLanguage,
   searchQuery,
 }: KurslarCatalogProps) {
   const t = await getTranslations("courses.catalog");
@@ -64,11 +71,20 @@ export async function KurslarCatalog({
 
   return (
     <div className="grid grid-cols-1 gap-8 lg:grid-cols-[280px_1fr]">
-      <aside aria-label={t("categoryFilterAria")}>
+      <aside aria-label={t("filtersAria")} className="space-y-8">
         <CategoryFilter
           categories={categories}
           selectedSlug={selectedCategory}
+          selectedLanguage={selectedLanguage}
           totalCount={totalPublished}
+          searchQuery={searchQuery}
+          variant="dark"
+        />
+        <LanguageFilter
+          languages={languages}
+          selectedLanguage={selectedLanguage}
+          totalCount={totalPublished}
+          categorySlug={selectedCategory}
           searchQuery={searchQuery}
           variant="dark"
         />
@@ -78,6 +94,7 @@ export async function KurslarCatalog({
         <CourseSearchForm
           defaultQuery={searchQuery}
           categorySlug={selectedCategory}
+          language={selectedLanguage}
           variant="dark"
         />
 
@@ -96,8 +113,8 @@ export async function KurslarCatalog({
               <p className="text-white/70">
                 {t("noSearchResults", { query: searchQuery })}
               </p>
-            ) : selectedCategory ? (
-              <p className="text-white/70">{t("noCoursesInCategory")}</p>
+            ) : selectedCategory || selectedLanguage ? (
+              <p className="text-white/70">{t("noCoursesInFilter")}</p>
             ) : (
               <p className="text-white/70">{t("noCourses")}</p>
             )}
@@ -118,6 +135,7 @@ export async function KurslarCatalog({
               totalPages={pagination.totalPages}
               total={pagination.total}
               categorySlug={selectedCategory}
+              language={selectedLanguage}
               searchQuery={searchQuery}
               variant="dark"
             />

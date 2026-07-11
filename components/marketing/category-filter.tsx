@@ -1,6 +1,7 @@
 import { getTranslations } from "next-intl/server";
 import { Link } from "@/i18n/navigation";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import type { CourseLanguageCode } from "@/lib/course/course-language";
 import { cn } from "@/lib/utils";
 
 interface CategoryFilterItem {
@@ -13,6 +14,7 @@ interface CategoryFilterItem {
 interface CategoryFilterProps {
   categories: CategoryFilterItem[];
   selectedSlug?: string;
+  selectedLanguage?: CourseLanguageCode;
   totalCount: number;
   searchQuery?: string;
   variant?: "light" | "dark";
@@ -21,6 +23,7 @@ interface CategoryFilterProps {
 export async function CategoryFilter({
   categories,
   selectedSlug,
+  selectedLanguage,
   totalCount,
   searchQuery,
   variant = "light",
@@ -40,7 +43,7 @@ export async function CategoryFilter({
       </h3>
 
       <Link
-        href={buildKurslarUrl({ search: searchQuery })}
+        href={buildKurslarUrl({ search: searchQuery, language: selectedLanguage })}
         className={cn(
           "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
           !selectedSlug
@@ -61,6 +64,7 @@ export async function CategoryFilter({
           href={buildKurslarUrl({
             categorySlug: cat.slug,
             search: searchQuery,
+            language: selectedLanguage,
           })}
           className={cn(
             "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",

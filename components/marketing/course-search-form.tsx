@@ -6,17 +6,20 @@ import { Search, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
+import type { CourseLanguageCode } from "@/lib/course/course-language";
 import { cn } from "@/lib/utils";
 
 interface CourseSearchFormProps {
   defaultQuery?: string;
   categorySlug?: string;
+  language?: CourseLanguageCode;
   variant?: "light" | "dark";
 }
 
 export function CourseSearchForm({
   defaultQuery,
   categorySlug,
+  language,
   variant = "light",
 }: CourseSearchFormProps) {
   const t = useTranslations("courses.catalog");
@@ -29,6 +32,7 @@ export function CourseSearchForm({
       {categorySlug ? (
         <input type="hidden" name="kategori" value={categorySlug} />
       ) : null}
+      {language ? <input type="hidden" name="dil" value={language} /> : null}
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
         <div className="relative flex-1">
@@ -80,7 +84,7 @@ export function CourseSearchForm({
               asChild
             >
               <Link
-                href={buildKurslarUrl({ categorySlug })}
+                href={buildKurslarUrl({ categorySlug, language })}
                 aria-label={t("clearSearchAria")}
               >
                 <X className="h-4 w-4" />

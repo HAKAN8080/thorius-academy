@@ -14,6 +14,7 @@ interface CourseLanguageBadgesProps {
   subtitleLanguage?: CourseLanguageCode | null;
   className?: string;
   overlay?: boolean;
+  size?: "md" | "lg";
 }
 
 export function CourseLanguageBadges({
@@ -21,17 +22,42 @@ export function CourseLanguageBadges({
   subtitleLanguage,
   className,
   overlay = false,
+  size,
 }: CourseLanguageBadgesProps) {
   const t = useTranslations("courses.language");
+  const resolvedSize = size ?? (overlay ? "lg" : "md");
   const hasSubtitle = subtitleLanguage != null;
   const subtitleDiffers =
     hasSubtitle && subtitleLanguage !== language;
   const languageLabel = courseLanguageShortLabel(language);
 
+  const badgeClass = cn(
+    "inline-flex items-center rounded-full font-semibold shadow-md",
+    resolvedSize === "lg"
+      ? "gap-2 px-3 py-1.5 text-sm"
+      : "gap-1.5 px-2.5 py-1 text-xs",
+    overlay
+      ? "border border-white/25 bg-primary-950/90 text-white backdrop-blur-sm"
+      : "border border-primary-100 bg-white text-primary-900",
+  );
+
+  const flagClass = cn(
+    "shrink-0 leading-none",
+    resolvedSize === "lg" ? "text-[1.45rem]" : "text-lg",
+  );
+
+  const labelClass = cn(
+    "font-bold tracking-wide",
+    resolvedSize === "lg" ? "text-sm" : "text-xs",
+  );
+
+  const captionClass = resolvedSize === "lg" ? "h-4 w-4" : "h-3.5 w-3.5";
+
   return (
     <div
       className={cn(
-        "flex flex-wrap items-center gap-1.5",
+        "flex flex-wrap items-center",
+        resolvedSize === "lg" ? "gap-2" : "gap-1.5",
         overlay && "pointer-events-none",
         className,
       )}
@@ -47,26 +73,18 @@ export function CourseLanguageBadges({
       }
     >
       <span
-        className={cn(
-          "inline-flex items-center gap-1 rounded-full font-semibold shadow-md",
-          overlay
-            ? "border border-white/20 bg-primary-950/85 px-2 py-1 text-[11px] text-white backdrop-blur-sm"
-            : "border border-primary-100 bg-white px-2 py-1 text-[11px] text-primary-900",
-        )}
+        className={badgeClass}
         title={t("courseLanguageTitle", { language: languageLabel })}
       >
-        <span aria-hidden="true">{courseLanguageFlag(language)}</span>
-        <span>{languageLabel}</span>
+        <span className={flagClass} aria-hidden="true">
+          {courseLanguageFlag(language)}
+        </span>
+        <span className={labelClass}>{languageLabel}</span>
       </span>
 
       {hasSubtitle ? (
         <span
-          className={cn(
-            "inline-flex items-center gap-1 rounded-full font-semibold shadow-md",
-            overlay
-              ? "border border-white/20 bg-primary-950/85 px-2 py-1 text-[11px] text-white backdrop-blur-sm"
-              : "border border-primary-100 bg-white px-2 py-1 text-[11px] text-primary-900",
-          )}
+          className={badgeClass}
           title={
             subtitleDiffers
               ? t("subtitleTitle", {
@@ -75,16 +93,18 @@ export function CourseLanguageBadges({
               : t("subtitled")
           }
         >
-          <Captions className="h-3 w-3" aria-hidden="true" />
+          <Captions className={captionClass} aria-hidden="true" />
           {subtitleDiffers ? (
             <>
-              <span aria-hidden="true">
+              <span className={flagClass} aria-hidden="true">
                 {courseLanguageFlag(subtitleLanguage)}
               </span>
-              <span>{courseLanguageShortLabel(subtitleLanguage)}</span>
+              <span className={labelClass}>
+                {courseLanguageShortLabel(subtitleLanguage)}
+              </span>
             </>
           ) : (
-            <span>{t("subtitled")}</span>
+            <span className={labelClass}>{t("subtitled")}</span>
           )}
         </span>
       ) : null}

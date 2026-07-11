@@ -9,6 +9,7 @@ import {
   buildKurslarUrl,
   parseKurslarPage,
   parseKurslarSearch,
+  parseKurslarLanguage,
 } from "@/lib/course/kurslar-url";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import { getCoursesCacheListingPage } from "@/lib/course/courses-cache-catalog";
@@ -17,7 +18,7 @@ export const revalidate = 3600;
 
 type PageProps = {
   params: Promise<{ locale: string }>;
-  searchParams: { kategori?: string; sayfa?: string; ara?: string };
+  searchParams: { kategori?: string; sayfa?: string; ara?: string; dil?: string };
 };
 
 export async function generateMetadata({
@@ -38,17 +39,20 @@ async function KurslarCatalogSection({
   page,
   categorySlug,
   searchQuery,
+  language,
   locale,
 }: {
   page: number;
   categorySlug?: string;
   searchQuery?: string;
+  language?: ReturnType<typeof parseKurslarLanguage>;
   locale: string;
 }) {
   const listing = await getCoursesCacheListingPage({
     page,
     categorySlug,
     search: searchQuery,
+    language,
     locale: locale === "en" ? "en" : "tr",
   });
 
@@ -61,6 +65,7 @@ async function KurslarCatalogSection({
         page: listing.pagination.totalPages,
         categorySlug,
         search: searchQuery,
+        language,
       }),
     );
   }
@@ -69,9 +74,11 @@ async function KurslarCatalogSection({
     <KurslarCatalog
       courses={listing.courses}
       categories={listing.categories}
+      languages={listing.languages}
       pagination={listing.pagination}
       totalPublished={listing.totalPublished}
       selectedCategory={listing.selectedCategory}
+      selectedLanguage={listing.selectedLanguage}
       searchQuery={listing.searchQuery}
     />
   );
@@ -89,8 +96,21 @@ export default async function KurslarPage({
     ? canonicalizeCategorySlug(rawCategorySlug)
     : undefined;
   const searchQuery = parseKurslarSearch(searchParams.ara);
+  const rawLanguage = searchParams.dil?.trim() || undefined;
+  const language = parseKurslarLanguage(rawLanguage);
 
   if (rawCategorySlug && categorySlug && rawCategorySlug !== categorySlug) {
+    redirect(
+      buildKurslarUrl({
+        page,
+        categorySlug,
+        search: searchQuery,
+        language,
+      }),
+    );
+  }
+
+  if (rawLanguage && !language) {
     redirect(
       buildKurslarUrl({
         page,
@@ -100,7 +120,7 @@ export default async function KurslarPage({
     );
   }
 
-  const suspenseKey = `${categorySlug ?? "all"}-${page}-${searchQuery ?? ""}`;
+  const suspenseKey = `${categorySlug ?? "all"}-${language ?? "all"}-${page}-${searchQuery ?? ""}`;
 
   return (
     <div className="bg-[#0B1E3F]">
@@ -123,6 +143,7 @@ export default async function KurslarPage({
             page={page}
             categorySlug={categorySlug}
             searchQuery={searchQuery}
+            language={language}
             locale={locale}
           />
         </Suspense>

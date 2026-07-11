@@ -3,13 +3,19 @@ import {
   canonicalizeCategorySlug,
   slugifyCategoryName,
 } from "@/lib/course/category-slug";
-import { resolveCourseLanguageMeta } from "@/lib/course/course-language";
+import {
+  resolveCourseLanguageMeta,
+  type CourseLanguageCode,
+} from "@/lib/course/course-language";
 import { pickLocalized } from "@/lib/course/resolve-course-content";
 import type { AppLocale } from "@/i18n/routing";
 import { resolveCategoryDisplayPriority } from "@/lib/course/sort-homepage-categories";
 import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
-import { fromCoursesCacheLevelLabel } from "@/lib/instructor/courses-cache-write";
+import {
+  fromCoursesCacheLevelLabel,
+  toCoursesCacheLanguageDbValue,
+} from "@/lib/instructor/courses-cache-write";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
 
 export const COURSES_CATALOG_PER_PAGE = 24;
@@ -35,6 +41,11 @@ export interface CatalogCourseItem {
   salePrice: number | null;
 }
 
+export interface CatalogLanguageItem {
+  code: CourseLanguageCode;
+  count: number;
+}
+
 export interface CatalogCategoryItem {
   id: string;
   slug: string;
@@ -53,7 +64,9 @@ export interface CoursesCacheListingPage {
   };
   totalPublished: number;
   selectedCategory?: string;
+  selectedLanguage?: CourseLanguageCode;
   searchQuery?: string;
+  languages: CatalogLanguageItem[];
 }
 
 function escapeIlike(value: string): string {
@@ -126,6 +139,27 @@ function mapRow(
     price,
     salePrice,
   };
+}
+
+export function buildLanguages(
+  rows: Array<{ language: string | null }>,
+): CatalogLanguageItem[] {
+  const counts = new Map<CourseLanguageCode, number>();
+
+  for (const row of rows) {
+    const dbValue = toCoursesCacheLanguageDbValue(row.language);
+    const code: CourseLanguageCode = dbValue === "english" ? "en" : "tr";
+    counts.set(code, (counts.get(code) ?? 0) + 1);
+  }
+
+  const order: CourseLanguageCode[] = ["tr", "en"];
+
+  return order
+    .filter((code) => (counts.get(code) ?? 0) > 0)
+    .map((code) => ({
+      code,
+      count: counts.get(code) ?? 0,
+    }));
 }
 
 export function buildCategories(rows: Array<{ category: string | null }>): CatalogCategoryItem[] {
@@ -212,31 +246,33 @@ function resolveCategoryName(
   return bySlug?.name;
 }
 
-async function fetchCategorySourceRows(): Promise<Array<{ category: string | null }>> {
-  return getCachedCategorySourceRows();
+async function fetchListingSourceRows(): Promise<
+  Array<{ category: string | null; language: string | null }>
+> {
+  return getCachedListingSourceRows();
 }
 
-const getCachedCategorySourceRows = unstable_cache(
+const getCachedListingSourceRows = unstable_cache(
   async () => {
     const supabase = getSupabasePublicClient();
     const { data, error } = await supabase
       .from("courses_cache")
-      .select("category")
+      .select("category,language")
       .eq("published", true)
       .eq("visibility", "public")
       .not("course_slug", "is", null);
 
     if (error) {
       console.error(
-        "[courses-cache-catalog] category fetch failed:",
+        "[courses-cache-catalog] listing source fetch failed:",
         error.message,
       );
       return [];
     }
 
-    return (data ?? []) as Array<{ category: string | null }>;
+    return (data ?? []) as Array<{ category: string | null; language: string | null }>;
   },
-  ["courses-cache-category-rows"],
+  ["courses-cache-listing-source-rows"],
   {
     revalidate: REVALIDATE_SECONDS,
     tags: ["courses-cache-catalog"],
@@ -247,31 +283,36 @@ async function buildCoursesCacheListingPage(params: {
   page?: number;
   categorySlug?: string;
   search?: string;
+  language?: CourseLanguageCode;
   locale?: AppLocale;
 }): Promise<CoursesCacheListingPage> {
   const page = Math.max(1, params.page ?? 1);
   const perPage = COURSES_CATALOG_PER_PAGE;
   const locale = params.locale ?? "tr";
   const searchQuery = params.search?.trim() || undefined;
+  const selectedLanguage = params.language;
   const categorySlug = params.categorySlug
     ? canonicalizeCategorySlug(params.categorySlug)
     : undefined;
-  const categoryRows = await fetchCategorySourceRows();
-  const categories = buildCategories(categoryRows);
+  const sourceRows = await fetchListingSourceRows();
+  const categories = buildCategories(sourceRows);
+  const languages = buildLanguages(sourceRows);
   const categoryName = resolveCategoryName(categories, categorySlug);
 
   if (categorySlug && !categoryName) {
     return {
       courses: [],
       categories,
+      languages,
       pagination: {
         page,
         totalPages: 0,
         total: 0,
         perPage,
       },
-      totalPublished: categoryRows.length,
+      totalPublished: sourceRows.length,
       selectedCategory: categorySlug,
+      selectedLanguage,
       searchQuery,
     };
   }
@@ -279,7 +320,7 @@ async function buildCoursesCacheListingPage(params: {
   const supabase = getSupabasePublicClient();
   const from = (page - 1) * perPage;
   const to = from + perPage - 1;
-  const useCategoryPrioritySort = !categoryName && !searchQuery;
+  const useCategoryPrioritySort = !categoryName && !searchQuery && !selectedLanguage;
 
   let query = supabase
     .from("courses_cache")
@@ -298,6 +339,15 @@ async function buildCoursesCacheListingPage(params: {
     query = query.eq("category", categoryName);
   }
 
+  if (selectedLanguage) {
+    query = query.eq(
+      "language",
+      toCoursesCacheLanguageDbValue(
+        selectedLanguage === "en" ? "İngilizce" : "Türkçe",
+      ),
+    );
+  }
+
   if (searchQuery) {
     const escaped = escapeIlike(searchQuery);
     query = query.or(
@@ -312,14 +362,16 @@ async function buildCoursesCacheListingPage(params: {
     return {
       courses: [],
       categories,
+      languages,
       pagination: {
         page,
         totalPages: 0,
         total: 0,
         perPage,
       },
-      totalPublished: categoryRows.length,
+      totalPublished: sourceRows.length,
       selectedCategory: categorySlug,
+      selectedLanguage,
       searchQuery,
     };
   }
@@ -339,14 +391,16 @@ async function buildCoursesCacheListingPage(params: {
   return {
     courses,
     categories,
+    languages,
     pagination: {
       page,
       totalPages,
       total,
       perPage,
     },
-    totalPublished: categoryRows.length,
+    totalPublished: sourceRows.length,
     selectedCategory: categorySlug,
+    selectedLanguage,
     searchQuery,
   };
 }
@@ -355,6 +409,7 @@ export async function getCoursesCacheListingPage(params: {
   page?: number;
   categorySlug?: string;
   search?: string;
+  language?: CourseLanguageCode;
   locale?: AppLocale;
 }): Promise<CoursesCacheListingPage> {
   const page = params.page ?? 1;
@@ -362,11 +417,12 @@ export async function getCoursesCacheListingPage(params: {
     ? canonicalizeCategorySlug(params.categorySlug)
     : "all";
   const search = params.search?.trim() ?? "";
+  const language = params.language ?? "all";
   const locale = params.locale ?? "tr";
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage({ ...params, locale }),
-    ["courses-cache-listing-v8", categorySlug, String(page), search, locale],
+    ["courses-cache-listing-v9", categorySlug, language, String(page), search, locale],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
