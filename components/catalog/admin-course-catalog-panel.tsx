@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useMemo, useState, useTransition } from "react";
-import { ExternalLink, Search } from "lucide-react";
+import { ExternalLink, Languages, Search } from "lucide-react";
 import { toast } from "sonner";
 import { bulkToggleAdminCatalogCoursesPublished, toggleAdminCatalogCoursePublished, updateAdminCatalogCourseCategory, updateAdminCatalogCourseInstructor } from "@/lib/actions/catalog-admin";
 import type {
@@ -286,6 +286,7 @@ export function AdminCourseCatalogPanel({
             <thead className="border-b border-primary-100 bg-primary-50/60 text-left">
               <tr>
                 <th className="px-4 py-3 font-semibold text-primary-950">Kurs</th>
+                <th className="px-4 py-3 font-semibold text-primary-950">Dil</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">Kategori</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">Yazar</th>
                 <th className="px-4 py-3 font-semibold text-primary-950">Durum</th>
@@ -298,6 +299,11 @@ export function AdminCourseCatalogPanel({
                   <td className="px-4 py-3 align-top">
                     <p className="font-medium text-primary-950">{course.title}</p>
                     <p className="mt-1 text-xs text-muted-foreground">{course.slug}</p>
+                  </td>
+                  <td className="px-4 py-3 align-top">
+                    <Badge variant={course.hasEnglishContent ? "default" : "secondary"}>
+                      {course.hasEnglishContent ? "TR + EN" : "TR only"}
+                    </Badge>
                   </td>
                   <td className="px-4 py-3 align-top">
                     <div className="min-w-[180px]">
@@ -369,6 +375,12 @@ export function AdminCourseCatalogPanel({
                   </td>
                   <td className="px-4 py-3 align-top">
                     <div className="flex flex-wrap gap-2">
+                      <Button asChild size="sm" variant="secondary">
+                        <Link href={`/panel/yonetim/kurslar/${course.id}/icerik`}>
+                          <Languages className="mr-1.5 h-4 w-4" />
+                          İçerik
+                        </Link>
+                      </Button>
                       <Button
                         type="button"
                         size="sm"

@@ -72,8 +72,8 @@ export default async function AdminCoursesPage({ searchParams }: AdminCoursesPag
             </h1>
           </div>
           <p className="max-w-2xl text-lg text-muted-foreground">
-            Tüm kursları listeden görün; MIT, İngilizce ve diğer içerikleri tek
-            tıkla yayına alın veya yayından kaldırın.
+            Tüm kursları listeden görün; yayın durumunu yönetin, TR/EN içerikleri
+            düzenleyin ve kategori veya yazar atamalarını güncelleyin.
           </p>
         </div>
       </header>

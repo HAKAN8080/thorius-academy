@@ -1,5 +1,10 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { fetchAllWpCourseCategories } from "@/lib/tutor/instructor-api";
+import {
+  fromCoursesCacheLanguageLabel,
+  normalizeCoursesCacheWritePayload,
+} from "@/lib/instructor/courses-cache-write";
+import { fromCoursesCacheSubtitleLanguageLabel } from "@/lib/course/course-language";
 import { syncCourseToWp } from "@/lib/wordpress/sync-course-to-wp";
 
 export type CatalogPublishedFilter = "all" | "published" | "unpublished";
@@ -22,6 +27,58 @@ export interface AdminCatalogCourse {
   instructorName: string | null;
   instructorEmail: string | null;
   updatedAt: string;
+  hasEnglishContent: boolean;
+}
+
+export interface AdminCatalogSectionContent {
+  id: string;
+  title: string;
+  titleEn: string | null;
+  sortOrder: number;
+}
+
+export interface AdminCatalogLessonContent {
+  id: string;
+  sectionId: string | null;
+  title: string;
+  titleEn: string | null;
+  sortOrder: number;
+}
+
+export interface AdminCatalogCourseContent {
+  id: string;
+  slug: string;
+  title: string;
+  subtitle: string | null;
+  descriptionMd: string | null;
+  titleEn: string | null;
+  subtitleEn: string | null;
+  descriptionMdEn: string | null;
+  whatWillLearn: string | null;
+  targetAudience: string | null;
+  whatWillLearnEn: string | null;
+  targetAudienceEn: string | null;
+  language: string;
+  subtitleLanguage: string | null;
+  sections: AdminCatalogSectionContent[];
+  lessons: AdminCatalogLessonContent[];
+}
+
+export interface AdminCatalogCourseContentInput {
+  title: string;
+  subtitle?: string | null;
+  descriptionMd?: string | null;
+  titleEn?: string | null;
+  subtitleEn?: string | null;
+  descriptionMdEn?: string | null;
+  whatWillLearn?: string | null;
+  targetAudience?: string | null;
+  whatWillLearnEn?: string | null;
+  targetAudienceEn?: string | null;
+  language?: string | null;
+  subtitleLanguage?: string | null;
+  sections?: Array<{ id: string; title: string; titleEn?: string | null }>;
+  lessons?: Array<{ id: string; title: string; titleEn?: string | null }>;
 }
 
 export interface SetAdminCatalogCourseInstructorResult {
@@ -33,7 +90,10 @@ export interface SetAdminCatalogCourseInstructorResult {
 export type SetAdminCatalogCourseCategoryResult = SetAdminCatalogCourseInstructorResult;
 
 const CATALOG_LIST_SELECT =
-  "id, course_slug, title, category, published, visibility, wp_course_id, instructor_wp_user_id, updated_at";
+  "id, course_slug, title, title_en, description_md_en, category, published, visibility, wp_course_id, instructor_wp_user_id, updated_at";
+
+const CATALOG_CONTENT_SELECT =
+  "id, course_slug, title, subtitle, description_md, title_en, subtitle_en, description_md_en, what_will_learn, target_audience, what_will_learn_en, target_audience_en, language, subtitle_language";
 
 const CATALOG_WP_SYNC_SELECT =
   "id, course_slug, title, subtitle, description_md, cover_image_url, category, published, visibility, wp_course_id, instructor_wp_user_id, pricing_model, price, sale_price, seo_title, seo_description, seo_focus_keyword";
@@ -85,6 +145,10 @@ function mapRow(
     instructorName: instructor?.fullName ?? null,
     instructorEmail: instructor?.email ?? null,
     updatedAt: String(row.updated_at ?? ""),
+    hasEnglishContent: Boolean(
+      (row.title_en as string | null)?.trim() ||
+        (row.description_md_en as string | null)?.trim(),
+    ),
   };
 }
 
@@ -575,4 +639,151 @@ export async function bulkSetAdminCatalogCoursesPublished(
       .map((row) => String(row.course_slug ?? ""))
       .filter(Boolean),
   };
+}
+
+export async function getAdminCatalogCourseContent(
+  courseId: string,
+): Promise<AdminCatalogCourseContent> {
+  const admin = getSupabaseAdmin();
+
+  const { data: row, error } = await admin
+    .from("courses_cache")
+    .select(CATALOG_CONTENT_SELECT)
+    .eq("id", courseId)
+    .maybeSingle();
+
+  if (error || !row) {
+    throw new Error(error?.message ?? "Kurs bulunamadı.");
+  }
+
+  const slug = String(row.course_slug ?? "").trim();
+  if (!slug) {
+    throw new Error("Kurs slug bilgisi eksik.");
+  }
+
+  const [{ data: sections }, { data: lessons }] = await Promise.all([
+    admin
+      .from("sections")
+      .select("id, title, title_en, sort_order")
+      .eq("course_id", courseId)
+      .order("sort_order", { ascending: true }),
+    admin
+      .from("lessons")
+      .select("id, section_id, title, title_en, sort_order")
+      .eq("courses_cache_id", courseId)
+      .order("sort_order", { ascending: true }),
+  ]);
+
+  const subtitleLanguageLabel = fromCoursesCacheSubtitleLanguageLabel(
+    row.subtitle_language as string | null | undefined,
+  );
+
+  return {
+    id: courseId,
+    slug,
+    title: String(row.title ?? "Kurs"),
+    subtitle: (row.subtitle as string | null)?.trim() || null,
+    descriptionMd: (row.description_md as string | null) ?? null,
+    titleEn: (row.title_en as string | null)?.trim() || null,
+    subtitleEn: (row.subtitle_en as string | null)?.trim() || null,
+    descriptionMdEn: (row.description_md_en as string | null) ?? null,
+    whatWillLearn: (row.what_will_learn as string | null) ?? null,
+    targetAudience: (row.target_audience as string | null) ?? null,
+    whatWillLearnEn: (row.what_will_learn_en as string | null) ?? null,
+    targetAudienceEn: (row.target_audience_en as string | null) ?? null,
+    language: fromCoursesCacheLanguageLabel(row.language as string | null | undefined),
+    subtitleLanguage:
+      subtitleLanguageLabel === "Yok" ? null : subtitleLanguageLabel,
+    sections: (sections ?? []).map((section) => ({
+      id: String(section.id),
+      title: String(section.title ?? ""),
+      titleEn: (section.title_en as string | null)?.trim() || null,
+      sortOrder: Number(section.sort_order ?? 0),
+    })),
+    lessons: (lessons ?? []).map((lesson) => ({
+      id: String(lesson.id),
+      sectionId: lesson.section_id ? String(lesson.section_id) : null,
+      title: String(lesson.title ?? ""),
+      titleEn: (lesson.title_en as string | null)?.trim() || null,
+      sortOrder: Number(lesson.sort_order ?? 0),
+    })),
+  };
+}
+
+export async function updateAdminCatalogCourseContent(
+  courseId: string,
+  input: AdminCatalogCourseContentInput,
+): Promise<AdminCatalogCourseContent> {
+  const title = input.title?.trim();
+  if (!title) {
+    throw new Error("Kurs başlığı zorunludur.");
+  }
+
+  const admin = getSupabaseAdmin();
+  const now = new Date().toISOString();
+
+  const cachePayload = normalizeCoursesCacheWritePayload({
+    title,
+    subtitle: input.subtitle?.trim() || null,
+    description_md: input.descriptionMd ?? null,
+    title_en: input.titleEn?.trim() || null,
+    subtitle_en: input.subtitleEn?.trim() || null,
+    description_md_en: input.descriptionMdEn ?? null,
+    what_will_learn: input.whatWillLearn ?? null,
+    target_audience: input.targetAudience ?? null,
+    what_will_learn_en: input.whatWillLearnEn ?? null,
+    target_audience_en: input.targetAudienceEn ?? null,
+    language: input.language ?? "Türkçe",
+    subtitle_language: input.subtitleLanguage ?? null,
+    updated_at: now,
+  });
+
+  const { error: courseError } = await admin
+    .from("courses_cache")
+    .update(cachePayload)
+    .eq("id", courseId);
+
+  if (courseError) {
+    throw new Error(courseError.message);
+  }
+
+  const sectionUpdates = input.sections ?? [];
+  for (const section of sectionUpdates) {
+    const sectionTitle = section.title?.trim();
+    if (!sectionTitle) continue;
+
+    const { error: sectionError } = await admin
+      .from("sections")
+      .update({
+        title: sectionTitle,
+        title_en: section.titleEn?.trim() || null,
+      })
+      .eq("id", section.id)
+      .eq("course_id", courseId);
+
+    if (sectionError) {
+      throw new Error(`Bölüm güncellenemedi: ${sectionError.message}`);
+    }
+  }
+
+  const lessonUpdates = input.lessons ?? [];
+  for (const lesson of lessonUpdates) {
+    const lessonTitle = lesson.title?.trim();
+    if (!lessonTitle) continue;
+
+    const { error: lessonError } = await admin
+      .from("lessons")
+      .update({
+        title: lessonTitle,
+        title_en: lesson.titleEn?.trim() || null,
+      })
+      .eq("id", lesson.id)
+      .eq("courses_cache_id", courseId);
+
+    if (lessonError) {
+      throw new Error(`Ders güncellenemedi: ${lessonError.message}`);
+    }
+  }
+
+  return getAdminCatalogCourseContent(courseId);
 }

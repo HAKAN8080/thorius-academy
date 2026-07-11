@@ -8,6 +8,9 @@ import {
   setAdminCatalogCourseInstructor,
   setAdminCatalogCourseCategory,
   setAdminCatalogCoursePublished,
+  updateAdminCatalogCourseContent,
+  type AdminCatalogCourseContent,
+  type AdminCatalogCourseContentInput,
   type CatalogPublishedFilter,
   type ListAdminCatalogCoursesResult,
 } from "@/lib/course/catalog-admin";
@@ -159,6 +162,32 @@ export async function updateAdminCatalogCourseCategory(
     }
     return {
       error: error instanceof Error ? error.message : "Kurs kategorisi güncellenemedi.",
+    };
+  }
+}
+
+export async function saveAdminCatalogCourseContent(
+  courseId: string,
+  input: AdminCatalogCourseContentInput,
+): Promise<{ content: AdminCatalogCourseContent } | { error: string }> {
+  try {
+    await requireCareerPathAdmin();
+    const content = await updateAdminCatalogCourseContent(courseId, input);
+
+    revalidateCourseCache({ slug: content.slug });
+    revalidatePath("/panel/yonetim/kurslar");
+    revalidatePath(`/panel/yonetim/kurslar/${courseId}/icerik`);
+    revalidatePath("/kurslar");
+    revalidatePath(`/kurslar/${content.slug}`);
+    revalidatePath(`/en/kurslar/${content.slug}`);
+
+    return { content };
+  } catch (error) {
+    if (error instanceof Error && error.message === "CAREER_PATH_ADMIN_DENIED") {
+      return { error: "Bu işlem için yetkiniz yok." };
+    }
+    return {
+      error: error instanceof Error ? error.message : "Kurs içeriği kaydedilemedi.",
     };
   }
 }

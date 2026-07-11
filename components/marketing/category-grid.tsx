@@ -3,7 +3,6 @@ import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { Card } from "@/components/ui/card";
 import { buildKurslarUrl } from "@/lib/course/kurslar-url";
-import { catalogSlugFromWordPressCategory } from "@/lib/course/category-slug";
 import { sortHomepageCategories } from "@/lib/course/sort-homepage-categories";
 import type { WPCategory } from "@/types/wordpress";
 import { cn } from "@/lib/utils";
@@ -31,7 +30,7 @@ export async function CategoryGrid({ categories }: CategoryGridProps) {
             <Link
               key={category.id}
               href={buildKurslarUrl({
-                categorySlug: catalogSlugFromWordPressCategory(category),
+                categorySlug: category.slug,
               })}
               className="group"
             >
