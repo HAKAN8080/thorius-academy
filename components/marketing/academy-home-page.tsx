@@ -9,6 +9,7 @@ import { MemberPromoSection } from "@/components/marketing/member-promo-section"
 import { EcosystemCards } from "@/components/marketing/ecosystem-cards";
 import { CategoryGrid } from "@/components/marketing/category-grid";
 import { CourseShowcaseSection } from "@/components/marketing/course-showcase-section";
+import { AcademyKitaplikPromoSection } from "@/components/marketing/academy-kitaplik-promo-section";
 import { InspirationBanner } from "@/components/marketing/inspiration-banner";
 import { Button } from "@/components/ui/button";
 import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
@@ -158,6 +159,7 @@ export async function AcademyHomePage() {
 
       <FreeCoursesHubSection />
 
+      <AcademyKitaplikPromoSection />
       <InspirationBanner />
 
       <section

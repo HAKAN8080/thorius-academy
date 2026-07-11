@@ -2,7 +2,6 @@ import { getTranslations } from "next-intl/server";
 import { Container } from "@/components/layout/container";
 import { HeroCarouselSection } from "@/components/marketing/hero-carousel-section";
 import { HeroMarketingCopy } from "@/components/marketing/hero-marketing-copy";
-import { AcademyKitaplikHeroBanner } from "@/components/marketing/academy-kitaplik-hero-banner";
 import { HeroRetailBackground } from "@/components/marketing/hero-retail-background";
 import type { Course } from "@/types/wordpress";
 
@@ -31,10 +30,7 @@ export async function Hero({ carouselCourses }: HeroProps) {
 
       <Container size="wide" className="relative z-10">
         <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6 xl:gap-8">
-          <div className="flex flex-col">
-            <HeroMarketingCopy />
-            <AcademyKitaplikHeroBanner />
-          </div>
+          <HeroMarketingCopy />
 
           {carouselCourses.length > 0 ? (
             <div className="w-full min-w-0">
