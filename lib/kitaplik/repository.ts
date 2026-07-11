@@ -128,14 +128,12 @@ export async function listUserOwnedEbooks(): Promise<OwnedLibraryBook[]> {
 
   const { data, error } = await supabase
     .from("ebook_entitlements")
-    .select(
-      "granted_at, library_books!inner(id, slug, title, subtitle, description, author, cover_image_url, printed_wc_product_id, ebook_wc_product_id, ebook_storage_path, page_count, language, is_published, sort_order)",
-    )
+    .select("granted_at, library_books!inner(*)")
     .eq("user_id", user.id)
     .order("granted_at", { ascending: false });
 
   if (error) {
-    throw new Error(error.message);
+    throw new Error(`E-kitaplar yuklenemedi: ${error.message}`);
   }
 
   return (data ?? []).map((row) => {

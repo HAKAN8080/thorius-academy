@@ -34,7 +34,24 @@ export async function KitaplikMyBooksPage() {
     );
   }
 
-  const owned = await listUserOwnedEbooks();
+  const owned = await listUserOwnedEbooks().catch(() => null);
+
+  if (!owned) {
+    return (
+      <section className="py-16">
+        <Container size="narrow" className="text-center">
+          <h1 className="text-2xl font-bold text-primary-950">Kitaplarim</h1>
+          <p className="mt-3 text-primary-700">
+            Kitaplariniz su anda yuklenemiyor. Lutfen birkac dakika sonra tekrar
+            deneyin.
+          </p>
+          <Button asChild variant="outline" className="mt-6">
+            <Link href="/">Ana sayfaya don</Link>
+          </Button>
+        </Container>
+      </section>
+    );
+  }
 
   return (
     <section className="py-10 md:py-14">
