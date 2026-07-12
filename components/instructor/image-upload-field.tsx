@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useTransition } from "react";
-import Image from "next/image";
 import { toast } from "sonner";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -85,8 +84,13 @@ export function ImageUploadField({
       </div>
       <p className="text-xs text-primary-500">{hint}</p>
       {value ? (
-        <div className="relative mt-2 h-40 w-full max-w-md overflow-hidden rounded-xl border border-primary-100">
-          <Image src={value} alt={previewAlt} fill className="object-cover" />
+        <div className="mt-2 flex h-48 w-full max-w-md items-center justify-center overflow-hidden rounded-xl border border-primary-100 bg-primary-50 p-2">
+          {/* eslint-disable-next-line @next/next/no-img-element -- remote upload preview; fit any aspect ratio */}
+          <img
+            src={value}
+            alt={previewAlt}
+            className="h-full w-full object-contain"
+          />
         </div>
       ) : null}
     </div>
