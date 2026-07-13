@@ -117,7 +117,7 @@ export function HeroCourseCarouselInner({
                     />
                   ) : (
                     <div
-                      className="aspect-[16/5] w-full bg-primary-950"
+                      className="aspect-video w-full bg-primary-950"
                       aria-hidden="true"
                     />
                   )}

@@ -22,7 +22,7 @@ export function HeroCourseSlide({ course, priority = false }: HeroCourseSlidePro
       tabIndex={priority ? 0 : -1}
     >
       <Card className="group h-full overflow-hidden rounded-none border-0 bg-white shadow-none transition-shadow hover:shadow-none">
-        <div className="relative flex aspect-[16/5] flex-col justify-end overflow-hidden bg-primary-950 p-3 sm:p-3.5">
+        <div className="relative flex aspect-video flex-col justify-end overflow-hidden bg-primary-950 p-3 sm:p-3.5">
           {course.featuredImage ? (
             // eslint-disable-next-line @next/next/no-img-element
             <img

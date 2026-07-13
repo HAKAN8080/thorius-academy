@@ -17,7 +17,7 @@ export function HeroCarouselSection({
   }
 
   return (
-    <div className="mx-auto w-full min-w-0 -mt-1 lg:-mt-4 lg:ml-auto lg:mr-0">
+    <div className="mx-auto w-full min-w-0 max-w-[22rem] -mt-1 sm:max-w-md lg:-mt-4 lg:ml-auto lg:mr-0 lg:max-w-[26rem] xl:max-w-md">
       <HeroCarouselHydrated
         courses={courses}
         heading={heading}

@@ -23,7 +23,7 @@ export function HeroCarouselLoading({
         {firstCourse ? (
           <HeroCourseSlide course={firstCourse} priority />
         ) : (
-          <div className="aspect-[16/10] w-full animate-pulse bg-primary-900/80" />
+          <div className="aspect-video w-full animate-pulse bg-primary-900/80" />
         )}
       </HeroCarouselShell>
       <HeroCarouselControlsPlaceholder slideCount={slideCount} />
