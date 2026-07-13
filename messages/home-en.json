@@ -13,7 +13,8 @@
     "countries": "Countries",
     "students": "Students",
     "hours": "Training Hours",
-    "courses": "Courses"
+    "courses": "Courses",
+    "lessons": "Lessons"
   },
   "memberPromo": {
     "ariaLabel": "Membership promotions",

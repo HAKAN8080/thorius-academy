@@ -12,6 +12,7 @@ export async function AcademyStatsSection() {
         students: t("students"),
         hours: t("hours"),
         courses: t("courses"),
+        lessons: t("lessons"),
       }}
     />
   );

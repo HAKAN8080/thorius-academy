@@ -13,7 +13,8 @@
     "countries": "Ülke",
     "students": "Öğrenci",
     "hours": "Saat Eğitim",
-    "courses": "Eğitim"
+    "courses": "Eğitim",
+    "lessons": "Ders"
   },
   "memberPromo": {
     "ariaLabel": "Üyelik kampanyaları",
