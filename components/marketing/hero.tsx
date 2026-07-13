@@ -14,7 +14,7 @@ export async function Hero({ carouselCourses }: HeroProps) {
 
   return (
     <section
-      className="relative overflow-hidden bg-gradient-to-br from-[#060b18] via-primary-950 to-[#0a1228] py-6 sm:py-8 md:py-10 lg:py-12"
+      className="relative overflow-hidden bg-gradient-to-br from-[#14081f] via-[#2a1548] to-[#1a0b2e] py-6 sm:py-8 md:py-10 lg:py-12"
       aria-labelledby="hero-heading"
     >
       <HeroRetailBackground />
@@ -23,9 +23,9 @@ export async function Hero({ carouselCourses }: HeroProps) {
         className="pointer-events-none absolute inset-0 overflow-hidden"
         aria-hidden="true"
       >
-        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent-500/25 blur-3xl md:-right-8 md:h-48 md:w-48" />
-        <div className="absolute -left-24 bottom-0 h-32 w-32 rounded-full bg-primary-500/25 blur-3xl" />
-        <div className="absolute left-1/2 top-1/3 h-28 w-28 -translate-x-1/2 rounded-full bg-accent-400/10 blur-[100px]" />
+        <div className="absolute -right-16 -top-16 h-40 w-40 rounded-full bg-accent-500/20 blur-3xl md:-right-8 md:h-48 md:w-48" />
+        <div className="absolute -left-24 bottom-0 h-36 w-36 rounded-full bg-violet-500/25 blur-3xl" />
+        <div className="absolute left-1/2 top-1/3 h-32 w-32 -translate-x-1/2 rounded-full bg-fuchsia-400/10 blur-[100px]" />
       </div>
 
       <Container size="wide" className="relative z-10">

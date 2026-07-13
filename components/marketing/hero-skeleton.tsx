@@ -3,7 +3,7 @@ import { Container } from "@/components/layout/container";
 export function HeroSkeleton() {
   return (
     <section
-      className="relative overflow-hidden bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-12 sm:py-16 md:py-20 lg:py-24"
+      className="relative overflow-hidden bg-gradient-to-br from-[#14081f] via-[#2a1548] to-[#1a0b2e] py-12 sm:py-16 md:py-20 lg:py-24"
       aria-busy="true"
       aria-label="Hero yükleniyor"
     >

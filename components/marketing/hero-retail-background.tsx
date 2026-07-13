@@ -33,15 +33,16 @@ export function HeroRetailBackground() {
       className="pointer-events-none absolute inset-0 overflow-hidden"
       aria-hidden="true"
     >
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(56,89,168,0.22),transparent_55%)]" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_20%,rgba(212,175,55,0.08),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_80%_60%_at_50%_0%,rgba(124,58,237,0.28),transparent_55%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_20%,rgba(212,175,55,0.1),transparent_50%)]" />
+      <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_50%_at_15%_80%,rgba(168,85,247,0.16),transparent_55%)]" />
 
       {/* Planlama grid'i — sağa doğru görünür, metnin üstünde kaybolur */}
       <div
-        className="absolute inset-0 opacity-[0.5]"
+        className="absolute inset-0 opacity-[0.45]"
         style={{
           backgroundImage:
-            "linear-gradient(rgba(143,169,204,0.08) 1px, transparent 1px), linear-gradient(90deg, rgba(143,169,204,0.08) 1px, transparent 1px)",
+            "linear-gradient(rgba(196,181,253,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(196,181,253,0.1) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
           maskImage:
             "radial-gradient(ellipse 70% 90% at 78% 45%, black 30%, transparent 75%)",
@@ -79,7 +80,7 @@ export function HeroRetailBackground() {
             width="34"
             height={bar.height}
             rx="4"
-            fill="rgba(143,169,204,0.10)"
+            fill="rgba(196,181,253,0.12)"
             style={{ animationDelay: `${bar.delay}s` }}
           />
         ))}
@@ -90,7 +91,7 @@ export function HeroRetailBackground() {
           y1="230"
           x2="830"
           y2="150"
-          stroke="rgba(143,169,204,0.28)"
+          stroke="rgba(196,181,253,0.32)"
           strokeWidth="1.5"
           strokeDasharray="8 8"
         />
