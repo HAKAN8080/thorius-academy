@@ -29,11 +29,11 @@ export async function Hero({ carouselCourses }: HeroProps) {
       </div>
 
       <Container size="wide" className="relative z-10">
-        <div className="grid grid-cols-1 items-start gap-5 lg:grid-cols-2 lg:gap-6 xl:gap-8">
+        <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[1.05fr_0.95fr] lg:gap-3 xl:gap-4">
           <HeroMarketingCopy />
 
           {carouselCourses.length > 0 ? (
-            <div className="w-full min-w-0">
+            <div className="w-full min-w-0 lg:pt-1">
               <HeroCarouselSection
                 courses={carouselCourses}
                 ariaLabel={t("popularCoursesAria")}

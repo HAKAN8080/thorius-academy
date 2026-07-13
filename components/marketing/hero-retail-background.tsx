@@ -46,16 +46,16 @@ export function HeroRetailBackground() {
             "linear-gradient(rgba(196,181,253,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(196,181,253,0.1) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
           maskImage:
-            "radial-gradient(ellipse 70% 90% at 22% 45%, black 30%, transparent 75%)",
+            "radial-gradient(ellipse 85% 95% at 28% 48%, black 35%, transparent 78%)",
           WebkitMaskImage:
-            "radial-gradient(ellipse 70% 90% at 22% 45%, black 30%, transparent 75%)",
+            "radial-gradient(ellipse 85% 95% at 28% 48%, black 35%, transparent 78%)",
         }}
       />
 
-      {/* Trend grafiği — yazının arkasında (sol yarı) */}
+      {/* Trend grafiği — yazının arkasında, biraz daha geniş */}
       <svg
         viewBox="0 0 860 420"
-        className="absolute -left-8 top-1/2 h-[120%] w-[70%] -translate-y-1/2 opacity-90 sm:-left-6 sm:w-[58%] lg:w-[48%]"
+        className="absolute -left-6 top-1/2 h-[125%] w-[82%] -translate-y-1/2 opacity-90 sm:-left-4 sm:w-[70%] lg:w-[60%]"
         fill="none"
         preserveAspectRatio="xMidYMid meet"
       >
