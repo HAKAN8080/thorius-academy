@@ -26,6 +26,7 @@ const BARS = [
 /**
  * Hero arka planı — perakende planlama motifleri:
  * grid kağıdı, plan (hedef) çizgisi, kendini çizen satış trendi ve KPI noktaları.
+ * Grafik yazı sütununun arkasında (sol) konumlanır.
  */
 export function HeroRetailBackground() {
   return (
@@ -37,7 +38,7 @@ export function HeroRetailBackground() {
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_50%_40%_at_80%_20%,rgba(212,175,55,0.1),transparent_50%)]" />
       <div className="absolute inset-0 bg-[radial-gradient(ellipse_45%_50%_at_15%_80%,rgba(168,85,247,0.16),transparent_55%)]" />
 
-      {/* Planlama grid'i — sağa doğru görünür, metnin üstünde kaybolur */}
+      {/* Planlama grid'i — yazı tarafında (sol) */}
       <div
         className="absolute inset-0 opacity-[0.45]"
         style={{
@@ -45,16 +46,16 @@ export function HeroRetailBackground() {
             "linear-gradient(rgba(196,181,253,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(196,181,253,0.1) 1px, transparent 1px)",
           backgroundSize: "56px 56px",
           maskImage:
-            "radial-gradient(ellipse 70% 90% at 78% 45%, black 30%, transparent 75%)",
+            "radial-gradient(ellipse 70% 90% at 22% 45%, black 30%, transparent 75%)",
           WebkitMaskImage:
-            "radial-gradient(ellipse 70% 90% at 78% 45%, black 30%, transparent 75%)",
+            "radial-gradient(ellipse 70% 90% at 22% 45%, black 30%, transparent 75%)",
         }}
       />
 
-      {/* Trend grafiği — sağ yarıda */}
+      {/* Trend grafiği — yazının arkasında (sol yarı) */}
       <svg
         viewBox="0 0 860 420"
-        className="absolute -right-10 top-1/2 hidden h-[130%] w-[62%] -translate-y-1/2 md:block"
+        className="absolute -left-8 top-1/2 h-[120%] w-[70%] -translate-y-1/2 opacity-90 sm:-left-6 sm:w-[58%] lg:w-[48%]"
         fill="none"
         preserveAspectRatio="xMidYMid meet"
       >
