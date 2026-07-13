@@ -9,6 +9,7 @@ export async function AcademyStatsSection() {
       ariaLabel={t("ariaLabel")}
       labels={{
         countries: t("countries"),
+        continents: t("continents"),
         students: t("students"),
         hours: t("hours"),
         courses: t("courses"),
