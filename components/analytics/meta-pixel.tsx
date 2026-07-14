@@ -1,63 +1,40 @@
-"use client";
+import Script from "next/script";
 
-import { useEffect, useRef } from "react";
-import { usePathname } from "next/navigation";
-import {
-  ensureMetaPixelInitialized,
-  getMetaPixelId,
-} from "@/lib/analytics/ensure-meta-pixel";
+const PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "";
 
 /**
- * Client Meta Pixel bootstrap.
- * NEXT_PUBLIC_META_PIXEL_ID must be set in Vercel and redeployed — empty at build ? no init.
+ * Meta Pixel base code via next/script.
+ * Requires NEXT_PUBLIC_META_PIXEL_ID at build/redeploy time.
  */
 export function MetaPixel() {
-  const pathname = usePathname();
-  const firstPageView = useRef(true);
-  const pixelId = getMetaPixelId();
-
-  useEffect(() => {
-    if (!pixelId) {
-      console.warn(
-        "[meta-pixel] NEXT_PUBLIC_META_PIXEL_ID is empty. Set it in Vercel env and Redeploy.",
-      );
-      return;
-    }
-
-    if (!ensureMetaPixelInitialized()) {
-      return;
-    }
-
-    window.fbq?.("track", "PageView");
-    firstPageView.current = false;
-  }, [pixelId]);
-
-  useEffect(() => {
-    if (!pixelId || firstPageView.current) {
-      return;
-    }
-
-    if (!ensureMetaPixelInitialized()) {
-      return;
-    }
-
-    window.fbq?.("track", "PageView");
-  }, [pathname, pixelId]);
-
-  if (!pixelId) {
+  if (!PIXEL_ID) {
     return null;
   }
 
   return (
-    <noscript>
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img
-        height="1"
-        width="1"
-        style={{ display: "none" }}
-        src={`https://www.facebook.com/tr?id=${pixelId}&ev=PageView&noscript=1`}
-        alt=""
-      />
-    </noscript>
+    <>
+      <Script id="meta-pixel" strategy="afterInteractive">{`
+!function(f,b,e,v,n,t,s)
+{if(f.fbq)return;n=f.fbq=function(){n.callMethod?
+n.callMethod.apply(n,arguments):n.queue.push(arguments)};
+if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
+n.queue=[];t=b.createElement(e);t.async=!0;
+t.src=v;s=b.getElementsByTagName(e)[0];
+s.parentNode.insertBefore(t,s)}(window, document,'script',
+'https://connect.facebook.net/en_US/fbevents.js');
+fbq('init', '${PIXEL_ID}');
+fbq('track', 'PageView');
+`}</Script>
+      <noscript>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          height="1"
+          width="1"
+          style={{ display: "none" }}
+          src={`https://www.facebook.com/tr?id=${PIXEL_ID}&ev=PageView&noscript=1`}
+          alt=""
+        />
+      </noscript>
+    </>
   );
 }
