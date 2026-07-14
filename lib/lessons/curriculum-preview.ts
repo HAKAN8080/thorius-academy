@@ -5,7 +5,6 @@ import {
   resolveCurriculumTitle,
 } from "@/lib/course/pilot-curriculum-content-en";
 import { getLessonsForCourse } from "@/lib/actions/lesson-sync";
-import { extractVideoUrl, fetchCourseFullStructure } from "@/lib/tutor/api";
 import type { AppLocale } from "@/i18n/routing";
 import type { Lesson } from "@/types/lesson";
 
@@ -190,46 +189,11 @@ export async function getCourseCurriculumPreview(
     };
   }
 
-  try {
-    const tutorTopics = await fetchCourseFullStructure(courseId);
-    if (tutorTopics.length === 0) return null;
-
-    const sections: CurriculumPreviewSection[] = tutorTopics.map(
-      (topic, index) => ({
-        id: String(topic.topic_id),
-        title: resolveCurriculumSectionTitle(
-          locale,
-          courseSlug,
-          topic.topic_title,
-        ),
-        sortOrder: index + 1,
-        lessons: topic.lessons.map((lesson) => {
-          const video = extractVideoUrl(lesson.video);
-          return {
-            id: String(lesson.ID),
-            title: resolveCurriculumTitle(
-              locale,
-              courseSlug,
-              lesson.post_title,
-            ),
-            durationSeconds: video.duration > 0 ? video.duration : null,
-            isFreePreview: false,
-          };
-        }),
-      }),
-    );
-
-    const allLessons = sections.flatMap((section) => section.lessons);
-
-    return {
-      sections,
-      totalLessons: allLessons.length,
-      totalDurationSeconds: allLessons.reduce(
-        (sum, lesson) => sum + (lesson.durationSeconds ?? 0),
-        0,
-      ),
-    };
-  } catch {
-    return null;
-  }
+  // Do not fall back to live Tutor/WP structure on marketing pages —
+  // that path causes RSC timeouts/503 under navigation prefetch.
+  return {
+    sections: [],
+    totalLessons: 0,
+    totalDurationSeconds: 0,
+  };
 }

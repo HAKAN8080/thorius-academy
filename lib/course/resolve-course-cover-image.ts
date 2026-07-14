@@ -270,27 +270,42 @@ export async function resolveCourseCoverImageUrl(options: {
   slug: string;
   coverImageUrl?: string | null;
   wpCourseId?: number | null;
+  /** Skip WordPress enrichment — use for marketing RSC paths. */
+  allowWordPressFallback?: boolean;
 }): Promise<string | null> {
   const dbCover = normalizeCoverImageUrl(options.coverImageUrl);
-  if (dbCover && !isWpYoutubeMirrorUrl(dbCover)) {
+  if (dbCover) {
     return dbCover;
   }
 
+  if (options.allowWordPressFallback === false) {
+    return null;
+  }
+
   if (options.wpCourseId && options.wpCourseId > 0) {
-    const byId = await fetchWpCoverImagesByWpIds([options.wpCourseId]);
-    const fromBatch = byId[options.wpCourseId] ?? null;
-    const picked = pickBestCoverImageUrl({
-      coverImageUrl: options.coverImageUrl,
-      fallbackUrl: fromBatch,
-    });
-    if (picked) {
-      return picked;
+    try {
+      const byId = await fetchWpCoverImagesByWpIds([options.wpCourseId]);
+      const fromBatch = byId[options.wpCourseId] ?? null;
+      const picked = pickBestCoverImageUrl({
+        coverImageUrl: options.coverImageUrl,
+        fallbackUrl: fromBatch,
+      });
+      if (picked) {
+        return picked;
+      }
+    } catch (error) {
+      console.error("[resolve-course-cover-image] wp id fallback failed:", error);
     }
   }
 
-  const wpCover = await fetchWpCoverImageBySlug(options.slug);
-  return pickBestCoverImageUrl({
-    coverImageUrl: options.coverImageUrl,
-    fallbackUrl: wpCover,
-  });
+  try {
+    const wpCover = await fetchWpCoverImageBySlug(options.slug);
+    return pickBestCoverImageUrl({
+      coverImageUrl: options.coverImageUrl,
+      fallbackUrl: wpCover,
+    });
+  } catch (error) {
+    console.error("[resolve-course-cover-image] wp slug fallback failed:", error);
+    return null;
+  }
 }

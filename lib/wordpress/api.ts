@@ -589,6 +589,7 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
       const res = await fetch(
         `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=true`,
         {
+          signal: AbortSignal.timeout(3000),
           next: {
             revalidate: REVALIDATE_SECONDS,
             tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],

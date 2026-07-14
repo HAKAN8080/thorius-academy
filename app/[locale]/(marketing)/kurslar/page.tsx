@@ -15,6 +15,7 @@ import { canonicalizeCategorySlug } from "@/lib/course/category-slug";
 import { getCoursesCacheListingPage } from "@/lib/course/courses-cache-catalog";
 
 export const revalidate = 3600;
+export const maxDuration = 20;
 
 type PageProps = {
   params: Promise<{ locale: string }>;

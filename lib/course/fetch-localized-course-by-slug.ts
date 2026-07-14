@@ -95,32 +95,32 @@ export async function fetchLocalizedCourseBySlug(
   locale: string,
 ): Promise<LocalizedCourse | null> {
   const appLocale = toAppLocale(locale);
-  const [wpCourse, cacheRow] = await Promise.all([
-    fetchCourseBySlug(slug),
-    getPublicCourseCacheBySlug(slug),
-  ]);
+  // Academy pages must stay fast under RSC prefetch — prefer Supabase, WP only as fallback.
+  const cacheRow = await getPublicCourseCacheBySlug(slug);
 
-  if (!wpCourse && !cacheRow) {
-    return null;
-  }
+  if (cacheRow) {
+    const resolved = resolveCourseContent(cacheRow, appLocale);
+    const base = courseFromCacheRow(cacheRow, resolved);
 
-  if (!cacheRow) {
     return {
-      ...wpCourse!,
-      hasLocaleContent: appLocale === "tr",
+      ...base,
+      title: resolved.title || base.title,
+      excerpt: resolved.excerpt || base.excerpt,
+      content: resolved.contentHtml || base.content,
+      featuredImage:
+        base.featuredImage || (cacheRow.cover_image_url as string | null),
+      imageAlt: resolved.title || base.imageAlt,
+      hasLocaleContent: resolved.hasLocaleContent,
     };
   }
 
-  const resolved = resolveCourseContent(cacheRow, appLocale);
-  const base = wpCourse ?? courseFromCacheRow(cacheRow, resolved);
+  const wpCourse = await fetchCourseBySlug(slug);
+  if (!wpCourse) {
+    return null;
+  }
 
   return {
-    ...base,
-    title: resolved.title || base.title,
-    excerpt: resolved.excerpt || base.excerpt,
-    content: resolved.contentHtml || base.content,
-    featuredImage: base.featuredImage || (cacheRow.cover_image_url as string | null),
-    imageAlt: resolved.title || base.imageAlt,
-    hasLocaleContent: resolved.hasLocaleContent,
+    ...wpCourse,
+    hasLocaleContent: appLocale === "tr",
   };
 }

@@ -25,6 +25,8 @@ interface CourseDetailPageProps {
 
 export const revalidate = 3600;
 export const dynamicParams = true;
+/** Keep RSC payloads under Vercel hobby/serverless time budget. */
+export const maxDuration = 20;
 
 export async function generateMetadata({
   params,
@@ -65,6 +67,7 @@ export default async function CourseDetailPage({
   const coverImageUrl = await resolveCourseCoverImageUrl({
     slug: course.slug,
     coverImageUrl: course.featuredImage,
+    allowWordPressFallback: false,
   });
   const courseWithCover = coverImageUrl
     ? { ...course, featuredImage: coverImageUrl }

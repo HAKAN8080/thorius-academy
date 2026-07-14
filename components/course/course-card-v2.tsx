@@ -52,6 +52,7 @@ export function CourseCardV2({
   return (
     <Link
       href={`/kurslar/${slug}`}
+      prefetch={false}
       className={cn(
         "group relative flex flex-col overflow-hidden rounded-2xl border border-primary-100/50 bg-white",
         "shadow-sm transition-all duration-300 hover:-translate-y-1 hover:border-accent-300 hover:shadow-xl",

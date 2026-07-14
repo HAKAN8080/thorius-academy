@@ -10,7 +10,6 @@ import {
 import { pickLocalized } from "@/lib/course/resolve-course-content";
 import type { AppLocale } from "@/i18n/routing";
 import { resolveCategoryDisplayPriority } from "@/lib/course/sort-homepage-categories";
-import { enrichCatalogCoverImages } from "@/lib/course/enrich-catalog-cover-images";
 import { enrichCatalogWithCourseProducts } from "@/lib/course/enrich-catalog-with-products";
 import {
   fromCoursesCacheLevelLabel,
@@ -400,17 +399,8 @@ async function buildCoursesCacheListingPage(params: {
     .map((row) => mapRow(row, locale))
     .filter((course): course is CatalogCourseItem => course !== null);
 
-  // Listing SSR must not wait on slow WordPress — DB covers only + short batch timeout.
-  try {
-    await enrichCatalogCoverImages(courses, {
-      skipSlugFallback: true,
-    });
-  } catch (enrichError) {
-    console.error(
-      "[courses-cache-catalog] cover enrich failed (non-fatal):",
-      enrichError,
-    );
-  }
+  // Listing covers come from courses_cache only — never block RSC on WordPress.
+  // (Missing images are preferable to 503 timeouts under prefetch load.)
 
   return {
     courses,
@@ -446,7 +436,7 @@ export async function getCoursesCacheListingPage(params: {
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage({ ...params, locale }),
-    ["courses-cache-listing-v12", categorySlug, language, String(page), search, locale],
+    ["courses-cache-listing-v13", categorySlug, language, String(page), search, locale],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],

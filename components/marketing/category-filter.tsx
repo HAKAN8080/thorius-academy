@@ -44,6 +44,7 @@ export async function CategoryFilter({
 
       <Link
         href={buildKurslarUrl({ search: searchQuery, language: selectedLanguage })}
+        prefetch={false}
         className={cn(
           "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
           !selectedSlug
@@ -66,6 +67,7 @@ export async function CategoryFilter({
             search: searchQuery,
             language: selectedLanguage,
           })}
+          prefetch={false}
           className={cn(
             "block rounded-lg px-4 py-2.5 text-sm font-medium transition-colors",
             selectedSlug === cat.slug
