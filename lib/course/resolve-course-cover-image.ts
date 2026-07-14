@@ -10,6 +10,8 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
+/** Soft deadline for WordPress cover/media fetches during catalog SSR. */
+const WP_FETCH_TIMEOUT_MS = 3500;
 const WP_COVER_BATCH_SIZE = 100;
 
 // `_embedded` ve `_links` olmadan WP, `_fields` ile birlikte `_embed` edilen
@@ -117,6 +119,7 @@ async function fetchWpCoverFromApi(slug: string): Promise<string | null> {
     const res = await fetch(
       `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
       {
+        signal: AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
         next: {
           revalidate: REVALIDATE_SECONDS,
           tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],
@@ -199,6 +202,7 @@ async function fetchWpCoverImagesByWpIdsUncached(
     const res = await fetch(
       `${WP_API_BASE}/courses?include=${chunk.join(",")}&per_page=${chunk.length}&_embed=wp:featuredmedia&_fields=${WP_COVER_FIELDS}`,
       {
+        signal: AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
         next: {
           revalidate: REVALIDATE_SECONDS,
           tags: [COURSE_CACHE_TAG],

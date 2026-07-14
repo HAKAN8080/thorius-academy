@@ -1,13 +1,13 @@
 import Script from "next/script";
+import { MetaPixel } from "@/components/analytics/meta-pixel";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.trim() || "";
-const META_PIXEL_ID = process.env.NEXT_PUBLIC_META_PIXEL_ID?.trim() || "";
 
+/**
+ * GA4 via next/script. Meta Pixel via client bootstrap (reliable init + PageView).
+ * Both require NEXT_PUBLIC_* env at build/redeploy time.
+ */
 export function AnalyticsScripts() {
-  if (!GA_ID && !META_PIXEL_ID) {
-    return null;
-  }
-
   return (
     <>
       {GA_ID ? (
@@ -26,23 +26,7 @@ export function AnalyticsScripts() {
           </Script>
         </>
       ) : null}
-
-      {META_PIXEL_ID ? (
-        <Script id="meta-pixel-init" strategy="afterInteractive">
-          {`
-            !function(f,b,e,v,n,t,s)
-            {if(f.fbq)return;n=f.fbq=function(){n.callMethod?
-            n.callMethod.apply(n,arguments):n.queue.push(arguments)};
-            if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';
-            n.queue=[];t=b.createElement(e);t.async=!0;
-            t.src=v;s=b.getElementsByTagName(e)[0];
-            s.parentNode.insertBefore(t,s)}(window, document,'script',
-            'https://connect.facebook.net/en_US/fbevents.js');
-            fbq('init', '${META_PIXEL_ID}');
-            fbq('track', 'PageView');
-          `}
-        </Script>
-      ) : null}
+      <MetaPixel />
     </>
   );
 }

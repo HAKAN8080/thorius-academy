@@ -341,7 +341,10 @@ async function buildCoursesCacheListingPage(params: {
     .not("course_slug", "is", null);
 
   if (useCategoryPrioritySort) {
-    query = query.order("updated_at", { ascending: false });
+    // Cap rows so catalog SSR never loads the full table into memory/time budget.
+    query = query
+      .order("updated_at", { ascending: false })
+      .range(0, Math.max(to, perPage * 8) - 1);
   } else {
     query = query.order("updated_at", { ascending: false }).range(from, to);
   }
@@ -397,7 +400,17 @@ async function buildCoursesCacheListingPage(params: {
     .map((row) => mapRow(row, locale))
     .filter((course): course is CatalogCourseItem => course !== null);
 
-  await enrichCatalogCoverImages(courses);
+  // Listing SSR must not wait on slow WordPress — DB covers only + short batch timeout.
+  try {
+    await enrichCatalogCoverImages(courses, {
+      skipSlugFallback: true,
+    });
+  } catch (enrichError) {
+    console.error(
+      "[courses-cache-catalog] cover enrich failed (non-fatal):",
+      enrichError,
+    );
+  }
 
   return {
     courses,
@@ -433,15 +446,23 @@ export async function getCoursesCacheListingPage(params: {
 
   const listing = await unstable_cache(
     () => buildCoursesCacheListingPage({ ...params, locale }),
-    ["courses-cache-listing-v11", categorySlug, language, String(page), search, locale],
+    ["courses-cache-listing-v12", categorySlug, language, String(page), search, locale],
     {
       revalidate: REVALIDATE_SECONDS,
       tags: ["courses-cache-catalog"],
     },
   )();
 
-  return {
-    ...listing,
-    courses: await enrichCatalogWithCourseProducts(listing.courses),
-  };
+  try {
+    return {
+      ...listing,
+      courses: await enrichCatalogWithCourseProducts(listing.courses),
+    };
+  } catch (productError) {
+    console.error(
+      "[courses-cache-catalog] product enrich failed (non-fatal):",
+      productError,
+    );
+    return listing;
+  }
 }

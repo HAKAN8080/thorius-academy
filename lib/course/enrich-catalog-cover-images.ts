@@ -8,7 +8,7 @@ import {
 /** Matches COURSES_CATALOG_PER_PAGE — slug fallback must cover a full listing page. */
 const PER_SLUG_CONCURRENCY = 4;
 const SLUG_FETCH_TIMEOUT_MS = 2500;
-const ENRICH_BUDGET_MS = 15000;
+const ENRICH_BUDGET_MS = 4000;
 const MAX_SLUG_FALLBACKS = 24;
 
 async function mapWithConcurrency<T>(
@@ -77,7 +77,11 @@ export async function enrichCatalogCoverImages(
   if (wpCourseIds.length > 0) {
     let byWpId: Record<number, string> = {};
     try {
-      byWpId = await fetchWpCoverImagesByWpIds(wpCourseIds);
+      byWpId =
+        (await withTimeout(
+          fetchWpCoverImagesByWpIds(wpCourseIds),
+          ENRICH_BUDGET_MS,
+        )) ?? {};
     } catch (error) {
       console.error("[enrich-catalog-cover-images] batch fetch failed:", error);
     }

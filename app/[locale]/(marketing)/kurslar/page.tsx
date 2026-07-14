@@ -48,13 +48,39 @@ async function KurslarCatalogSection({
   language?: ReturnType<typeof parseKurslarLanguage>;
   locale: string;
 }) {
-  const listing = await getCoursesCacheListingPage({
-    page,
-    categorySlug,
-    search: searchQuery,
-    language,
-    locale: locale === "en" ? "en" : "tr",
-  });
+  let listing;
+  try {
+    listing = await getCoursesCacheListingPage({
+      page,
+      categorySlug,
+      search: searchQuery,
+      language,
+      locale: locale === "en" ? "en" : "tr",
+    });
+  } catch (error) {
+    console.error("[kurslar] listing failed:", {
+      categorySlug,
+      page,
+      searchQuery,
+      language,
+      error,
+    });
+    listing = {
+      courses: [],
+      categories: [],
+      languages: [],
+      pagination: {
+        page: 1,
+        totalPages: 0,
+        total: 0,
+        perPage: 24,
+      },
+      totalPublished: 0,
+      selectedCategory: categorySlug,
+      selectedLanguage: language,
+      searchQuery,
+    };
+  }
 
   if (
     page > listing.pagination.totalPages &&

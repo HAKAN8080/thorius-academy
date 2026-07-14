@@ -1,10 +1,10 @@
+import { ensureMetaPixelInitialized } from "@/lib/analytics/ensure-meta-pixel";
+
 type GtagFn = (...args: unknown[]) => void;
-type FbqFn = (...args: unknown[]) => void;
 
 declare global {
   interface Window {
     gtag?: GtagFn;
-    fbq?: FbqFn;
     dataLayer?: unknown[];
   }
 }
@@ -21,6 +21,15 @@ function toPrice(value: number | null | undefined): number | undefined {
     return undefined;
   }
   return Math.round(value * 100) / 100;
+}
+
+function trackMeta(event: string, payload: Record<string, unknown>): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  ensureMetaPixelInitialized();
+  window.fbq?.("track", event, payload);
 }
 
 /** GA4 begin_checkout + Meta InitiateCheckout */
@@ -45,7 +54,7 @@ export function trackBeginCheckout(item: TrackingItem): void {
     ],
   });
 
-  window.fbq?.("track", "InitiateCheckout", {
+  trackMeta("InitiateCheckout", {
     content_name: item.name,
     content_ids: item.id ? [item.id] : undefined,
     content_type: "product",
@@ -76,7 +85,7 @@ export function trackViewContent(item: TrackingItem): void {
     ],
   });
 
-  window.fbq?.("track", "ViewContent", {
+  trackMeta("ViewContent", {
     content_name: item.name,
     content_ids: item.id ? [item.id] : undefined,
     content_type: "product",
