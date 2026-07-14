@@ -345,7 +345,60 @@ body.woocommerce-checkout
   display: none !important;
 }
 
-/* ── Kupon kutusu: ikon + metin çakışması ── */
+/* ── Kupon kutusu: varsayılan açık ── */
+body.woocommerce-checkout .woocommerce-form-coupon-toggle {
+  display: none !important;
+}
+
+body.woocommerce-checkout form.checkout_coupon,
+body.woocommerce-checkout .checkout_coupon {
+  display: block !important;
+  margin: 0 0 20px 0 !important;
+  padding: 16px 18px !important;
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-radius: 12px !important;
+}
+
+body.woocommerce-checkout form.checkout_coupon .form-row-first,
+body.woocommerce-checkout form.checkout_coupon .form-row-last {
+  float: none !important;
+  width: 100% !important;
+  margin: 0 !important;
+}
+
+body.woocommerce-checkout form.checkout_coupon .form-row {
+  display: flex !important;
+  flex-wrap: wrap !important;
+  gap: 10px !important;
+  align-items: center !important;
+  margin: 0 !important;
+}
+
+body.woocommerce-checkout form.checkout_coupon #coupon_code,
+body.woocommerce-checkout form.checkout_coupon input.input-text {
+  flex: 1 1 180px !important;
+  width: 100% !important;
+  min-height: 48px !important;
+  font-size: 16px !important;
+  border: 1px solid #cbd5e1 !important;
+  border-radius: 10px !important;
+  padding: 0 14px !important;
+  box-sizing: border-box !important;
+}
+
+body.woocommerce-checkout form.checkout_coupon .button {
+  flex: 0 0 auto !important;
+  min-height: 48px !important;
+  padding: 0 18px !important;
+  border-radius: 10px !important;
+  background: #0b1e3f !important;
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  border: none !important;
+}
+
+/* ── Eski kupon toggle stili (geriye dönük) ── */
 .woocommerce-checkout .woocommerce-form-coupon-toggle .woocommerce-info {
   position: relative !important;
   padding: 14px 18px 14px 44px !important;
@@ -899,5 +952,82 @@ body.woocommerce-cart .wc-proceed-to-checkout a.checkout-button:hover {
 
   .woocommerce-billing-fields {
     padding: 20px !important;
+  }
+}
+
+/* ── Mobil checkout (≤768px): tek sütun, dokunma dostu alanlar ── */
+@media (max-width: 768px) {
+  body.woocommerce-checkout {
+    overflow-x: hidden !important;
+  }
+
+  body.woocommerce-checkout .woocommerce,
+  body.woocommerce-checkout .entry-content,
+  body.woocommerce-checkout form.checkout {
+    max-width: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding-left: 12px !important;
+    padding-right: 12px !important;
+  }
+
+  form.checkout {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 20px !important;
+    grid-template-columns: none !important;
+  }
+
+  #customer_details,
+  #order_review,
+  .woocommerce-checkout-review-order {
+    width: 100% !important;
+    max-width: 100% !important;
+    grid-column: auto !important;
+  }
+
+  .woocommerce-billing-fields,
+  .woocommerce-checkout-review-order {
+    padding: 16px !important;
+  }
+
+  .woocommerce-billing-fields__field-wrapper {
+    grid-template-columns: 1fr !important;
+  }
+
+  #billing_first_name_field,
+  #billing_last_name_field,
+  #billing_email_field,
+  #billing_phone_field {
+    grid-column: 1 / -1 !important;
+    width: 100% !important;
+  }
+
+  body.woocommerce-checkout .woocommerce form .form-row input.input-text,
+  body.woocommerce-checkout .woocommerce form .form-row select,
+  body.woocommerce-checkout .select2-container--default .select2-selection--single,
+  body.woocommerce-checkout form.checkout_coupon #coupon_code {
+    width: 100% !important;
+    min-height: 44px !important;
+    height: 48px !important;
+    font-size: 16px !important; /* iOS otomatik zoom engeli */
+    box-sizing: border-box !important;
+  }
+
+  body.woocommerce-checkout .woocommerce-checkout-review-order #place_order,
+  body.woocommerce-checkout .woocommerce-checkout-review-order .button.alt {
+    width: 100% !important;
+    min-height: 48px !important;
+    font-size: 16px !important;
+    display: block !important;
+  }
+
+  body.woocommerce-checkout form.checkout_coupon .form-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+  }
+
+  body.woocommerce-checkout form.checkout_coupon .button {
+    width: 100% !important;
   }
 }

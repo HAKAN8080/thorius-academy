@@ -4,6 +4,7 @@ import { routing } from "@/i18n/routing";
 import { Suspense } from "react";
 import { Inter } from "next/font/google";
 import { Toaster } from "sonner";
+import { AnalyticsScripts } from "@/components/analytics/analytics-scripts";
 import { NavigationPending } from "@/components/layout/navigation-pending";
 import "./globals.css";
 
@@ -89,6 +90,7 @@ export default function RootLayout({
   return (
     <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased`}>
+        <AnalyticsScripts />
         <Suspense fallback={null}>
           <NavigationPending />
         </Suspense>

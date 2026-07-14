@@ -12,6 +12,7 @@ import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { getCourseLanguageMetaBySlug } from "@/lib/course/course-language";
 import { CourseLanguageBadges } from "@/components/course/course-language-badges";
 import { CourseContentLanguageNotice } from "@/components/course/course-content-language-notice";
+import { CourseViewTracker } from "@/components/analytics/course-view-tracker";
 import { fetchLocalizedCourseBySlug } from "@/lib/course/fetch-localized-course-by-slug";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
 import { getCourseProduct } from "@/lib/actions/course-products";
@@ -87,6 +88,11 @@ export default async function CourseDetailPage({
   return (
     <article>
       <JsonLd data={courseJsonLd} />
+      <CourseViewTracker
+        courseSlug={courseWithCover.slug}
+        courseTitle={courseWithCover.title}
+        price={product?.price_sale ?? product?.price_normal ?? null}
+      />
       <header className="bg-gradient-to-br from-primary-900 via-primary-950 to-primary-900 py-16 md:py-20">
         <Container>
           <Link

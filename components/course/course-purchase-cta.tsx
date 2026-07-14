@@ -62,6 +62,7 @@ export function CoursePurchaseCta({
         priceNormal={courseProduct.price_normal}
         priceSale={courseProduct.price_sale}
         courseSlug={courseSlug}
+        courseTitle={courseTitle}
         isLoggedIn={isLoggedIn}
         customer={customer}
         theme={theme}

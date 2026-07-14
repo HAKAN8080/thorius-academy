@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.7.3
+ * Version: 1.7.4
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.7.3');
+define('THORIUS_CHECKOUT_VERSION', '1.7.4');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -1005,3 +1005,50 @@ function thorius_checkout_enqueue_assets(): void
     }
 }
 add_action('wp_enqueue_scripts', 'thorius_checkout_enqueue_assets', 99);
+
+/**
+ * Conversion tracking on checkout/cart (WP domain).
+ * Define in wp-config.php (do not hardcode secrets in the plugin):
+ *   define('THORIUS_GA_ID', 'G-XXXXXXXXXX');
+ *   define('THORIUS_META_PIXEL_ID', '123456789012345');
+ */
+function thorius_checkout_tracking_ids(): array
+{
+    $ga = defined('THORIUS_GA_ID') ? trim((string) THORIUS_GA_ID) : '';
+    $pixel = defined('THORIUS_META_PIXEL_ID') ? trim((string) THORIUS_META_PIXEL_ID) : '';
+
+    /**
+     * @param array{ga:string,pixel:string} $ids
+     */
+    return apply_filters('thorius_checkout_tracking_ids', array(
+        'ga' => $ga,
+        'pixel' => $pixel,
+    ));
+}
+
+function thorius_checkout_print_tracking_scripts(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return;
+    }
+
+    $ids = thorius_checkout_tracking_ids();
+    $ga = isset($ids['ga']) ? (string) $ids['ga'] : '';
+    $pixel = isset($ids['pixel']) ? (string) $ids['pixel'] : '';
+
+    if ($ga === '' && $pixel === '') {
+        return;
+    }
+
+    if ($ga !== '') {
+        $ga_js = esc_js($ga);
+        echo "\n<script async src=\"https://www.googletagmanager.com/gtag/js?id=" . esc_attr($ga) . "\"></script>\n";
+        echo "<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js', new Date());gtag('config','{$ga_js}');</script>\n";
+    }
+
+    if ($pixel !== '') {
+        $pixel_js = esc_js($pixel);
+        echo "<script>!function(f,b,e,v,n,t,s){if(f.fbq)return;n=f.fbq=function(){n.callMethod?n.callMethod.apply(n,arguments):n.queue.push(arguments)};if(!f._fbq)f._fbq=n;n.push=n;n.loaded=!0;n.version='2.0';n.queue=[];t=b.createElement(e);t.async=!0;t.src=v;s=b.getElementsByTagName(e)[0];s.parentNode.insertBefore(t,s)}(window,document,'script','https://connect.facebook.net/en_US/fbevents.js');fbq('init','{$pixel_js}');fbq('track','PageView');</script>\n";
+    }
+}
+add_action('wp_head', 'thorius_checkout_print_tracking_scripts', 5);

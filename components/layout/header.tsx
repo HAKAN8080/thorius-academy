@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Menu } from "lucide-react";
@@ -90,6 +90,21 @@ export function Header({
   const t = useTranslations("common");
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (!open) {
+      return;
+    }
+
+    const previousOverflow = document.body.style.overflow;
+    const previousPaddingRight = document.body.style.paddingRight;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = previousOverflow;
+      document.body.style.paddingRight = previousPaddingRight;
+    };
+  }, [open]);
+
   return (
     <header className="sticky top-0 z-50 w-full border-b border-white/10 bg-[var(--thorius-logo-bg)]">
       <Container size="wide" className="flex h-16 items-center justify-between gap-4">
@@ -132,28 +147,36 @@ export function Header({
                 <Menu className="h-5 w-5" />
               </Button>
             </SheetTrigger>
-            <SheetContent side="right" className="w-[300px]">
+            <SheetContent
+              side="right"
+              overlayClassName="z-[105] bg-black/65"
+              className="z-[110] w-[min(100vw,20rem)] border-l border-white/10 bg-[#0a0e27] p-6 text-white shadow-2xl [&>button]:text-white [&>button]:hover:bg-white/10 [&>button]:hover:text-white"
+            >
               <SheetHeader>
-                <SheetTitle>
+                <SheetTitle className="text-white">
                   <Logo localized={localized} />
                 </SheetTitle>
               </SheetHeader>
-              <nav className="mt-8 flex flex-col gap-4" aria-label={t("mobileMenu")}>
+              <nav
+                className="mt-8 flex flex-col gap-4"
+                aria-label={t("mobileMenu")}
+              >
                 {navLinks.map((link) => (
                   <HeaderNavItem
                     key={link.href}
                     link={link}
-                    className="text-base font-medium text-primary-800"
+                    className="text-base font-medium text-primary-50 transition-colors hover:text-accent-400"
                     onNavigate={() => setOpen(false)}
                     localized={localized}
                   />
                 ))}
-                <hr className="my-2 border-primary-100" />
+                <hr className="my-2 border-white/15" />
                 <AuthButtons
                   className="flex flex-col gap-2"
                   authUrls={authUrls}
                   onNavigate={() => setOpen(false)}
                   localized={localized}
+                  tone="dark"
                 />
               </nav>
             </SheetContent>

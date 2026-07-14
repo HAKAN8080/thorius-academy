@@ -9,12 +9,14 @@ import {
   buildWooCommerceCheckoutUrl,
   type CheckoutCustomer,
 } from "@/lib/course/checkout-url";
+import { trackBeginCheckout } from "@/lib/analytics/tracking";
 
 interface Props {
   wcProductId: number;
   priceNormal: number | null;
   priceSale: number | null;
   courseSlug: string;
+  courseTitle?: string;
   isLoggedIn: boolean;
   customer: CheckoutCustomer | null;
   theme?: "light" | "dark";
@@ -25,6 +27,7 @@ export function BuyButton({
   priceNormal,
   priceSale,
   courseSlug,
+  courseTitle,
   isLoggedIn,
   customer,
   theme = "light",
@@ -45,6 +48,13 @@ export function BuyButton({
       router.push(`/giris?redirect=/kurslar/${courseSlug}`);
       return;
     }
+
+    trackBeginCheckout({
+      id: courseSlug,
+      name: courseTitle?.trim() || courseSlug,
+      price: finalPrice,
+      currency: "TRY",
+    });
 
     const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer);
     window.location.href = checkoutUrl;
