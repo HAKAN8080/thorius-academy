@@ -19,10 +19,16 @@ async function wpFetch(
   url: string,
   init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } },
 ): Promise<Response> {
-  return fetch(url, {
-    ...init,
-    signal: init?.signal ?? AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
-  });
+  try {
+    return await fetch(url, {
+      ...init,
+      signal: init?.signal ?? AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
+    });
+  } catch (error) {
+    // Never throw — AbortSignal timeouts must not crash Server Actions / RSC pages.
+    console.error("[wpFetch] failed:", url, error);
+    return new Response(null, { status: 504, statusText: "WP timeout" });
+  }
 }
 
 export const COURSES_PER_PAGE = 24;
@@ -624,21 +630,26 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
 }
 
 export async function fetchCategoryList(): Promise<WPCategory[]> {
-  const res = await wpFetch(
-    `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
-    {
-      next: {
-        revalidate: REVALIDATE_SECONDS,
-        tags: [COURSE_CATEGORY_CACHE_TAG],
+  try {
+    const res = await wpFetch(
+      `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
+      {
+        next: {
+          revalidate: REVALIDATE_SECONDS,
+          tags: [COURSE_CATEGORY_CACHE_TAG],
+        },
       },
-    },
-  );
+    );
 
-  if (!res.ok) {
+    if (!res.ok) {
+      return [];
+    }
+
+    return (await res.json()) as WPCategory[];
+  } catch (error) {
+    console.error("fetchCategoryList error:", error);
     return [];
   }
-
-  return res.json();
 }
 
 export function enrichCategoriesFromCourses(

@@ -2,7 +2,7 @@ import { notFound } from "next/navigation";
 import { requireInstructorLayoutAccess } from "@/lib/instructor/require-instructor-layout";
 import { getCourseBasics } from "@/lib/actions/instructor-courses";
 import { CourseBasicsForm } from "@/components/instructor/course-builder/course-basics-form";
-import { fetchCategoryList } from "@/lib/wordpress/api";
+import { getFooterCategoriesFromCache } from "@/lib/course/footer-categories";
 
 interface Props {
   params: Promise<{ courseId: string }>;
@@ -15,7 +15,7 @@ export default async function InstructorCourseBasicsPage({ params }: Props) {
   const { courseId } = await params;
   const [result, categories] = await Promise.all([
     getCourseBasics(courseId),
-    fetchCategoryList(),
+    getFooterCategoriesFromCache(),
   ]);
 
   if ("error" in result) {
