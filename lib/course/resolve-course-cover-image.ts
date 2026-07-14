@@ -10,8 +10,8 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
-/** Soft deadline for WordPress cover/media fetches during catalog SSR. */
-const WP_FETCH_TIMEOUT_MS = 3500;
+/** Soft deadline for WordPress cover/media fetches during SSR. */
+const WP_FETCH_TIMEOUT_MS = 1500;
 const WP_COVER_BATCH_SIZE = 100;
 
 // `_embedded` ve `_links` olmadan WP, `_fields` ile birlikte `_embed` edilen

@@ -13,7 +13,7 @@ import {
   OgDomainFooter,
   ThoriusWordmark,
 } from "@/lib/seo/og-card";
-import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import { fetchLocalizedCourseBySlug } from "@/lib/course/fetch-localized-course-by-slug";
 
 export const COURSE_OG_SIZE = OG_CARD_SIZE;
 export const COURSE_OG_CONTENT_TYPE = "image/png";
@@ -127,7 +127,7 @@ function CourseOgPriceBadge({ price }: { price: CourseOgPriceDisplay }) {
 }
 
 export async function getCourseOgAlt(slug: string): Promise<string> {
-  const course = await fetchCourseBySlug(slug);
+  const course = await fetchLocalizedCourseBySlug(slug, "tr");
   if (!course) {
     return "Thorius Academy Kurs";
   }
@@ -135,7 +135,7 @@ export async function getCourseOgAlt(slug: string): Promise<string> {
 }
 
 export async function renderCourseOgImage(slug: string): Promise<ImageResponse> {
-  const course = await fetchCourseBySlug(slug);
+  const course = await fetchLocalizedCourseBySlug(slug, "tr");
   const backgroundSrc = await loadOgBackgroundSrc(course?.featuredImage);
 
   if (!course) {

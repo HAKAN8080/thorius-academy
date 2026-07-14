@@ -7,7 +7,7 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
-const WP_FETCH_TIMEOUT_MS = 25_000;
+const WP_FETCH_TIMEOUT_MS = 1500;
 
 async function fetchWpJson<T>(
   url: string,

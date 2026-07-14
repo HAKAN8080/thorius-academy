@@ -1,22 +1,24 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { getTranslations } from "next-intl/server";
+import { getLocale, getTranslations } from "next-intl/server";
 import { ArrowLeft } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { PreviewVideoPlayer } from "@/components/course/preview-video-player";
 import { getPreviewLessonById } from "@/lib/actions/lesson-sync";
-import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import { fetchLocalizedCourseBySlug } from "@/lib/course/fetch-localized-course-by-slug";
 
 interface Props {
   params: { slug: string; lessonId: string };
 }
 
 export const dynamic = "force-dynamic";
+export const maxDuration = 20;
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const t = await getTranslations("courses.preview");
-  const course = await fetchCourseBySlug(params.slug);
+  const locale = await getLocale();
+  const course = await fetchLocalizedCourseBySlug(params.slug, locale);
   if (!course) return { title: t("metaTitle") };
 
   const lesson = await getPreviewLessonById(
@@ -34,7 +36,8 @@ export async function generateMetadata({ params }: Props): Promise<Metadata> {
 
 export default async function LessonPreviewPage({ params }: Props) {
   const t = await getTranslations("courses.preview");
-  const course = await fetchCourseBySlug(params.slug);
+  const locale = await getLocale();
+  const course = await fetchLocalizedCourseBySlug(params.slug, locale);
   if (!course) notFound();
 
   const lesson = await getPreviewLessonById(

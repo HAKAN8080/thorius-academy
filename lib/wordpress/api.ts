@@ -12,6 +12,18 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
+/** Soft deadline so stalled JetPress never turns marketing/API callers into 503s. */
+const WP_FETCH_TIMEOUT_MS = 1500;
+
+async function wpFetch(
+  url: string,
+  init?: RequestInit & { next?: { revalidate?: number; tags?: string[] } },
+): Promise<Response> {
+  return fetch(url, {
+    ...init,
+    signal: init?.signal ?? AbortSignal.timeout(WP_FETCH_TIMEOUT_MS),
+  });
+}
 
 export const COURSES_PER_PAGE = 24;
 
@@ -146,7 +158,7 @@ async function fetchFeaturedMediaMap(
 
   for (let offset = 0; offset < uniqueIds.length; offset += 100) {
     const chunk = uniqueIds.slice(offset, offset + 100);
-    const res = await fetch(
+    const res = await wpFetch(
       `${WP_API_BASE}/media?include=${chunk.join(",")}&per_page=100&_fields=id,source_url,media_details`,
       {
         next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
@@ -261,7 +273,7 @@ function transformCourse(
 
 async function fetchWPCourses(url: string): Promise<WPCourse[]> {
   const separator = url.includes("?") ? "&" : "?";
-  const firstRes = await fetch(`${url}${separator}page=1`, {
+  const firstRes = await wpFetch(`${url}${separator}page=1`, {
     next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
   });
 
@@ -280,7 +292,7 @@ async function fetchWPCourses(url: string): Promise<WPCourse[]> {
   const remainingBatches = await Promise.all(
     Array.from({ length: totalPages - 1 }, (_, index) => {
       const page = index + 2;
-      return fetch(`${url}${separator}page=${page}`, {
+      return wpFetch(`${url}${separator}page=${page}`, {
         next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
       }).then(async (res) => {
         if (!res.ok) {
@@ -406,7 +418,7 @@ async function fetchCoursesSearchListingPage(options: {
 }
 
 async function resolveCategoryId(categorySlug: string): Promise<number | null> {
-  const res = await fetch(
+  const res = await wpFetch(
     `${WP_API_BASE}/course-category?slug=${encodeURIComponent(categorySlug)}`,
     {
       next: {
@@ -426,7 +438,7 @@ async function resolveCategoryId(categorySlug: string): Promise<number | null> {
 
 export async function fetchPublishedCourseTotal(): Promise<number> {
   try {
-    const res = await fetch(
+    const res = await wpFetch(
       `${WP_API_BASE}/courses?per_page=1&status=publish&_fields=id`,
       {
         next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
@@ -481,7 +493,7 @@ export async function fetchCoursesListingPage(options: {
     }
 
     const [res, categories] = await Promise.all([
-      fetch(url, {
+      wpFetch(url, {
         next: { revalidate: REVALIDATE_SECONDS, tags: [COURSE_CACHE_TAG] },
       }),
       fetchCategoryList(),
@@ -586,10 +598,10 @@ export async function fetchAllCourses(): Promise<Course[]> {
 export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
   for (const variant of getCourseSlugLookupVariants(slug)) {
     try {
-      const res = await fetch(
+      const res = await wpFetch(
         `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=true`,
         {
-          signal: AbortSignal.timeout(3000),
+          signal: AbortSignal.timeout(1500),
           next: {
             revalidate: REVALIDATE_SECONDS,
             tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],
@@ -612,7 +624,7 @@ export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
 }
 
 export async function fetchCategoryList(): Promise<WPCategory[]> {
-  const res = await fetch(
+  const res = await wpFetch(
     `${WP_API_BASE}/course-category?per_page=100&hide_empty=true`,
     {
       next: {
@@ -665,7 +677,7 @@ export async function fetchCoursesByCategory(
   categorySlug: string,
 ): Promise<Course[]> {
   try {
-    const catRes = await fetch(
+    const catRes = await wpFetch(
       `${WP_API_BASE}/course-category?slug=${encodeURIComponent(categorySlug)}`,
       {
         next: {

@@ -29,7 +29,30 @@ function applySessionCookies(source: NextResponse, target: NextResponse) {
 }
 
 /**
- * Middleware oturum yenileme — Supabase auth cookie'lerini günceller.
+ * Only resolve the Supabase user when auth routing needs it.
+ * Public marketing/RSC traffic must not wait on auth.getUser() — that path
+ * caused intermittent 503 timeouts under navigation prefetch load.
+ */
+function needsAuthUserLookup(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
+
+  if (isProtectedAppPath(stripped)) {
+    return true;
+  }
+
+  if (AUTH_ROUTES.includes(stripped as (typeof AUTH_ROUTES)[number])) {
+    return true;
+  }
+
+  if (stripped === "/auth" || stripped.startsWith("/auth/")) {
+    return true;
+  }
+
+  return false;
+}
+
+/**
+ * Middleware session refresh — Supabase auth cookies for protected/auth routes.
  */
 export async function updateSession(
   request: NextRequest,
@@ -47,6 +70,10 @@ export async function updateSession(
     NextResponse.next({
       request: { headers: requestHeaders },
     });
+
+  if (!needsAuthUserLookup(pathname)) {
+    return supabaseResponse;
+  }
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -73,9 +100,29 @@ export async function updateSession(
     },
   );
 
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  let user = null;
+  try {
+    const result = await Promise.race([
+      supabase.auth.getUser(),
+      new Promise<never>((_, reject) => {
+        setTimeout(() => reject(new Error("getUser timeout")), 1500);
+      }),
+    ]);
+    user = result.data.user;
+  } catch (error) {
+    console.error("[middleware] supabase.auth.getUser failed:", error);
+    if (isProtectedAppPath(strippedPath)) {
+      const loginUrl = request.nextUrl.clone();
+      loginUrl.pathname = `/${locale}/giris`;
+      loginUrl.search = "";
+      loginUrl.searchParams.set("redirect", `${pathname}${search}`);
+      loginUrl.searchParams.delete("error");
+      const redirectResponse = NextResponse.redirect(loginUrl);
+      applySessionCookies(supabaseResponse, redirectResponse);
+      return redirectResponse;
+    }
+    return supabaseResponse;
+  }
 
   if (
     user &&

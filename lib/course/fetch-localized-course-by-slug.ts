@@ -6,7 +6,6 @@ import {
 import { slugifyCategoryName } from "@/lib/course/category-slug";
 import type { AppLocale } from "@/i18n/routing";
 import { getSupabasePublicClient } from "@/lib/supabase/public";
-import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import type { Course } from "@/types/wordpress";
 
 function toAppLocale(locale: string): AppLocale {
@@ -95,32 +94,24 @@ export async function fetchLocalizedCourseBySlug(
   locale: string,
 ): Promise<LocalizedCourse | null> {
   const appLocale = toAppLocale(locale);
-  // Academy pages must stay fast under RSC prefetch — prefer Supabase, WP only as fallback.
+  // Marketing/RSC paths: Supabase only. Never block page render on WordPress.
   const cacheRow = await getPublicCourseCacheBySlug(slug);
 
-  if (cacheRow) {
-    const resolved = resolveCourseContent(cacheRow, appLocale);
-    const base = courseFromCacheRow(cacheRow, resolved);
-
-    return {
-      ...base,
-      title: resolved.title || base.title,
-      excerpt: resolved.excerpt || base.excerpt,
-      content: resolved.contentHtml || base.content,
-      featuredImage:
-        base.featuredImage || (cacheRow.cover_image_url as string | null),
-      imageAlt: resolved.title || base.imageAlt,
-      hasLocaleContent: resolved.hasLocaleContent,
-    };
-  }
-
-  const wpCourse = await fetchCourseBySlug(slug);
-  if (!wpCourse) {
+  if (!cacheRow) {
     return null;
   }
 
+  const resolved = resolveCourseContent(cacheRow, appLocale);
+  const base = courseFromCacheRow(cacheRow, resolved);
+
   return {
-    ...wpCourse,
-    hasLocaleContent: appLocale === "tr",
+    ...base,
+    title: resolved.title || base.title,
+    excerpt: resolved.excerpt || base.excerpt,
+    content: resolved.contentHtml || base.content,
+    featuredImage:
+      base.featuredImage || (cacheRow.cover_image_url as string | null),
+    imageAlt: resolved.title || base.imageAlt,
+    hasLocaleContent: resolved.hasLocaleContent,
   };
 }

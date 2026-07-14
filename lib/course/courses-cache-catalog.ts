@@ -434,14 +434,46 @@ export async function getCoursesCacheListingPage(params: {
   const language = params.language ?? "all";
   const locale = params.locale ?? "tr";
 
-  const listing = await unstable_cache(
-    () => buildCoursesCacheListingPage({ ...params, locale }),
-    ["courses-cache-listing-v13", categorySlug, language, String(page), search, locale],
-    {
-      revalidate: REVALIDATE_SECONDS,
-      tags: ["courses-cache-catalog"],
+  const emptyListing = (): CoursesCacheListingPage => ({
+    courses: [],
+    categories: [],
+    languages: [],
+    pagination: {
+      page: 1,
+      totalPages: 0,
+      total: 0,
+      perPage: COURSES_CATALOG_PER_PAGE,
     },
-  )();
+    totalPublished: 0,
+    selectedCategory: categorySlug === "all" ? undefined : categorySlug,
+    selectedLanguage: language === "all" ? undefined : language,
+    searchQuery: search || undefined,
+  });
+
+  let listing: CoursesCacheListingPage;
+  try {
+    listing = await unstable_cache(
+      () => buildCoursesCacheListingPage({ ...params, locale }),
+      [
+        "courses-cache-listing-v14",
+        categorySlug,
+        language,
+        String(page),
+        search,
+        locale,
+      ],
+      {
+        revalidate: REVALIDATE_SECONDS,
+        tags: ["courses-cache-catalog"],
+      },
+    )();
+  } catch (error) {
+    console.error(
+      "[courses-cache-catalog] listing build failed (returning empty 200):",
+      error,
+    );
+    return emptyListing();
+  }
 
   try {
     return {
