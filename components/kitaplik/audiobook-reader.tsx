@@ -121,6 +121,10 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
 
   const chapter = chapters[chapterIdx];
 
+  function chapterLabel(number: number, chapterTitle: string) {
+    return `${number} \u2014 ${chapterTitle}`;
+  }
+
   // Bolum degisince zamanlama verisini indir
   useEffect(() => {
     let cancelled = false;
@@ -150,6 +154,31 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
       cancelled = true;
     };
   }, [chapter]);
+
+  // Dinle sayfasina girince / bolum degisince otomatik baslat
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    let cancelled = false;
+    const tryPlay = () => {
+      if (cancelled) return;
+      void audio.play().catch(() => {
+        // Tarayici autoplay engellerse kullanici controls'tan baslatir.
+      });
+    };
+
+    if (audio.readyState >= 2) {
+      tryPlay();
+    } else {
+      audio.addEventListener("canplay", tryPlay, { once: true });
+    }
+
+    return () => {
+      cancelled = true;
+      audio.removeEventListener("canplay", tryPlay);
+    };
+  }, [chapter.audioUrl]);
 
   // Sayfalama: gizli olcum kutusuna parca parca doldurup tasma noktalarini bul
   const paginate = useCallback(() => {
@@ -327,13 +356,14 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
         >
           {chapters.map((item, index) => (
             <option key={item.number} value={index}>
-              {`B\u00f6l\u00fcm ${item.number} \u2014 ${item.title}`}
+              {chapterLabel(item.number, item.title)}
             </option>
           ))}
         </select>
         <audio
           ref={audioRef}
           controls
+          autoPlay
           preload="auto"
           src={chapter.audioUrl}
           onEnded={onEnded}
@@ -363,7 +393,7 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
           >
             {currentPage === 0 ? (
               <h2 className="mb-5 text-center font-serif text-xl font-bold text-[#7c2d4e] md:text-2xl">
-                {`B\u00f6l\u00fcm ${chapter.number} \u2014 ${chapter.title}`}
+                {chapterLabel(chapter.number, chapter.title)}
               </h2>
             ) : null}
 
@@ -423,7 +453,7 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
             className="pointer-events-none invisible absolute left-0 top-0 h-[min(72vh,740px)] w-full overflow-hidden rounded-r-[10px] rounded-l px-7 pb-14 pt-8 md:px-16 md:pt-12"
           >
             <h2 className="mb-5 text-center font-serif text-xl font-bold md:text-2xl">
-              {`B\u00f6l\u00fcm ${chapter.number} \u2014 ${chapter.title}`}
+              {chapterLabel(chapter.number, chapter.title)}
             </h2>
             <div
               ref={measureContentRef}
