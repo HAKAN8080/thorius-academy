@@ -1,12 +1,14 @@
 import Link from "next/link";
+import { Headphones } from "lucide-react";
 import type { LibraryBookWithPricing } from "@/lib/kitaplik/types";
 import { Card } from "@/components/ui/card";
 
 interface KitaplikBookCardProps {
   book: LibraryBookWithPricing;
+  hasAudiobook?: boolean;
 }
 
-export function KitaplikBookCard({ book }: KitaplikBookCardProps) {
+export function KitaplikBookCard({ book, hasAudiobook = false }: KitaplikBookCardProps) {
   const printed = book.printedSalePrice ?? book.printedPrice;
   const ebook = book.ebookSalePrice ?? book.ebookPrice;
 
@@ -25,6 +27,12 @@ export function KitaplikBookCard({ book }: KitaplikBookCardProps) {
           ) : (
             <div className="absolute inset-0 bg-gradient-to-br from-primary-200 to-primary-400" />
           )}
+          {hasAudiobook ? (
+            <span className="absolute left-2 top-2 inline-flex items-center gap-1 rounded-full bg-primary-950/90 px-2.5 py-1 text-xs font-semibold text-accent-300 shadow-sm backdrop-blur-sm">
+              <Headphones className="h-3.5 w-3.5" />
+              Sesli
+            </span>
+          ) : null}
         </div>
       </Link>
 

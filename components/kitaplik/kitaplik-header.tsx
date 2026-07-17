@@ -33,7 +33,7 @@ export async function KitaplikHeader() {
     <header className="sticky top-0 z-50 border-b border-primary-100/80 bg-white/90 backdrop-blur-md">
       <Container size="wide">
         <div className="flex h-16 items-center justify-between gap-3">
-          <KitaplikLogo className="shrink-0" variant="compact" />
+          <KitaplikLogo className="shrink-0" variant="compact" showTagline />
 
           <nav
             className="hidden min-w-0 flex-1 items-center justify-center gap-4 overflow-x-auto px-2 sm:gap-5 md:flex lg:gap-6"
