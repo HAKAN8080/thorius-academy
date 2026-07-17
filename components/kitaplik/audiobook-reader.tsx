@@ -25,9 +25,26 @@ interface ChapterTiming {
 }
 
 function coreOf(value: string): string {
-  // \p{L}\p{N} yerine RegExp constructor: tsconfig es5 hedefinde u-flag literali derlenmiyor.
+  // u-flag regex literali es5 hedefinde derlenmiyor; constructor kullan.
   const pattern = new RegExp("[^\\p{L}\\p{N}]", "gu");
   return (value || "").toLowerCase().replace(pattern, "");
+}
+
+function findWordAtTime(words: TimedWord[], t: number): number {
+  if (!words.length) return -1;
+  let lo = 0;
+  let hi = words.length - 1;
+  let ans = 0;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (words[mid].startMs <= t) {
+      ans = mid;
+      lo = mid + 1;
+    } else {
+      hi = mid - 1;
+    }
+  }
+  return ans;
 }
 
 /**
@@ -49,15 +66,21 @@ function buildChunks(timing: ChapterTiming): PageChunk[] {
   const paragraphs = timing.text.split(/\n\s*\n/);
   let ti = 0;
 
-  // Ilk paragraf konusulan "Chapter N. Title." girisidir; baslik sayfada
-  // zaten gorunur, o yuzden metne basilmaz ama zamanlanmis kelimeleri tuketilir.
-  if (paragraphs.length > 1) {
-    const introTokens = paragraphs.shift()!.split(/\s+/).filter(Boolean);
+  const skipPunctTimed = () => {
+    while (ti < words.length && !coreOf(words[ti].word)) {
+      ti += 1;
+    }
+  };
+
+  const consumeIntro = (tokens: string[]) => {
     let pendingCore = "";
-    for (const tok of introTokens) {
+    for (const tok of tokens) {
+      skipPunctTimed();
       if (ti >= words.length) break;
+      const tokCore = coreOf(tok);
+      if (!tokCore) continue;
       const target = coreOf(words[ti].word);
-      pendingCore += coreOf(tok);
+      pendingCore += tokCore;
       if (pendingCore === target) {
         ti += 1;
         pendingCore = "";
@@ -65,6 +88,13 @@ function buildChunks(timing: ChapterTiming): PageChunk[] {
         pendingCore = "";
       }
     }
+    skipPunctTimed();
+  };
+
+  // Ilk paragraf konusulan "Chapter N. Title." girisidir; baslik sayfada
+  // zaten gorunur, o yuzden metne basilmaz ama zamanlanmis kelimeleri tuketilir.
+  if (paragraphs.length > 1) {
+    consumeIntro(paragraphs.shift()!.split(/\s+/).filter(Boolean));
   }
 
   for (const para of paragraphs) {
@@ -87,13 +117,35 @@ function buildChunks(timing: ChapterTiming): PageChunk[] {
     };
 
     for (const tok of tokens) {
+      const tokCore = coreOf(tok);
+
+      // Saf noktalama (ornek: "/") — TTS de ayri WordBoundary uretebilir.
+      if (!tokCore) {
+        if (pending.length) {
+          skipPunctTimed();
+          const target = ti < words.length ? coreOf(words[ti].word) : null;
+          flush(Boolean(target) && pendingCore === target);
+        }
+        let timedIndex = -1;
+        if (ti < words.length && !coreOf(words[ti].word)) {
+          timedIndex = ti;
+          ti += 1;
+        }
+        chunks.push({ text: tok, timedIndex, paragraphStart });
+        paragraphStart = false;
+        continue;
+      }
+
+      skipPunctTimed();
       const target = ti < words.length ? coreOf(words[ti].word) : null;
       pending.push(tok);
-      pendingCore += coreOf(tok);
+      pendingCore += tokCore;
       if (!target) flush(false);
       else if (pendingCore === target) flush(true);
       else if (!target.startsWith(pendingCore)) flush(false);
     }
+
+    skipPunctTimed();
     flush(
       Boolean(pendingCore) &&
         ti < words.length &&
@@ -180,6 +232,29 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
     };
   }, [chapter.audioUrl]);
 
+  // Secme / kopyalama engeli (e-kitap okuyucu ile ayni)
+  useEffect(() => {
+    const block = (event: Event) => event.preventDefault();
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (
+        (event.ctrlKey || event.metaKey) &&
+        ["c", "p", "s", "a"].includes(event.key.toLowerCase())
+      ) {
+        event.preventDefault();
+      }
+    };
+    document.addEventListener("contextmenu", block);
+    document.addEventListener("copy", block);
+    document.addEventListener("cut", block);
+    document.addEventListener("keydown", onKeyDown);
+    return () => {
+      document.removeEventListener("contextmenu", block);
+      document.removeEventListener("copy", block);
+      document.removeEventListener("cut", block);
+      document.removeEventListener("keydown", onKeyDown);
+    };
+  }, []);
+
   // Sayfalama: gizli olcum kutusuna parca parca doldurup tasma noktalarini bul
   const paginate = useCallback(() => {
     if (!timing) return;
@@ -189,7 +264,7 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
 
     const chunks = buildChunks(timing);
     const result: BookPage[] = [];
-    const pageOfWord: number[] = new Array(timing.words.length).fill(0);
+    const pageOfWord: number[] = new Array(timing.words.length).fill(-1);
 
     content.innerHTML = "";
     let currentP: HTMLParagraphElement | null = null;
@@ -234,9 +309,20 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
     if (pageChunks.length) result.push(pageChunks);
     content.innerHTML = "";
 
+    // Eslestirilmeyen timed kelimeler 0'da kalmasin — onceki sayfayi ileri doldur.
+    let lastPage = 0;
+    for (let i = 0; i < pageOfWord.length; i += 1) {
+      if (pageOfWord[i] >= 0) lastPage = pageOfWord[i];
+      else pageOfWord[i] = lastPage;
+    }
+
     setPages(result);
     setWordPage(pageOfWord);
-    setCurrentPage(0);
+    setCurrentPage((prev) => {
+      if (!result.length) return 0;
+      if (prev >= result.length) return result.length - 1;
+      return prev;
+    });
   }, [timing]);
 
   useEffect(() => {
@@ -277,15 +363,12 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
       const audio = audioRef.current;
       if (!audio || audio.paused || !timing?.words.length) return;
       const t = audio.currentTime * 1000;
-      const words = timing.words;
-
-      let idx = activeWord;
-      if (idx < 0 || t < (words[idx]?.startMs ?? 0)) idx = 0;
-      while (idx + 1 < words.length && words[idx + 1].startMs <= t) idx += 1;
+      const idx = findWordAtTime(timing.words, t);
+      if (idx < 0) return;
 
       if (idx !== activeWord) {
         setActiveWord(idx);
-        const target = wordPage[idx] ?? 0;
+        const target = wordPage[idx] ?? currentPage;
         if (target !== currentPage) flipTo(target, target < currentPage);
       }
     }, 90);
@@ -332,7 +415,8 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
   const pageChunks = pages[currentPage] ?? [];
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(ellipse_at_50%_-20%,#fff8ea_0%,transparent_60%),linear-gradient(160deg,#e7dbc6_0%,#d8c9ae_100%)] text-[#3a3049]">
+    <div
+      className="min-h-screen select-none bg-[radial-gradient(ellipse_at_50%_-20%,#fff8ea_0%,transparent_60%),linear-gradient(160deg,#e7dbc6_0%,#d8c9ae_100%)] text-[#3a3049]">
       <style>{`
         @keyframes bookTurnOut { to { transform: rotateY(-76deg); opacity: 0.25; } }
         @keyframes bookTurnIn { from { transform: rotateY(38deg); opacity: 0; } to { transform: rotateY(0); opacity: 1; } }
@@ -352,7 +436,7 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
         <select
           value={chapterIdx}
           onChange={(event) => setChapterIdx(Number(event.target.value))}
-          className="rounded-lg border border-[#d9cbb8] bg-white px-3 py-1.5 text-sm"
+          className="select-text rounded-lg border border-[#d9cbb8] bg-white px-3 py-1.5 text-sm"
         >
           {chapters.map((item, index) => (
             <option key={item.number} value={index}>
@@ -397,7 +481,7 @@ export function AudiobookReader({ slug, title, chapters }: AudiobookReaderProps)
               </h2>
             ) : null}
 
-            <div className="font-serif text-lg leading-[1.85] md:text-[22px]">
+            <div className="font-serif text-lg leading-[1.85] md:text-[22px]" style={{ userSelect: "none", WebkitUserSelect: "none" }}>
               {loading ? <p className="text-[#a08a68]">{"Y\u00fckleniyor\u2026"}</p> : null}
               {error ? <p className="text-red-700">{error}</p> : null}
               {(() => {
