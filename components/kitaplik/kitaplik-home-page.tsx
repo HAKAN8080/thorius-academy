@@ -1,7 +1,7 @@
-import Link from "next/link";
 import { BookOpen, Headphones, Truck } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { KitaplikBookCard } from "@/components/kitaplik/kitaplik-book-card";
+import { KitaplikLibraryHero } from "@/components/kitaplik/kitaplik-library-hero";
 import { getAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { listPublishedLibraryBooksWithPricing } from "@/lib/kitaplik/repository";
 
@@ -27,38 +27,7 @@ export async function KitaplikHomePage() {
 
   return (
     <>
-      <section className="relative overflow-hidden border-b border-primary-100 bg-gradient-to-br from-primary-950 via-primary-900 to-[#0a1228] py-16 text-white md:py-24">
-        <div
-          aria-hidden
-          className="pointer-events-none absolute inset-0 bg-[radial-gradient(ellipse_at_80%_20%,rgba(212,175,55,0.18),transparent_55%)]"
-        />
-        <Container size="wide" className="relative">
-          <p className="mb-3 text-sm font-semibold tracking-[0.2em] text-accent-300">
-            THORIUS KİTAPLIĞI
-          </p>
-          <h1 className="max-w-3xl font-serif text-4xl font-bold tracking-tight md:text-6xl">
-            Konuşan Kitaplar
-          </h1>
-          <p className="mt-5 max-w-2xl text-base text-primary-100/90 md:text-lg">
-            Kelimeleri takip ederek dinleyin. Basılı sipariş, güvenli e-kitap ve
-            sesli okuma — aynı Thorius rafında.
-          </p>
-          <div className="mt-8 flex flex-wrap gap-3">
-            <a
-              href="#kitaplik-books"
-              className="inline-flex items-center rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-primary-950 transition hover:bg-accent-400"
-            >
-              Kitapları keşfet
-            </a>
-            <Link
-              href="/kitaplarim"
-              className="inline-flex items-center rounded-full border border-white/30 px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-white/10"
-            >
-              Kitaplarım
-            </Link>
-          </div>
-        </Container>
-      </section>
+      <KitaplikLibraryHero books={books} />
 
       <section
         className="border-b border-primary-100 bg-primary-50/40 py-8 md:py-10"
