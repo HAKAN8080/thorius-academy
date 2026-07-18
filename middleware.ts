@@ -23,6 +23,7 @@ import {
   isKitaplikSiteHost,
   isShopAllowedPath,
   isShopSiteHost,
+  isSitePublicAssetPath,
 } from "@/lib/site/site-mode";
 
 const intlMiddleware = createIntlMiddleware(routing);
@@ -37,6 +38,9 @@ const LOCALE_EXEMPT_PREFIXES = [
 
 function isLocaleExempt(pathname: string): boolean {
   const stripped = stripLocalePrefix(pathname);
+  if (isSitePublicAssetPath(stripped)) {
+    return true;
+  }
   return LOCALE_EXEMPT_PREFIXES.some(
     (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
