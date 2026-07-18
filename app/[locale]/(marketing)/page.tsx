@@ -44,13 +44,19 @@ const SHOP_HOME_METADATA: Metadata = {
 
 const KITAPLIK_HOME_METADATA: Metadata = {
   title: {
-    absolute: "Thorius Kitaplık — Basılı Kitap & E-Kitap",
+    absolute: "Thorius Kitaplık — Yeni Nesil Kitaplık | Oku, Dinle, Takip Et",
   },
   description:
-    "Perakende ve liderlik kitapları. Basılı sipariş veya indirilemez e-kitap — güvenli okuyucuda sayfa çevirerek okuyun.",
+    "Sesli okuma, eş zamanlı metin takibi, e-kitap ve basılı kitap deneyimi tek platformda. Yeni nesil dijital kitaplık.",
+  alternates: {
+    canonical: getKitaplikOrigin(),
+  },
   openGraph: {
-    title: "Thorius Kitaplık",
+    title: "Thorius Kitaplık — Yeni Nesil Kitaplık",
+    description:
+      "Oku. Dinle. Takip Et. E-kitap, sesli okuma ve basılı kitap aynı rafta.",
     url: getKitaplikOrigin(),
+    siteName: "Thorius Kitaplık",
     type: "website",
   },
 };

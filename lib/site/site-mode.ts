@@ -263,6 +263,10 @@ export function isShopAllowedPath(pathname: string): boolean {
     return true;
   }
 
+  if (isSitePublicAssetPath(stripped)) {
+    return true;
+  }
+
   return SHOP_ALLOWED_PATH_PREFIXES.some(
     (prefix) => stripped === prefix || stripped.startsWith(`${prefix}/`),
   );
@@ -281,9 +285,40 @@ export const KITAPLIK_ALLOWED_PATH_PREFIXES = [
   "/auth",
 ] as const;
 
+/** SEO / favicon — subdomain allow-list'inde unutulursa botlar ana sayfaya düşer. */
+export const SITE_PUBLIC_ASSET_PATHS = [
+  "/robots.txt",
+  "/sitemap.xml",
+  "/favicon.ico",
+  "/icon",
+  "/icon.png",
+  "/apple-icon",
+  "/apple-icon.png",
+  "/favicon-32.png",
+  "/manifest.webmanifest",
+  "/manifest.json",
+] as const;
+
+export function isSitePublicAssetPath(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
+  if (SITE_PUBLIC_ASSET_PATHS.some((path) => stripped === path)) {
+    return true;
+  }
+  // Next.js icon route variants: /icon-xxx, /apple-icon-xxx
+  return (
+    stripped.startsWith("/icon") ||
+    stripped.startsWith("/apple-icon") ||
+    stripped.startsWith("/favicon")
+  );
+}
+
 export function isKitaplikAllowedPath(pathname: string): boolean {
   const stripped = stripLocalePrefix(pathname);
   if (stripped === "/") {
+    return true;
+  }
+
+  if (isSitePublicAssetPath(stripped)) {
     return true;
   }
 

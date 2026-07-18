@@ -1,10 +1,17 @@
 import type { MetadataRoute } from "next";
+import { headers } from "next/headers";
 import { routing } from "@/i18n/routing";
+import { listPublishedLibraryBooks } from "@/lib/kitaplik/repository";
 import { getSiteUrl } from "@/lib/seo/site-url";
 import {
   fetchBlogSitemapEntries,
   fetchCourseSitemapEntries,
 } from "@/lib/seo/sitemap-sources";
+import {
+  getKitaplikOrigin,
+  getShopOrigin,
+  getSiteModeFromHost,
+} from "@/lib/site/site-mode";
 
 export const revalidate = 3600;
 
@@ -74,7 +81,48 @@ function buildLocalizedEntry(
   }));
 }
 
+async function buildKitaplikSitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getKitaplikOrigin();
+  const books = await listPublishedLibraryBooks();
+
+  const home: MetadataRoute.Sitemap[number] = {
+    url: `${siteUrl}/`,
+    changeFrequency: "daily",
+    priority: 1,
+  };
+
+  const bookEntries: MetadataRoute.Sitemap = books.map((book) => ({
+    url: `${siteUrl}/kitap/${book.slug}`,
+    changeFrequency: "weekly",
+    priority: 0.85,
+  }));
+
+  return [home, ...bookEntries];
+}
+
+async function buildShopSitemap(): Promise<MetadataRoute.Sitemap> {
+  const siteUrl = getShopOrigin();
+  return [
+    {
+      url: `${siteUrl}/`,
+      changeFrequency: "daily",
+      priority: 1,
+    },
+  ];
+}
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const host = headers().get("host");
+  const mode = getSiteModeFromHost(host);
+
+  if (mode === "kitaplik") {
+    return buildKitaplikSitemap();
+  }
+
+  if (mode === "shop") {
+    return buildShopSitemap();
+  }
+
   const siteUrl = getSiteUrl();
   const [courses, blogPosts] = await Promise.all([
     fetchCourseSitemapEntries(),
