@@ -1,5 +1,7 @@
 import Link from "next/link";
 import { Headphones } from "lucide-react";
+import { libraryBookCategoryLabel } from "@/lib/kitaplik/book-category";
+import { libraryBookLanguageLabel } from "@/lib/kitaplik/book-language";
 import type { LibraryBookWithPricing } from "@/lib/kitaplik/types";
 import { Card } from "@/components/ui/card";
 
@@ -11,6 +13,7 @@ interface KitaplikBookCardProps {
 export function KitaplikBookCard({ book, hasAudiobook = false }: KitaplikBookCardProps) {
   const printed = book.printedSalePrice ?? book.printedPrice;
   const ebook = book.ebookSalePrice ?? book.ebookPrice;
+  const categoryLabel = libraryBookCategoryLabel(book.category);
 
   return (
     <Card className="flex h-full flex-col overflow-hidden border-primary-100">
@@ -38,16 +41,25 @@ export function KitaplikBookCard({ book, hasAudiobook = false }: KitaplikBookCar
 
       <div className="flex flex-1 flex-col gap-3 p-4">
         <div>
-          {book.author ? (
-            <p className="text-xs font-medium uppercase tracking-wide text-accent-700">
-              {book.author}
-            </p>
-          ) : null}
+          <div className="flex flex-wrap items-center gap-1.5 text-[11px] font-semibold uppercase tracking-wide text-accent-700">
+            {book.author ? <span>{book.author}</span> : null}
+            <span className="text-primary-300">·</span>
+            <span>{libraryBookLanguageLabel(book.language)}</span>
+            {book.print_year ? (
+              <>
+                <span className="text-primary-300">·</span>
+                <span>{book.print_year}</span>
+              </>
+            ) : null}
+          </div>
           <Link href={`/kitap/${book.slug}`}>
             <h3 className="mt-1 line-clamp-2 text-base font-semibold text-primary-950 hover:text-primary-700">
               {book.title}
             </h3>
           </Link>
+          {categoryLabel ? (
+            <p className="mt-1 text-xs font-medium text-primary-600">{categoryLabel}</p>
+          ) : null}
           {book.subtitle ? (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
               {book.subtitle}

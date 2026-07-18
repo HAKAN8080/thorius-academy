@@ -3,6 +3,10 @@
 import { revalidatePath } from "next/cache";
 import { canAccessKitaplikAdmin } from "@/lib/kitaplik/access";
 import {
+  parseLibraryBookCategory,
+  type LibraryBookCategoryId,
+} from "@/lib/kitaplik/book-category";
+import {
   fromLibraryBookLanguageDbValue,
   toLibraryBookLanguageDbValue,
 } from "@/lib/kitaplik/book-language";
@@ -49,6 +53,17 @@ function parseOptionalInt(value: FormDataEntryValue | null): number | null {
   return Number.isFinite(parsed) && parsed > 0 ? Math.trunc(parsed) : null;
 }
 
+function parseOptionalPrintYear(
+  value: FormDataEntryValue | null,
+): number | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) return null;
+  const year = Math.trunc(parsed);
+  if (year < 1800 || year > 2100) return null;
+  return year;
+}
+
 function parseOptionalText(value: FormDataEntryValue | null): string | null {
   if (typeof value !== "string") return null;
   const trimmed = value.trim();
@@ -75,6 +90,13 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
     ebook_storage_path: (data.ebook_storage_path as string | null) ?? null,
     page_count: data.page_count === null ? null : Number(data.page_count),
     language: fromLibraryBookLanguageDbValue(data.language as string | null),
+    category: parseLibraryBookCategory(
+      typeof data.category === "string" ? data.category : null,
+    ),
+    print_year:
+      data.print_year === null || data.print_year === undefined
+        ? null
+        : Number(data.print_year),
     is_published: Boolean(data.is_published),
     sort_order: Number(data.sort_order ?? 0),
   };
@@ -91,6 +113,8 @@ type LibraryBookWritePayload = {
   ebook_wc_product_id: number | null;
   page_count: number | null;
   language?: "turkish" | "english";
+  category?: LibraryBookCategoryId | null;
+  print_year?: number | null;
   sort_order: number;
   is_published: boolean;
   updated_at: string;
@@ -103,9 +127,21 @@ function isMissingLanguageColumnError(message: string): boolean {
   );
 }
 
+function isMissingCategoryOrYearColumnError(message: string): boolean {
+  return (
+    message.includes("Could not find the 'category' column") ||
+    message.includes("Could not find the 'print_year' column") ||
+    (message.includes("category") && message.includes("schema cache")) ||
+    (message.includes("print_year") && message.includes("schema cache"))
+  );
+}
+
 function mapKitaplikDbError(message: string): string {
   if (isMissingLanguageColumnError(message)) {
     return "Supabase'de library_books.language kolonu henuz yok. SQL Editor'da supabase/manual/20260711180000_library_books_language_prod_apply.sql dosyasini calistirin, sonra API schema cache'i yenileyin.";
+  }
+  if (isMissingCategoryOrYearColumnError(message)) {
+    return "Supabase'de library_books.category / print_year kolonlari henuz yok. SQL Editor'da supabase/manual/20260719010000_library_books_category_print_year_prod_apply.sql dosyasini calistirin.";
   }
   return message;
 }
@@ -132,6 +168,17 @@ async function writeLibraryBook(
   };
 
   let { data, error } = await attempt(payload);
+
+  if (
+    error &&
+    isMissingCategoryOrYearColumnError(error.message) &&
+    (payload.category !== undefined || payload.print_year !== undefined)
+  ) {
+    const withoutMeta = { ...payload };
+    delete withoutMeta.category;
+    delete withoutMeta.print_year;
+    ({ data, error } = await attempt(withoutMeta));
+  }
 
   if (
     error &&
@@ -227,6 +274,10 @@ export async function saveKitaplikBook(
     language: toLibraryBookLanguageDbValue(
       parseOptionalText(formData.get("language")),
     ),
+    category: parseLibraryBookCategory(
+      parseOptionalText(formData.get("category")),
+    ),
+    print_year: parseOptionalPrintYear(formData.get("print_year")),
     sort_order: parseOptionalInt(formData.get("sort_order")) ?? 0,
     is_published: formData.get("is_published") === "true",
     updated_at: new Date().toISOString(),

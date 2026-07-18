@@ -1,6 +1,6 @@
 import { BookOpen, Headphones, Truck } from "lucide-react";
 import { Container } from "@/components/layout/container";
-import { KitaplikBookCard } from "@/components/kitaplik/kitaplik-book-card";
+import { KitaplikBookCatalog } from "@/components/kitaplik/kitaplik-book-catalog";
 import { KitaplikLibraryHero } from "@/components/kitaplik/kitaplik-library-hero";
 import { getAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { listPublishedLibraryBooksWithPricing } from "@/lib/kitaplik/repository";
@@ -80,9 +80,7 @@ export async function KitaplikHomePage() {
               Raftaki kitaplar
             </h2>
             <p className="mt-1 text-sm text-muted-foreground">
-              {books.length > 0
-                ? `${books.length} kitap`
-                : "Yakında yeni yayınlar"}
+              {books.length > 0 ? "Kategori ve dile göre süzün" : "Yakında yeni yayınlar"}
             </p>
           </div>
 
@@ -93,15 +91,10 @@ export async function KitaplikHomePage() {
           ) : null}
 
           {books.length > 0 ? (
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
-              {books.map((book) => (
-                <KitaplikBookCard
-                  key={book.id}
-                  book={book}
-                  hasAudiobook={Boolean(hasAudiobookBySlug[book.slug])}
-                />
-              ))}
-            </div>
+            <KitaplikBookCatalog
+              books={books}
+              hasAudiobookBySlug={hasAudiobookBySlug}
+            />
           ) : (
             !loadError && (
               <div className="rounded-2xl border border-dashed border-primary-200 bg-primary-50/60 px-6 py-12 text-center">

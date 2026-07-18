@@ -13,6 +13,11 @@ import { validateEbookPdfFileClient } from "@/lib/kitaplik/ebook-pdf-upload";
 import { slugifyCourseTitle } from "@/lib/instructor/slugify-course-title";
 import { createClient } from "@/lib/supabase/client";
 import { libraryBookLanguageLabel } from "@/lib/kitaplik/book-language";
+import {
+  LIBRARY_BOOK_CATEGORIES,
+  libraryBookCategoryLabel,
+  type LibraryBookCategoryId,
+} from "@/lib/kitaplik/book-category";
 import type { LibraryBook, LibraryBookLanguageCode } from "@/lib/kitaplik/types";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -35,6 +40,8 @@ interface BookFormState {
   ebook_wc_product_id: string;
   page_count: string;
   language: LibraryBookLanguageCode;
+  category: LibraryBookCategoryId | "";
+  print_year: string;
   sort_order: string;
   is_published: boolean;
   ebook_storage_path: string;
@@ -52,6 +59,8 @@ const emptyForm = (): BookFormState => ({
   ebook_wc_product_id: "",
   page_count: "",
   language: "tr",
+  category: "",
+  print_year: "",
   sort_order: "0",
   is_published: false,
   ebook_storage_path: "",
@@ -72,6 +81,8 @@ function bookToForm(book: LibraryBook): BookFormState {
       book.ebook_wc_product_id != null ? String(book.ebook_wc_product_id) : "",
     page_count: book.page_count != null ? String(book.page_count) : "",
     language: book.language,
+    category: book.category ?? "",
+    print_year: book.print_year != null ? String(book.print_year) : "",
     sort_order: String(book.sort_order ?? 0),
     is_published: book.is_published,
     ebook_storage_path: book.ebook_storage_path ?? "",
@@ -190,6 +201,8 @@ export function KitaplikBookAdminPanel({
       payload.set("ebook_wc_product_id", form.ebook_wc_product_id);
       payload.set("page_count", form.page_count);
       payload.set("language", form.language);
+      payload.set("category", form.category);
+      payload.set("print_year", form.print_year);
       payload.set("sort_order", form.sort_order);
       payload.set("is_published", form.is_published ? "true" : "false");
 
@@ -312,6 +325,41 @@ export function KitaplikBookAdminPanel({
               <option value="tr">TR - Turkce</option>
               <option value="en">EN - Ingilizce</option>
             </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="category">Kategori</Label>
+            <select
+              id="category"
+              value={form.category}
+              onChange={(event) =>
+                updateField(
+                  "category",
+                  event.target.value as LibraryBookCategoryId | "",
+                )
+              }
+              className="h-10 w-full rounded-md border border-input bg-background px-3 text-sm"
+            >
+              <option value="">Secin</option>
+              {LIBRARY_BOOK_CATEGORIES.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="print_year">Baski tarihi (yil)</Label>
+            <Input
+              id="print_year"
+              type="number"
+              min={1800}
+              max={2100}
+              value={form.print_year}
+              onChange={(event) => updateField("print_year", event.target.value)}
+              placeholder="2026"
+            />
           </div>
 
           <div className="space-y-2 md:col-span-2">
@@ -488,6 +536,14 @@ export function KitaplikBookAdminPanel({
                     <Badge variant="outline">
                       {libraryBookLanguageLabel(book.language)}
                     </Badge>
+                    {book.category ? (
+                      <Badge variant="outline">
+                        {libraryBookCategoryLabel(book.category)}
+                      </Badge>
+                    ) : null}
+                    {book.print_year ? (
+                      <Badge variant="outline">{book.print_year}</Badge>
+                    ) : null}
                     <Badge variant={book.is_published ? "default" : "secondary"}>
                       {book.is_published ? "Yayinda" : "Taslak"}
                     </Badge>

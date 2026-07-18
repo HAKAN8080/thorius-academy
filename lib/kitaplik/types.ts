@@ -1,3 +1,5 @@
+import type { LibraryBookCategoryId } from "@/lib/kitaplik/book-category";
+
 export type LibraryBookLanguageCode = "tr" | "en";
 
 export interface LibraryBook {
@@ -13,6 +15,8 @@ export interface LibraryBook {
   ebook_storage_path: string | null;
   page_count: number | null;
   language: LibraryBookLanguageCode;
+  category: LibraryBookCategoryId | null;
+  print_year: number | null;
   is_published: boolean;
   sort_order: number;
 }

@@ -1,4 +1,5 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import { parseLibraryBookCategory } from "@/lib/kitaplik/book-category";
 import { fromLibraryBookLanguageDbValue } from "@/lib/kitaplik/book-language";
 import type { LibraryBook } from "@/lib/kitaplik/types";
 
@@ -23,6 +24,13 @@ function mapBookRow(row: Record<string, unknown>): LibraryBook {
     page_count:
       row.page_count === null ? null : Number(row.page_count),
     language: fromLibraryBookLanguageDbValue(row.language as string | null),
+    category: parseLibraryBookCategory(
+      typeof row.category === "string" ? row.category : null,
+    ),
+    print_year:
+      row.print_year === null || row.print_year === undefined
+        ? null
+        : Number(row.print_year),
     is_published: Boolean(row.is_published),
     sort_order: Number(row.sort_order ?? 0),
   };
