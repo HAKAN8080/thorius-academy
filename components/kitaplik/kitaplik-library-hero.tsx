@@ -179,8 +179,8 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
           </p>
 
           <p className="mt-6 max-w-md text-base leading-relaxed text-white/75 md:text-lg">
-            Sesli okuma, e\u015f zamanl\u0131 metin takibi, e-kitap ve bas\u0131l\u0131 kitap
-            deneyimini tek platformda ke\u015ffedin.
+            Sesli okuma, eş zamanlı metin takibi, e-kitap ve basılı kitap
+            deneyimini tek platformda keşfedin.
           </p>
 
           <div
