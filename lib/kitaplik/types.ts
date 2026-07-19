@@ -17,6 +17,8 @@ export interface LibraryBook {
   language: LibraryBookLanguageCode;
   category: LibraryBookCategoryId | null;
   print_year: number | null;
+  isbn: string | null;
+  publisher: string | null;
   is_published: boolean;
   sort_order: number;
 }

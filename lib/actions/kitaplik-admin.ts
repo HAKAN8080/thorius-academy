@@ -97,6 +97,8 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
       data.print_year === null || data.print_year === undefined
         ? null
         : Number(data.print_year),
+    isbn: (data.isbn as string | null) ?? null,
+    publisher: (data.publisher as string | null) ?? null,
     is_published: Boolean(data.is_published),
     sort_order: Number(data.sort_order ?? 0),
   };
@@ -115,6 +117,8 @@ type LibraryBookWritePayload = {
   language?: "turkish" | "english";
   category?: LibraryBookCategoryId | null;
   print_year?: number | null;
+  isbn?: string | null;
+  publisher?: string | null;
   sort_order: number;
   is_published: boolean;
   updated_at: string;
@@ -136,12 +140,24 @@ function isMissingCategoryOrYearColumnError(message: string): boolean {
   );
 }
 
+function isMissingIsbnOrPublisherColumnError(message: string): boolean {
+  return (
+    message.includes("Could not find the 'isbn' column") ||
+    message.includes("Could not find the 'publisher' column") ||
+    (message.includes("isbn") && message.includes("schema cache")) ||
+    (message.includes("publisher") && message.includes("schema cache"))
+  );
+}
+
 function mapKitaplikDbError(message: string): string {
   if (isMissingLanguageColumnError(message)) {
     return "Supabase'de library_books.language kolonu henuz yok. SQL Editor'da supabase/manual/20260711180000_library_books_language_prod_apply.sql dosyasini calistirin, sonra API schema cache'i yenileyin.";
   }
   if (isMissingCategoryOrYearColumnError(message)) {
     return "Supabase'de library_books.category / print_year kolonlari henuz yok. SQL Editor'da supabase/manual/20260719010000_library_books_category_print_year_prod_apply.sql dosyasini calistirin.";
+  }
+  if (isMissingIsbnOrPublisherColumnError(message)) {
+    return "Supabase'de library_books.isbn / publisher kolonlari henuz yok. SQL Editor'da supabase/manual/20260719140000_library_books_isbn_publisher_prod_apply.sql dosyasini calistirin.";
   }
   return message;
 }
@@ -168,6 +184,17 @@ async function writeLibraryBook(
   };
 
   let { data, error } = await attempt(payload);
+
+  if (
+    error &&
+    isMissingIsbnOrPublisherColumnError(error.message) &&
+    (payload.isbn !== undefined || payload.publisher !== undefined)
+  ) {
+    const withoutIdentity = { ...payload };
+    delete withoutIdentity.isbn;
+    delete withoutIdentity.publisher;
+    ({ data, error } = await attempt(withoutIdentity));
+  }
 
   if (
     error &&
@@ -278,6 +305,8 @@ export async function saveKitaplikBook(
       parseOptionalText(formData.get("category")),
     ),
     print_year: parseOptionalPrintYear(formData.get("print_year")),
+    isbn: parseOptionalText(formData.get("isbn")),
+    publisher: parseOptionalText(formData.get("publisher")),
     sort_order: parseOptionalInt(formData.get("sort_order")) ?? 0,
     is_published: formData.get("is_published") === "true",
     updated_at: new Date().toISOString(),

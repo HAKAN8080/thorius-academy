@@ -42,6 +42,8 @@ interface BookFormState {
   language: LibraryBookLanguageCode;
   category: LibraryBookCategoryId | "";
   print_year: string;
+  isbn: string;
+  publisher: string;
   sort_order: string;
   is_published: boolean;
   ebook_storage_path: string;
@@ -61,6 +63,8 @@ const emptyForm = (): BookFormState => ({
   language: "tr",
   category: "",
   print_year: "",
+  isbn: "",
+  publisher: "",
   sort_order: "0",
   is_published: false,
   ebook_storage_path: "",
@@ -83,6 +87,8 @@ function bookToForm(book: LibraryBook): BookFormState {
     language: book.language,
     category: book.category ?? "",
     print_year: book.print_year != null ? String(book.print_year) : "",
+    isbn: book.isbn ?? "",
+    publisher: book.publisher ?? "",
     sort_order: String(book.sort_order ?? 0),
     is_published: book.is_published,
     ebook_storage_path: book.ebook_storage_path ?? "",
@@ -203,6 +209,8 @@ export function KitaplikBookAdminPanel({
       payload.set("language", form.language);
       payload.set("category", form.category);
       payload.set("print_year", form.print_year);
+      payload.set("isbn", form.isbn);
+      payload.set("publisher", form.publisher);
       payload.set("sort_order", form.sort_order);
       payload.set("is_published", form.is_published ? "true" : "false");
 
@@ -350,7 +358,7 @@ export function KitaplikBookAdminPanel({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="print_year">Baski tarihi (yil)</Label>
+            <Label htmlFor="print_year">Baskı tarihi (yil)</Label>
             <Input
               id="print_year"
               type="number"
@@ -359,6 +367,26 @@ export function KitaplikBookAdminPanel({
               value={form.print_year}
               onChange={(event) => updateField("print_year", event.target.value)}
               placeholder="2026"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="isbn">ISBN</Label>
+            <Input
+              id="isbn"
+              value={form.isbn}
+              onChange={(event) => updateField("isbn", event.target.value)}
+              placeholder="978-..."
+            />
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="publisher">Yayıncı</Label>
+            <Input
+              id="publisher"
+              value={form.publisher}
+              onChange={(event) => updateField("publisher", event.target.value)}
+              placeholder="Fairchild Books"
             />
           </div>
 
@@ -543,6 +571,12 @@ export function KitaplikBookAdminPanel({
                     ) : null}
                     {book.print_year ? (
                       <Badge variant="outline">{book.print_year}</Badge>
+                    ) : null}
+                    {book.publisher ? (
+                      <Badge variant="outline">{book.publisher}</Badge>
+                    ) : null}
+                    {book.isbn ? (
+                      <Badge variant="outline">ISBN {book.isbn}</Badge>
                     ) : null}
                     <Badge variant={book.is_published ? "default" : "secondary"}>
                       {book.is_published ? "Yayinda" : "Taslak"}

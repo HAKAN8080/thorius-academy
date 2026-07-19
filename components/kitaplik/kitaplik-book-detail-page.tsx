@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
+import { KitaplikBookSpecs } from "@/components/kitaplik/kitaplik-book-specs";
 import { KitaplikPurchaseButtons } from "@/components/kitaplik/kitaplik-purchase-buttons";
 import { getAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
-import { libraryBookCategoryLabel } from "@/lib/kitaplik/book-category";
-import { libraryBookLanguageLabel } from "@/lib/kitaplik/book-language";
 import { getKitaplikBookPurchaseState } from "@/lib/kitaplik/book-purchase-state";
 
 interface KitaplikBookDetailPageProps {
@@ -34,17 +33,20 @@ export async function KitaplikBookDetailPage({
         </Link>
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,380px)_1fr] lg:items-start">
-          <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl border border-primary-100 bg-primary-50 p-4">
-            {book.cover_image_url ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img
-                src={book.cover_image_url}
-                alt={book.title}
-                className="max-h-full max-w-full object-contain"
-              />
-            ) : (
-              <div className="h-full w-full bg-gradient-to-br from-primary-200 to-primary-300" />
-            )}
+          <div className="space-y-5">
+            <div className="flex aspect-[3/4] items-center justify-center overflow-hidden rounded-2xl border border-primary-100 bg-primary-50 p-4">
+              {book.cover_image_url ? (
+                // eslint-disable-next-line @next/next/no-img-element
+                <img
+                  src={book.cover_image_url}
+                  alt={book.title}
+                  className="max-h-full max-w-full object-contain"
+                />
+              ) : (
+                <div className="h-full w-full bg-gradient-to-br from-primary-200 to-primary-300" />
+              )}
+            </div>
+            <KitaplikBookSpecs book={book} />
           </div>
 
           <div className="space-y-6">
@@ -61,43 +63,6 @@ export async function KitaplikBookDetailPage({
                 <p className="mt-2 text-lg text-primary-700">{book.subtitle}</p>
               ) : null}
             </div>
-
-            <dl className="grid gap-3 rounded-2xl border border-primary-100 bg-primary-50/50 p-4 text-sm sm:grid-cols-2">
-              {book.author ? (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-primary-500">
-                    Yazar
-                  </dt>
-                  <dd className="mt-1 font-medium text-primary-950">{book.author}</dd>
-                </div>
-              ) : null}
-              <div>
-                <dt className="text-xs font-semibold uppercase tracking-wide text-primary-500">
-                  Dil
-                </dt>
-                <dd className="mt-1 font-medium text-primary-950">
-                  {libraryBookLanguageLabel(book.language)}
-                </dd>
-              </div>
-              {book.print_year ? (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-primary-500">
-                    Baskı tarihi
-                  </dt>
-                  <dd className="mt-1 font-medium text-primary-950">{book.print_year}</dd>
-                </div>
-              ) : null}
-              {book.category ? (
-                <div>
-                  <dt className="text-xs font-semibold uppercase tracking-wide text-primary-500">
-                    Kategori
-                  </dt>
-                  <dd className="mt-1 font-medium text-primary-950">
-                    {libraryBookCategoryLabel(book.category)}
-                  </dd>
-                </div>
-              ) : null}
-            </dl>
 
             <KitaplikPurchaseButtons
               bookSlug={book.slug}

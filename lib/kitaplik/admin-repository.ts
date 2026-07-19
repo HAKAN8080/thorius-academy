@@ -31,6 +31,8 @@ function mapBookRow(row: Record<string, unknown>): LibraryBook {
       row.print_year === null || row.print_year === undefined
         ? null
         : Number(row.print_year),
+    isbn: (row.isbn as string | null) ?? null,
+    publisher: (row.publisher as string | null) ?? null,
     is_published: Boolean(row.is_published),
     sort_order: Number(row.sort_order ?? 0),
   };
