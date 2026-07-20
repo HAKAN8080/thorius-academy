@@ -57,30 +57,37 @@ export function KitaplikBookCard({ book, hasAudiobook = false }: KitaplikBookCar
               {book.title}
             </h3>
           </Link>
-          {categoryLabel ? (
-            <p className="mt-1 text-xs font-medium text-primary-600">{categoryLabel}</p>
-          ) : null}
           {book.subtitle ? (
             <p className="mt-1 line-clamp-2 text-sm text-muted-foreground">
               {book.subtitle}
             </p>
           ) : null}
+          {book.isbn ? (
+            <p className="mt-1 text-xs text-primary-700">
+              ISBN: <span className="font-medium">{book.isbn}</span>
+            </p>
+          ) : null}
+          {categoryLabel ? (
+            <p className="mt-1 text-xs font-medium text-primary-600">
+              {categoryLabel}
+            </p>
+          ) : null}
         </div>
 
         <div className="mt-auto space-y-2 text-sm">
-          {printed ? (
+          {ebook ? (
             <p className="text-primary-800">
-              Basılı:{" "}
-              <span className="font-semibold">
-                {printed.toLocaleString("tr-TR")}₺
+              E-Kitap:{" "}
+              <span className="font-semibold text-accent-700">
+                {ebook.toLocaleString("tr-TR")}₺
               </span>
             </p>
           ) : null}
-          {ebook ? (
+          {printed ? (
             <p className="text-primary-800">
-              E-kitap:{" "}
-              <span className="font-semibold text-accent-700">
-                {ebook.toLocaleString("tr-TR")}₺
+              Baskılı:{" "}
+              <span className="font-semibold">
+                {printed.toLocaleString("tr-TR")}₺
               </span>
             </p>
           ) : null}

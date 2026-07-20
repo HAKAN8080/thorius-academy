@@ -37,7 +37,7 @@ async function main() {
   await ensureBucket();
 
   const files = (await readdir(dir)).filter((f) =>
-    /^chapter_\d{2}\.(mp3|json)$/.test(f),
+    /^chapter_\d{2,}\.(mp3|json)$/.test(f),
   );
   if (!files.length) {
     console.error("Klasorde chapter_XX.mp3/json bulunamadi:", dir);
