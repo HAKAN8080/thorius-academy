@@ -98,23 +98,33 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
                 {row.map((book, bookIndex) => {
                   const height =
                     bookIndex % 3 === 0
-                      ? "h-[9.5rem] sm:h-[11rem] md:h-[12.5rem]"
+                      ? "h-[8rem] sm:h-[9rem] lg:h-[10rem]"
                       : bookIndex % 3 === 1
-                        ? "h-[8.5rem] sm:h-[10rem] md:h-[11.5rem]"
-                        : "h-[10rem] sm:h-[11.5rem] md:h-[13rem]";
+                        ? "h-[7rem] sm:h-[8rem] lg:h-[9rem]"
+                        : "h-[8.5rem] sm:h-[9.5rem] lg:h-[10.5rem]";
                   const tilt =
                     bookIndex % 5 === 0
                       ? "rotate-[-1.5deg]"
                       : bookIndex % 5 === 3
                         ? "rotate-[1.2deg]"
                         : "rotate-0";
+                  // Trailing books only appear when the shelf column is wide
+                  // enough, so full covers never overflow or get clipped.
+                  const visibility =
+                    bookIndex === 3
+                      ? "hidden sm:block"
+                      : bookIndex === 4
+                        ? "hidden lg:block"
+                        : bookIndex === 5
+                          ? "hidden xl:block"
+                          : "";
                   const spine =
                     SPINE_COLORS[(rowIndex * 6 + bookIndex) % SPINE_COLORS.length];
 
                   return (
                     <div
                       key={`${book.slug}-${rowIndex}-${bookIndex}`}
-                      className={`relative w-[2.6rem] shrink-0 overflow-hidden rounded-[2px] shadow-[2px_4px_12px_rgba(0,0,0,0.5)] sm:w-12 md:w-14 ${height} ${tilt}`}
+                      className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-[2px] shadow-[2px_4px_12px_rgba(0,0,0,0.5)] ${height} ${tilt} ${visibility}`}
                       style={{ backgroundColor: spine }}
                     >
                       {book.cover_image_url ? (
@@ -122,17 +132,17 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
                         <img
                           src={book.cover_image_url}
                           alt=""
-                          className="h-full w-full object-cover object-center opacity-95"
+                          className="h-full w-full object-contain object-center opacity-95"
                           loading="eager"
                         />
                       ) : (
-                        <div className="flex h-full items-center justify-center px-0.5">
-                          <span className="rotate-180 truncate text-[9px] font-semibold tracking-widest text-white/70 [writing-mode:vertical-rl]">
+                        <div className="flex h-full items-center justify-center px-1">
+                          <span className="truncate text-center text-[10px] font-semibold tracking-widest text-white/70">
                             {book.title}
                           </span>
                         </div>
                       )}
-                      <span className="pointer-events-none absolute inset-y-0 left-0 w-[28%] bg-gradient-to-r from-black/40 to-transparent" />
+                      <span className="pointer-events-none absolute inset-y-0 left-0 w-[12%] bg-gradient-to-r from-black/45 to-transparent" />
                     </div>
                   );
                 })}
