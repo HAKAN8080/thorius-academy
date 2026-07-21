@@ -178,17 +178,32 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
   }, []);
 
   const toggleFullscreen = useCallback(async () => {
-    const container = containerRef.current;
-    if (!container) return;
+    const target = containerRef.current ?? document.documentElement;
     try {
       if (document.fullscreenElement) {
         await document.exitFullscreen();
-      } else if (container.requestFullscreen) {
-        await container.requestFullscreen();
+      } else if (target.requestFullscreen) {
+        await target.requestFullscreen();
       }
     } catch {
       // Fullscreen not supported or blocked; ignore.
     }
+  }, []);
+
+  // Best-effort auto fullscreen on open. Works when the reader was opened via
+  // a click (transient user activation); otherwise the browser rejects and we
+  // ignore it. Uses documentElement because the reader container isn't
+  // mounted yet during the loading state.
+  useEffect(() => {
+    const target = document.documentElement;
+    if (!document.fullscreenElement && target.requestFullscreen) {
+      target.requestFullscreen().catch(() => {});
+    }
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
   }, []);
 
   useEffect(() => {
@@ -279,12 +294,12 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
       className="fixed inset-0 z-50 flex h-dvh flex-col bg-[#0a1228] text-white select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
-      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-white/10 px-3 py-2 md:px-4">
-        <div className="min-w-0 flex-1">
+      <header className="grid shrink-0 grid-cols-[1fr_auto_1fr] items-center gap-x-2 border-b border-white/10 px-3 py-2 md:gap-x-4 md:px-4">
+        <div className="min-w-0">
           <p className="truncate text-sm font-medium">{title}</p>
         </div>
 
-        <div className="flex items-center gap-1.5 md:gap-2">
+        <div className="flex items-center justify-center gap-1.5 md:gap-2">
           <Button
             type="button"
             variant="outline"
@@ -341,18 +356,24 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
           <Button
             type="button"
             variant="outline"
-            size="icon"
-            className="ml-1 h-8 w-8 border-white/20 bg-transparent text-white md:ml-2"
+            size="sm"
+            className="ml-1 h-8 gap-1.5 border-white/20 bg-transparent px-2 text-white md:ml-2 md:px-2.5"
             onClick={() => void toggleFullscreen()}
-            aria-label={isFullscreen ? "Tam ekrandan çık" : "Tam ekran"}
+            title={isFullscreen ? "Tam ekrandan çık" : "Tam ekrana geç"}
+            aria-label={isFullscreen ? "Tam ekrandan çık" : "Tam ekrana geç"}
           >
             {isFullscreen ? (
               <Minimize className="h-4 w-4" />
             ) : (
               <Maximize className="h-4 w-4" />
             )}
+            <span className="hidden text-xs lg:inline">
+              {isFullscreen ? "Tam ekrandan çık" : "Tam ekrana geç"}
+            </span>
           </Button>
+        </div>
 
+        <div className="flex items-center justify-end">
           <Button
             asChild
             size="icon"
