@@ -14,6 +14,53 @@ interface AudiobookReaderProps {
 
 const PLAYBACK_RATES = [0.75, 1, 1.25, 1.5];
 
+const PROGRESS_STORAGE_VERSION = 1;
+const PROGRESS_SAVE_INTERVAL_MS = 4000;
+// Bolum sonuna cok yakin kaydedilmis konumu biraz geriye cekerek
+// "ac -> hemen bitti -> tekrar ac" dongusunu engeller.
+const END_CLAMP_SECONDS = 2;
+
+interface SavedProgress {
+  version: number;
+  chapterNumber: number;
+  chapterIndex: number;
+  currentTime: number;
+  playbackRate: number;
+  updatedAt: string;
+}
+
+function progressStorageKey(slug: string): string {
+  return `thorius:audiobook-progress:${slug}`;
+}
+
+function readSavedProgress(slug: string): SavedProgress | null {
+  try {
+    const raw = window.localStorage.getItem(progressStorageKey(slug));
+    if (!raw) return null;
+    const parsed = JSON.parse(raw) as Partial<SavedProgress>;
+    if (
+      parsed.version !== PROGRESS_STORAGE_VERSION ||
+      typeof parsed.chapterNumber !== "number" ||
+      typeof parsed.chapterIndex !== "number" ||
+      typeof parsed.currentTime !== "number" ||
+      !Number.isFinite(parsed.currentTime)
+    ) {
+      return null;
+    }
+    return parsed as SavedProgress;
+  } catch {
+    return null;
+  }
+}
+
+function clearSavedProgress(slug: string) {
+  try {
+    window.localStorage.removeItem(progressStorageKey(slug));
+  } catch {
+    // localStorage kullanilamiyorsa sessizce gec.
+  }
+}
+
 function formatTime(totalSeconds: number): string {
   if (!Number.isFinite(totalSeconds) || totalSeconds < 0) return "0:00";
   const whole = Math.floor(totalSeconds);
@@ -35,25 +82,142 @@ export function AudiobookReader({
   const [currentTime, setCurrentTime] = useState(0);
   const [duration, setDuration] = useState(0);
   const [rateIdx, setRateIdx] = useState(1);
+  const [resumeNotice, setResumeNotice] = useState<string | null>(null);
+
+  const chapterIdxRef = useRef(chapterIdx);
+  const playbackRateRef = useRef(PLAYBACK_RATES[rateIdx]);
+  const pendingSeekRef = useRef<{ chapterIndex: number; time: number } | null>(
+    null,
+  );
+  const suppressAutoplayRef = useRef(false);
+  const lastSaveAtRef = useRef(0);
+  const didRestoreRef = useRef(false);
+  // Kitap tamamen bittiginde true olur; kapanis kayitlarinin
+  // temizlenen ilerlemeyi "sonda kaldi" diye geri yazmasini engeller.
+  const finishedRef = useRef(false);
 
   const chapter = chapters[chapterIdx];
   const playbackRate = PLAYBACK_RATES[rateIdx];
+
+  useEffect(() => {
+    chapterIdxRef.current = chapterIdx;
+  }, [chapterIdx]);
+
+  useEffect(() => {
+    playbackRateRef.current = playbackRate;
+  }, [playbackRate]);
 
   function chapterLabel(number: number, chapterTitle: string) {
     return `${number} \u2014 ${chapterTitle}`;
   }
 
-  // Bolum degisince otomatik baslat
+  const writeProgress = useCallback(
+    (chapterIndex: number, time: number) => {
+      const target = chapters[chapterIndex];
+      if (!target) return;
+      try {
+        const payload: SavedProgress = {
+          version: PROGRESS_STORAGE_VERSION,
+          chapterNumber: target.number,
+          chapterIndex,
+          currentTime: Math.max(0, Number.isFinite(time) ? time : 0),
+          playbackRate: playbackRateRef.current,
+          updatedAt: new Date().toISOString(),
+        };
+        window.localStorage.setItem(
+          progressStorageKey(slug),
+          JSON.stringify(payload),
+        );
+      } catch {
+        // localStorage dolu veya kullanilamiyor; oynatmayi etkilemesin.
+      }
+    },
+    [chapters, slug],
+  );
+
+  // Anlik konumu kaydeder. Kayitli konum henuz geri yuklenmediyse
+  // (pending seek varken) 0 saniyeyle uzerine yazmamak icin atlar.
+  const saveCurrentPosition = useCallback(() => {
+    const audio = audioRef.current;
+    if (!audio || pendingSeekRef.current || finishedRef.current) return;
+    writeProgress(chapterIdxRef.current, audio.currentTime);
+  }, [writeProgress]);
+
+  // Bekleyen geri yukleme konumunu, sure bilgisi hazir olunca uygular.
+  const applyPendingSeek = useCallback((audio: HTMLAudioElement) => {
+    const pending = pendingSeekRef.current;
+    if (!pending || pending.chapterIndex !== chapterIdxRef.current) return;
+    pendingSeekRef.current = null;
+    let target = pending.time;
+    if (Number.isFinite(audio.duration) && audio.duration > 0) {
+      target = Math.min(
+        Math.max(0, target),
+        Math.max(0, audio.duration - END_CLAMP_SECONDS),
+      );
+    } else if (!Number.isFinite(target) || target < 0) {
+      target = 0;
+    }
+    if (target > 0) {
+      audio.currentTime = target;
+      setCurrentTime(target);
+    }
+  }, []);
+
+  // Acilista kayitli ilerlemeyi geri yukle (bolum + saniye + hiz).
+  useEffect(() => {
+    if (didRestoreRef.current) return;
+    didRestoreRef.current = true;
+
+    const saved = readSavedProgress(slug);
+    if (!saved) return;
+
+    let index = chapters.findIndex(
+      (item) => item.number === saved.chapterNumber,
+    );
+    if (index < 0 && saved.chapterIndex >= 0 && saved.chapterIndex < chapters.length) {
+      index = saved.chapterIndex;
+    }
+    if (index < 0) return;
+
+    const time = Math.max(0, saved.currentTime);
+    // Ilk bolumun en basi = kayda deger ilerleme yok; normal davranisi koru.
+    if (index === 0 && time < 1) return;
+
+    const savedRateIdx = PLAYBACK_RATES.indexOf(saved.playbackRate);
+    if (savedRateIdx >= 0) setRateIdx(savedRateIdx);
+
+    suppressAutoplayRef.current = true;
+    pendingSeekRef.current = { chapterIndex: index, time };
+    setChapterIdx(index);
+    setCurrentTime(time);
+    setResumeNotice(
+      `Kald\u0131\u011f\u0131n\u0131z yer: B\u00f6l\u00fcm ${chapters[index].number} \u00b7 ${formatTime(time)}`,
+    );
+
+    // Ayni bolume donuluyorsa ve ses zaten yuklendiyse konumu hemen uygula.
+    const audio = audioRef.current;
+    if (audio && index === chapterIdxRef.current && audio.readyState >= 1) {
+      chapterIdxRef.current = index;
+      applyPendingSeek(audio);
+    }
+  }, [slug, chapters, applyPendingSeek]);
+
+  // Bolum degisince otomatik baslat (geri yukleme sirasinda baslatma;
+  // mobil tarayicilar engeller, kullanici oynat dugmesine basar).
   useEffect(() => {
     const audio = audioRef.current;
     if (!audio) return;
 
-    setCurrentTime(0);
+    setCurrentTime(
+      pendingSeekRef.current?.chapterIndex === chapterIdxRef.current
+        ? pendingSeekRef.current.time
+        : 0,
+    );
     setDuration(0);
 
     let cancelled = false;
     const tryPlay = () => {
-      if (cancelled) return;
+      if (cancelled || suppressAutoplayRef.current) return;
       void audio.play().catch(() => {
         // Tarayici autoplay engellerse kullanici oynat dugmesiyle baslatir.
       });
@@ -77,9 +241,22 @@ export function AudiobookReader({
     if (audio) audio.playbackRate = playbackRate;
   }, [playbackRate, chapter.audioUrl]);
 
+  // Sayfa kapanirken / gizlenirken ve bilesen sokulurken son konumu kaydet.
+  useEffect(() => {
+    window.addEventListener("pagehide", saveCurrentPosition);
+    window.addEventListener("beforeunload", saveCurrentPosition);
+    return () => {
+      window.removeEventListener("pagehide", saveCurrentPosition);
+      window.removeEventListener("beforeunload", saveCurrentPosition);
+      saveCurrentPosition();
+    };
+  }, [saveCurrentPosition]);
+
   const togglePlay = useCallback(() => {
     const audio = audioRef.current;
     if (!audio) return;
+    suppressAutoplayRef.current = false;
+    finishedRef.current = false;
     if (audio.paused) void audio.play();
     else audio.pause();
   }, []);
@@ -87,6 +264,8 @@ export function AudiobookReader({
   const seekTo = useCallback((seconds: number) => {
     const audio = audioRef.current;
     if (!audio) return;
+    // Kullanicinin elle yaptigi arama, bekleyen geri yuklemeyi gecersiz kilar.
+    pendingSeekRef.current = null;
     audio.currentTime = seconds;
     setCurrentTime(seconds);
   }, []);
@@ -94,18 +273,27 @@ export function AudiobookReader({
   const goToChapter = useCallback(
     (index: number) => {
       if (index < 0 || index >= chapters.length) return;
+      suppressAutoplayRef.current = false;
+      finishedRef.current = false;
+      pendingSeekRef.current = null;
+      setResumeNotice(null);
+      writeProgress(index, 0);
       setChapterIdx(index);
     },
-    [chapters.length],
+    [chapters.length, writeProgress],
   );
 
   const onEnded = useCallback(() => {
     if (chapterIdx + 1 < chapters.length) {
+      writeProgress(chapterIdx + 1, 0);
       setChapterIdx(chapterIdx + 1);
     } else {
+      // Kitap bitti: kaydi temizle ki tekrar acilista bastan baslasin.
+      finishedRef.current = true;
+      clearSavedProgress(slug);
       setIsPlaying(false);
     }
-  }, [chapterIdx, chapters.length]);
+  }, [chapterIdx, chapters.length, slug, writeProgress]);
 
   return (
     <div className="flex min-h-screen flex-col bg-[radial-gradient(ellipse_at_50%_-20%,#fff8ea_0%,transparent_60%),linear-gradient(160deg,#e7dbc6_0%,#d8c9ae_100%)] text-[#3a3049]">
@@ -156,6 +344,11 @@ export function AudiobookReader({
                   </option>
                 ))}
               </select>
+              {resumeNotice ? (
+                <p className="mt-2 text-xs font-medium text-[#7c2d4e]/80">
+                  {resumeNotice}
+                </p>
+              ) : null}
             </div>
 
             <div className="w-full">
@@ -210,7 +403,11 @@ export function AudiobookReader({
 
             <button
               type="button"
-              onClick={() => setRateIdx((rateIdx + 1) % PLAYBACK_RATES.length)}
+              onClick={() => {
+                setRateIdx((rateIdx + 1) % PLAYBACK_RATES.length);
+                // Hiz tercihi de kayitta tutulsun.
+                window.setTimeout(saveCurrentPosition, 0);
+              }}
               aria-label={"Oynatma h\u0131z\u0131"}
               className="rounded-full border border-[#d9cbb8] bg-white px-4 py-1.5 text-sm font-medium text-[#7c2d4e] transition hover:bg-[#f5e6da]"
             >
@@ -222,13 +419,28 @@ export function AudiobookReader({
 
       <audio
         ref={audioRef}
-        autoPlay
         preload="auto"
         src={chapter.audioUrl}
-        onPlay={() => setIsPlaying(true)}
-        onPause={() => setIsPlaying(false)}
-        onTimeUpdate={(event) => setCurrentTime(event.currentTarget.currentTime)}
-        onLoadedMetadata={(event) => setDuration(event.currentTarget.duration)}
+        onPlay={() => {
+          setIsPlaying(true);
+          setResumeNotice(null);
+        }}
+        onPause={() => {
+          setIsPlaying(false);
+          saveCurrentPosition();
+        }}
+        onTimeUpdate={(event) => {
+          setCurrentTime(event.currentTarget.currentTime);
+          const now = Date.now();
+          if (now - lastSaveAtRef.current >= PROGRESS_SAVE_INTERVAL_MS) {
+            lastSaveAtRef.current = now;
+            saveCurrentPosition();
+          }
+        }}
+        onLoadedMetadata={(event) => {
+          setDuration(event.currentTarget.duration);
+          applyPendingSeek(event.currentTarget);
+        }}
         onEnded={onEnded}
         className="hidden"
       />
