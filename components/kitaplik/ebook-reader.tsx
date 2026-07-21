@@ -210,6 +210,20 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
     setPageInput(String(page));
   }, [page]);
 
+  const changePage = useCallback(
+    (next: number) => {
+      if (flipping || next < 1 || next > pageCount || next === page) return;
+      setFlipDirection(next > page ? "next" : "prev");
+      setFlipping(true);
+      setPage(next);
+      window.setTimeout(() => {
+        setFlipping(false);
+        setFlipDirection(null);
+      }, 360);
+    },
+    [flipping, page, pageCount],
+  );
+
   useEffect(() => {
     const block = (event: Event) => event.preventDefault();
     const onKeyDown = (event: KeyboardEvent) => {
@@ -230,11 +244,11 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
 
       if (event.key === "ArrowLeft") {
         event.preventDefault();
-        void changePage(page - 1);
+        changePage(page - 1);
       }
       if (event.key === "ArrowRight") {
         event.preventDefault();
-        void changePage(page + 1);
+        changePage(page + 1);
       }
     };
 
@@ -249,18 +263,7 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
       document.removeEventListener("cut", block);
       document.removeEventListener("keydown", onKeyDown);
     };
-  }, [page]);
-
-  function changePage(next: number) {
-    if (flipping || next < 1 || next > pageCount || next === page) return;
-    setFlipDirection(next > page ? "next" : "prev");
-    setFlipping(true);
-    setPage(next);
-    window.setTimeout(() => {
-      setFlipping(false);
-      setFlipDirection(null);
-    }, 360);
-  }
+  }, [page, changePage]);
 
   function handlePageJump(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -405,6 +408,25 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
           disabled={page >= pageCount || flipping}
           onClick={() => changePage(page + 1)}
         />
+
+        <button
+          type="button"
+          className="absolute left-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/40 bg-amber-400/20 text-amber-200 shadow-lg backdrop-blur-sm transition hover:bg-amber-400/40 hover:text-amber-100 disabled:pointer-events-none disabled:opacity-0 md:left-5 md:h-12 md:w-12"
+          aria-label="Önceki sayfa"
+          disabled={page <= 1}
+          onClick={() => changePage(page - 1)}
+        >
+          <ChevronLeft className="h-6 w-6" />
+        </button>
+        <button
+          type="button"
+          className="absolute right-2 top-1/2 z-20 flex h-11 w-11 -translate-y-1/2 items-center justify-center rounded-full border border-amber-300/40 bg-amber-400/20 text-amber-200 shadow-lg backdrop-blur-sm transition hover:bg-amber-400/40 hover:text-amber-100 disabled:pointer-events-none disabled:opacity-0 md:right-5 md:h-12 md:w-12"
+          aria-label="Sonraki sayfa"
+          disabled={page >= pageCount}
+          onClick={() => changePage(page + 1)}
+        >
+          <ChevronRight className="h-6 w-6" />
+        </button>
 
         <div
           className={`relative overflow-hidden rounded-lg shadow-2xl ${
