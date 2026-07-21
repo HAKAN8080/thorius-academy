@@ -17,6 +17,8 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
   const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
+  const renderTaskRef = useRef<import("pdfjs-dist").RenderTask | null>(null);
+  const renderSeqRef = useRef(0);
   const [page, setPage] = useState(1);
   const [pageCount, setPageCount] = useState(0);
   const [loading, setLoading] = useState(true);
@@ -33,32 +35,61 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
     const canvas = canvasRef.current;
     if (!pdf || !canvas) return;
 
-    const pdfPage = await pdf.getPage(pageNum);
-    const baseViewport = pdfPage.getViewport({ scale: 1 });
+    // Serialize renders: overlapping render() calls on the same canvas make
+    // pdf.js throw, and resizing the canvas mid-render resets the context
+    // transform (page ends up tiny and upside-down in the corner).
+    const seq = ++renderSeqRef.current;
+    const previousTask = renderTaskRef.current;
+    if (previousTask) {
+      previousTask.cancel();
+      await previousTask.promise.catch(() => {});
+    }
+    if (seq !== renderSeqRef.current) return;
 
-    const stage = stageRef.current;
-    const maxHeight = Math.max((stage?.clientHeight ?? 480) - 16, 240);
-    const maxWidth = Math.max((stage?.clientWidth ?? 320) - 16, 240);
-    const cssScale = Math.min(
-      maxHeight / baseViewport.height,
-      maxWidth / baseViewport.width,
-      2.5,
-    );
-    const dpr = Math.min(window.devicePixelRatio || 1, 2);
-    const cssViewport = pdfPage.getViewport({ scale: cssScale });
-    const viewport = pdfPage.getViewport({ scale: cssScale * dpr });
-    const context = canvas.getContext("2d");
-    if (!context) return;
+    try {
+      const pdfPage = await pdf.getPage(pageNum);
+      if (seq !== renderSeqRef.current) return;
 
-    canvas.width = viewport.width;
-    canvas.height = viewport.height;
-    canvas.style.width = `${cssViewport.width}px`;
-    canvas.style.height = `${cssViewport.height}px`;
+      const baseViewport = pdfPage.getViewport({ scale: 1 });
 
-    await pdfPage.render({
-      canvas,
-      viewport,
-    }).promise;
+      const stage = stageRef.current;
+      const maxHeight = Math.max((stage?.clientHeight ?? 480) - 16, 240);
+      const maxWidth = Math.max((stage?.clientWidth ?? 320) - 16, 240);
+      const cssScale = Math.min(
+        maxHeight / baseViewport.height,
+        maxWidth / baseViewport.width,
+        2.5,
+      );
+      const dpr = Math.min(window.devicePixelRatio || 1, 2);
+      const cssViewport = pdfPage.getViewport({ scale: cssScale });
+      const viewport = pdfPage.getViewport({ scale: cssScale * dpr });
+
+      // Render offscreen so the visible canvas is never cleared or resized
+      // while pdf.js is still painting into it.
+      const offscreen = document.createElement("canvas");
+      offscreen.width = Math.floor(viewport.width);
+      offscreen.height = Math.floor(viewport.height);
+
+      const task = pdfPage.render({ canvas: offscreen, viewport });
+      renderTaskRef.current = task;
+      await task.promise;
+      if (seq !== renderSeqRef.current) return;
+
+      const context = canvas.getContext("2d");
+      if (!context) return;
+
+      canvas.width = offscreen.width;
+      canvas.height = offscreen.height;
+      canvas.style.width = `${Math.floor(cssViewport.width)}px`;
+      canvas.style.height = `${Math.floor(cssViewport.height)}px`;
+      context.drawImage(offscreen, 0, 0);
+    } catch {
+      // Superseded by a newer render (RenderingCancelledException) — ignore.
+    } finally {
+      if (seq === renderSeqRef.current) {
+        renderTaskRef.current = null;
+      }
+    }
   }, []);
 
   useEffect(() => {
@@ -106,6 +137,9 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
     void load();
     return () => {
       cancelled = true;
+      renderSeqRef.current += 1;
+      renderTaskRef.current?.cancel();
+      renderTaskRef.current = null;
     };
   }, [slug]);
 
