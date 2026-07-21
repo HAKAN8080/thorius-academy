@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { ChevronLeft, ChevronRight, X } from "lucide-react";
+import { ChevronLeft, ChevronRight, Maximize, Minimize, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
@@ -13,6 +13,8 @@ interface EbookReaderProps {
 }
 
 export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const stageRef = useRef<HTMLDivElement | null>(null);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const pdfRef = useRef<import("pdfjs-dist").PDFDocumentProxy | null>(null);
   const [page, setPage] = useState(1);
@@ -24,6 +26,7 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
     null,
   );
   const [pageInput, setPageInput] = useState("1");
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const renderPage = useCallback(async (pageNum: number) => {
     const pdf = pdfRef.current;
@@ -32,21 +35,25 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
 
     const pdfPage = await pdf.getPage(pageNum);
     const baseViewport = pdfPage.getViewport({ scale: 1 });
-    const maxHeight = Math.max(window.innerHeight - 144, 480);
-    const maxWidth = Math.max(window.innerWidth - 48, 320);
-    const scale = Math.min(
+
+    const stage = stageRef.current;
+    const maxHeight = Math.max((stage?.clientHeight ?? 480) - 16, 240);
+    const maxWidth = Math.max((stage?.clientWidth ?? 320) - 16, 240);
+    const cssScale = Math.min(
       maxHeight / baseViewport.height,
       maxWidth / baseViewport.width,
-      2,
+      2.5,
     );
-    const viewport = pdfPage.getViewport({ scale });
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const cssViewport = pdfPage.getViewport({ scale: cssScale });
+    const viewport = pdfPage.getViewport({ scale: cssScale * dpr });
     const context = canvas.getContext("2d");
     if (!context) return;
 
     canvas.width = viewport.width;
     canvas.height = viewport.height;
-    canvas.style.width = `${viewport.width}px`;
-    canvas.style.height = `${viewport.height}px`;
+    canvas.style.width = `${cssViewport.width}px`;
+    canvas.style.height = `${cssViewport.height}px`;
 
     await pdfPage.render({
       canvas,
@@ -107,6 +114,48 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
       void renderPage(page);
     }
   }, [page, pageCount, loading, renderPage]);
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    if (!stage || loading) return;
+
+    let frame = 0;
+    const observer = new ResizeObserver(() => {
+      window.cancelAnimationFrame(frame);
+      frame = window.requestAnimationFrame(() => {
+        if (pdfRef.current) void renderPage(page);
+      });
+    });
+    observer.observe(stage);
+    return () => {
+      window.cancelAnimationFrame(frame);
+      observer.disconnect();
+    };
+  }, [page, loading, renderPage]);
+
+  useEffect(() => {
+    const onFullscreenChange = () => {
+      setIsFullscreen(Boolean(document.fullscreenElement));
+    };
+    document.addEventListener("fullscreenchange", onFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", onFullscreenChange);
+    };
+  }, []);
+
+  const toggleFullscreen = useCallback(async () => {
+    const container = containerRef.current;
+    if (!container) return;
+    try {
+      if (document.fullscreenElement) {
+        await document.exitFullscreen();
+      } else if (container.requestFullscreen) {
+        await container.requestFullscreen();
+      }
+    } catch {
+      // Fullscreen not supported or blocked; ignore.
+    }
+  }, []);
 
   useEffect(() => {
     setPageInput(String(page));
@@ -192,25 +241,101 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
 
   return (
     <div
-      className="relative flex min-h-screen flex-col bg-[#0a1228] text-white select-none"
+      ref={containerRef}
+      className="fixed inset-0 z-50 flex h-dvh flex-col bg-[#0a1228] text-white select-none"
       style={{ userSelect: "none", WebkitUserSelect: "none" }}
     >
-      <header className="flex items-center justify-between border-b border-white/10 px-4 py-3">
-        <div className="min-w-0">
+      <header className="flex shrink-0 flex-wrap items-center justify-between gap-x-4 gap-y-2 border-b border-white/10 px-3 py-2 md:px-4">
+        <div className="min-w-0 flex-1">
           <p className="truncate text-sm font-medium">{title}</p>
-          <p className="text-xs text-primary-300">
-            Sayfa {page} / {pageCount}
-          </p>
         </div>
-        <Button asChild size="sm" variant="ghost" className="text-white">
-          <Link href="/kitaplarim">
-            <X className="mr-1 h-4 w-4" />
-            Kapat
-          </Link>
-        </Button>
+
+        <div className="flex items-center gap-1.5 md:gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 border-white/20 bg-transparent text-white"
+            disabled={page <= 1 || flipping}
+            onClick={() => changePage(page - 1)}
+            aria-label="Önceki sayfa"
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
+
+          <form
+            onSubmit={handlePageJump}
+            className="flex items-center gap-1.5 text-sm text-primary-200"
+          >
+            <label htmlFor="ebook-page-input" className="sr-only">
+              Sayfa numarası
+            </label>
+            <Input
+              id="ebook-page-input"
+              type="number"
+              min={1}
+              max={pageCount}
+              value={pageInput}
+              disabled={flipping}
+              onChange={(event) => setPageInput(event.target.value)}
+              className="h-8 w-14 border-white/20 bg-white/5 text-center text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
+            />
+            <span className="whitespace-nowrap">/ {pageCount}</span>
+            <Button
+              type="submit"
+              variant="outline"
+              size="sm"
+              disabled={flipping}
+              className="h-8 border-white/20 bg-transparent px-2.5 text-white"
+            >
+              Git
+            </Button>
+          </form>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="h-8 w-8 border-white/20 bg-transparent text-white"
+            disabled={page >= pageCount || flipping}
+            onClick={() => changePage(page + 1)}
+            aria-label="Sonraki sayfa"
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+
+          <Button
+            type="button"
+            variant="outline"
+            size="icon"
+            className="ml-1 h-8 w-8 border-white/20 bg-transparent text-white md:ml-2"
+            onClick={() => void toggleFullscreen()}
+            aria-label={isFullscreen ? "Tam ekrandan çık" : "Tam ekran"}
+          >
+            {isFullscreen ? (
+              <Minimize className="h-4 w-4" />
+            ) : (
+              <Maximize className="h-4 w-4" />
+            )}
+          </Button>
+
+          <Button
+            asChild
+            size="icon"
+            variant="ghost"
+            className="h-8 w-8 text-white"
+          >
+            <Link href="/kitaplarim" aria-label="Kapat">
+              <X className="h-4 w-4" />
+            </Link>
+          </Button>
+        </div>
       </header>
 
-      <div className="relative flex flex-1 items-center justify-center overflow-auto p-4 md:p-8">
+      <div
+        ref={stageRef}
+        className="relative flex min-h-0 flex-1 items-center justify-center overflow-hidden p-2 md:p-3"
+      >
         <button
           type="button"
           className="absolute inset-y-0 left-0 z-10 w-1/5 cursor-pointer bg-transparent md:w-[15%]"
@@ -250,61 +375,6 @@ export function EbookReader({ slug, title, watermark }: EbookReaderProps) {
           </div>
         </div>
       </div>
-
-      <footer className="flex flex-wrap items-center justify-center gap-3 border-t border-white/10 px-4 py-4">
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="border-white/20 bg-transparent text-white"
-          disabled={page <= 1 || flipping}
-          onClick={() => changePage(page - 1)}
-          aria-label="Önceki sayfa"
-        >
-          <ChevronLeft className="h-5 w-5" />
-        </Button>
-
-        <form
-          onSubmit={handlePageJump}
-          className="flex items-center gap-2 text-sm text-primary-200"
-        >
-          <label htmlFor="ebook-page-input" className="sr-only">
-            Sayfa numarası
-          </label>
-          <Input
-            id="ebook-page-input"
-            type="number"
-            min={1}
-            max={pageCount}
-            value={pageInput}
-            disabled={flipping}
-            onChange={(event) => setPageInput(event.target.value)}
-            className="h-9 w-16 border-white/20 bg-white/5 text-center text-white [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-          />
-          <span>/ {pageCount}</span>
-          <Button
-            type="submit"
-            variant="outline"
-            size="sm"
-            disabled={flipping}
-            className="border-white/20 bg-transparent text-white"
-          >
-            Git
-          </Button>
-        </form>
-
-        <Button
-          type="button"
-          variant="outline"
-          size="icon"
-          className="border-white/20 bg-transparent text-white"
-          disabled={page >= pageCount || flipping}
-          onClick={() => changePage(page + 1)}
-          aria-label="Sonraki sayfa"
-        >
-          <ChevronRight className="h-5 w-5" />
-        </Button>
-      </footer>
     </div>
   );
 }
