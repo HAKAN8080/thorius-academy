@@ -59,6 +59,11 @@ export default async function DinlePage({ params }: DinlePageProps) {
   const chapters = await getAudiobookChapterSources(manifest);
 
   return (
-    <AudiobookReader slug={slug} title={book.title} chapters={chapters} />
+    <AudiobookReader
+      slug={slug}
+      title={book.title}
+      coverImageUrl={book.cover_image_url}
+      chapters={chapters}
+    />
   );
 }
