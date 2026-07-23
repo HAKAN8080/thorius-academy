@@ -3,6 +3,8 @@ import { getSupabaseAdmin } from "@/lib/supabase/admin";
 
 const BUCKET = "audiobook-files";
 const SIGNED_URL_TTL_SECONDS = 3 * 60 * 60;
+// Bunny pull-zone caches manifest.json for ~30d; bump when republishing if purge unavailable.
+const CDN_MANIFEST_FILENAME = "manifest.v2.json";
 
 export interface AudiobookChapterMeta {
   number: number;
@@ -43,20 +45,24 @@ function cdnObjectUrl(slug: string, filename: string): string {
 async function fetchCdnManifest(slug: string): Promise<AudiobookManifest | null> {
   if (!audiobookCdnBase()) return null;
 
-  try {
-    const response = await fetch(cdnObjectUrl(slug, "manifest.json"), {
-      next: { revalidate: 60 },
-    });
-    if (!response.ok) return null;
-    const manifest = (await response.json()) as AudiobookManifest;
-    if (!Array.isArray(manifest.chapters) || manifest.chapters.length === 0) {
-      return null;
+  // Prefer cache-busted filename when present (Bunny edge may keep stale manifest.json).
+  const candidates = [CDN_MANIFEST_FILENAME, "manifest.json"];
+  for (const filename of candidates) {
+    try {
+      const response = await fetch(cdnObjectUrl(slug, filename), {
+        next: { revalidate: 60 },
+      });
+      if (!response.ok) continue;
+      const manifest = (await response.json()) as AudiobookManifest;
+      if (!Array.isArray(manifest.chapters) || manifest.chapters.length === 0) {
+        continue;
+      }
+      return manifest;
+    } catch (error) {
+      console.error("[audiobook] CDN manifest fetch failed:", slug, filename, error);
     }
-    return manifest;
-  } catch (error) {
-    console.error("[audiobook] CDN manifest fetch failed:", slug, error);
-    return null;
   }
+  return null;
 }
 
 async function fetchSupabaseManifest(
@@ -92,6 +98,17 @@ export const getAudiobookManifest = cache(
   },
 );
 
+/** Cache-busted cue JSON when Bunny edge keeps stale chapter_XX.json. */
+const CDN_CUES_SUFFIX_BY_SLUG: Record<string, string> = {
+  "aurora-en": ".cues.v3.json",
+};
+
+function chapterTimingFilename(slug: string, stem: string): string {
+  const suffix = CDN_CUES_SUFFIX_BY_SLUG[slug];
+  if (suffix) return `${stem}${suffix}`;
+  return `${stem}.json`;
+}
+
 function chapterSourcesFromCdn(
   manifest: AudiobookManifest,
 ): AudiobookChapterSource[] {
@@ -100,7 +117,10 @@ function chapterSourcesFromCdn(
     return {
       ...chapter,
       audioUrl: cdnObjectUrl(manifest.slug, `${stem}.mp3`),
-      timingUrl: cdnObjectUrl(manifest.slug, `${stem}.json`),
+      timingUrl: cdnObjectUrl(
+        manifest.slug,
+        chapterTimingFilename(manifest.slug, stem),
+      ),
     };
   });
 }
@@ -151,12 +171,14 @@ export async function getAudiobookChapterSources(
     // Prefer CDN when configured: files live under kitaplik/{slug}/ on Bunny.
     // Entitlement remains on the /dinle page; URLs are only handed to entitled users.
     try {
-      const probe = await fetch(cdnObjectUrl(manifest.slug, "manifest.json"), {
-        method: "HEAD",
-        next: { revalidate: 60 },
-      });
-      if (probe.ok) {
-        return chapterSourcesFromCdn(manifest);
+      for (const filename of [CDN_MANIFEST_FILENAME, "manifest.json"]) {
+        const probe = await fetch(cdnObjectUrl(manifest.slug, filename), {
+          method: "HEAD",
+          next: { revalidate: 60 },
+        });
+        if (probe.ok) {
+          return chapterSourcesFromCdn(manifest);
+        }
       }
     } catch {
       // Fall through to Supabase signed URLs.

@@ -47,22 +47,30 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 
   try {
-    const response = await fetch(chapter.timingUrl, {
-      cache: "no-store",
-    });
-    if (!response.ok) {
+    // Prefer timingUrl (may be cache-busted *.cues.v3.json); fall back to chapter_XX.json.
+    const candidates = [chapter.timingUrl];
+    if (chapter.timingUrl.includes(".cues.v3.json")) {
+      candidates.push(chapter.timingUrl.replace(".cues.v3.json", ".json"));
+    }
+    let payload: unknown = null;
+    for (const url of candidates) {
+      const response = await fetch(url, { cache: "no-store" });
+      if (!response.ok) continue;
+      payload = await response.json();
+      break;
+    }
+    if (payload == null) {
       return NextResponse.json(
         { error: "Altyazı dosyası alınamadı." },
         { status: 502 },
       );
     }
-    const payload: unknown = await response.json();
     const cues = parseAudiobookCues(payload);
     return NextResponse.json(
       { cues },
       {
         headers: {
-          "Cache-Control": "private, max-age=60",
+          "Cache-Control": "private, no-store",
         },
       },
     );
