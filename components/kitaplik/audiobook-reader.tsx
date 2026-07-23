@@ -112,14 +112,17 @@ export function AudiobookReader({
     chapterIdxRef.current = chapterIdx;
   }, [chapterIdx]);
 
-  // Fetch TR subtitle cues for the current chapter timing JSON.
+  // Fetch TR subtitle cues via same-origin proxy (Bunny JSON has no CORS).
   useEffect(() => {
     let cancelled = false;
     setCues([]);
 
     async function loadCues() {
       try {
-        const response = await fetch(chapter.timingUrl, { cache: "no-store" });
+        const response = await fetch(
+          `/api/kitaplik/audiobook/${encodeURIComponent(slug)}/${chapter.number}/cues`,
+          { cache: "no-store" },
+        );
         if (!response.ok) return;
         const payload: unknown = await response.json();
         if (cancelled) return;
@@ -133,7 +136,7 @@ export function AudiobookReader({
     return () => {
       cancelled = true;
     };
-  }, [chapter.timingUrl]);
+  }, [slug, chapter.number]);
 
   useEffect(() => {
     if (!subtitlesOn || activeCueIndex < 0) return;
