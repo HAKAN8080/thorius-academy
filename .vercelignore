@@ -1,0 +1,5 @@
+# Local audiobook / book assets — live on Bunny CDN, not Vercel
+ThoriusAcademy/
+*.mp3
+*.zip
+drelifdemirugur-site/

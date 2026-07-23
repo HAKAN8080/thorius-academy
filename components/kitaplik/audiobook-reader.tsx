@@ -4,6 +4,11 @@ import { useCallback, useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { Pause, Play, SkipBack, SkipForward, X } from "lucide-react";
 import type { AudiobookChapterSource } from "@/lib/kitaplik/audiobook-access";
+import {
+  findActiveCueIndex,
+  parseAudiobookCues,
+  type AudiobookCue,
+} from "@/lib/kitaplik/audiobook-cues";
 
 interface AudiobookReaderProps {
   slug: string;
@@ -83,6 +88,9 @@ export function AudiobookReader({
   const [duration, setDuration] = useState(0);
   const [rateIdx, setRateIdx] = useState(1);
   const [resumeNotice, setResumeNotice] = useState<string | null>(null);
+  const [cues, setCues] = useState<AudiobookCue[]>([]);
+  const [subtitlesOn, setSubtitlesOn] = useState(true);
+  const cueListRef = useRef<HTMLDivElement | null>(null);
 
   const chapterIdxRef = useRef(chapterIdx);
   const playbackRateRef = useRef(PLAYBACK_RATES[rateIdx]);
@@ -98,10 +106,44 @@ export function AudiobookReader({
 
   const chapter = chapters[chapterIdx];
   const playbackRate = PLAYBACK_RATES[rateIdx];
+  const activeCueIndex = findActiveCueIndex(cues, currentTime * 1000);
 
   useEffect(() => {
     chapterIdxRef.current = chapterIdx;
   }, [chapterIdx]);
+
+  // Fetch TR subtitle cues for the current chapter timing JSON.
+  useEffect(() => {
+    let cancelled = false;
+    setCues([]);
+
+    async function loadCues() {
+      try {
+        const response = await fetch(chapter.timingUrl, { cache: "no-store" });
+        if (!response.ok) return;
+        const payload: unknown = await response.json();
+        if (cancelled) return;
+        setCues(parseAudiobookCues(payload));
+      } catch {
+        if (!cancelled) setCues([]);
+      }
+    }
+
+    void loadCues();
+    return () => {
+      cancelled = true;
+    };
+  }, [chapter.timingUrl]);
+
+  useEffect(() => {
+    if (!subtitlesOn || activeCueIndex < 0) return;
+    const root = cueListRef.current;
+    if (!root) return;
+    const active = root.querySelector<HTMLElement>(
+      `[data-cue-index="${activeCueIndex}"]`,
+    );
+    active?.scrollIntoView({ block: "center", behavior: "smooth" });
+  }, [activeCueIndex, subtitlesOn]);
 
   useEffect(() => {
     playbackRateRef.current = playbackRate;
@@ -310,110 +352,169 @@ export function AudiobookReader({
         </h1>
       </header>
 
-      <main className="flex flex-1 items-center justify-center px-4 py-8">
-        <div className="w-full max-w-md rounded-3xl border border-[#e5d9c3] bg-[#fffdf9]/90 p-6 shadow-[0_14px_34px_rgba(90,70,40,0.25)] md:p-8">
-          <div className="flex flex-col items-center gap-5">
-            <div className="h-48 w-36 overflow-hidden rounded-xl shadow-[0_10px_24px_rgba(90,70,40,0.35)] md:h-56 md:w-40">
-              {coverImageUrl ? (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
-                  src={coverImageUrl}
-                  alt={title}
-                  className="h-full w-full object-cover"
-                />
-              ) : (
-                <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#7c2d4e] to-[#3a3049] p-3 text-center font-serif text-sm font-bold text-[#fffdf9]">
+      <main className="flex flex-1 items-start justify-center px-4 py-8 md:items-center">
+        <div className="grid w-full max-w-5xl gap-6 lg:grid-cols-[minmax(0,22rem)_minmax(0,1fr)]">
+          <div className="rounded-3xl border border-[#e5d9c3] bg-[#fffdf9]/90 p-6 shadow-[0_14px_34px_rgba(90,70,40,0.25)] md:p-8">
+            <div className="flex flex-col items-center gap-5">
+              <div className="h-48 w-36 overflow-hidden rounded-xl shadow-[0_10px_24px_rgba(90,70,40,0.35)] md:h-56 md:w-40">
+                {coverImageUrl ? (
+                  // eslint-disable-next-line @next/next/no-img-element
+                  <img
+                    src={coverImageUrl}
+                    alt={title}
+                    className="h-full w-full object-cover"
+                  />
+                ) : (
+                  <div className="flex h-full w-full items-center justify-center bg-gradient-to-br from-[#7c2d4e] to-[#3a3049] p-3 text-center font-serif text-sm font-bold text-[#fffdf9]">
+                    {title}
+                  </div>
+                )}
+              </div>
+
+              <div className="w-full text-center">
+                <p className="font-serif text-lg font-bold text-[#7c2d4e]">
                   {title}
-                </div>
-              )}
-            </div>
-
-            <div className="w-full text-center">
-              <p className="font-serif text-lg font-bold text-[#7c2d4e]">
-                {title}
-              </p>
-              <select
-                value={chapterIdx}
-                onChange={(event) => goToChapter(Number(event.target.value))}
-                aria-label={"B\u00f6l\u00fcm se\u00e7"}
-                className="mt-3 w-full rounded-lg border border-[#d9cbb8] bg-white px-3 py-2 text-sm"
-              >
-                {chapters.map((item, index) => (
-                  <option key={item.number} value={index}>
-                    {chapterLabel(item.number, item.title)}
-                  </option>
-                ))}
-              </select>
-              {resumeNotice ? (
-                <p className="mt-2 text-xs font-medium text-[#7c2d4e]/80">
-                  {resumeNotice}
                 </p>
-              ) : null}
-            </div>
+                <select
+                  value={chapterIdx}
+                  onChange={(event) => goToChapter(Number(event.target.value))}
+                  aria-label={"B\u00f6l\u00fcm se\u00e7"}
+                  className="mt-3 w-full rounded-lg border border-[#d9cbb8] bg-white px-3 py-2 text-sm"
+                >
+                  {chapters.map((item, index) => (
+                    <option key={item.number} value={index}>
+                      {chapterLabel(item.number, item.title)}
+                    </option>
+                  ))}
+                </select>
+                {resumeNotice ? (
+                  <p className="mt-2 text-xs font-medium text-[#7c2d4e]/80">
+                    {resumeNotice}
+                  </p>
+                ) : null}
+              </div>
 
-            <div className="w-full">
-              <input
-                type="range"
-                min={0}
-                max={duration || chapter.durationSec || 0}
-                step={1}
-                value={Math.min(currentTime, duration || chapter.durationSec || 0)}
-                onChange={(event) => seekTo(Number(event.target.value))}
-                aria-label={"Konum"}
-                className="w-full accent-[#7c2d4e]"
-              />
-              <div className="mt-1 flex justify-between text-xs text-[#a08a68]">
-                <span>{formatTime(currentTime)}</span>
-                <span>{formatTime(duration || chapter.durationSec || 0)}</span>
+              <div className="w-full">
+                <input
+                  type="range"
+                  min={0}
+                  max={duration || chapter.durationSec || 0}
+                  step={1}
+                  value={Math.min(
+                    currentTime,
+                    duration || chapter.durationSec || 0,
+                  )}
+                  onChange={(event) => seekTo(Number(event.target.value))}
+                  aria-label={"Konum"}
+                  className="w-full accent-[#7c2d4e]"
+                />
+                <div className="mt-1 flex justify-between text-xs text-[#a08a68]">
+                  <span>{formatTime(currentTime)}</span>
+                  <span>
+                    {formatTime(duration || chapter.durationSec || 0)}
+                  </span>
+                </div>
+              </div>
+
+              <div className="flex items-center gap-4">
+                <button
+                  type="button"
+                  onClick={() => goToChapter(chapterIdx - 1)}
+                  disabled={chapterIdx === 0}
+                  aria-label={"\u00d6nceki b\u00f6l\u00fcm"}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5e6da] text-[#7c2d4e] transition hover:bg-[#f0dcc9] disabled:opacity-30"
+                >
+                  <SkipBack className="h-5 w-5" />
+                </button>
+                <button
+                  type="button"
+                  onClick={togglePlay}
+                  aria-label={isPlaying ? "Duraklat" : "Oynat"}
+                  className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7c2d4e] text-[#fffdf9] shadow-md transition hover:bg-[#8f3a5e]"
+                >
+                  {isPlaying ? (
+                    <Pause className="h-7 w-7" />
+                  ) : (
+                    <Play className="ml-1 h-7 w-7" />
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => goToChapter(chapterIdx + 1)}
+                  disabled={chapterIdx >= chapters.length - 1}
+                  aria-label={"Sonraki b\u00f6l\u00fcm"}
+                  className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5e6da] text-[#7c2d4e] transition hover:bg-[#f0dcc9] disabled:opacity-30"
+                >
+                  <SkipForward className="h-5 w-5" />
+                </button>
+              </div>
+
+              <div className="flex flex-wrap items-center justify-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setRateIdx((rateIdx + 1) % PLAYBACK_RATES.length);
+                    window.setTimeout(saveCurrentPosition, 0);
+                  }}
+                  aria-label={"Oynatma h\u0131z\u0131"}
+                  className="rounded-full border border-[#d9cbb8] bg-white px-4 py-1.5 text-sm font-medium text-[#7c2d4e] transition hover:bg-[#f5e6da]"
+                >
+                  {playbackRate}x
+                </button>
+                {cues.length > 0 ? (
+                  <button
+                    type="button"
+                    onClick={() => setSubtitlesOn((value) => !value)}
+                    aria-pressed={subtitlesOn}
+                    aria-label={"Altyaz\u0131"}
+                    className="rounded-full border border-[#d9cbb8] bg-white px-4 py-1.5 text-sm font-medium text-[#7c2d4e] transition hover:bg-[#f5e6da]"
+                  >
+                    {subtitlesOn ? "Altyazı açık" : "Altyazı kapalı"}
+                  </button>
+                ) : null}
               </div>
             </div>
-
-            <div className="flex items-center gap-4">
-              <button
-                type="button"
-                onClick={() => goToChapter(chapterIdx - 1)}
-                disabled={chapterIdx === 0}
-                aria-label={"\u00d6nceki b\u00f6l\u00fcm"}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5e6da] text-[#7c2d4e] transition hover:bg-[#f0dcc9] disabled:opacity-30"
-              >
-                <SkipBack className="h-5 w-5" />
-              </button>
-              <button
-                type="button"
-                onClick={togglePlay}
-                aria-label={isPlaying ? "Duraklat" : "Oynat"}
-                className="flex h-16 w-16 items-center justify-center rounded-full bg-[#7c2d4e] text-[#fffdf9] shadow-md transition hover:bg-[#8f3a5e]"
-              >
-                {isPlaying ? (
-                  <Pause className="h-7 w-7" />
-                ) : (
-                  <Play className="ml-1 h-7 w-7" />
-                )}
-              </button>
-              <button
-                type="button"
-                onClick={() => goToChapter(chapterIdx + 1)}
-                disabled={chapterIdx >= chapters.length - 1}
-                aria-label={"Sonraki b\u00f6l\u00fcm"}
-                className="flex h-12 w-12 items-center justify-center rounded-full bg-[#f5e6da] text-[#7c2d4e] transition hover:bg-[#f0dcc9] disabled:opacity-30"
-              >
-                <SkipForward className="h-5 w-5" />
-              </button>
-            </div>
-
-            <button
-              type="button"
-              onClick={() => {
-                setRateIdx((rateIdx + 1) % PLAYBACK_RATES.length);
-                // Hiz tercihi de kayitta tutulsun.
-                window.setTimeout(saveCurrentPosition, 0);
-              }}
-              aria-label={"Oynatma h\u0131z\u0131"}
-              className="rounded-full border border-[#d9cbb8] bg-white px-4 py-1.5 text-sm font-medium text-[#7c2d4e] transition hover:bg-[#f5e6da]"
-            >
-              {playbackRate}x
-            </button>
           </div>
+
+          {subtitlesOn && cues.length > 0 ? (
+            <section
+              aria-label={"T\u00fcrk\u00e7e altyaz\u0131"}
+              className="flex min-h-[22rem] flex-col rounded-3xl border border-[#e5d9c3] bg-[#fffdf9]/90 p-4 shadow-[0_14px_34px_rgba(90,70,40,0.18)] md:min-h-[28rem] md:p-5"
+            >
+              <p className="mb-3 text-xs font-semibold uppercase tracking-[0.14em] text-[#a08a68]">
+                Türkçe altyazı
+              </p>
+              <div
+                ref={cueListRef}
+                className="max-h-[70vh] flex-1 space-y-3 overflow-y-auto pr-1"
+              >
+                {cues.map((cue, index) => {
+                  const isActive = index === activeCueIndex;
+                  return (
+                    <button
+                      key={`${cue.startMs}-${index}`}
+                      type="button"
+                      data-cue-index={index}
+                      onClick={() => seekTo(cue.startMs / 1000)}
+                      className={`block w-full rounded-2xl px-3 py-2 text-left transition ${
+                        isActive
+                          ? "bg-[#7c2d4e] text-[#fffdf9] shadow-sm"
+                          : "bg-transparent text-[#5a4a3a] hover:bg-[#f5e6da]/70"
+                      }`}
+                    >
+                      <span
+                        className={`font-serif text-[0.95rem] leading-relaxed md:text-base ${
+                          isActive ? "font-semibold" : "font-normal"
+                        }`}
+                      >
+                        {cue.textTr}
+                      </span>
+                    </button>
+                  );
+                })}
+              </div>
+            </section>
+          ) : null}
         </div>
       </main>
 
