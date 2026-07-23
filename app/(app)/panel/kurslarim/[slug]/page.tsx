@@ -16,7 +16,7 @@ import { CourseLessonsEmpty } from "@/components/player/course-lessons-empty";
 import { MarkLessonCompleteButton } from "@/components/player/mark-lesson-complete-button";
 import { LessonSidebar } from "@/components/player/lesson-sidebar";
 import { LessonAttachments } from "@/components/player/lesson-attachments";
-import { fetchCourseBySlug } from "@/lib/wordpress/api";
+import { resolvePlayerCourse } from "@/lib/course/resolve-player-course";
 import { groupLessonsByTopic } from "@/lib/lessons/group-by-topic";
 import { pickActiveLesson } from "@/lib/lessons/pick-active-lesson";
 import type { LessonProgress } from "@/types/lesson";
@@ -47,7 +47,7 @@ export default async function CoursePlayerPage({ params, searchParams }: Props) 
     redirect(`/giris?redirect=/panel/kurslarim/${slug}`);
   }
 
-  const course = await fetchCourseBySlug(slug);
+  const course = await resolvePlayerCourse(slug, user.id);
   if (!course) notFound();
 
   const enrollment = await checkCourseAccess(course.id, slug);

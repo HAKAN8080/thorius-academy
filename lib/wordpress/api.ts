@@ -601,13 +601,18 @@ export async function fetchAllCourses(): Promise<Course[]> {
   return fetchCoursesForListing();
 }
 
-export async function fetchCourseBySlug(slug: string): Promise<Course | null> {
+export async function fetchCourseBySlug(
+  slug: string,
+  options?: { timeoutMs?: number },
+): Promise<Course | null> {
+  const timeoutMs = options?.timeoutMs ?? WP_FETCH_TIMEOUT_MS;
+
   for (const variant of getCourseSlugLookupVariants(slug)) {
     try {
       const res = await wpFetch(
         `${WP_API_BASE}/courses?slug=${encodeURIComponent(variant)}&_embed=true`,
         {
-          signal: AbortSignal.timeout(1500),
+          signal: AbortSignal.timeout(timeoutMs),
           next: {
             revalidate: REVALIDATE_SECONDS,
             tags: [COURSE_CACHE_TAG, courseSlugCacheTag(variant)],
