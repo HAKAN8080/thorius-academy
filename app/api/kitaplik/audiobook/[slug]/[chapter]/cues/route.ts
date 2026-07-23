@@ -48,7 +48,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
 
   try {
     const response = await fetch(chapter.timingUrl, {
-      next: { revalidate: 300 },
+      cache: "no-store",
     });
     if (!response.ok) {
       return NextResponse.json(
