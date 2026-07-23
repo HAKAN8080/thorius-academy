@@ -1,5 +1,6 @@
 import Script from "next/script";
 import { MetaPixel } from "@/components/analytics/meta-pixel";
+import { UtmCapture } from "@/components/analytics/utm-capture";
 
 const GA_ID = process.env.NEXT_PUBLIC_GA_ID?.trim() || "";
 
@@ -26,6 +27,7 @@ export function AnalyticsScripts() {
         </>
       ) : null}
       <MetaPixel />
+      <UtmCapture />
     </>
   );
 }

@@ -1,4 +1,6 @@
 import { getWpSiteUrl } from "@/lib/config/portal-urls";
+import { appendAttributionToUrl } from "@/lib/analytics/utm";
+import { academyPath } from "@/lib/site/site-mode";
 
 export interface CheckoutCustomer {
   email: string;
@@ -27,6 +29,11 @@ export function splitFullName(fullName: string): {
   };
 }
 
+/** Default post-purchase destination (after /tesekkurler). */
+export function defaultCheckoutReturnUrl(): string {
+  return academyPath("/panel/kurslarim");
+}
+
 export function buildWooCommerceCheckoutUrl(
   wcProductId: number,
   customer?: CheckoutCustomer | null,
@@ -37,8 +44,9 @@ export function buildWooCommerceCheckoutUrl(
   url.searchParams.set("add-to-cart", String(wcProductId));
   url.searchParams.set("quantity", "1");
 
-  if (options?.returnUrl) {
-    url.searchParams.set("thorius_return", options.returnUrl);
+  const returnUrl = options?.returnUrl?.trim() || defaultCheckoutReturnUrl();
+  if (returnUrl) {
+    url.searchParams.set("thorius_return", returnUrl);
   }
 
   if (customer?.email) {
@@ -54,5 +62,5 @@ export function buildWooCommerceCheckoutUrl(
     url.searchParams.set("billing_phone", customer.phone);
   }
 
-  return url.toString();
+  return appendAttributionToUrl(url.toString());
 }

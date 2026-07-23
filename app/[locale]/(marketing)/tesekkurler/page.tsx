@@ -2,21 +2,94 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CheckCircle2, Mail, BookOpen } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { PurchaseTracker } from "@/components/analytics/purchase-tracker";
 
 export const metadata: Metadata = {
   title: "Teşekkürler — Siparişiniz Alındı",
   description: "Thorius Academy satın alma onayı",
 };
 
+function resolveNextHref(next: string | undefined): string {
+  if (!next?.trim()) {
+    return "/panel/kurslarim";
+  }
+
+  try {
+    const url = new URL(next);
+    const host = url.hostname.toLowerCase();
+    const allowed = new Set([
+      "academy.thorius.com.tr",
+      "kitaplik.thorius.com.tr",
+      "shop.thorius.com.tr",
+      "thorius.com.tr",
+      "www.thorius.com.tr",
+      "localhost",
+    ]);
+    if (!allowed.has(host)) {
+      return "/panel/kurslarim";
+    }
+    // Same-app relative path when on academy host
+    if (host === "academy.thorius.com.tr" || host === "localhost") {
+      return `${url.pathname}${url.search}${url.hash}` || "/panel/kurslarim";
+    }
+    return url.toString();
+  } catch {
+    if (next.startsWith("/") && !next.startsWith("//")) {
+      return next;
+    }
+    return "/panel/kurslarim";
+  }
+}
+
+function nextCtaLabel(nextHref: string): string {
+  if (nextHref.includes("kitaplik") || nextHref.includes("kitaplarim")) {
+    return "Kitaplarıma Git";
+  }
+  if (nextHref.includes("shop.thorius")) {
+    return "Mağazaya Dön";
+  }
+  return "Kurslarıma Git";
+}
+
 export default function TesekkurlerPage({
   searchParams,
 }: {
-  searchParams: { order_id?: string };
+  searchParams: {
+    order_id?: string;
+    value?: string;
+    currency?: string;
+    content_ids?: string;
+    content_name?: string;
+    next?: string;
+  };
 }) {
-  const orderId = searchParams.order_id;
+  const orderId = searchParams.order_id?.trim() || "";
+  const rawValue = searchParams.value?.trim();
+  const parsedValue =
+    rawValue != null && rawValue !== "" ? Number(rawValue) : null;
+  const value =
+    parsedValue != null && !Number.isNaN(parsedValue) ? parsedValue : null;
+  const currency = searchParams.currency?.trim() || "TRY";
+  const contentIds = (searchParams.content_ids ?? "")
+    .split(",")
+    .map((id) => id.trim())
+    .filter(Boolean);
+  const contentName = searchParams.content_name?.trim() || undefined;
+  const nextHref = resolveNextHref(searchParams.next);
+  const isExternalNext = nextHref.startsWith("http");
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
+      {orderId ? (
+        <PurchaseTracker
+          orderId={orderId}
+          value={value}
+          currency={currency}
+          contentIds={contentIds}
+          contentName={contentName}
+        />
+      ) : null}
+
       <div className="space-y-6 text-center">
         <div className="inline-flex h-20 w-20 items-center justify-center rounded-full bg-green-100">
           <CheckCircle2 className="h-12 w-12 text-green-600" />
@@ -24,20 +97,20 @@ export default function TesekkurlerPage({
 
         <div className="space-y-3">
           <h1 className="text-3xl font-bold text-primary-950 md:text-4xl">
-            Teşekkürler! 🎉
+            Teşekkürler!
           </h1>
           <p className="text-lg text-muted-foreground">
             Satın alma işleminiz başarıyla tamamlandı.
           </p>
-          {orderId && (
+          {orderId ? (
             <p className="text-sm text-muted-foreground">
               Sipariş No:{" "}
               <span className="font-mono font-semibold">{orderId}</span>
             </p>
-          )}
+          ) : null}
         </div>
 
-        <div className="my-8 space-y-4 rounded-2xl border border-primary-100 bg-gradient-to-br from-primary-50 to-accent-50 p-6 text-left md:p-8">
+        <div className="my-8 space-y-4 rounded-2xl border border-primary-100 bg-primary-50 p-6 text-left md:p-8">
           <h2 className="text-xl font-bold text-primary-950">
             Sıradaki Adımlar
           </h2>
@@ -63,11 +136,11 @@ export default function TesekkurlerPage({
             </div>
             <div>
               <p className="font-semibold text-primary-950">
-                2. Kursunuza Erişim
+                2. İçeriğinize Erişim
               </p>
               <p className="text-sm text-primary-700">
-                Sistem otomatik olarak kursunuzu hesabınıza tanımlar. Birkaç
-                dakika içinde panelden görebilirsiniz.
+                Sistem satın almanızı hesabınıza tanımlar. Birkaç dakika içinde
+                panelden görebilirsiniz.
               </p>
             </div>
           </div>
@@ -79,7 +152,11 @@ export default function TesekkurlerPage({
             size="lg"
             className="bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
           >
-            <Link href="/panel/kurslarim">Kurslarıma Git</Link>
+            {isExternalNext ? (
+              <a href={nextHref}>{nextCtaLabel(nextHref)}</a>
+            ) : (
+              <Link href={nextHref}>{nextCtaLabel(nextHref)}</Link>
+            )}
           </Button>
           <Button asChild variant="outline" size="lg">
             <Link href="/kurslar">Diğer Kurslara Bak</Link>

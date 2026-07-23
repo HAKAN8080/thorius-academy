@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.7.4
+ * Version: 1.8.0
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,10 +11,11 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.7.4');
+define('THORIUS_CHECKOUT_VERSION', '1.8.0');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
+define('THORIUS_CHECKOUT_THANKYOU_URL', 'https://academy.thorius.com.tr/tesekkurler');
 define('THORIUS_CHECKOUT_KITAPLIK_MY_BOOKS_URL', 'https://kitaplik.thorius.com.tr/kitaplarim');
 define('THORIUS_CHECKOUT_PATH', plugin_dir_path(__FILE__));
 define('THORIUS_CHECKOUT_URL', plugin_dir_url(__FILE__));
@@ -491,6 +492,8 @@ function thorius_checkout_allowed_return_hosts(): array
         'shop.thorius.com.tr',
         'thorius.com.tr',
         'www.thorius.com.tr',
+        'localhost',
+        '127.0.0.1',
     );
 
     return apply_filters('thorius_checkout_allowed_return_hosts', $hosts);
@@ -578,14 +581,17 @@ function thorius_checkout_order_contains_only_library_products(WC_Order $order):
     return true;
 }
 
-function thorius_checkout_post_payment_url(?WC_Order $order = null): string
-{
-    if (function_exists('WC') && WC()->session) {
-        $stored = WC()->session->get('thorius_return_url');
-        if (is_string($stored) && $stored !== '' && thorius_checkout_is_allowed_return_url($stored)) {
-            WC()->session->__unset('thorius_return_url');
-            return $stored;
-        }
+function thorius_checkout_destination_after_thankyou(
+    ?WC_Order $order = null,
+    ?string $stored_return = null
+): string {
+    if (
+        is_string($stored_return)
+        && $stored_return !== ''
+        && thorius_checkout_is_allowed_return_url($stored_return)
+        && strpos($stored_return, '/tesekkurler') === false
+    ) {
+        return $stored_return;
     }
 
     if ($order instanceof WC_Order && thorius_checkout_order_contains_only_library_products($order)) {
@@ -595,14 +601,100 @@ function thorius_checkout_post_payment_url(?WC_Order $order = null): string
     return thorius_checkout_catalog_url();
 }
 
+/**
+ * Academy /tesekkurler with purchase params for GA4/Meta Purchase.
+ */
+function thorius_checkout_build_thankyou_url(WC_Order $order, string $next_url): string
+{
+    $base = apply_filters('thorius_checkout_thankyou_url', THORIUS_CHECKOUT_THANKYOU_URL);
+
+    $product_ids = array();
+    $names = array();
+    foreach ($order->get_items() as $item) {
+        if (!($item instanceof WC_Order_Item_Product)) {
+            continue;
+        }
+        $product_id = absint($item->get_product_id());
+        if ($product_id > 0) {
+            $product_ids[] = (string) $product_id;
+        }
+        $name = trim((string) $item->get_name());
+        if ($name !== '') {
+            $names[] = $name;
+        }
+    }
+
+    $args = array(
+        'order_id' => (string) $order->get_id(),
+        'value' => (string) $order->get_total(),
+        'currency' => $order->get_currency() ? (string) $order->get_currency() : 'TRY',
+    );
+
+    if ($product_ids !== array()) {
+        $args['content_ids'] = implode(',', $product_ids);
+    }
+    if ($names !== array()) {
+        $args['content_name'] = $names[0];
+    }
+    if ($next_url !== '' && thorius_checkout_is_allowed_return_url($next_url)) {
+        $args['next'] = $next_url;
+    }
+
+    return add_query_arg($args, $base);
+}
+
+/**
+ * @return string Absolute post-payment URL (Academy thank-you with conversion params).
+ */
+function thorius_checkout_post_payment_url(?WC_Order $order = null): string
+{
+    static $cache = array();
+
+    $cache_key = $order instanceof WC_Order ? (string) $order->get_id() : '0';
+    if (isset($cache[$cache_key])) {
+        return $cache[$cache_key];
+    }
+
+    $stored = null;
+    if (function_exists('WC') && WC()->session) {
+        $candidate = WC()->session->get('thorius_return_url');
+        if (is_string($candidate) && $candidate !== '') {
+            $stored = $candidate;
+            WC()->session->__unset('thorius_return_url');
+        }
+    }
+
+    $next = thorius_checkout_destination_after_thankyou($order, $stored);
+
+    if ($order instanceof WC_Order) {
+        $url = thorius_checkout_build_thankyou_url($order, $next);
+        $cache[$cache_key] = $url;
+        return $url;
+    }
+
+    $cache[$cache_key] = $next;
+    return $next;
+}
+
 function thorius_checkout_post_payment_link_label(?WC_Order $order = null): string
 {
-    $target = thorius_checkout_post_payment_url($order);
-    if (strpos($target, 'kitaplik.thorius.com.tr') !== false) {
+    $next = '';
+    if ($order instanceof WC_Order) {
+        $thankyou = thorius_checkout_post_payment_url($order);
+        $parts = wp_parse_url($thankyou);
+        if (is_array($parts) && !empty($parts['query'])) {
+            parse_str((string) $parts['query'], $query);
+            if (!empty($query['next']) && is_string($query['next'])) {
+                $next = $query['next'];
+            }
+        }
+    }
+
+    if ($next !== '' && strpos($next, 'kitaplik.thorius.com.tr') !== false) {
         return __('Kitaplarıma dön', 'thorius-checkout');
     }
 
-    return __('Kurslara dön', 'thorius-checkout');
+    return __('Panele dön', 'thorius-checkout');
 }
 add_filter('woocommerce_return_to_shop_redirect', 'thorius_checkout_catalog_url');
 add_filter('woocommerce_continue_shopping_redirect', 'thorius_checkout_catalog_url');
@@ -691,9 +783,7 @@ function thorius_checkout_thankyou_redirect_fallback(int $order_id): void
         esc_html($link_label) .
         '</a>';
 
-    $message = strpos($catalog_url, 'kitaplik.thorius.com.tr') !== false
-        ? __('Ödemeniz alındı. Kitaplarım sayfasına yönlendiriliyorsunuz… %s', 'thorius-checkout')
-        : __('Ödemeniz alındı. Kurslarınıza yönlendiriliyorsunuz… %s', 'thorius-checkout');
+    $message = __('Ödemeniz alındı. Onay sayfasına yönlendiriliyorsunuz… %s', 'thorius-checkout');
 
     echo '<p class="thorius-thankyou-redirect">' .
         sprintf(

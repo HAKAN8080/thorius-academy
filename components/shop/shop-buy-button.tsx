@@ -1,6 +1,8 @@
 "use client";
 
 import { buildWooCommerceCheckoutUrl } from "@/lib/course/checkout-url";
+import { trackBeginCheckout } from "@/lib/analytics/tracking";
+import { shopPath } from "@/lib/site/site-mode";
 import { Button } from "@/components/ui/button";
 
 interface ShopBuyButtonProps {
@@ -11,6 +13,7 @@ interface ShopBuyButtonProps {
   label?: string;
   size?: "default" | "lg";
   className?: string;
+  productName?: string;
 }
 
 export function ShopBuyButton({
@@ -21,11 +24,21 @@ export function ShopBuyButton({
   label = "Satın al",
   size = "lg",
   className,
+  productName,
 }: ShopBuyButtonProps) {
   const finalPrice = priceSale ?? priceNormal;
 
   function handleBuy() {
-    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId);
+    trackBeginCheckout({
+      id: String(wcProductId),
+      name: productName?.trim() || label,
+      price: finalPrice,
+      currency: "TRY",
+    });
+
+    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, null, {
+      returnUrl: shopPath("/"),
+    });
     window.location.href = checkoutUrl;
   }
 

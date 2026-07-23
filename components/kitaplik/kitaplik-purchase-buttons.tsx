@@ -5,6 +5,7 @@ import { BookMarked, BookOpen, Headphones, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { buildWooCommerceCheckoutUrl } from "@/lib/course/checkout-url";
+import { trackBeginCheckout } from "@/lib/analytics/tracking";
 
 interface KitaplikPurchaseButtonsProps {
   bookSlug: string;
@@ -47,7 +48,12 @@ export function KitaplikPurchaseButtons({
   customerFirstName,
   customerLastName,
 }: KitaplikPurchaseButtonsProps) {
-  function goToCheckout(wcProductId: number, requiresLogin: boolean) {
+  function goToCheckout(
+    wcProductId: number,
+    requiresLogin: boolean,
+    price: number | null,
+    label: string,
+  ) {
     if (requiresLogin && (!isLoggedIn || !customerEmail)) {
       toast.info("E-kitap satın almak için giriş yapın");
       window.location.href = academyPath(
@@ -55,6 +61,13 @@ export function KitaplikPurchaseButtons({
       );
       return;
     }
+
+    trackBeginCheckout({
+      id: bookSlug,
+      name: label,
+      price,
+      currency: "TRY",
+    });
 
     const checkoutUrl = buildWooCommerceCheckoutUrl(
       wcProductId,
@@ -87,7 +100,14 @@ export function KitaplikPurchaseButtons({
           <Button
             className="w-full bg-primary-950 font-semibold text-accent-500 hover:bg-primary-900 hover:text-accent-400"
             disabled={!printedInStock}
-            onClick={() => goToCheckout(printedWcProductId, false)}
+            onClick={() =>
+              goToCheckout(
+                printedWcProductId,
+                false,
+                printedSalePrice ?? printedPrice,
+                `${bookSlug} (basılı)`,
+              )
+            }
           >
             {printedInStock
               ? `Basılı sipariş ver — ${printedLabel}`
@@ -143,7 +163,14 @@ export function KitaplikPurchaseButtons({
             <Button
               className="w-full bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
               disabled={!ebookInStock}
-              onClick={() => goToCheckout(ebookWcProductId, true)}
+              onClick={() =>
+                goToCheckout(
+                  ebookWcProductId,
+                  true,
+                  ebookSalePrice ?? ebookPrice,
+                  `${bookSlug} (e-kitap)`,
+                )
+              }
             >
               {ebookInStock
                 ? `E-kitap al — ${ebookLabel}`

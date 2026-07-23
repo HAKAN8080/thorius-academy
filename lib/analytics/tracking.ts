@@ -93,3 +93,46 @@ export function trackViewContent(item: TrackingItem): void {
     currency,
   });
 }
+
+export interface PurchaseTrackingPayload {
+  transactionId: string;
+  value: number;
+  currency?: string;
+  items: TrackingItem[];
+}
+
+/** GA4 purchase + Meta Purchase (fire once per transactionId). */
+export function trackPurchase(payload: PurchaseTrackingPayload): void {
+  if (typeof window === "undefined") {
+    return;
+  }
+
+  const currency = payload.currency ?? "TRY";
+  const value = toPrice(payload.value) ?? 0;
+  const items = payload.items.map((item) => ({
+    item_id: item.id,
+    item_name: item.name,
+    price: toPrice(item.price),
+    quantity: 1,
+  }));
+
+  window.gtag?.("event", "purchase", {
+    transaction_id: payload.transactionId,
+    currency,
+    value,
+    items,
+  });
+
+  const contentIds = payload.items
+    .map((item) => item.id)
+    .filter((id): id is string => Boolean(id));
+
+  trackMeta("Purchase", {
+    content_name: payload.items[0]?.name,
+    content_ids: contentIds.length > 0 ? contentIds : undefined,
+    content_type: "product",
+    value,
+    currency,
+    num_items: payload.items.length || 1,
+  });
+}

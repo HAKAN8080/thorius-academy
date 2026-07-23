@@ -9,6 +9,8 @@ import {
   type CheckoutCustomer,
 } from "@/lib/course/checkout-url";
 import { isPurchasableCareerPathProduct } from "@/lib/career-path/career-path-product-utils";
+import { trackBeginCheckout } from "@/lib/analytics/tracking";
+import { academyPath } from "@/lib/site/site-mode";
 import type { CareerPathProduct } from "@/types/career-path-product";
 
 interface CareerPathBuyButtonProps {
@@ -48,9 +50,17 @@ export function CareerPathBuyButton({
       return;
     }
 
+    trackBeginCheckout({
+      id: pathSlug,
+      name: pathSlug,
+      price: finalPrice,
+      currency: "TRY",
+    });
+
     const checkoutUrl = buildWooCommerceCheckoutUrl(
       pathProduct.wc_product_id,
       customer,
+      { returnUrl: academyPath("/panel/kurslarim") },
     );
     window.location.href = checkoutUrl;
   }

@@ -10,6 +10,7 @@ import {
   type CheckoutCustomer,
 } from "@/lib/course/checkout-url";
 import { trackBeginCheckout } from "@/lib/analytics/tracking";
+import { academyPath } from "@/lib/site/site-mode";
 
 interface Props {
   wcProductId: number;
@@ -56,7 +57,9 @@ export function BuyButton({
       currency: "TRY",
     });
 
-    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer);
+    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer, {
+      returnUrl: academyPath("/panel/kurslarim"),
+    });
     window.location.href = checkoutUrl;
   }
 

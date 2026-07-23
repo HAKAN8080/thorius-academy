@@ -13,6 +13,13 @@ WooCommerce ödeme sayfası (`/odeme/`) için dijital kurs satışına uygun sad
 
 ## Ne yapar?
 
+### v1.8.0 — Purchase attribution
+- Ödeme sonrası yönlendirme: `academy.thorius.com.tr/tesekkurler` + `order_id`, `value`, `currency`, `content_ids`, `next`
+- Academy thank-you sayfasında GA4 `purchase` + Meta `Purchase` ateşlenir
+- `thorius_return` artık teşekkür *sonrası* hedef (panel / kitaplarım)
+- wp-config: `THORIUS_GA_ID`, `THORIUS_META_PIXEL_ID` (checkout domain PageView)
+- Vercel: `NEXT_PUBLIC_GA_ID`, `NEXT_PUBLIC_META_PIXEL_ID` (Academy thank-you Purchase) — **redeploy şart**
+
 ### v1.7.2 — Siparis ozeti toplam satiri
 - Toplam satirinda **Toplam** etiketi gorunur
 - Satir fiyatlari ve toplam tutarin yaninda **KDV Dahil** notu
