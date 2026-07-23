@@ -100,13 +100,24 @@ export const getAudiobookManifest = cache(
 
 /** Cache-busted cue JSON when Bunny edge keeps stale chapter_XX.json. */
 const CDN_CUES_SUFFIX_BY_SLUG: Record<string, string> = {
-  "aurora-en": ".cues.v3.json",
+  "aurora-en": ".cues.v6.json",
+};
+
+/** Cache-busted audio when Bunny edge keeps stale concatenated MP3s. */
+const CDN_AUDIO_SUFFIX_BY_SLUG: Record<string, string> = {
+  "aurora-en": ".v2.mp3",
 };
 
 function chapterTimingFilename(slug: string, stem: string): string {
   const suffix = CDN_CUES_SUFFIX_BY_SLUG[slug];
   if (suffix) return `${stem}${suffix}`;
   return `${stem}.json`;
+}
+
+function chapterAudioFilename(slug: string, stem: string): string {
+  const suffix = CDN_AUDIO_SUFFIX_BY_SLUG[slug];
+  if (suffix) return `${stem}${suffix}`;
+  return `${stem}.mp3`;
 }
 
 function chapterSourcesFromCdn(
@@ -116,7 +127,10 @@ function chapterSourcesFromCdn(
     const stem = chapterFileStem(chapter.number);
     return {
       ...chapter,
-      audioUrl: cdnObjectUrl(manifest.slug, `${stem}.mp3`),
+      audioUrl: cdnObjectUrl(
+        manifest.slug,
+        chapterAudioFilename(manifest.slug, stem),
+      ),
       timingUrl: cdnObjectUrl(
         manifest.slug,
         chapterTimingFilename(manifest.slug, stem),

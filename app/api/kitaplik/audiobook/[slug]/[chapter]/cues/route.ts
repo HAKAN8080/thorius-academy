@@ -47,9 +47,12 @@ export async function GET(_request: Request, { params }: RouteParams) {
   }
 
   try {
-    // Prefer timingUrl (may be cache-busted *.cues.v3.json); fall back to chapter_XX.json.
+    // Prefer timingUrl (cache-busted *.cues.v6.json); fall back v6 → v3 → chapter_XX.json.
     const candidates = [chapter.timingUrl];
-    if (chapter.timingUrl.includes(".cues.v3.json")) {
+    if (chapter.timingUrl.includes(".cues.v6.json")) {
+      candidates.push(chapter.timingUrl.replace(".cues.v6.json", ".cues.v3.json"));
+      candidates.push(chapter.timingUrl.replace(".cues.v6.json", ".json"));
+    } else if (chapter.timingUrl.includes(".cues.v3.json")) {
       candidates.push(chapter.timingUrl.replace(".cues.v3.json", ".json"));
     }
     let payload: unknown = null;
