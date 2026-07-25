@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import {
   getAudiobookChapterSources,
-  getAudiobookManifest,
+  getEnabledAudiobookManifest,
 } from "@/lib/kitaplik/audiobook-access";
 import { parseAudiobookCues } from "@/lib/kitaplik/audiobook-cues";
 import { getKitaplikBookPurchaseState } from "@/lib/kitaplik/book-purchase-state";
@@ -35,7 +35,7 @@ export async function GET(_request: Request, { params }: RouteParams) {
     return NextResponse.json({ error: "Erişim yok." }, { status: 403 });
   }
 
-  const manifest = await getAudiobookManifest(slug);
+  const manifest = await getEnabledAudiobookManifest(book);
   if (!manifest) {
     return NextResponse.json({ error: "Sesli sürüm yok." }, { status: 404 });
   }

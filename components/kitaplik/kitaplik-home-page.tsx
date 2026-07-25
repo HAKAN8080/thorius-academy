@@ -2,7 +2,7 @@ import { BookOpen, Headphones, Truck } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { KitaplikBookCatalog } from "@/components/kitaplik/kitaplik-book-catalog";
 import { KitaplikLibraryHero } from "@/components/kitaplik/kitaplik-library-hero";
-import { getAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
+import { getEnabledAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { listPublishedLibraryBooksWithPricing } from "@/lib/kitaplik/repository";
 
 export async function KitaplikHomePage() {
@@ -20,7 +20,7 @@ export async function KitaplikHomePage() {
   const audiobookFlags = await Promise.all(
     books.map(
       async (book) =>
-        [book.slug, Boolean(await getAudiobookManifest(book.slug))] as const,
+        [book.slug, Boolean(await getEnabledAudiobookManifest(book))] as const,
     ),
   );
   const hasAudiobookBySlug = Object.fromEntries(audiobookFlags);

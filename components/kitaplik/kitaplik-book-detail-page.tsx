@@ -3,7 +3,7 @@ import { notFound } from "next/navigation";
 import { Container } from "@/components/layout/container";
 import { KitaplikBookSpecs } from "@/components/kitaplik/kitaplik-book-specs";
 import { KitaplikPurchaseButtons } from "@/components/kitaplik/kitaplik-purchase-buttons";
-import { getAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
+import { getEnabledAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { getKitaplikBookPurchaseState } from "@/lib/kitaplik/book-purchase-state";
 
 interface KitaplikBookDetailPageProps {
@@ -20,7 +20,7 @@ export async function KitaplikBookDetailPage({
     notFound();
   }
 
-  const audiobook = await getAudiobookManifest(book.slug);
+  const audiobook = await getEnabledAudiobookManifest(book);
 
   return (
     <section className="py-10 md:py-14">

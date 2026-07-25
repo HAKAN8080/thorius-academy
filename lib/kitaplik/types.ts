@@ -20,6 +20,8 @@ export interface LibraryBook {
   isbn: string | null;
   publisher: string | null;
   is_published: boolean;
+  /** Kapaliysa manifest yuklu olsa bile sesli kitap yok sayilir. */
+  audiobook_enabled: boolean;
   sort_order: number;
 }
 

@@ -100,6 +100,11 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
     isbn: (data.isbn as string | null) ?? null,
     publisher: (data.publisher as string | null) ?? null,
     is_published: Boolean(data.is_published),
+    // Kolon migration'i uygulanmadiysa eski davranisi koru (manifest belirler).
+    audiobook_enabled:
+      data.audiobook_enabled === undefined
+        ? true
+        : Boolean(data.audiobook_enabled),
     sort_order: Number(data.sort_order ?? 0),
   };
 }
@@ -121,6 +126,7 @@ type LibraryBookWritePayload = {
   publisher?: string | null;
   sort_order: number;
   is_published: boolean;
+  audiobook_enabled?: boolean;
   updated_at: string;
 };
 
@@ -149,6 +155,13 @@ function isMissingIsbnOrPublisherColumnError(message: string): boolean {
   );
 }
 
+function isMissingAudiobookEnabledColumnError(message: string): boolean {
+  return (
+    message.includes("Could not find the 'audiobook_enabled' column") ||
+    (message.includes("audiobook_enabled") && message.includes("schema cache"))
+  );
+}
+
 function mapKitaplikDbError(message: string): string {
   if (isMissingLanguageColumnError(message)) {
     return "Supabase'de library_books.language kolonu henuz yok. SQL Editor'da supabase/manual/20260711180000_library_books_language_prod_apply.sql dosyasini calistirin, sonra API schema cache'i yenileyin.";
@@ -158,6 +171,9 @@ function mapKitaplikDbError(message: string): string {
   }
   if (isMissingIsbnOrPublisherColumnError(message)) {
     return "Supabase'de library_books.isbn / publisher kolonlari henuz yok. SQL Editor'da supabase/manual/20260719140000_library_books_isbn_publisher_prod_apply.sql dosyasini calistirin.";
+  }
+  if (isMissingAudiobookEnabledColumnError(message)) {
+    return "Supabase'de library_books.audiobook_enabled kolonu henuz yok. SQL Editor'da supabase/manual/20260725180000_library_books_audiobook_enabled_prod_apply.sql dosyasini calistirin.";
   }
   return message;
 }
@@ -184,6 +200,16 @@ async function writeLibraryBook(
   };
 
   let { data, error } = await attempt(payload);
+
+  if (
+    error &&
+    isMissingAudiobookEnabledColumnError(error.message) &&
+    payload.audiobook_enabled !== undefined
+  ) {
+    const withoutAudiobook = { ...payload };
+    delete withoutAudiobook.audiobook_enabled;
+    ({ data, error } = await attempt(withoutAudiobook));
+  }
 
   if (
     error &&
@@ -309,6 +335,7 @@ export async function saveKitaplikBook(
     publisher: parseOptionalText(formData.get("publisher")),
     sort_order: parseOptionalInt(formData.get("sort_order")) ?? 0,
     is_published: formData.get("is_published") === "true",
+    audiobook_enabled: formData.get("audiobook_enabled") === "true",
     updated_at: new Date().toISOString(),
   };
 

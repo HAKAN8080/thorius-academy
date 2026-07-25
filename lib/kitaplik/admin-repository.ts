@@ -34,6 +34,11 @@ function mapBookRow(row: Record<string, unknown>): LibraryBook {
     isbn: (row.isbn as string | null) ?? null,
     publisher: (row.publisher as string | null) ?? null,
     is_published: Boolean(row.is_published),
+    // Kolon migration'i uygulanmadiysa eski davranisi koru (manifest belirler).
+    audiobook_enabled:
+      row.audiobook_enabled === undefined
+        ? true
+        : Boolean(row.audiobook_enabled),
     sort_order: Number(row.sort_order ?? 0),
   };
 }

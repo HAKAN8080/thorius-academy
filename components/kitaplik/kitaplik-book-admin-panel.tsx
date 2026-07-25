@@ -46,6 +46,7 @@ interface BookFormState {
   publisher: string;
   sort_order: string;
   is_published: boolean;
+  audiobook_enabled: boolean;
   ebook_storage_path: string;
 }
 
@@ -67,6 +68,7 @@ const emptyForm = (): BookFormState => ({
   publisher: "",
   sort_order: "0",
   is_published: false,
+  audiobook_enabled: false,
   ebook_storage_path: "",
 });
 
@@ -91,6 +93,7 @@ function bookToForm(book: LibraryBook): BookFormState {
     publisher: book.publisher ?? "",
     sort_order: String(book.sort_order ?? 0),
     is_published: book.is_published,
+    audiobook_enabled: book.audiobook_enabled,
     ebook_storage_path: book.ebook_storage_path ?? "",
   };
 }
@@ -213,6 +216,10 @@ export function KitaplikBookAdminPanel({
       payload.set("publisher", form.publisher);
       payload.set("sort_order", form.sort_order);
       payload.set("is_published", form.is_published ? "true" : "false");
+      payload.set(
+        "audiobook_enabled",
+        form.audiobook_enabled ? "true" : "false",
+      );
 
       const result = await saveKitaplikBook(payload);
       if ("error" in result) {
@@ -478,6 +485,27 @@ export function KitaplikBookAdminPanel({
             <Label htmlFor="is_published">Yayinda (kitaplikta gorunsun)</Label>
           </div>
 
+          <div className="space-y-1 md:col-span-2">
+            <div className="flex items-center gap-2">
+              <input
+                id="audiobook_enabled"
+                type="checkbox"
+                checked={form.audiobook_enabled}
+                onChange={(event) =>
+                  updateField("audiobook_enabled", event.target.checked)
+                }
+                className="h-4 w-4 rounded border-input"
+              />
+              <Label htmlFor="audiobook_enabled">
+                Sesli kitap acik (dinleme aktif)
+              </Label>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              Kapaliyken ses dosyalari yuklu olsa bile &quot;Sesli&quot; rozeti
+              ve dinleme sayfasi devre disi kalir.
+            </p>
+          </div>
+
           <div className="space-y-2 md:col-span-2 rounded-xl border border-dashed border-primary-200 bg-primary-50/40 p-4">
             <Label htmlFor="ebook_pdf">E-kitap PDF</Label>
             <input
@@ -583,6 +611,9 @@ export function KitaplikBookAdminPanel({
                     </Badge>
                     <Badge variant={book.ebook_storage_path ? "outline" : "secondary"}>
                       {book.ebook_storage_path ? "PDF var" : "PDF yok"}
+                    </Badge>
+                    <Badge variant={book.audiobook_enabled ? "outline" : "secondary"}>
+                      {book.audiobook_enabled ? "Sesli acik" : "Sesli kapali"}
                     </Badge>
                   </div>
                 </div>

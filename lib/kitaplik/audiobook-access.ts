@@ -1,5 +1,6 @@
 import { cache } from "react";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
+import type { LibraryBook } from "@/lib/kitaplik/types";
 
 const BUCKET = "audiobook-files";
 const SIGNED_URL_TTL_SECONDS = 3 * 60 * 60;
@@ -97,6 +98,17 @@ export const getAudiobookManifest = cache(
     return fetchSupabaseManifest(slug);
   },
 );
+
+/**
+ * Admin anahtari (audiobook_enabled) kapaliysa manifest yuklu olsa bile
+ * sesli kitap yok sayilir. Kullanici tarafindaki tum kontroller bunu kullanmali.
+ */
+export async function getEnabledAudiobookManifest(
+  book: Pick<LibraryBook, "slug" | "audiobook_enabled">,
+): Promise<AudiobookManifest | null> {
+  if (!book.audiobook_enabled) return null;
+  return getAudiobookManifest(book.slug);
+}
 
 /** Cache-busted cue JSON when Bunny edge keeps stale chapter_XX.json. */
 const CDN_CUES_SUFFIX_BY_SLUG: Record<string, string> = {

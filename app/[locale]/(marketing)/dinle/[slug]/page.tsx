@@ -2,7 +2,7 @@ import { notFound, redirect } from "next/navigation";
 import { AudiobookReader } from "@/components/kitaplik/audiobook-reader";
 import {
   getAudiobookChapterSources,
-  getAudiobookManifest,
+  getEnabledAudiobookManifest,
 } from "@/lib/kitaplik/audiobook-access";
 import { getKitaplikBookPurchaseState } from "@/lib/kitaplik/book-purchase-state";
 import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
@@ -47,7 +47,7 @@ export default async function DinlePage({ params }: DinlePageProps) {
     redirect(`/kitap/${slug}`);
   }
 
-  const manifest = await getAudiobookManifest(slug);
+  const manifest = await getEnabledAudiobookManifest(book);
   if (!manifest) {
     return (
       <div className="flex min-h-screen items-center justify-center bg-[#0a1228] px-6 text-center text-white">
