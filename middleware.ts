@@ -98,8 +98,17 @@ function redirectToKitaplikHome() {
   return NextResponse.redirect(new URL("/", getKitaplikOrigin()));
 }
 
+function redirectCompanyKitaplikPath() {
+  return NextResponse.redirect(new URL("/", getKitaplikOrigin()), 308);
+}
+
 function resolveSiteModePath(pathname: string): string {
   return stripLocalePrefix(pathname);
+}
+
+function isLegacyCompanyKitaplikPath(pathname: string): boolean {
+  const stripped = stripLocalePrefix(pathname);
+  return stripped === "/kitaplik" || stripped.startsWith("/kitaplik/");
 }
 
 export async function middleware(request: NextRequest) {
@@ -128,6 +137,10 @@ export async function middleware(request: NextRequest) {
   }
 
   if (isCompanySiteHost(host)) {
+    if (isLegacyCompanyKitaplikPath(sitePath)) {
+      return redirectCompanyKitaplikPath();
+    }
+
     if (isCompanyRedirectToWordPressPath(sitePath)) {
       return redirectToWordPress(request);
     }
