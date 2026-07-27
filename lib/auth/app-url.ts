@@ -69,14 +69,18 @@ export function redirectResponseUrl(next: string, requestOrigin: string): string
 }
 
 export function getAuthCallbackUrl(nextPath: string): string {
-  return `${getAppOrigin()}/auth/callback?next=${encodeURIComponent(safeNextPath(nextPath))}`;
+  return `${getAppOrigin()}/auth/callback?next=${encodeURIComponent(safeRedirectTarget(nextPath))}`;
 }
 
 export function getEmailRedirectUrl(nextPath = "/panel"): string {
-  return getAuthCallbackUrl(safeNextPath(nextPath));
+  return getAuthCallbackUrl(nextPath);
 }
 
-/** E-posta doğrulama — yalnızca göreli yollar. */
+/**
+ * Yalnızca göreli yollar (parola sıfırlama vb.).
+ * E-posta / OAuth dönüşü için `safeRedirectTarget` kullanın —
+ * Kitaplik gibi güvenilir absolute URL'ler korunur.
+ */
 export function safeNextPath(next: string | null): string {
   if (!next || !next.startsWith("/") || next.startsWith("//")) {
     return "/panel";

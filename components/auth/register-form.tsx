@@ -10,6 +10,7 @@ import {
   signUp,
   type AuthActionState,
 } from "@/lib/actions/auth";
+import { safeRedirectTarget } from "@/lib/auth/app-url";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -137,7 +138,7 @@ function RegisterSuccess({
 
 export function RegisterForm() {
   const searchParams = useSearchParams();
-  const redirectTo = searchParams.get("redirect") ?? "/panel";
+  const redirectTo = safeRedirectTarget(searchParams.get("redirect"));
   const [state, formAction] = useFormState(signUp, initialState);
   const [resendState, resendAction] = useFormState(
     resendVerificationEmail,

@@ -1,9 +1,11 @@
 import { getAuthCallbackUrl, getAppOrigin } from "@/lib/auth/app-url";
 import { fulfillCareerPathPurchase } from "@/lib/career-path/fulfill-career-path-purchase";
 import {
+  classifyLibraryWcProduct,
   fulfillEbookPurchase,
   isLibraryBookProductId,
 } from "@/lib/kitaplik/fulfill-ebook-purchase";
+import { EbookPurchaseEmail } from "@/lib/email/templates/ebook-purchase";
 import { EnrollmentEmail } from "@/lib/email/templates/enrollment";
 import { recordEnrollmentEarning } from "@/lib/earnings/record-enrollment-earning";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
@@ -168,6 +170,26 @@ async function isOrderAlreadyProcessed(orderId: number): Promise<boolean> {
   );
 }
 
+/** Basılı-only kitap siparişlerinde Auth kullanıcısı oluşturma. */
+async function orderNeedsDigitalAccount(
+  lineItems: WooCommerceOrderWebhook["line_items"],
+): Promise<boolean> {
+  if (!lineItems?.length) {
+    return false;
+  }
+
+  for (const item of lineItems) {
+    const kind = await classifyLibraryWcProduct(item.product_id);
+    if (kind === "printed") {
+      continue;
+    }
+    // E-kitap veya kurs/kariyer yolu / bilinmeyen ürün → dijital hesap gerekir
+    return true;
+  }
+
+  return false;
+}
+
 export async function processWooCommerceOrder(
   order: WooCommerceOrderWebhook,
 ): Promise<ProcessWcOrderResult> {
@@ -194,6 +216,24 @@ export async function processWooCommerceOrder(
       enrolled_courses: [],
       email_sent: false,
       message: "Order already processed",
+    };
+  }
+
+  const needsDigitalAccount = await orderNeedsDigitalAccount(
+    order.line_items ?? [],
+  );
+  if (!needsDigitalAccount) {
+    console.log(
+      "[Webhook] Printed-only library order — Auth kullanıcısı oluşturulmadı:",
+      order.id,
+    );
+    return {
+      success: true,
+      order_id: order.id,
+      enrolled_courses: [],
+      granted_books: [],
+      email_sent: false,
+      message: "Printed-only order; no digital entitlement",
     };
   }
 
@@ -374,7 +414,21 @@ export async function processWooCommerceOrder(
   let accessLink: string;
 
   if (isBookOnly) {
-    accessLink = `${getAppOrigin()}/giris?redirect=${encodeURIComponent(kitaplarimUrl)}`;
+    const redirectTo = getAuthCallbackUrl(kitaplarimUrl);
+    const { data: magicLinkData, error: magicLinkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: customerEmail,
+        options: { redirectTo },
+      });
+
+    if (magicLinkError) {
+      console.error("[Webhook] Book magic link error:", magicLinkError.message);
+    }
+
+    accessLink =
+      magicLinkData?.properties?.action_link ??
+      `${getAppOrigin()}/giris?redirect=${encodeURIComponent(kitaplarimUrl)}`;
   } else {
     const firstCourseSlug = enrolledCourses[0].slug;
     const redirectTo = getAuthCallbackUrl(`/panel/kurslarim/${firstCourseSlug}`);
@@ -407,14 +461,21 @@ export async function processWooCommerceOrder(
       from: getResendFromAddress(),
       to: customerEmail,
       subject: isBookOnly
-        ? `📚 Kitabınız Hazır - ${contentTitle}`
-        : `🎓 Kursunuz Hazır - ${contentTitle}`,
-      react: EnrollmentEmail({
-        customerName,
-        courseTitle: contentTitle,
-        magicLink: accessLink,
-        orderTotal,
-      }),
+        ? `Kitabınız hazır — ${contentTitle}`
+        : `Kursunuz hazır — ${contentTitle}`,
+      react: isBookOnly
+        ? EbookPurchaseEmail({
+            customerName,
+            bookTitle: contentTitle,
+            accessLink,
+            orderTotal,
+          })
+        : EnrollmentEmail({
+            customerName,
+            courseTitle: contentTitle,
+            magicLink: accessLink,
+            orderTotal,
+          }),
     });
 
     if (emailError) {

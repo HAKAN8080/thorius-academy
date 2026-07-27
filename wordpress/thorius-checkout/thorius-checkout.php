@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.8.0
+ * Version: 1.9.0
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.8.0');
+define('THORIUS_CHECKOUT_VERSION', '1.9.0');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -527,9 +527,14 @@ function thorius_checkout_is_allowed_return_url(string $url): bool
  */
 function thorius_checkout_library_product_ids(): array
 {
-    $ids = array(8978, 8980);
+    // Kitaplik basili + e-kitap WC urunleri (guncel tutun / filter ile genisletin)
+    // 9046 = aurora (TR e-kitap), 9055 = aurora-en (EN e-kitap)
+    $ids = array(8978, 8980, 9046, 9055);
 
-    return array_map('absint', apply_filters('thorius_checkout_library_product_ids', $ids));
+    return array_values(array_unique(array_filter(array_map(
+        'absint',
+        apply_filters('thorius_checkout_library_product_ids', $ids)
+    ))));
 }
 
 function thorius_checkout_store_return_url_from_request(): void
@@ -554,6 +559,38 @@ function thorius_checkout_store_return_url_from_request(): void
     WC()->session->set('thorius_return_url', $candidate);
 }
 add_action('template_redirect', 'thorius_checkout_store_return_url_from_request', 3);
+
+/**
+ * PayTR / 3DS sonrasi session kaybolabiliyor — return URL'yi siparise yaz.
+ */
+function thorius_checkout_persist_return_url_on_order(WC_Order $order): void
+{
+    if (!function_exists('WC') || !WC()->session) {
+        return;
+    }
+
+    $candidate = WC()->session->get('thorius_return_url');
+    if (!is_string($candidate) || $candidate === '') {
+        return;
+    }
+
+    if (!thorius_checkout_is_allowed_return_url($candidate)) {
+        return;
+    }
+
+    $order->update_meta_data('_thorius_return_url', $candidate);
+}
+add_action('woocommerce_checkout_create_order', 'thorius_checkout_persist_return_url_on_order', 20);
+
+function thorius_checkout_order_return_url(WC_Order $order): ?string
+{
+    $stored = $order->get_meta('_thorius_return_url', true);
+    if (is_string($stored) && $stored !== '' && thorius_checkout_is_allowed_return_url($stored)) {
+        return $stored;
+    }
+
+    return null;
+}
 
 function thorius_checkout_order_contains_only_library_products(WC_Order $order): bool
 {
@@ -581,6 +618,24 @@ function thorius_checkout_order_contains_only_library_products(WC_Order $order):
     return true;
 }
 
+function thorius_checkout_order_looks_like_kitaplik(WC_Order $order): bool
+{
+    if (thorius_checkout_order_contains_only_library_products($order)) {
+        return true;
+    }
+
+    $order_return = thorius_checkout_order_return_url($order);
+    if (is_string($order_return) && strpos($order_return, 'kitaplik.thorius.com.tr') !== false) {
+        return true;
+    }
+
+    if (is_string($order_return) && strpos($order_return, '/kitaplarim') !== false) {
+        return true;
+    }
+
+    return false;
+}
+
 function thorius_checkout_destination_after_thankyou(
     ?WC_Order $order = null,
     ?string $stored_return = null
@@ -594,8 +649,15 @@ function thorius_checkout_destination_after_thankyou(
         return $stored_return;
     }
 
-    if ($order instanceof WC_Order && thorius_checkout_order_contains_only_library_products($order)) {
-        return THORIUS_CHECKOUT_KITAPLIK_MY_BOOKS_URL;
+    if ($order instanceof WC_Order) {
+        $order_return = thorius_checkout_order_return_url($order);
+        if (is_string($order_return) && strpos($order_return, '/tesekkurler') === false) {
+            return $order_return;
+        }
+
+        if (thorius_checkout_order_looks_like_kitaplik($order)) {
+            return THORIUS_CHECKOUT_KITAPLIK_MY_BOOKS_URL;
+        }
     }
 
     return thorius_checkout_catalog_url();

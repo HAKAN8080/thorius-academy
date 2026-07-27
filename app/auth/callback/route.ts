@@ -2,7 +2,7 @@ import type { EmailOtpType } from "@supabase/supabase-js";
 import { createServerClient } from "@supabase/ssr";
 import { cookies } from "next/headers";
 import { NextResponse } from "next/server";
-import { redirectResponseUrl, safeNextPath } from "@/lib/auth/app-url";
+import { redirectResponseUrl, safeRedirectTarget } from "@/lib/auth/app-url";
 import { ensureUserProfile } from "@/lib/profile/ensure-profile";
 import { createClient } from "@/lib/supabase/server";
 import { mergeAuthCookieOptions } from "@/lib/supabase/auth-cookies";
@@ -50,7 +50,7 @@ async function finalizeVerifiedSession(
 
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url);
-  const next = safeNextPath(requestUrl.searchParams.get("next"));
+  const next = safeRedirectTarget(requestUrl.searchParams.get("next"));
   const code = requestUrl.searchParams.get("code");
   const tokenHash = requestUrl.searchParams.get("token_hash");
   const type = requestUrl.searchParams.get("type");

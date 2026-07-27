@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { BookOpen, Headphones } from "lucide-react";
 import { Container } from "@/components/layout/container";
+import { PendingAccessRefresh } from "@/components/marketing/pending-access-refresh";
 import { Button } from "@/components/ui/button";
 import { getEnabledAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { listUserReadableEbooks } from "@/lib/kitaplik/repository";
@@ -8,7 +9,11 @@ import { hasKitaplikAdminReadAllAccess } from "@/lib/kitaplik/ebook-read-access"
 import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
 import { createClient } from "@/lib/supabase/server";
 
-export async function KitaplikMyBooksPage() {
+export async function KitaplikMyBooksPage({
+  pendingPurchase = false,
+}: {
+  pendingPurchase?: boolean;
+}) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -63,6 +68,7 @@ export async function KitaplikMyBooksPage() {
     }),
   );
   const hasAudiobookBySlug = Object.fromEntries(audiobookFlags);
+  const showPendingEmpty = pendingPurchase && owned.length === 0;
 
   return (
     <section className="py-10 md:py-14">
@@ -77,11 +83,17 @@ export async function KitaplikMyBooksPage() {
         {owned.length === 0 ? (
           <div className="mt-10 rounded-2xl border border-dashed border-primary-200 bg-primary-50/60 px-6 py-12 text-center">
             <p className="font-medium text-primary-900">
-              Henüz e-kitabınız yok.
+              {showPendingEmpty
+                ? "Satın almanız işleniyor…"
+                : "Henüz e-kitabınız yok."}
             </p>
-            <Button asChild variant="outline" className="mt-4">
-              <Link href="/">Kitaplara göz at</Link>
-            </Button>
+            {showPendingEmpty ? (
+              <PendingAccessRefresh active />
+            ) : (
+              <Button asChild variant="outline" className="mt-4">
+                <Link href="/">Kitaplara göz at</Link>
+              </Button>
+            )}
           </div>
         ) : (
           <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">

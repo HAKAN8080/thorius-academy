@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
 import { BookMarked, BookOpen, Headphones, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -48,6 +49,8 @@ export function KitaplikPurchaseButtons({
   customerFirstName,
   customerLastName,
 }: KitaplikPurchaseButtonsProps) {
+  const autoCheckoutStarted = useRef(false);
+
   function goToCheckout(
     wcProductId: number,
     requiresLogin: boolean,
@@ -56,8 +59,11 @@ export function KitaplikPurchaseButtons({
   ) {
     if (requiresLogin && (!isLoggedIn || !customerEmail)) {
       toast.info("E-kitap satın almak için giriş yapın");
+      const returnPath = kitaplikPath(
+        `/kitap/${bookSlug}?checkout=ebook`,
+      );
       window.location.href = academyPath(
-        `/giris?redirect=${encodeURIComponent(kitaplikPath(`/kitap/${bookSlug}`))}`,
+        `/giris?redirect=${encodeURIComponent(returnPath)}`,
       );
       return;
     }
@@ -82,6 +88,32 @@ export function KitaplikPurchaseButtons({
     );
     window.location.href = checkoutUrl;
   }
+
+  useEffect(() => {
+    if (autoCheckoutStarted.current) return;
+    const wantsCheckout =
+      new URLSearchParams(window.location.search).get("checkout") === "ebook";
+    if (!wantsCheckout) return;
+    if (hasEbookAccess) return;
+    if (!ebookWcProductId || !ebookInStock) return;
+    if (!isLoggedIn || !customerEmail) return;
+
+    autoCheckoutStarted.current = true;
+    goToCheckout(
+      ebookWcProductId,
+      true,
+      ebookSalePrice ?? ebookPrice,
+      `${bookSlug} (e-kitap)`,
+    );
+    // Intentional: resume checkout once after login return
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [
+    hasEbookAccess,
+    ebookWcProductId,
+    ebookInStock,
+    isLoggedIn,
+    customerEmail,
+  ]);
 
   const printedLabel = formatPrice(printedPrice, printedSalePrice);
   const ebookLabel = formatPrice(ebookPrice, ebookSalePrice);

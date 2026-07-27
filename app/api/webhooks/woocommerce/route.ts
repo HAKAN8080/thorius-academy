@@ -66,6 +66,13 @@ export async function POST(req: NextRequest) {
 
     const result = await processWooCommerceOrder(order);
 
+    // Permanent failures should not retry; transient ones must be non-2xx
+    // so WooCommerce redelivers the webhook.
+    if (!result.success) {
+      const permanent = result.warning === "No customer email";
+      return webhookResponse({ ...result }, permanent ? 422 : 500);
+    }
+
     return webhookResponse({
       ...result,
     });
@@ -77,7 +84,7 @@ export async function POST(req: NextRequest) {
         error: "Webhook processing failed",
         details: error instanceof Error ? error.message : String(error),
       },
-      200,
+      500,
     );
   }
 }

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useLocale, useTranslations } from "next-intl";
 import { useRouter } from "@/i18n/navigation";
 import { toast } from "sonner";
@@ -36,6 +37,7 @@ export function BuyButton({
   const t = useTranslations("courses.purchase");
   const locale = useLocale();
   const router = useRouter();
+  const autoCheckoutStarted = useRef(false);
   const priceLocale = locale === "en" ? "en-US" : "tr-TR";
   const finalPrice = priceSale || priceNormal;
   const hasDiscount =
@@ -46,7 +48,9 @@ export function BuyButton({
   function handleBuy() {
     if (!isLoggedIn || !customer?.email) {
       toast.info(t("loginToBuy"));
-      router.push(`/giris?redirect=/kurslar/${courseSlug}`);
+      router.push(
+        `/giris?redirect=${encodeURIComponent(`/kurslar/${courseSlug}?checkout=1`)}`,
+      );
       return;
     }
 
@@ -62,6 +66,20 @@ export function BuyButton({
     });
     window.location.href = checkoutUrl;
   }
+
+  useEffect(() => {
+    if (autoCheckoutStarted.current) return;
+    const wantsCheckout =
+      new URLSearchParams(window.location.search).get("checkout") === "1";
+    if (!wantsCheckout) return;
+    if (!finalPrice) return;
+    if (!isLoggedIn || !customer?.email) return;
+
+    autoCheckoutStarted.current = true;
+    handleBuy();
+    // Intentional: resume checkout once after login return
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoggedIn, customer?.email, finalPrice]);
 
   if (!finalPrice) {
     return null;

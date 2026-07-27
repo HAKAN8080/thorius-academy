@@ -94,6 +94,15 @@ export async function isLibraryBookProductId(
   return Boolean(resolved);
 }
 
+/** `ebook` | `printed` | null (not a library catalog product). */
+export async function classifyLibraryWcProduct(
+  wcProductId: number,
+): Promise<"ebook" | "printed" | null> {
+  const resolved = await resolveBookForWcProduct(wcProductId);
+  if (!resolved) return null;
+  return resolved.isEbookPurchase ? "ebook" : "printed";
+}
+
 export async function grantEbookEntitlementByEmail(params: {
   email: string;
   bookSlug?: string;
