@@ -7,6 +7,7 @@ import {
 import { EnrollmentEmail } from "@/lib/email/templates/enrollment";
 import { recordEnrollmentEarning } from "@/lib/earnings/record-enrollment-earning";
 import { getResendClient, getResendFromAddress } from "@/lib/resend/client";
+import { getKitaplikOrigin } from "@/lib/site/site-mode";
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
 import { fetchCourseBySlug } from "@/lib/wordpress/api";
 import type { CareerPathProduct } from "@/types/career-path-product";
@@ -30,11 +31,17 @@ interface EnrolledCourse {
   title: string;
 }
 
+interface GrantedBook {
+  slug: string;
+  title: string;
+}
+
 export interface ProcessWcOrderResult {
   success: boolean;
   order_id: number;
   user_id?: string;
   enrolled_courses: EnrolledCourse[];
+  granted_books?: GrantedBook[];
   email_sent: boolean;
   message?: string;
   warning?: string;
@@ -118,7 +125,7 @@ async function getOrCreateUser(
 async function isOrderAlreadyProcessed(orderId: number): Promise<boolean> {
   const supabaseAdmin = getSupabaseAdmin();
 
-  const [enrollmentCheck, pathEnrollmentCheck] = await Promise.all([
+  const [enrollmentCheck, pathEnrollmentCheck, ebookCheck] = await Promise.all([
     supabaseAdmin
       .from("enrollments")
       .select("id")
@@ -126,6 +133,11 @@ async function isOrderAlreadyProcessed(orderId: number): Promise<boolean> {
       .limit(1),
     supabaseAdmin
       .from("career_path_enrollments")
+      .select("id")
+      .eq("wc_order_id", orderId)
+      .limit(1),
+    supabaseAdmin
+      .from("ebook_entitlements")
       .select("id")
       .eq("wc_order_id", orderId)
       .limit(1),
@@ -142,9 +154,17 @@ async function isOrderAlreadyProcessed(orderId: number): Promise<boolean> {
     );
   }
 
+  if (ebookCheck.error) {
+    console.warn(
+      "[Webhook] ebook entitlement wc_order_id check skipped:",
+      ebookCheck.error.message,
+    );
+  }
+
   return (
     (enrollmentCheck.data?.length ?? 0) > 0 ||
-    (pathEnrollmentCheck.data?.length ?? 0) > 0
+    (pathEnrollmentCheck.data?.length ?? 0) > 0 ||
+    (ebookCheck.data?.length ?? 0) > 0
   );
 }
 
@@ -190,6 +210,7 @@ export async function processWooCommerceOrder(
 
   const supabaseAdmin = getSupabaseAdmin();
   const enrolledCourses: EnrolledCourse[] = [];
+  const grantedBooks: GrantedBook[] = [];
   const orderTotalAmount = Number.parseFloat(order.total);
   const saleAmountBase = Number.isFinite(orderTotalAmount) ? orderTotalAmount : 0;
   const mappableLineItems = (order.line_items ?? []).length || 1;
@@ -205,7 +226,15 @@ export async function processWooCommerceOrder(
         wcProductId,
       });
 
-      if (ebookResult.success && ebookResult.bookSlug) {
+      if (ebookResult.success && ebookResult.printedOnly) {
+        console.log(
+          `[Webhook] Basılı kitap siparişi — kurs/e-kitap kaydı açılmadı (${wcProductId})`,
+        );
+      } else if (ebookResult.success && ebookResult.bookSlug) {
+        grantedBooks.push({
+          slug: ebookResult.bookSlug,
+          title: item.name,
+        });
         console.log(
           `[Webhook] E-kitap erişimi: ${ebookResult.bookSlug}${
             ebookResult.alreadyGranted ? " (zaten vardı)" : ""
@@ -214,10 +243,6 @@ export async function processWooCommerceOrder(
       } else if (!ebookResult.success && ebookResult.error) {
         console.warn(
           `[Webhook] Kitaplık ürünü atlandı (${wcProductId}): ${ebookResult.error}`,
-        );
-      } else {
-        console.log(
-          `[Webhook] Basılı kitap siparişi — kurs kaydı açılmadı (${wcProductId})`,
         );
       }
       continue;
@@ -328,36 +353,47 @@ export async function processWooCommerceOrder(
     console.log(`[Webhook] Enrolled: ${courseSlug}`);
   }
 
-  if (enrolledCourses.length === 0) {
+  if (enrolledCourses.length === 0 && grantedBooks.length === 0) {
     return {
       success: true,
       order_id: order.id,
       user_id: userId,
       enrolled_courses: [],
+      granted_books: [],
       email_sent: false,
-      warning: "No courses to enroll",
+      warning: "No courses or ebooks to fulfill",
     };
   }
 
-  const firstCourseSlug = enrolledCourses[0].slug;
-  const redirectTo = getAuthCallbackUrl(`/panel/kurslarim/${firstCourseSlug}`);
+  const isBookOnly = enrolledCourses.length === 0 && grantedBooks.length > 0;
+  const kitaplarimUrl = `${getKitaplikOrigin()}/kitaplarim`;
+  const contentTitle = isBookOnly
+    ? grantedBooks.map((book) => book.title).join(", ")
+    : enrolledCourses.map((course) => course.title).join(", ");
 
-  const { data: magicLinkData, error: magicLinkError } =
-    await supabaseAdmin.auth.admin.generateLink({
-      type: "magiclink",
-      email: customerEmail,
-      options: { redirectTo },
-    });
+  let accessLink: string;
 
-  if (magicLinkError) {
-    console.error("[Webhook] Magic link error:", magicLinkError.message);
+  if (isBookOnly) {
+    accessLink = `${getAppOrigin()}/giris?redirect=${encodeURIComponent(kitaplarimUrl)}`;
+  } else {
+    const firstCourseSlug = enrolledCourses[0].slug;
+    const redirectTo = getAuthCallbackUrl(`/panel/kurslarim/${firstCourseSlug}`);
+    const { data: magicLinkData, error: magicLinkError } =
+      await supabaseAdmin.auth.admin.generateLink({
+        type: "magiclink",
+        email: customerEmail,
+        options: { redirectTo },
+      });
+
+    if (magicLinkError) {
+      console.error("[Webhook] Magic link error:", magicLinkError.message);
+    }
+
+    accessLink =
+      magicLinkData?.properties?.action_link ??
+      `${getAppOrigin()}/giris?redirect=${encodeURIComponent(`/panel/kurslarim/${firstCourseSlug}`)}`;
   }
 
-  const magicLink =
-    magicLinkData?.properties?.action_link ??
-    `${getAppOrigin()}/giris?redirect=${encodeURIComponent(`/panel/kurslarim/${firstCourseSlug}`)}`;
-
-  const courseTitle = enrolledCourses.map((course) => course.title).join(", ");
   const parsedTotal = Number.parseFloat(order.total);
   const orderTotal = Number.isFinite(parsedTotal)
     ? `₺${parsedTotal.toLocaleString("tr-TR")}`
@@ -370,11 +406,13 @@ export async function processWooCommerceOrder(
     const { error: emailError } = await resend.emails.send({
       from: getResendFromAddress(),
       to: customerEmail,
-      subject: `🎓 Kursunuz Hazır - ${courseTitle}`,
+      subject: isBookOnly
+        ? `📚 Kitabınız Hazır - ${contentTitle}`
+        : `🎓 Kursunuz Hazır - ${contentTitle}`,
       react: EnrollmentEmail({
         customerName,
-        courseTitle,
-        magicLink,
+        courseTitle: contentTitle,
+        magicLink: accessLink,
         orderTotal,
       }),
     });
@@ -394,6 +432,7 @@ export async function processWooCommerceOrder(
     order_id: order.id,
     user_id: userId,
     enrolled_courses: enrolledCourses,
+    granted_books: grantedBooks,
     email_sent: emailSent,
   };
 }

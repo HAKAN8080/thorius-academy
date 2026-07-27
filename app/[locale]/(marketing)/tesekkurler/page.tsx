@@ -28,6 +28,9 @@ function resolveNextHref(next: string | undefined): string {
     if (!allowed.has(host)) {
       return "/panel/kurslarim";
     }
+    if (host === "kitaplik.thorius.com.tr") {
+      return url.toString();
+    }
     // Same-app relative path when on academy host
     if (host === "academy.thorius.com.tr" || host === "localhost") {
       return `${url.pathname}${url.search}${url.hash}` || "/panel/kurslarim";
@@ -77,6 +80,8 @@ export default function TesekkurlerPage({
   const contentName = searchParams.content_name?.trim() || undefined;
   const nextHref = resolveNextHref(searchParams.next);
   const isExternalNext = nextHref.startsWith("http");
+  const isKitaplikNext =
+    nextHref.includes("kitaplik") || nextHref.includes("kitaplarim");
 
   return (
     <div className="container mx-auto max-w-3xl px-4 py-16 sm:px-6 md:py-24 lg:px-8">
@@ -139,8 +144,9 @@ export default function TesekkurlerPage({
                 2. İçeriğinize Erişim
               </p>
               <p className="text-sm text-primary-700">
-                Sistem satın almanızı hesabınıza tanımlar. Birkaç dakika içinde
-                panelden görebilirsiniz.
+                {isKitaplikNext
+                  ? "E-kitabınız Kitaplarım paneline tanımlanır. Birkaç dakika içinde oradan okuyabilirsiniz."
+                  : "Sistem satın almanızı hesabınıza tanımlar. Birkaç dakika içinde panelden görebilirsiniz."}
               </p>
             </div>
           </div>
@@ -159,7 +165,9 @@ export default function TesekkurlerPage({
             )}
           </Button>
           <Button asChild variant="outline" size="lg">
-            <Link href="/kurslar">Diğer Kurslara Bak</Link>
+            <Link href={isKitaplikNext ? "https://kitaplik.thorius.com.tr/" : "/kurslar"}>
+              {isKitaplikNext ? "Kitaplığa Dön" : "Diğer Kurslara Bak"}
+            </Link>
           </Button>
         </div>
 

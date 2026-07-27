@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BookOpen } from "lucide-react";
+import { BookOpen, Headphones } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { Button } from "@/components/ui/button";
+import { getEnabledAudiobookManifest } from "@/lib/kitaplik/audiobook-access";
 import { listUserReadableEbooks } from "@/lib/kitaplik/repository";
 import { hasKitaplikAdminReadAllAccess } from "@/lib/kitaplik/ebook-read-access";
 import { academyPath, kitaplikPath } from "@/lib/site/site-mode";
@@ -42,18 +43,26 @@ export async function KitaplikMyBooksPage() {
     return (
       <section className="py-16">
         <Container size="narrow" className="text-center">
-          <h1 className="text-2xl font-bold text-primary-950">Kitaplarim</h1>
+          <h1 className="text-2xl font-bold text-primary-950">Kitaplarım</h1>
           <p className="mt-3 text-primary-700">
-            Kitaplariniz su anda yuklenemiyor. Lutfen birkac dakika sonra tekrar
+            Kitaplarınız şu an yüklenemiyor. Lütfen birkaç dakika sonra tekrar
             deneyin.
           </p>
           <Button asChild variant="outline" className="mt-6">
-            <Link href="/">Ana sayfaya don</Link>
+            <Link href="/">Ana sayfaya dön</Link>
           </Button>
         </Container>
       </section>
     );
   }
+
+  const audiobookFlags = await Promise.all(
+    owned.map(async (book) => {
+      const manifest = await getEnabledAudiobookManifest(book);
+      return [book.slug, Boolean(manifest)] as const;
+    }),
+  );
+  const hasAudiobookBySlug = Object.fromEntries(audiobookFlags);
 
   return (
     <section className="py-10 md:py-14">
@@ -61,8 +70,8 @@ export async function KitaplikMyBooksPage() {
         <h1 className="text-3xl font-bold text-primary-950">Kitaplarım</h1>
         <p className="mt-2 text-primary-700">
           {isAdminReader
-            ? "Yonetici erisimi — PDF yuklu tum e-kitaplar okunabilir."
-            : "Satin aldiginiz e-kitaplar — yalnizca burada okunabilir."}
+            ? "Yönetici erişimi — PDF yüklü tüm e-kitaplar okunabilir."
+            : "Satın aldığınız e-kitaplar — yalnızca burada okunabilir / dinlenebilir."}
         </p>
 
         {owned.length === 0 ? (
@@ -76,44 +85,67 @@ export async function KitaplikMyBooksPage() {
           </div>
         ) : (
           <ul className="mt-10 grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
-            {owned.map((book) => (
-              <li
-                key={book.id}
-                className="flex flex-col rounded-2xl border border-primary-100 bg-white p-5 shadow-sm"
-              >
-                <div className="flex gap-4">
-                  {book.cover_image_url ? (
-                    // eslint-disable-next-line @next/next/no-img-element
-                    <img
-                      src={book.cover_image_url}
-                      alt=""
-                      className="h-24 w-24 shrink-0 rounded bg-primary-50 object-contain p-1"
-                    />
-                  ) : (
-                    <div className="h-24 w-16 shrink-0 rounded bg-primary-200" />
-                  )}
-                  <div>
-                    <h2 className="font-semibold text-primary-950">
-                      {book.title}
-                    </h2>
-                    {book.author ? (
-                      <p className="text-sm text-muted-foreground">
-                        {book.author}
-                      </p>
+            {owned.map((book) => {
+              const hasAudiobook = hasAudiobookBySlug[book.slug] === true;
+              return (
+                <li
+                  key={book.id}
+                  className="flex flex-col rounded-2xl border border-primary-100 bg-white p-5 shadow-sm"
+                >
+                  <div className="flex gap-4">
+                    {book.cover_image_url ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={book.cover_image_url}
+                        alt=""
+                        className="h-24 w-24 shrink-0 rounded bg-primary-50 object-contain p-1"
+                      />
+                    ) : (
+                      <div className="h-24 w-16 shrink-0 rounded bg-primary-200" />
+                    )}
+                    <div>
+                      <h2 className="font-semibold text-primary-950">
+                        {book.title}
+                      </h2>
+                      {book.author ? (
+                        <p className="text-sm text-muted-foreground">
+                          {book.author}
+                        </p>
+                      ) : null}
+                      {hasAudiobook ? (
+                        <p className="mt-1 inline-flex items-center gap-1 text-xs font-medium text-accent-700">
+                          <Headphones className="h-3.5 w-3.5" />
+                          Sesli e-kitap dahil
+                        </p>
+                      ) : null}
+                    </div>
+                  </div>
+                  <div className="mt-5 flex flex-col gap-2">
+                    <Button
+                      asChild
+                      className="w-full bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
+                    >
+                      <Link href={`/oku/${book.slug}`}>
+                        <BookOpen className="mr-2 h-4 w-4" />
+                        Oku
+                      </Link>
+                    </Button>
+                    {hasAudiobook ? (
+                      <Button
+                        asChild
+                        variant="outline"
+                        className="w-full border-accent-400 font-semibold text-accent-700 hover:bg-accent-50"
+                      >
+                        <Link href={`/dinle/${book.slug}`}>
+                          <Headphones className="mr-2 h-4 w-4" />
+                          Sesli Dinle
+                        </Link>
+                      </Button>
                     ) : null}
                   </div>
-                </div>
-                <Button
-                  asChild
-                  className="mt-5 w-full bg-accent-500 font-semibold text-primary-950 hover:bg-accent-600"
-                >
-                  <Link href={`/oku/${book.slug}`}>
-                    <BookOpen className="mr-2 h-4 w-4" />
-                    Oku
-                  </Link>
-                </Button>
-              </li>
-            ))}
+                </li>
+              );
+            })}
           </ul>
         )}
       </Container>

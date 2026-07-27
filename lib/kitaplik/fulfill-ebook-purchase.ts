@@ -1,11 +1,33 @@
 import { getSupabaseAdmin } from "@/lib/supabase/admin";
-import { getLibraryBookByEbookProductId } from "@/lib/kitaplik/repository";
+import {
+  getLibraryBookByEbookProductId,
+  getLibraryBookByPrintedProductId,
+  getLibraryBookBySlug,
+} from "@/lib/kitaplik/repository";
+import type { LibraryBook } from "@/lib/kitaplik/types";
 
 export interface FulfillEbookPurchaseResult {
   success: boolean;
   bookSlug?: string;
   alreadyGranted?: boolean;
+  printedOnly?: boolean;
   error?: string;
+}
+
+async function resolveBookForWcProduct(
+  wcProductId: number,
+): Promise<{ book: LibraryBook; isEbookPurchase: boolean } | null> {
+  const ebookBook = await getLibraryBookByEbookProductId(wcProductId);
+  if (ebookBook) {
+    return { book: ebookBook, isEbookPurchase: true };
+  }
+
+  const printedBook = await getLibraryBookByPrintedProductId(wcProductId);
+  if (printedBook) {
+    return { book: printedBook, isEbookPurchase: false };
+  }
+
+  return null;
 }
 
 export async function fulfillEbookPurchase(params: {
@@ -13,17 +35,19 @@ export async function fulfillEbookPurchase(params: {
   wcOrderId: number;
   wcProductId: number;
 }): Promise<FulfillEbookPurchaseResult> {
-  const book = await getLibraryBookByEbookProductId(params.wcProductId);
+  const resolved = await resolveBookForWcProduct(params.wcProductId);
 
-  if (!book) {
-    return { success: false, error: "E-kitap kataloğunda bulunamadı" };
+  if (!resolved) {
+    return { success: false, error: "Kitaplık kataloğunda bulunamadı" };
   }
 
-  if (!book.ebook_storage_path) {
+  const { book, isEbookPurchase } = resolved;
+
+  if (!isEbookPurchase) {
     return {
-      success: false,
+      success: true,
       bookSlug: book.slug,
-      error: "E-kitap dosyası henüz yüklenmedi",
+      printedOnly: true,
     };
   }
 
@@ -54,21 +78,79 @@ export async function fulfillEbookPurchase(params: {
     return { success: false, bookSlug: book.slug, error: error.message };
   }
 
+  if (!book.ebook_storage_path) {
+    console.warn(
+      `[Kitaplik] E-kitap hakkı verildi ama PDF yok: ${book.slug}`,
+    );
+  }
+
   return { success: true, bookSlug: book.slug };
 }
 
 export async function isLibraryBookProductId(
   wcProductId: number,
 ): Promise<boolean> {
-  const book = await getLibraryBookByEbookProductId(wcProductId);
-  if (book) return true;
+  const resolved = await resolveBookForWcProduct(wcProductId);
+  return Boolean(resolved);
+}
+
+export async function grantEbookEntitlementByEmail(params: {
+  email: string;
+  bookSlug?: string;
+  ebookWcProductId?: number;
+  wcOrderId?: number;
+}): Promise<FulfillEbookPurchaseResult & { userId?: string }> {
+  const email = params.email.trim().toLowerCase();
+  if (!email) {
+    return { success: false, error: "E-posta gerekli" };
+  }
+
+  let book: LibraryBook | null = null;
+
+  if (params.ebookWcProductId) {
+    book = await getLibraryBookByEbookProductId(params.ebookWcProductId);
+  } else if (params.bookSlug) {
+    book = await getLibraryBookBySlug(params.bookSlug, {
+      includeUnpublished: true,
+    });
+  }
+
+  if (!book) {
+    return { success: false, error: "Kitap bulunamadı" };
+  }
+
+  if (!book.ebook_wc_product_id) {
+    return {
+      success: false,
+      bookSlug: book.slug,
+      error: "Bu kitabın e-kitap WC ürünü yok",
+    };
+  }
 
   const supabaseAdmin = getSupabaseAdmin();
-  const { data } = await supabaseAdmin
-    .from("library_books")
-    .select("id")
-    .eq("printed_wc_product_id", wcProductId)
-    .maybeSingle();
+  let userId: string | null = null;
+  let page = 1;
+  while (page <= 10 && !userId) {
+    const { data, error } = await supabaseAdmin.auth.admin.listUsers({
+      page,
+      perPage: 200,
+    });
+    if (error) return { success: false, error: error.message };
+    const match = data.users.find((u) => u.email?.toLowerCase() === email);
+    if (match) userId = match.id;
+    if (data.users.length < 200) break;
+    page += 1;
+  }
 
-  return Boolean(data);
+  if (!userId) {
+    return { success: false, error: "Kullanıcı bulunamadı" };
+  }
+
+  const result = await fulfillEbookPurchase({
+    userId,
+    wcOrderId: params.wcOrderId ?? 0,
+    wcProductId: book.ebook_wc_product_id,
+  });
+
+  return { ...result, userId };
 }

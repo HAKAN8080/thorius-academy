@@ -118,6 +118,23 @@ export async function getLibraryBookByEbookProductId(
   return data ? mapBookRow(data as Record<string, unknown>) : null;
 }
 
+export async function getLibraryBookByPrintedProductId(
+  wcProductId: number,
+): Promise<LibraryBook | null> {
+  const supabase = getSupabaseAdmin();
+  const { data, error } = await supabase
+    .from("library_books")
+    .select("*")
+    .eq("printed_wc_product_id", wcProductId)
+    .maybeSingle();
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return data ? mapBookRow(data as Record<string, unknown>) : null;
+}
+
 export async function userHasEbookEntitlement(
   userId: string,
   libraryBookId: string,
