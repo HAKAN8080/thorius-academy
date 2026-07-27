@@ -11,8 +11,10 @@ import { createClient } from "@/lib/supabase/server";
 
 export async function KitaplikMyBooksPage({
   pendingPurchase = false,
+  orderId,
 }: {
   pendingPurchase?: boolean;
+  orderId?: string;
 }) {
   const supabase = await createClient();
   const {
@@ -88,7 +90,7 @@ export async function KitaplikMyBooksPage({
                 : "Henüz e-kitabınız yok."}
             </p>
             {showPendingEmpty ? (
-              <PendingAccessRefresh active />
+              <PendingAccessRefresh active orderId={orderId} />
             ) : (
               <Button asChild variant="outline" className="mt-4">
                 <Link href="/">Kitaplara göz at</Link>

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.9.2
+ * Version: 1.9.3
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.9.2');
+define('THORIUS_CHECKOUT_VERSION', '1.9.3');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -365,6 +365,70 @@ function thorius_checkout_validate_customer_gate(): void
     }
 }
 add_action('woocommerce_checkout_process', 'thorius_checkout_validate_customer_gate', 5);
+
+/**
+ * Siparis olusurken e-posta yoksa hard-fail — webhook kitap yazamaz.
+ * (%%100 kupon / bos form kacagini burada keser.)
+ */
+function thorius_checkout_abort_order_without_email($order, array $data): void
+{
+    if (!is_a($order, 'WC_Order')) {
+        return;
+    }
+
+    $email = trim((string) $order->get_billing_email());
+    if ($email === '' && isset($data['billing_email'])) {
+        $email = trim((string) $data['billing_email']);
+    }
+
+    if ($email === '' || !is_email($email)) {
+        throw new Exception(
+            __('Sipariş oluşturulamadı: geçerli bir e-posta adresi zorunludur. Lütfen fatura bilgilerinizi doldurun.', 'thorius-checkout')
+        );
+    }
+
+    $first = trim((string) $order->get_billing_first_name());
+    $last = trim((string) $order->get_billing_last_name());
+    if ($first === '' || $last === '') {
+        throw new Exception(
+            __('Sipariş oluşturulamadı: ad ve soyad zorunludur.', 'thorius-checkout')
+        );
+    }
+}
+add_action('woocommerce_checkout_create_order', 'thorius_checkout_abort_order_without_email', 5, 2);
+
+/**
+ * Query string billing bilgisini WC customer oturumuna yaz (kupon AJAX sonrasi kaybolmasin).
+ */
+function thorius_checkout_persist_query_billing_to_customer(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout() || !function_exists('WC') || !WC()->customer) {
+        return;
+    }
+
+    $map = array(
+        'billing_email' => 'set_billing_email',
+        'billing_first_name' => 'set_billing_first_name',
+        'billing_last_name' => 'set_billing_last_name',
+        'billing_phone' => 'set_billing_phone',
+    );
+
+    $customer = WC()->customer;
+    foreach ($map as $queryKey => $setter) {
+        if (!isset($_GET[$queryKey]) || $_GET[$queryKey] === '') {
+            continue;
+        }
+        if (!method_exists($customer, $setter)) {
+            continue;
+        }
+        $value = sanitize_text_field(wp_unslash((string) $_GET[$queryKey]));
+        if ($value === '') {
+            continue;
+        }
+        $customer->$setter($value);
+    }
+}
+add_action('woocommerce_checkout_init', 'thorius_checkout_persist_query_billing_to_customer', 6);
 
 /**
  * Guven rozetleri HTML (PayTR + kart aglari).

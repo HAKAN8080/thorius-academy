@@ -61,6 +61,14 @@ export function PurchaseReadyCta({
     const tick = async () => {
       attempts += 1;
       try {
+        // Safety net: claim entitlement if webhook missed
+        await fetch("/api/purchase/claim", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: orderId }),
+        }).catch(() => null);
+
         const response = await fetch(
           `/api/purchase/status?order_id=${encodeURIComponent(orderId)}`,
           { credentials: "include" },

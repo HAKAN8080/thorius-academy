@@ -16,5 +16,5 @@ export default async function KitaplarimPage({
     params.pending === "true" ||
     Boolean(params.order_id?.trim());
 
-  return <KitaplikMyBooksPage pendingPurchase={pending} />;
+  return <KitaplikMyBooksPage pendingPurchase={pending} orderId={params.order_id?.trim()} />;
 }

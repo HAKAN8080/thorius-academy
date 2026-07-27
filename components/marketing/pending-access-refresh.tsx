@@ -8,10 +8,12 @@ import { useRouter } from "next/navigation";
  */
 export function PendingAccessRefresh({
   active,
+  orderId,
   maxSeconds = 90,
   intervalMs = 4000,
 }: {
   active: boolean;
+  orderId?: string;
   maxSeconds?: number;
   intervalMs?: number;
 }) {
@@ -22,6 +24,21 @@ export function PendingAccessRefresh({
     if (!active) return;
 
     const started = Date.now();
+
+    async function claimAndRefresh() {
+      if (orderId) {
+        await fetch("/api/purchase/claim", {
+          method: "POST",
+          credentials: "include",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ order_id: orderId }),
+        }).catch(() => null);
+      }
+      router.refresh();
+    }
+
+    void claimAndRefresh();
+
     const tick = setInterval(() => {
       const seconds = Math.floor((Date.now() - started) / 1000);
       setElapsed(seconds);
@@ -29,11 +46,11 @@ export function PendingAccessRefresh({
         clearInterval(tick);
         return;
       }
-      router.refresh();
+      void claimAndRefresh();
     }, intervalMs);
 
     return () => clearInterval(tick);
-  }, [active, intervalMs, maxSeconds, router]);
+  }, [active, intervalMs, maxSeconds, orderId, router]);
 
   if (!active) return null;
 
