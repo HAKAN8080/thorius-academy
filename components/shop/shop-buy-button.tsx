@@ -1,6 +1,7 @@
 "use client";
 
 import { buildWooCommerceCheckoutUrl } from "@/lib/course/checkout-url";
+import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import { trackBeginCheckout } from "@/lib/analytics/tracking";
 import { shopPath } from "@/lib/site/site-mode";
 import { Button } from "@/components/ui/button";
@@ -14,6 +15,8 @@ interface ShopBuyButtonProps {
   size?: "default" | "lg";
   className?: string;
   productName?: string;
+  productSlug?: string;
+  customer?: CheckoutCustomer | null;
 }
 
 export function ShopBuyButton({
@@ -25,6 +28,8 @@ export function ShopBuyButton({
   size = "lg",
   className,
   productName,
+  productSlug,
+  customer = null,
 }: ShopBuyButtonProps) {
   const finalPrice = priceSale ?? priceNormal;
 
@@ -36,8 +41,12 @@ export function ShopBuyButton({
       currency: "TRY",
     });
 
-    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, null, {
-      returnUrl: shopPath("/"),
+    const returnUrl = productSlug
+      ? shopPath(`/kitap/${productSlug}`)
+      : shopPath("/");
+
+    const checkoutUrl = buildWooCommerceCheckoutUrl(wcProductId, customer, {
+      returnUrl,
     });
     window.location.href = checkoutUrl;
   }

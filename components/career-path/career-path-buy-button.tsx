@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Zap } from "lucide-react";
@@ -31,22 +32,25 @@ export function CareerPathBuyButton({
   layout = "hero",
 }: CareerPathBuyButtonProps) {
   const router = useRouter();
-
-  if (!isPurchasableCareerPathProduct(pathProduct)) {
-    return null;
-  }
-
-  const finalPrice =
-    pathProduct.price_sale ?? pathProduct.price_normal ?? null;
+  const autoCheckoutStarted = useRef(false);
+  const purchasable = isPurchasableCareerPathProduct(pathProduct);
+  const finalPrice = purchasable
+    ? (pathProduct.price_sale ?? pathProduct.price_normal ?? null)
+    : null;
   const hasDiscount =
+    purchasable &&
     pathProduct.price_sale !== null &&
     pathProduct.price_normal !== null &&
     pathProduct.price_sale < pathProduct.price_normal;
 
   function handleBuy() {
+    if (!purchasable || !finalPrice) return;
+
     if (!isLoggedIn || !customer?.email) {
       toast.info("Satın almak için lütfen giriş yapın");
-      router.push(`/giris?redirect=/kariyer-yolu/${pathSlug}`);
+      router.push(
+        `/giris?redirect=${encodeURIComponent(`/kariyer-yolu/${pathSlug}?checkout=1`)}`,
+      );
       return;
     }
 
@@ -65,7 +69,22 @@ export function CareerPathBuyButton({
     window.location.href = checkoutUrl;
   }
 
-  if (!finalPrice) {
+  useEffect(() => {
+    if (!purchasable) return;
+    if (autoCheckoutStarted.current) return;
+    const wantsCheckout =
+      new URLSearchParams(window.location.search).get("checkout") === "1";
+    if (!wantsCheckout) return;
+    if (!finalPrice) return;
+    if (!isLoggedIn || !customer?.email) return;
+
+    autoCheckoutStarted.current = true;
+    handleBuy();
+    // Intentional: resume checkout once after login return
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [purchasable, isLoggedIn, customer?.email, finalPrice]);
+
+  if (!purchasable || !finalPrice) {
     return null;
   }
 

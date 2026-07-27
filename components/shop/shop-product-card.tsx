@@ -1,5 +1,6 @@
 import Link from "next/link";
 import type { ShopProduct } from "@/lib/shop/types";
+import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import { Card } from "@/components/ui/card";
 import { ShopBuyButton } from "@/components/shop/shop-buy-button";
 import { cn } from "@/lib/utils";
@@ -7,9 +8,14 @@ import { cn } from "@/lib/utils";
 interface ShopProductCardProps {
   product: ShopProduct;
   className?: string;
+  customer?: CheckoutCustomer | null;
 }
 
-export function ShopProductCard({ product, className }: ShopProductCardProps) {
+export function ShopProductCard({
+  product,
+  className,
+  customer = null,
+}: ShopProductCardProps) {
   const displayPrice = product.priceSale ?? product.priceNormal;
 
   return (
@@ -61,6 +67,9 @@ export function ShopProductCard({ product, className }: ShopProductCardProps) {
             priceNormal={product.priceNormal}
             priceSale={product.priceSale}
             inStock={product.inStock}
+            productName={product.name}
+            productSlug={product.slug}
+            customer={customer}
             size="default"
           />
         </div>

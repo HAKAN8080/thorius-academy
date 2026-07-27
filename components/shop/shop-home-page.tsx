@@ -1,12 +1,14 @@
 import Link from "next/link";
 import { Container } from "@/components/layout/container";
 import { ShopProductCard } from "@/components/shop/shop-product-card";
+import { getSessionCheckoutCustomer } from "@/lib/course/session-checkout-customer";
 import { listShopProducts } from "@/lib/shop/fetch-shop-products";
 import { academyPath } from "@/lib/site/site-mode";
 
 export async function ShopHomePage() {
   let products: Awaited<ReturnType<typeof listShopProducts>> = [];
   let loadError: string | null = null;
+  const customer = await getSessionCheckoutCustomer();
 
   try {
     products = await listShopProducts();
@@ -63,7 +65,11 @@ export async function ShopHomePage() {
           {products.length > 0 ? (
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
               {products.map((product) => (
-                <ShopProductCard key={product.id} product={product} />
+                <ShopProductCard
+                  key={product.id}
+                  product={product}
+                  customer={customer}
+                />
               ))}
             </div>
           ) : (

@@ -271,17 +271,15 @@ export function isShopAllowedPath(pathname: string): boolean {
   );
 }
 
-/** kitaplik.thorius.com.tr üzerinde açık kalacak sayfalar. */
+/** kitaplik.thorius.com.tr üzerinde açık kalacak sayfalar.
+ * Auth (/giris, /kayit, …) ACADEMY_ONLY — middleware academy'ye yönlendirir.
+ */
 export const KITAPLIK_ALLOWED_PATH_PREFIXES = [
   "/kitap",
   "/kitaplarim",
   "/oku",
   "/dinle",
   "/kitaplik-yonetim",
-  "/giris",
-  "/kayit",
-  "/yeni-parola",
-  "/auth",
 ] as const;
 
 /** SEO / favicon — subdomain allow-list'inde unutulursa botlar ana sayfaya düşer. */

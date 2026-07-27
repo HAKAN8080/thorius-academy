@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { KitaplikBookDetailPage } from "@/components/kitaplik/kitaplik-book-detail-page";
 import { ShopBuyButton } from "@/components/shop/shop-buy-button";
 import { Container } from "@/components/layout/container";
+import { getSessionCheckoutCustomer } from "@/lib/course/session-checkout-customer";
 import { getShopProductBySlug } from "@/lib/shop/fetch-shop-products";
 import { getSiteModeFromHost } from "@/lib/site/site-mode";
 import Link from "next/link";
@@ -45,6 +46,7 @@ export default async function ShopProductPage({ params }: ShopProductPageProps) 
     notFound();
   }
 
+  const customer = await getSessionCheckoutCustomer();
   const descriptionHtml = product.description || product.shortDescription;
 
   return (
@@ -86,6 +88,9 @@ export default async function ShopProductPage({ params }: ShopProductPageProps) 
               priceNormal={product.priceNormal}
               priceSale={product.priceSale}
               inStock={product.inStock}
+              productName={product.name}
+              productSlug={product.slug}
+              customer={customer}
             />
 
             {descriptionHtml ? (

@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.9.3
+ * Version: 1.9.4
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.9.3');
+define('THORIUS_CHECKOUT_VERSION', '1.9.4');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -647,15 +647,92 @@ function thorius_checkout_is_allowed_return_url(string $url): bool
  */
 function thorius_checkout_library_product_ids(): array
 {
-    // Kitaplik basili + e-kitap WC urunleri (guncel tutun / filter ile genisletin)
-    // 9046 = aurora (TR e-kitap), 9055 = aurora-en (EN e-kitap)
-    $ids = array(8978, 8980, 9046, 9055);
+    // Kitaplik e-kitap WC urunleri (guncel tutun / filter ile genisletin)
+    // 9046 = aurora (TR), 9055 = aurora-en, 9023 = pofi-s-friends
+    $ids = array(8978, 8980, 9023, 9046, 9055);
 
     return array_values(array_unique(array_filter(array_map(
         'absint',
         apply_filters('thorius_checkout_library_product_ids', $ids)
     ))));
 }
+
+/**
+ * Siparis yalnizca sanal (kargo gerektirmeyen) urunlerden mi olusuyor?
+ */
+function thorius_checkout_order_is_fully_virtual(WC_Order $order): bool
+{
+    $line_items = $order->get_items();
+    if ($line_items === array()) {
+        return false;
+    }
+
+    foreach ($line_items as $item) {
+        if (!($item instanceof WC_Order_Item_Product)) {
+            return false;
+        }
+
+        $product = $item->get_product();
+        if (!is_a($product, 'WC_Product') || !$product->is_virtual()) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+/**
+ * WC varsayilaninda otomatik tamamlanma virtual+downloadable ister.
+ * Kurs / e-kitap cogu zaman yalnizca virtual → "Hazırlanıyor"da kalir.
+ * Sanal satirlar icin processing gerekmesin.
+ *
+ * @param bool $needs_processing
+ * @param WC_Product $product
+ */
+function thorius_checkout_virtual_item_needs_processing($needs_processing, $product): bool
+{
+    if (is_a($product, 'WC_Product') && $product->is_virtual()) {
+        return false;
+    }
+
+    return (bool) $needs_processing;
+}
+add_filter('woocommerce_order_item_needs_processing', 'thorius_checkout_virtual_item_needs_processing', 10, 2);
+
+/**
+ * Odeme sonrasi / processing'e dusen tamamen sanal siparisleri Tamamlandi yap.
+ */
+function thorius_checkout_maybe_complete_virtual_order($order_id): void
+{
+    if (!function_exists('wc_get_order')) {
+        return;
+    }
+
+    $order_id = absint($order_id);
+    if ($order_id <= 0) {
+        return;
+    }
+
+    $order = wc_get_order($order_id);
+    if (!$order instanceof WC_Order) {
+        return;
+    }
+
+    if ($order->get_status() !== 'processing') {
+        return;
+    }
+
+    if (!thorius_checkout_order_is_fully_virtual($order)) {
+        return;
+    }
+
+    $order->update_status(
+        'completed',
+        __('Thorius: dijital sipariş otomatik tamamlandı.', 'thorius-checkout')
+    );
+}
+add_action('woocommerce_payment_complete', 'thorius_checkout_maybe_complete_virtual_order', 30);
+add_action('woocommerce_order_status_processing', 'thorius_checkout_maybe_complete_virtual_order', 30);
 
 function thorius_checkout_store_return_url_from_request(): void
 {
