@@ -33,27 +33,30 @@ export function KitaplikUserMenu({
           <ChevronDown className="h-3.5 w-3.5 opacity-80" />
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="end" className="w-56">
+      <DropdownMenuContent
+        align="end"
+        className="w-56 border-[#D4AF37] bg-[#D4AF37] p-1.5 text-primary-950 shadow-lg"
+      >
         {email ? (
           <>
-            <DropdownMenuLabel className="truncate font-normal text-muted-foreground">
+            <DropdownMenuLabel className="truncate font-normal text-primary-900/80">
               {email}
             </DropdownMenuLabel>
-            <DropdownMenuSeparator />
+            <DropdownMenuSeparator className="bg-primary-950/20" />
           </>
         ) : null}
-        <DropdownMenuItem asChild>
-          <Link href="/kitaplarim" className="cursor-pointer">
+        <DropdownMenuItem asChild className="focus:bg-primary-950/10 focus:text-primary-950">
+          <Link href="/kitaplarim" className="cursor-pointer font-medium">
             <BookMarked className="mr-2 h-4 w-4" />
             Kitaplarım
           </Link>
         </DropdownMenuItem>
-        <DropdownMenuSeparator />
+        <DropdownMenuSeparator className="bg-primary-950/20" />
         <form action={signOut}>
           <input type="hidden" name="redirect" value={kitaplikPath("/")} />
           <button
             type="submit"
-            className="flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm text-destructive outline-none hover:bg-accent"
+            className="flex w-full cursor-pointer items-center rounded-sm px-2 py-1.5 text-sm font-semibold text-primary-950 outline-none hover:bg-primary-950/10"
           >
             <LogOut className="mr-2 h-4 w-4" />
             Çıkış yap
