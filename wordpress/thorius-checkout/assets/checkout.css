@@ -591,7 +591,8 @@ body.woocommerce-cart .woocommerce {
   padding: 32px 20px 56px;
   display: flex !important;
   flex-direction: row !important;
-  flex-wrap: nowrap !important;
+  /* wrap: silindi/geri al bildirimi tam satır alsın, ürün kartını sıkıştırmasın */
+  flex-wrap: wrap !important;
   align-items: flex-start !important;
   gap: 28px 32px !important;
 }
@@ -602,8 +603,33 @@ body.woocommerce-cart .woocommerce::after {
   content: none !important;
 }
 
+/* “X silindi. Geri alınsın mı?” — flex satırında yan ürün gibi durmasın */
+body.woocommerce-cart .woocommerce > .woocommerce-notices-wrapper,
+body.woocommerce-cart .woocommerce > .woocommerce-message,
+body.woocommerce-cart .woocommerce > .woocommerce-info,
+body.woocommerce-cart .woocommerce > .woocommerce-error,
+body.woocommerce-cart .woocommerce > .woocommerce-NoticeGroup {
+  flex: 0 0 100% !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  order: 0 !important;
+  float: none !important;
+  clear: both !important;
+  margin: 0 0 8px 0 !important;
+  box-sizing: border-box !important;
+}
+
+body.woocommerce-cart .woocommerce-message,
+body.woocommerce-cart .woocommerce-info,
+body.woocommerce-cart .woocommerce-error {
+  display: block !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 body.woocommerce-cart .woocommerce-cart-form {
-  flex: 1 1 auto !important;
+  flex: 1 1 0 !important;
   order: 1 !important;
   min-width: 0 !important;
   float: none !important;
