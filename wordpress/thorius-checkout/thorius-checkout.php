@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.9.0
+ * Version: 1.9.2
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.9.0');
+define('THORIUS_CHECKOUT_VERSION', '1.9.2');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
@@ -309,6 +309,62 @@ function thorius_checkout_terms_checkbox_text(): string
     );
 }
 add_filter('woocommerce_get_terms_and_conditions_checkbox_text', 'thorius_checkout_terms_checkbox_text');
+
+/**
+ * Sartlar kutusu her zaman gorunsun (Woo ayari kapali olsa bile).
+ */
+add_filter('woocommerce_checkout_show_terms', '__return_true');
+
+/**
+ * Odenecek tutar 0 olsa bile (%%100 kupon) ad / e-posta / telefon / sartlar zorunlu.
+ * PayTR'ye eksik parametreyle dusmeyi engeller.
+ */
+function thorius_checkout_validate_customer_gate(): void
+{
+    if (!function_exists('is_checkout') || !is_checkout()) {
+        return;
+    }
+
+    $first = isset($_POST['billing_first_name'])
+        ? trim((string) wp_unslash($_POST['billing_first_name']))
+        : '';
+    $last = isset($_POST['billing_last_name'])
+        ? trim((string) wp_unslash($_POST['billing_last_name']))
+        : '';
+    $email = isset($_POST['billing_email'])
+        ? trim((string) wp_unslash($_POST['billing_email']))
+        : '';
+    $phone = isset($_POST['billing_phone'])
+        ? trim((string) wp_unslash($_POST['billing_phone']))
+        : '';
+
+    if ($first === '') {
+        wc_add_notice(__('Lütfen adınızı girin.', 'thorius-checkout'), 'error');
+    }
+
+    if ($last === '') {
+        wc_add_notice(__('Lütfen soyadınızı girin.', 'thorius-checkout'), 'error');
+    }
+
+    if ($email === '') {
+        wc_add_notice(__('Lütfen e-posta adresinizi girin.', 'thorius-checkout'), 'error');
+    } elseif (!is_email($email)) {
+        wc_add_notice(__('Lütfen geçerli bir e-posta adresi girin.', 'thorius-checkout'), 'error');
+    }
+
+    if ($phone === '') {
+        wc_add_notice(__('Lütfen telefon numaranızı girin.', 'thorius-checkout'), 'error');
+    }
+
+    $termsAccepted = !empty($_POST['terms']) || !empty($_POST['legal']);
+    if (!$termsAccepted) {
+        wc_add_notice(
+            __('Devam etmek için şartlar ve koşulları kabul etmelisiniz.', 'thorius-checkout'),
+            'error'
+        );
+    }
+}
+add_action('woocommerce_checkout_process', 'thorius_checkout_validate_customer_gate', 5);
 
 /**
  * Guven rozetleri HTML (PayTR + kart aglari).
@@ -1150,7 +1206,7 @@ function thorius_checkout_enqueue_assets(): void
         wp_enqueue_script(
             'thorius-checkout',
             THORIUS_CHECKOUT_URL . 'assets/checkout.js',
-            array(),
+            array('jquery', 'wc-checkout'),
             THORIUS_CHECKOUT_VERSION,
             true
         );

@@ -68,9 +68,23 @@ body.woocommerce-checkout .woocommerce-error li:last-child {
 /* Alan içi hata metinlerini gizle — form düzeni bozulmasın */
 .woocommerce-checkout #customer_details .form-row .woocommerce-error,
 .woocommerce-checkout #customer_details .checkout-inline-error-message,
-.woocommerce-checkout #customer_details .form-row .form-row-error,
-.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-error {
+.woocommerce-checkout #customer_details .form-row .form-row-error {
   display: none !important;
+}
+
+/* Şartlar / ödeme öncesi hatalar görünür kalsın */
+.woocommerce-checkout .woocommerce-terms-and-conditions-wrapper .woocommerce-error,
+.woocommerce-checkout .thorius-client-checkout-errors,
+.woocommerce-checkout .thorius-client-checkout-errors .woocommerce-error {
+  display: block !important;
+}
+
+.woocommerce-checkout .thorius-client-checkout-errors {
+  margin: 0 0 16px !important;
+}
+
+.woocommerce-checkout-review-order #place_order.thorius-place-order-blocked {
+  opacity: 0.72 !important;
 }
 
 /* Hatalı alan: sadece kırmızı çerçeve */

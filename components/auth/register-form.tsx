@@ -1,6 +1,7 @@
 "use client";
 
 import type { ReactNode } from "react";
+import { useState } from "react";
 import { useFormState, useFormStatus } from "react-dom";
 import Link from "next/link";
 import { useSearchParams } from "next/navigation";
@@ -25,10 +26,15 @@ import {
 
 const initialState: AuthActionState = {};
 
-function SubmitButton() {
+function SubmitButton({ disabled }: { disabled: boolean }) {
   const { pending } = useFormStatus();
   return (
-    <Button type="submit" variant="gold" className="w-full" disabled={pending}>
+    <Button
+      type="submit"
+      variant="gold"
+      className="w-full"
+      disabled={disabled || pending}
+    >
       {pending ? "Kayıt oluşturuluyor..." : "Hesap Oluştur"}
     </Button>
   );
@@ -78,12 +84,8 @@ function RegisterSuccess({
           </h2>
           <div className="mt-4 max-w-sm space-y-3 text-sm leading-relaxed text-primary-700">
             <p>
-              <span aria-hidden="true">📧 </span>
-              <strong>{email}</strong> adresine doğrulama linki gönderdik.
-            </p>
-            <p>
-              Tek e-postada doğrulama linki ve %20 indirim kuponunuz var.
-              Linke tıkladığınızda hesabınıza otomatik giriş yapılacak.
+              <strong>{email}</strong> adresine tek bir e-posta gönderdik:
+              doğrulama linki ve ilk üyelik %20 indirim kuponunuz birlikte.
             </p>
             {displayCoupon && (
               <div className="rounded-xl border-2 border-accent-500 bg-amber-50 px-4 py-3">
@@ -142,8 +144,9 @@ export function RegisterForm() {
   const [state, formAction] = useFormState(signUp, initialState);
   const [resendState, resendAction] = useFormState(
     resendVerificationEmail,
-    initialState
+    initialState,
   );
+  const [kvkkAccepted, setKvkkAccepted] = useState(false);
 
   const registeredEmail = state.registeredEmail ?? resendState.registeredEmail;
 
@@ -227,6 +230,8 @@ export function RegisterForm() {
               type="checkbox"
               className="mt-1 h-4 w-4 rounded border-primary-300"
               required
+              checked={kvkkAccepted}
+              onChange={(event) => setKvkkAccepted(event.target.checked)}
             />
             <Label
               htmlFor="kvkk"
@@ -238,7 +243,12 @@ export function RegisterForm() {
               &apos;ni okudum ve kişisel verilerimin işlenmesini kabul ediyorum.
             </Label>
           </div>
-          <SubmitButton />
+          {!kvkkAccepted ? (
+            <p className="text-xs text-muted-foreground">
+              Devam etmek için KVKK onayını işaretleyin.
+            </p>
+          ) : null}
+          <SubmitButton disabled={!kvkkAccepted} />
         </CardContent>
         <CardFooter className="justify-center text-sm text-muted-foreground">
           Zaten üye misiniz?{" "}

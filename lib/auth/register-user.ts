@@ -228,6 +228,45 @@ async function buildSuccessResult(
   };
 }
 
+async function createUserWithoutSupabaseEmail(
+  params: RegisterUserParams,
+): Promise<{ userId: string | null; alreadyExists: boolean; error?: string }> {
+  if (!getSupabaseServiceRoleKey()) {
+    return { userId: null, alreadyExists: false, error: "no_service_role" };
+  }
+
+  const email = normalizeEmail(params.email);
+  const fullName = params.fullName.trim();
+
+  try {
+    const admin = getSupabaseAdmin();
+    const { data, error } = await admin.auth.admin.createUser({
+      email,
+      password: params.password,
+      email_confirm: false,
+      user_metadata: { full_name: fullName },
+    });
+
+    if (data.user) {
+      return { userId: data.user.id, alreadyExists: false };
+    }
+
+    if (error && /already|registered|exists|duplicate/i.test(error.message)) {
+      return { userId: null, alreadyExists: true };
+    }
+
+    if (error) {
+      logSignupFailure("admin.createUser", error.message);
+      return { userId: null, alreadyExists: false, error: error.message };
+    }
+
+    return { userId: null, alreadyExists: false };
+  } catch (error) {
+    logSignupFailure("admin.createUser.throw", error);
+    return { userId: null, alreadyExists: false, error: "create_failed" };
+  }
+}
+
 export async function registerUser(
   params: RegisterUserParams,
 ): Promise<RegisterUserOutcome> {
@@ -244,6 +283,53 @@ export async function registerUser(
       error:
         "Kayıt servisi yapılandırması eksik. Lütfen daha sonra tekrar deneyin.",
     };
+  }
+
+  // Resend custom welcome (verify + coupon) is configured → create via admin
+  // so Supabase does not also send its default confirmation email.
+  if (isSignupEmailConfigured() && getSupabaseServiceRoleKey()) {
+    const created = await createUserWithoutSupabaseEmail(params);
+
+    if (created.userId) {
+      await safeEnsureUserProfile(created.userId, { email, fullName });
+      return {
+        ok: true,
+        result: await buildSuccessResult(params),
+      };
+    }
+
+    if (created.alreadyExists) {
+      const signInState = await probeSignInState(
+        supabase,
+        email,
+        params.password,
+      );
+
+      if (signInState === "confirmed") {
+        return {
+          ok: false,
+          error: mapSignupAuthError("already registered"),
+        };
+      }
+
+      // Pending / unconfirmed: resend only our single welcome email
+      return {
+        ok: true,
+        result: await buildSuccessResult(params, {
+          recoveredPendingSignup: true,
+        }),
+      };
+    }
+
+    if (created.error && isFatalSignupError(created.error)) {
+      return { ok: false, error: mapSignupAuthError(created.error) };
+    }
+
+    // Fall through to client signUp if admin path failed unexpectedly
+    logSignupFailure(
+      "admin.createUser.fallback_signUp",
+      created.error ?? "unknown",
+    );
   }
 
   try {
@@ -289,6 +375,10 @@ export async function registerUser(
       };
     }
 
+    // If Resend is configured, deliverSignupEmail already sends the only mail.
+    // When falling back to signUp (no service role), Supabase may also email —
+    // still try custom email; dashboard should disable Confirm email template
+    // when possible.
     return {
       ok: true,
       result: await buildSuccessResult(params, {
