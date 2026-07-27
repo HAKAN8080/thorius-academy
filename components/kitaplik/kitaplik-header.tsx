@@ -1,7 +1,8 @@
 import Link from "next/link";
-import { BookOpen, Library, User } from "lucide-react";
+import { BookOpen, Library } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { KitaplikLogo } from "@/components/kitaplik/kitaplik-logo";
+import { KitaplikUserMenu } from "@/components/kitaplik/kitaplik-user-menu";
 import {
   academyPath,
   getCompanyOrigin,
@@ -28,6 +29,7 @@ export async function KitaplikHeader() {
     data: { user },
   } = await supabase.auth.getUser();
   const showAdminLink = canAccessKitaplikAdmin(user?.email);
+  const displayName = user?.email?.split("@")[0] ?? "Hesabım";
 
   return (
     <header className="sticky top-0 z-50 border-b border-primary-100/80 bg-white/90 backdrop-blur-md">
@@ -70,15 +72,10 @@ export async function KitaplikHeader() {
               Kitaplarım
             </Link>
             {user ? (
-              <Link
-                href="/kitaplarim"
-                className="inline-flex items-center gap-1.5 rounded-full bg-primary-950 px-4 py-2 text-sm font-semibold text-white hover:bg-primary-900"
-              >
-                <User className="h-4 w-4" />
-                <span className="max-w-[10rem] truncate">
-                  {user.email?.split("@")[0] ?? "Hesabım"}
-                </span>
-              </Link>
+              <KitaplikUserMenu
+                displayName={displayName}
+                email={user.email}
+              />
             ) : (
               <Link
                 href={academyPath(
