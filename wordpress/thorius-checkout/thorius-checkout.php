@@ -2,7 +2,7 @@
 /**
  * Plugin Name: Thorius Checkout
  * Description: Dijital kurslar için sadeleştirilmiş WooCommerce ödeme sayfası.
- * Version: 1.9.4
+ * Version: 1.9.5
  * Author: Thorius
  * Text Domain: thorius-checkout
  */
@@ -11,7 +11,7 @@ if (!defined('ABSPATH')) {
     exit;
 }
 
-define('THORIUS_CHECKOUT_VERSION', '1.9.4');
+define('THORIUS_CHECKOUT_VERSION', '1.9.5');
 define('THORIUS_CHECKOUT_TERMS_FALLBACK_URL', 'https://academy.thorius.com.tr/kullanim-kosullari');
 define('THORIUS_CHECKOUT_PRIVACY_FALLBACK_URL', 'https://academy.thorius.com.tr/gizlilik');
 define('THORIUS_CHECKOUT_CATALOG_URL', 'https://academy.thorius.com.tr/kurslar');
