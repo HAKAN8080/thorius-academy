@@ -209,12 +209,19 @@ export async function updatePassword(
   }
 }
 
-export async function signOut(): Promise<void> {
+export async function signOut(formData?: FormData): Promise<void> {
   const supabase = await createClient();
   await supabase.auth.signOut({ scope: "global" });
   await clearCoachingAuthCookie();
   revalidatePath("/", "layout");
-  redirect("/giris");
+
+  const rawRedirect = formData?.get("redirect");
+  const redirectTo =
+    typeof rawRedirect === "string" && rawRedirect.trim()
+      ? safeRedirectTarget(rawRedirect)
+      : "/giris";
+
+  redirect(redirectTo);
 }
 
 export async function requestPasswordReset(
