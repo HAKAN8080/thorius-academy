@@ -302,11 +302,18 @@ export function isSitePublicAssetPath(pathname: string): boolean {
     return true;
   }
   // Next.js icon route variants: /icon-xxx, /apple-icon-xxx
-  return (
+  if (
     stripped.startsWith("/icon") ||
     stripped.startsWith("/apple-icon") ||
     stripped.startsWith("/favicon")
-  );
+  ) {
+    return true;
+  }
+  // Static media under /public (hero video, etc.)
+  if (stripped.startsWith("/videos/") || stripped.startsWith("/media/")) {
+    return true;
+  }
+  return /\.(?:mp4|webm|mov|m4v)$/i.test(stripped);
 }
 
 export function isKitaplikAllowedPath(pathname: string): boolean {

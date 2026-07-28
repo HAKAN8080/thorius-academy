@@ -27,7 +27,7 @@ export async function KitaplikHomePage() {
 
   return (
     <>
-      <KitaplikLibraryHero />
+      <KitaplikLibraryHero books={books} />
 
       <section
         className="border-b border-primary-100 bg-primary-50/40 py-8 md:py-10"
