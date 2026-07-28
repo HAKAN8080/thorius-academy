@@ -32,22 +32,22 @@ function shelfRows(books: ShelfBook[]) {
         ? books
         : [{ slug: "placeholder", title: "Thorius", cover_image_url: null }];
 
-  const needed = 12;
+  const needed = 18;
   const filled: ShelfBook[] = [];
   for (let i = 0; i < needed; i += 1) {
     filled.push(pool[i % pool.length]!);
   }
-  return [filled.slice(0, 4), filled.slice(4, 8), filled.slice(8, 12)] as const;
+  return [filled.slice(0, 6), filled.slice(6, 12), filled.slice(12, 18)] as const;
 }
 
 /**
- * Kitaplik hero — 3 blocks: copy | Aurora video | bookshelf.
+ * Kitaplik hero — yazı sol, video orta, kitaplık sağda tam yükseklik.
  */
 export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
   const rows = shelfRows(books);
 
   return (
-    <section className="relative isolate overflow-hidden border-b border-primary-900 text-white">
+    <section className="relative isolate min-h-[min(88vh,920px)] overflow-hidden border-b border-primary-900 text-white">
       <style>{`
         @keyframes shelfLight {
           0%, 100% { opacity: 0.4; }
@@ -82,117 +82,35 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute -right-16 -top-20 h-[75%] w-[55%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.2)_0%,transparent_62%)]"
+        className="pointer-events-none absolute -right-16 -top-20 h-[75%] w-[70%] rounded-full bg-[radial-gradient(ellipse_at_center,rgba(212,175,55,0.22)_0%,transparent_62%)]"
         style={{ animation: "shelfLight 8s ease-in-out infinite" }}
       />
       <div
         aria-hidden
-        className="pointer-events-none absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,120,200,0.16),transparent_60%)]"
+        className="pointer-events-none absolute bottom-0 left-0 h-1/2 w-1/2 bg-[radial-gradient(ellipse_at_bottom_left,rgba(56,120,200,0.18),transparent_60%)]"
       />
 
-      <div className="relative z-10 mx-auto grid min-h-[min(82vh,880px)] w-full max-w-7xl items-center gap-8 px-4 py-12 sm:px-6 md:gap-10 md:py-16 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,0.85fr)_minmax(0,0.95fr)] lg:gap-8 lg:px-8 lg:py-20">
-        {/* 1 — Yazı */}
-        <div
-          className="max-w-md justify-self-start text-left"
-          style={{ animation: "heroFadeUp 0.7s ease-out both" }}
-        >
-          <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-accent-300/90 sm:text-sm">
-            Thorius Kitaplığı
-          </p>
-
-          <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-[2.65rem] md:leading-tight">
-            Yeni Nesil Kitaplık
-          </h1>
-
-          <div
-            className="mt-8 flex flex-wrap gap-3"
-            style={{ animation: "heroFadeUp 0.7s ease-out 0.12s both" }}
-          >
-            <a
-              href="#kitaplik-books"
-              className="inline-flex items-center rounded-full bg-accent-500 px-5 py-2.5 text-sm font-semibold text-primary-950 transition hover:bg-accent-400"
-            >
-              Kitapları Keşfet
-            </a>
-            <Link
-              href="/kitaplarim"
-              className="inline-flex items-center rounded-full border border-white/25 bg-white/5 px-5 py-2.5 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
-            >
-              Hemen Okumaya Başla
-            </Link>
-          </div>
-
-          <ul className="mt-8 flex flex-wrap gap-x-4 gap-y-2 text-[11px] font-medium uppercase tracking-[0.16em] text-white/45">
-            <li>E-kitap</li>
-            <li className="text-accent-500/80" aria-hidden>
-              ·
-            </li>
-            <li>Sesli</li>
-            <li className="text-accent-500/80" aria-hidden>
-              ·
-            </li>
-            <li>Metin takibi</li>
-            <li className="text-accent-500/80" aria-hidden>
-              ·
-            </li>
-            <li>Basılı</li>
-          </ul>
-        </div>
-
-        {/* 2 — Video */}
-        <div
-          className="relative w-full max-w-sm justify-self-center"
-          style={{ animation: "heroFadeUp 0.75s ease-out 0.08s both" }}
-        >
-          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
-            <span
-              className="pointer-events-none absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md bg-accent-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-950"
-              style={{ animation: "yayindaBlink 1.35s ease-in-out infinite" }}
-            >
-              <span
-                aria-hidden
-                className="h-1.5 w-1.5 rounded-full bg-primary-950"
-              />
-              YAYINDA
-            </span>
-
-            <video
-              className="aspect-[4/5] w-full bg-black object-contain"
-              src={HERO_VIDEO_SRC}
-              autoPlay
-              muted
-              loop
-              playsInline
-              preload="auto"
-              controls={false}
-              aria-label="Aurora — yayında tanıtım videosu"
-            >
-              <source src={HERO_VIDEO_SRC} type="video/mp4" />
-            </video>
-          </div>
-        </div>
-
-        {/* 3 — Kitaplık rafları */}
-        <div
-          aria-hidden
-          className="relative flex w-full flex-col justify-end gap-2.5 self-end pb-2 pt-4 sm:gap-3 lg:pb-0"
-          style={{ animation: "heroFadeUp 0.75s ease-out 0.14s both" }}
-        >
+      {/* 3 — Kitaplık: sağda absolute, ekranı dikey kaplar (eski yapı) */}
+      <div
+        aria-hidden
+        className="absolute inset-y-0 right-0 z-[1] hidden h-full w-[52%] items-end justify-end xl:w-[50%] lg:flex"
+      >
+        <div className="relative mr-0 flex h-full w-full max-w-none flex-col justify-end gap-3 px-2 pb-8 pt-16 sm:gap-4 sm:px-4 md:pb-10 lg:mr-2 lg:px-5 xl:mr-6">
           {rows.map((row, rowIndex) => (
             <div key={rowIndex} className="relative">
               <div
-                className="flex items-end justify-center gap-1.5 sm:gap-2 lg:justify-end"
+                className="flex items-end justify-end gap-1.5 sm:gap-2 md:gap-2.5"
                 style={{
-                  animation: `bookSettle 0.7s ease-out ${0.1 * rowIndex}s both`,
+                  animation: `bookSettle 0.7s ease-out ${0.12 * rowIndex}s both`,
                 }}
               >
                 {row.map((book, bookIndex) => {
                   const height =
                     bookIndex % 3 === 0
-                      ? "h-[6.5rem] sm:h-[7.5rem] lg:h-[8.5rem]"
+                      ? "h-[8rem] sm:h-[9rem] lg:h-[10rem] xl:h-[11rem]"
                       : bookIndex % 3 === 1
-                        ? "h-[5.75rem] sm:h-[6.75rem] lg:h-[7.75rem]"
-                        : "h-[7rem] sm:h-[8rem] lg:h-[9rem]";
+                        ? "h-[7rem] sm:h-[8rem] lg:h-[9rem] xl:h-[10rem]"
+                        : "h-[8.5rem] sm:h-[9.5rem] lg:h-[10.5rem] xl:h-[11.5rem]";
                   const tilt =
                     bookIndex % 5 === 0
                       ? "rotate-[-1.5deg]"
@@ -200,9 +118,15 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
                         ? "rotate-[1.2deg]"
                         : "rotate-0";
                   const visibility =
-                    bookIndex === 3 ? "hidden sm:block" : "";
+                    bookIndex === 3
+                      ? "hidden xl:block"
+                      : bookIndex === 4
+                        ? "hidden xl:block"
+                        : bookIndex === 5
+                          ? "hidden 2xl:block"
+                          : "";
                   const spine =
-                    SPINE_COLORS[(rowIndex * 4 + bookIndex) % SPINE_COLORS.length];
+                    SPINE_COLORS[(rowIndex * 6 + bookIndex) % SPINE_COLORS.length];
 
                   return (
                     <div
@@ -231,6 +155,144 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
                 })}
               </div>
               <div className="relative mt-1 h-2.5 rounded-sm bg-[linear-gradient(180deg,#3a4558_0%,#1c2433_100%)] shadow-[0_8px_18px_rgba(0,0,0,0.5)] sm:h-3">
+                <div className="absolute inset-x-0 top-0 h-px bg-accent-500/35" />
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      {/* Okunabilirlik: soldan kitaplığa yumuşak geçiş */}
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(90deg,#070b14_0%,#070b14f2_28%,#070b14cc_48%,#070b1488_62%,transparent_78%)]"
+      />
+      <div
+        aria-hidden
+        className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(180deg,rgba(7,11,20,0.2)_0%,transparent_30%,rgba(7,11,20,0.45)_100%)]"
+      />
+
+      {/* 1+2 — Yazı sol, video orta (kitaplık sağda absolute) */}
+      <div className="relative z-10 flex min-h-[min(88vh,920px)] w-full items-center">
+        <div className="flex w-full flex-col gap-10 px-4 py-14 sm:px-6 md:px-8 md:py-16 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pr-[min(48%,36rem)] xl:px-10 xl:pr-[min(46%,40rem)]">
+          <div
+            className="w-full max-w-md shrink-0 text-left lg:max-w-sm xl:max-w-md"
+            style={{ animation: "heroFadeUp 0.7s ease-out both" }}
+          >
+            <p className="mb-4 text-xs font-semibold uppercase tracking-[0.28em] text-accent-300/90 sm:text-sm">
+              Thorius Kitaplığı
+            </p>
+
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl md:text-5xl">
+              Yeni Nesil Kitaplık
+            </h1>
+
+            <div
+              className="mt-8 flex flex-wrap gap-3"
+              style={{ animation: "heroFadeUp 0.7s ease-out 0.12s both" }}
+            >
+              <a
+                href="#kitaplik-books"
+                className="inline-flex items-center rounded-full bg-accent-500 px-6 py-3 text-sm font-semibold text-primary-950 transition hover:bg-accent-400"
+              >
+                Kitapları Keşfet
+              </a>
+              <Link
+                href="/kitaplarim"
+                className="inline-flex items-center rounded-full border border-white/25 bg-white/5 px-6 py-3 text-sm font-semibold text-white backdrop-blur-sm transition hover:bg-white/10"
+              >
+                Hemen Okumaya Başla
+              </Link>
+            </div>
+
+            <ul className="mt-10 flex flex-wrap gap-x-5 gap-y-2 text-xs font-medium uppercase tracking-[0.16em] text-white/45">
+              <li>E-kitap</li>
+              <li className="text-accent-500/80" aria-hidden>
+                ·
+              </li>
+              <li>Sesli</li>
+              <li className="text-accent-500/80" aria-hidden>
+                ·
+              </li>
+              <li>Metin takibi</li>
+              <li className="text-accent-500/80" aria-hidden>
+                ·
+              </li>
+              <li>Basılı</li>
+            </ul>
+          </div>
+
+          <div
+            className="relative mx-auto w-full max-w-[280px] shrink-0 sm:max-w-[300px] lg:mx-0 lg:max-w-[320px]"
+            style={{ animation: "heroFadeUp 0.75s ease-out 0.1s both" }}
+          >
+            <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+              <span
+                className="pointer-events-none absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md bg-accent-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-950"
+                style={{ animation: "yayindaBlink 1.35s ease-in-out infinite" }}
+              >
+                <span
+                  aria-hidden
+                  className="h-1.5 w-1.5 rounded-full bg-primary-950"
+                />
+                YAYINDA
+              </span>
+
+              <video
+                className="aspect-[4/5] w-full bg-black object-contain"
+                src={HERO_VIDEO_SRC}
+                autoPlay
+                muted
+                loop
+                playsInline
+                preload="auto"
+                controls={false}
+                aria-label="Aurora — yayında tanıtım videosu"
+              >
+                <source src={HERO_VIDEO_SRC} type="video/mp4" />
+              </video>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Mobil / tablet: kitaplık altta tam genişlik */}
+      <div
+        aria-hidden
+        className="relative z-10 border-t border-white/5 px-3 pb-8 pt-2 lg:hidden"
+      >
+        <div className="mx-auto flex w-full max-w-3xl flex-col justify-end gap-3">
+          {rows.map((row, rowIndex) => (
+            <div key={`m-${rowIndex}`} className="relative">
+              <div className="flex items-end justify-center gap-1.5 sm:gap-2">
+                {row.slice(0, 4).map((book, bookIndex) => {
+                  const height =
+                    bookIndex % 2 === 0
+                      ? "h-[6.5rem] sm:h-[7.5rem]"
+                      : "h-[7.25rem] sm:h-[8.25rem]";
+                  const spine =
+                    SPINE_COLORS[(rowIndex * 4 + bookIndex) % SPINE_COLORS.length];
+                  return (
+                    <div
+                      key={`m-${book.slug}-${rowIndex}-${bookIndex}`}
+                      className={`relative aspect-[2/3] shrink-0 overflow-hidden rounded-[2px] shadow-[2px_4px_12px_rgba(0,0,0,0.5)] ${height}`}
+                      style={{ backgroundColor: spine }}
+                    >
+                      {book.cover_image_url ? (
+                        // eslint-disable-next-line @next/next/no-img-element
+                        <img
+                          src={book.cover_image_url}
+                          alt=""
+                          className="h-full w-full object-contain object-center opacity-95"
+                          loading="lazy"
+                        />
+                      ) : null}
+                      <span className="pointer-events-none absolute inset-y-0 left-0 w-[12%] bg-gradient-to-r from-black/45 to-transparent" />
+                    </div>
+                  );
+                })}
+              </div>
+              <div className="relative mt-1 h-2.5 rounded-sm bg-[linear-gradient(180deg,#3a4558_0%,#1c2433_100%)] sm:h-3">
                 <div className="absolute inset-x-0 top-0 h-px bg-accent-500/35" />
               </div>
             </div>
