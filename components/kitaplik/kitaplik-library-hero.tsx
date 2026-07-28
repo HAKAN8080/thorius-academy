@@ -165,16 +165,51 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
       {/* Okunabilirlik: soldan kitaplığa yumuşak geçiş */}
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(90deg,#070b14_0%,#070b14f2_28%,#070b14cc_48%,#070b1488_62%,transparent_78%)]"
+        className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(90deg,#070b14_0%,#070b14f2_22%,#070b14b8_42%,#070b1466_58%,transparent_72%)]"
       />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 z-[2] bg-[linear-gradient(180deg,rgba(7,11,20,0.2)_0%,transparent_30%,rgba(7,11,20,0.45)_100%)]"
       />
 
-      {/* 1+2 — Yazı sol, video orta (kitaplık sağda absolute) */}
+      {/* 2 — Video: ekranın gerçek ortası (lg+) */}
+      <div
+        className="pointer-events-none absolute inset-0 z-20 hidden items-center justify-center lg:flex"
+        style={{ animation: "heroFadeUp 0.75s ease-out 0.1s both" }}
+      >
+        <div className="pointer-events-auto w-[min(100%,300px)] xl:w-[320px]">
+          <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
+            <span
+              className="pointer-events-none absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md bg-accent-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-950"
+              style={{ animation: "yayindaBlink 1.35s ease-in-out infinite" }}
+            >
+              <span
+                aria-hidden
+                className="h-1.5 w-1.5 rounded-full bg-primary-950"
+              />
+              YAYINDA
+            </span>
+
+            <video
+              className="aspect-[4/5] w-full bg-black object-contain"
+              src={HERO_VIDEO_SRC}
+              autoPlay
+              muted
+              loop
+              playsInline
+              preload="auto"
+              controls={false}
+              aria-label="Aurora — yayında tanıtım videosu"
+            >
+              <source src={HERO_VIDEO_SRC} type="video/mp4" />
+            </video>
+          </div>
+        </div>
+      </div>
+
+      {/* 1 — Yazı sol */}
       <div className="relative z-10 flex min-h-[min(88vh,920px)] w-full items-center">
-        <div className="flex w-full flex-col gap-10 px-4 py-14 sm:px-6 md:px-8 md:py-16 lg:flex-row lg:items-center lg:justify-between lg:gap-6 lg:pr-[min(48%,36rem)] xl:px-10 xl:pr-[min(46%,40rem)]">
+        <div className="flex w-full flex-col gap-10 px-4 py-14 sm:px-6 md:px-8 md:py-16 xl:px-10">
           <div
             className="w-full max-w-md shrink-0 text-left lg:max-w-sm xl:max-w-md"
             style={{ animation: "heroFadeUp 0.7s ease-out both" }}
@@ -222,8 +257,9 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
             </ul>
           </div>
 
+          {/* Mobil: video yazının altında */}
           <div
-            className="relative mx-auto w-full max-w-[280px] shrink-0 sm:max-w-[300px] lg:mx-0 lg:max-w-[320px]"
+            className="relative mx-auto w-full max-w-[280px] sm:max-w-[300px] lg:hidden"
             style={{ animation: "heroFadeUp 0.75s ease-out 0.1s both" }}
           >
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
