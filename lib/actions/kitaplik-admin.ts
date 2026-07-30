@@ -100,10 +100,10 @@ function mapBookRow(data: Record<string, unknown>): LibraryBook {
     isbn: (data.isbn as string | null) ?? null,
     publisher: (data.publisher as string | null) ?? null,
     is_published: Boolean(data.is_published),
-    // Kolon migration'i uygulanmadiysa eski davranisi koru (manifest belirler).
+    // Kolon yoksa false — acik varsaymak admin tikinin kaybolmasina yol acar.
     audiobook_enabled:
       data.audiobook_enabled === undefined
-        ? true
+        ? false
         : Boolean(data.audiobook_enabled),
     sort_order: Number(data.sort_order ?? 0),
   };
@@ -201,14 +201,11 @@ async function writeLibraryBook(
 
   let { data, error } = await attempt(payload);
 
-  if (
-    error &&
-    isMissingAudiobookEnabledColumnError(error.message) &&
-    payload.audiobook_enabled !== undefined
-  ) {
-    const withoutAudiobook = { ...payload };
-    delete withoutAudiobook.audiobook_enabled;
-    ({ data, error } = await attempt(withoutAudiobook));
+  // audiobook_enabled kalici olmali — kolon yoksa sessizce atlama (tik geri gelir).
+  if (error && isMissingAudiobookEnabledColumnError(error.message)) {
+    return {
+      error: mapKitaplikDbError(error.message),
+    };
   }
 
   if (
