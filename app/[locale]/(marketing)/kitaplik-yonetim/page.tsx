@@ -1,12 +1,13 @@
 import type { Metadata } from "next";
-import { BookOpen } from "lucide-react";
-import { KitaplikBookAdminPanel } from "@/components/kitaplik/kitaplik-book-admin-panel";
+import { Shield } from "lucide-react";
+import { KitaplikAdminShell } from "@/components/kitaplik/kitaplik-admin-shell";
 import { Container } from "@/components/layout/container";
 import { listAllLibraryBooksForAdmin } from "@/lib/kitaplik/admin-repository";
+import { listKitaplikAdminUsers } from "@/lib/kitaplik/admin-users";
 import { requireKitaplikAdmin } from "@/lib/kitaplik/require-kitaplik-admin";
 
 export const metadata: Metadata = {
-  title: "Kitap Yukleme",
+  title: "Admin Panel",
   robots: { index: false, follow: false },
 };
 
@@ -14,28 +15,43 @@ export const dynamic = "force-dynamic";
 
 export default async function KitaplikYonetimPage() {
   await requireKitaplikAdmin();
+
   const books = await listAllLibraryBooksForAdmin();
+  let users: Awaited<ReturnType<typeof listKitaplikAdminUsers>> = [];
+  let usersError: string | null = null;
+
+  try {
+    users = await listKitaplikAdminUsers();
+  } catch (error) {
+    usersError =
+      error instanceof Error ? error.message : "Kullanicilar yuklenemedi.";
+  }
 
   return (
     <Container className="py-10 md:py-14">
       <header className="mb-8">
         <div className="mb-2 flex items-center gap-3">
           <div className="rounded-lg bg-primary-950 p-2">
-            <BookOpen className="h-6 w-6 text-accent-400" aria-hidden="true" />
+            <Shield className="h-6 w-6 text-accent-400" aria-hidden="true" />
           </div>
           <div>
             <h1 className="text-2xl font-bold text-primary-950 md:text-3xl">
-              Kitaplik Yonetimi
+              Admin Panel
             </h1>
             <p className="text-muted-foreground">
-              Yeni kitap ekleyin, WooCommerce urun ID&apos;lerini baglayin ve e-kitap
-              PDF&apos;ini yukleyin.
+              Kitap katalogu yonetimi ve kayitli kullanici / e-kitap haklari.
             </p>
           </div>
         </div>
       </header>
 
-      <KitaplikBookAdminPanel initialBooks={books} />
+      {usersError ? (
+        <p className="mb-4 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-950">
+          Kullanici listesi yuklenemedi: {usersError}
+        </p>
+      ) : null}
+
+      <KitaplikAdminShell initialBooks={books} initialUsers={users} />
     </Container>
   );
 }

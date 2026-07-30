@@ -61,7 +61,7 @@ export async function KitaplikHeader() {
                 href="/kitaplik-yonetim"
                 className="hidden rounded-full border border-[#D4AF37]/50 px-3 py-1.5 text-sm font-medium text-primary-900 hover:bg-[#D4AF37]/10 md:inline-flex"
               >
-                Kitap yükle
+                Admin Panel
               </Link>
             ) : null}
             <Link
