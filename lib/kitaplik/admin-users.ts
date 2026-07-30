@@ -52,6 +52,26 @@ async function listAllAuthUsers(): Promise<User[]> {
   return users;
 }
 
+/** Soft-delete / anonimlestirilmis hesaplar (deleted@site.invalid, [silinmiş], …). */
+export function isAnonymizedOrDeletedAuthUser(input: {
+  email?: string | null;
+  fullName?: string | null;
+}): boolean {
+  const email = (input.email ?? "").trim().toLowerCase();
+  const fullName = (input.fullName ?? "").trim().toLowerCase();
+
+  if (!email || email === "(e-posta yok)") return true;
+  if (email === "deleted@site.invalid") return true;
+  if (email.endsWith("@site.invalid")) return true;
+  if (email.startsWith("deleted@")) return true;
+  if (fullName.includes("[silinmiş]") || fullName.includes("[silinmis]")) {
+    return true;
+  }
+  if (fullName === "silinmiş" || fullName === "silinmis") return true;
+
+  return false;
+}
+
 export async function listKitaplikAdminUsers(): Promise<
   KitaplikAdminUserSummary[]
 > {
@@ -87,19 +107,27 @@ export async function listKitaplikAdminUsers(): Promise<
     bookCountByUser.set(userId, (bookCountByUser.get(userId) ?? 0) + 1);
   }
 
-  const summaries: KitaplikAdminUserSummary[] = authUsers.map((user) => {
-    const profile = profileById.get(user.id);
-    const bookCount = bookCountByUser.get(user.id) ?? 0;
-    return {
-      userId: user.id,
-      email: user.email?.trim() ?? "(e-posta yok)",
-      fullName: profile?.fullName ?? null,
-      phone: profile?.phone ?? null,
-      registeredAt: user.created_at,
-      bookCount,
-      hasPurchases: bookCount > 0,
-    };
-  });
+  const summaries: KitaplikAdminUserSummary[] = authUsers
+    .map((user) => {
+      const profile = profileById.get(user.id);
+      const bookCount = bookCountByUser.get(user.id) ?? 0;
+      return {
+        userId: user.id,
+        email: user.email?.trim() ?? "(e-posta yok)",
+        fullName: profile?.fullName ?? null,
+        phone: profile?.phone ?? null,
+        registeredAt: user.created_at,
+        bookCount,
+        hasPurchases: bookCount > 0,
+      };
+    })
+    .filter(
+      (user) =>
+        !isAnonymizedOrDeletedAuthUser({
+          email: user.email,
+          fullName: user.fullName,
+        }),
+    );
 
   summaries.sort((a, b) => {
     if (b.bookCount !== a.bookCount) return b.bookCount - a.bookCount;
@@ -137,11 +165,21 @@ export async function getKitaplikAdminUserDetail(
     return null;
   }
 
+  const user = authData.user;
+  const fullName = (profileResult.data?.full_name as string | null) ?? null;
+  if (
+    isAnonymizedOrDeletedAuthUser({
+      email: user.email,
+      fullName,
+    })
+  ) {
+    return null;
+  }
+
   if (entsResult.error) {
     throw new Error(`Kitap haklari yuklenemedi: ${entsResult.error.message}`);
   }
 
-  const user = authData.user;
   const books: KitaplikAdminUserBook[] = (entsResult.data ?? []).map((row) => {
     const book = row.library_books as unknown as {
       id?: string;
@@ -165,7 +203,7 @@ export async function getKitaplikAdminUserDetail(
   return {
     userId: user.id,
     email: user.email?.trim() ?? "(e-posta yok)",
-    fullName: (profileResult.data?.full_name as string | null) ?? null,
+    fullName,
     phone: (profileResult.data?.phone as string | null) ?? null,
     registeredAt: user.created_at,
     bookCount: books.length,
@@ -174,4 +212,41 @@ export async function getKitaplikAdminUserDetail(
     lastSignInAt: user.last_sign_in_at ?? null,
     emailConfirmedAt: user.email_confirmed_at ?? null,
   };
+}
+
+/** Auth kullanicisini ve bagli profil / e-kitap haklarini kaldirir. */
+export async function deleteKitaplikAdminUser(
+  userId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const admin = getSupabaseAdmin();
+  const trimmedId = userId.trim();
+  if (!trimmedId) {
+    return { error: "Gecersiz kullanici." };
+  }
+
+  const { error: entsError } = await admin
+    .from("ebook_entitlements")
+    .delete()
+    .eq("user_id", trimmedId);
+  if (entsError) {
+    return { error: `E-kitap haklari silinemedi: ${entsError.message}` };
+  }
+
+  const { error: profileError } = await admin
+    .from("profiles")
+    .delete()
+    .eq("id", trimmedId);
+  if (profileError) {
+    // Profil yoksa devam et
+    if (!profileError.message.toLowerCase().includes("0 rows")) {
+      // non-fatal for missing profile
+    }
+  }
+
+  const { error: authError } = await admin.auth.admin.deleteUser(trimmedId);
+  if (authError) {
+    return { error: `Kullanici silinemedi: ${authError.message}` };
+  }
+
+  return { ok: true };
 }

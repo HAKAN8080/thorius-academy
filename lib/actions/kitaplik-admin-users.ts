@@ -2,12 +2,14 @@
 
 import { canAccessKitaplikAdmin } from "@/lib/kitaplik/access";
 import {
+  deleteKitaplikAdminUser,
   getKitaplikAdminUserDetail,
   listKitaplikAdminUsers,
   type KitaplikAdminUserDetail,
   type KitaplikAdminUserSummary,
 } from "@/lib/kitaplik/admin-users";
 import { createClient } from "@/lib/supabase/server";
+import { revalidatePath } from "next/cache";
 
 async function requireKitaplikAdminAction(): Promise<
   { userId: string; email: string } | { error: string }
@@ -66,4 +68,21 @@ export async function getKitaplikAdminUserDetailAction(
           : "Kullanici detayi yuklenemedi.",
     };
   }
+}
+
+export async function deleteKitaplikAdminUserAction(
+  userId: string,
+): Promise<{ ok: true } | { error: string }> {
+  const access = await requireKitaplikAdminAction();
+  if ("error" in access) return access;
+
+  if (access.userId === userId) {
+    return { error: "Kendi admin hesabinizi silemezsiniz." };
+  }
+
+  const result = await deleteKitaplikAdminUser(userId);
+  if ("error" in result) return result;
+
+  revalidatePath("/kitaplik-yonetim");
+  return { ok: true };
 }

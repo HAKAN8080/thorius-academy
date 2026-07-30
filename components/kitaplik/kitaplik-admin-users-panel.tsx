@@ -2,9 +2,10 @@
 
 import { useEffect, useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ChevronDown, ChevronRight, Search, Users } from "lucide-react";
+import { ChevronDown, ChevronRight, Search, Trash2, Users } from "lucide-react";
 import { toast } from "sonner";
 import {
+  deleteKitaplikAdminUserAction,
   getKitaplikAdminUserDetailAction,
   listKitaplikAdminUsersAction,
 } from "@/lib/actions/kitaplik-admin-users";
@@ -40,6 +41,7 @@ export function KitaplikAdminUsersPanel({
   const [detail, setDetail] = useState<KitaplikAdminUserDetail | null>(null);
   const [isRefreshing, startRefresh] = useTransition();
   const [isLoadingDetail, startDetail] = useTransition();
+  const [isDeleting, startDelete] = useTransition();
 
   useEffect(() => {
     setUsers(initialUsers);
@@ -87,6 +89,29 @@ export function KitaplikAdminUsersPanel({
         return;
       }
       setDetail(result.user);
+    });
+  }
+
+  function deleteUser(user: KitaplikAdminUserSummary) {
+    const confirmed = window.confirm(
+      `${user.email} hesabini kalici olarak silmek istiyor musunuz?\n\nE-kitap haklari ve profil de silinir.`,
+    );
+    if (!confirmed) return;
+
+    startDelete(async () => {
+      const result = await deleteKitaplikAdminUserAction(user.userId);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setUsers((current) =>
+        current.filter((row) => row.userId !== user.userId),
+      );
+      if (expandedId === user.userId) {
+        setExpandedId(null);
+        setDetail(null);
+      }
+      toast.success("Kullanici silindi.");
     });
   }
 
@@ -301,6 +326,24 @@ export function KitaplikAdminUsersPanel({
                                 ))}
                               </ul>
                             )}
+                          </div>
+                          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-primary-100 pt-4">
+                            <p className="text-xs text-muted-foreground">
+                              Kullanici ID: {showingDetail.userId}
+                            </p>
+                            <Button
+                              type="button"
+                              variant="destructive"
+                              size="sm"
+                              disabled={isDeleting}
+                              onClick={(event) => {
+                                event.stopPropagation();
+                                deleteUser(user);
+                              }}
+                            >
+                              <Trash2 className="mr-1.5 h-4 w-4" />
+                              Kullaniciyi sil
+                            </Button>
                           </div>
                         </div>
                       ) : (
