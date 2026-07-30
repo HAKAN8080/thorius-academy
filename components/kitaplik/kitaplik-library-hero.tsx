@@ -177,7 +177,7 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
         className="pointer-events-none absolute inset-0 z-20 hidden items-center justify-center lg:flex"
         style={{ animation: "heroFadeUp 0.75s ease-out 0.1s both" }}
       >
-        <div className="pointer-events-auto w-[min(100%,300px)] xl:w-[320px]">
+        <div className="pointer-events-auto w-[min(100%,600px)] xl:w-[640px]">
           <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
             <span
               className="pointer-events-none absolute right-3 top-3 z-20 inline-flex items-center gap-1.5 rounded-md bg-accent-500 px-2.5 py-1 text-[11px] font-bold uppercase tracking-[0.18em] text-primary-950"
@@ -249,17 +249,13 @@ export function KitaplikLibraryHero({ books }: KitaplikLibraryHeroProps) {
               <li className="text-accent-500/80" aria-hidden>
                 ·
               </li>
-              <li>Metin takibi</li>
-              <li className="text-accent-500/80" aria-hidden>
-                ·
-              </li>
               <li>Basılı</li>
             </ul>
           </div>
 
           {/* Mobil: video yazının altında */}
           <div
-            className="relative mx-auto w-full max-w-[280px] sm:max-w-[300px] lg:hidden"
+            className="relative mx-auto w-full max-w-[min(100%,560px)] sm:max-w-[600px] lg:hidden"
             style={{ animation: "heroFadeUp 0.75s ease-out 0.1s both" }}
           >
             <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-black/50 shadow-[0_24px_80px_rgba(0,0,0,0.55)]">
