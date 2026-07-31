@@ -160,13 +160,11 @@ export function KitaplikPurchaseButtons({
               </span>
             ) : null}
           </div>
-          <p className="mb-4 text-sm text-primary-700">
-            Yalnızca tarayıcıda okunur. İndirilemez; kopyalama ve ekran görüntüsü
-            engellenir.
-            {hasAudiobook
-              ? " Kelime takipli sesli okuma özelliği içerir."
-              : ""}
-          </p>
+          {hasAudiobook ? (
+            <p className="mb-4 text-sm text-primary-700">
+              Kelime takipli sesli okuma özelliği içerir.
+            </p>
+          ) : null}
           {hasEbookAccess ? (
             <div className="flex flex-col gap-2">
               <Button
