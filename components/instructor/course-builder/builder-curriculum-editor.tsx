@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useTransition } from "react";
+import { useMemo, useRef, useState, useTransition, type ChangeEvent } from "react";
 import {
   DndContext,
   PointerSensor,
@@ -19,11 +19,14 @@ import { CSS } from "@dnd-kit/utilities";
 import {
   ChevronDown,
   ChevronRight,
+  Download,
+  FileSpreadsheet,
   FileText,
   GripVertical,
   Pencil,
   Plus,
   Trash2,
+  Upload,
   Video,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -39,6 +42,10 @@ import {
   toggleBuilderLessonPublished,
   updateSectionTitle,
 } from "@/lib/actions/instructor-builder";
+import {
+  downloadCurriculumTemplate,
+  importCurriculumFromXlsx,
+} from "@/lib/actions/instructor-curriculum-import";
 import { Button } from "@/components/ui/button";
 import { BuilderLessonForm } from "@/components/instructor/course-builder/builder-lesson-form";
 import {
@@ -290,6 +297,7 @@ export function BuilderCurriculumEditor({
     {},
   );
   const [isPending, startTransition] = useTransition();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const lessonsBySection = useMemo(() => {
     const map = new Map<string, BuilderLesson[]>();
@@ -318,6 +326,65 @@ export function BuilderCurriculumEditor({
       }
       setSections((current) => [...current, result.section]);
       toast.success("Bölüm eklendi ✓");
+    });
+  }
+
+  function handleDownloadTemplate() {
+    startTransition(async () => {
+      const result = await downloadCurriculumTemplate();
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+
+      const binary = atob(result.base64);
+      const bytes = new Uint8Array(binary.length);
+      for (let i = 0; i < binary.length; i += 1) {
+        bytes[i] = binary.charCodeAt(i);
+      }
+      const blob = new Blob([bytes], {
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+      });
+      const url = URL.createObjectURL(blob);
+      const anchor = document.createElement("a");
+      anchor.href = url;
+      anchor.download = result.filename;
+      anchor.click();
+      URL.revokeObjectURL(url);
+      toast.success("Şablon indirildi ✓");
+    });
+  }
+
+  function handleImportFileChange(event: ChangeEvent<HTMLInputElement>) {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) return;
+
+    if (
+      !window.confirm(
+        "Yükleme mevcut tüm bölüm ve dersleri silip Excel’den yeniden oluşturur. Devam edilsin mi?",
+      )
+    ) {
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("file", file);
+
+    startTransition(async () => {
+      const result = await importCurriculumFromXlsx(courseCacheId, formData);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+
+      setSections(result.sections);
+      setLessons(result.lessons);
+      setSelectedLessonId(result.lessons[0]?.id ?? null);
+      setCollapsedSections({});
+      toast.success(
+        `${result.importedSections} bölüm, ${result.importedLessons} ders içe aktarıldı ✓`,
+      );
     });
   }
 
@@ -475,11 +542,43 @@ export function BuilderCurriculumEditor({
     <div>
       <CourseBuilderNav courseId={courseCacheId} current="curriculum" />
 
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-[#0B1E3F]">{courseTitle}</h1>
-        <p className="mt-1 text-sm text-primary-600">
-          Bölümleri ve dersleri sürükleyerek düzenleyin.
-        </p>
+      <div className="mb-6 flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
+        <div>
+          <h1 className="text-2xl font-bold text-[#0B1E3F]">{courseTitle}</h1>
+          <p className="mt-1 text-sm text-primary-600">
+            Bölümleri ve dersleri sürükleyerek düzenleyin. Excel ile toplu
+            müfredat da yükleyebilirsiniz.
+          </p>
+        </div>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={handleDownloadTemplate}
+            className="border-[#0B1E3F]/20 text-[#0B1E3F]"
+          >
+            <Download className="mr-2 h-4 w-4" />
+            Şablon indir
+          </Button>
+          <Button
+            type="button"
+            variant="outline"
+            disabled={isPending}
+            onClick={() => fileInputRef.current?.click()}
+            className="border-[#0B1E3F]/20 text-[#0B1E3F]"
+          >
+            <Upload className="mr-2 h-4 w-4" />
+            Müfredat yükle
+          </Button>
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+            className="hidden"
+            onChange={handleImportFileChange}
+          />
+        </div>
       </div>
 
       <div className="grid gap-6 lg:grid-cols-[2fr_3fr]">
@@ -495,9 +594,10 @@ export function BuilderCurriculumEditor({
             >
               <div className="space-y-3">
                 {sections.length === 0 ? (
-                  <p className="rounded-xl border border-dashed border-primary-200 p-6 text-center text-sm text-primary-500">
-                    Henüz bölüm yok. İlk bölümünüzü ekleyin.
-                  </p>
+                  <div className="rounded-xl border border-dashed border-primary-200 p-6 text-center text-sm text-primary-500">
+                    <FileSpreadsheet className="mx-auto mb-2 h-8 w-8 text-primary-300" />
+                    <p>Henüz bölüm yok. Bölüm ekleyin veya Excel müfredat yükleyin.</p>
+                  </div>
                 ) : (
                   sections.map((section) => (
                     <SortableSection key={section.id} section={section}>
