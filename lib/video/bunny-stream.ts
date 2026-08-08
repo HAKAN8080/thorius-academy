@@ -28,11 +28,123 @@ function isYouTubeOrVimeoUrl(url: string): boolean {
   return /youtube\.com|youtu\.be|vimeo\.com/i.test(url);
 }
 
-interface BunnyVideoResponse {
-  guid?: string;
-  videoLibraryId?: number;
-  title?: string;
-  status?: number;
+function sleep(ms: number): Promise<void> {
+  return new Promise((resolve) => setTimeout(resolve, ms));
+}
+
+function extractBunnyVideoId(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") {
+    return undefined;
+  }
+
+  const record = body as Record<string, unknown>;
+  if (typeof record.guid === "string" && record.guid.trim()) {
+    return record.guid.trim();
+  }
+
+  const nested = record.video;
+  if (nested && typeof nested === "object") {
+    const nestedGuid = (nested as Record<string, unknown>).guid;
+    if (typeof nestedGuid === "string" && nestedGuid.trim()) {
+      return nestedGuid.trim();
+    }
+  }
+
+  return undefined;
+}
+
+function readBunnyMessage(body: unknown): string | undefined {
+  if (!body || typeof body !== "object") {
+    return undefined;
+  }
+  const record = body as Record<string, unknown>;
+  if (typeof record.Message === "string" && record.Message.trim()) {
+    return record.Message.trim();
+  }
+  if (typeof record.message === "string" && record.message.trim()) {
+    return record.message.trim();
+  }
+  return undefined;
+}
+
+function isBunnyStatusSuccess(body: unknown, httpOk: boolean): boolean {
+  if (!httpOk) {
+    return false;
+  }
+  if (!body || typeof body !== "object") {
+    return httpOk;
+  }
+  const record = body as Record<string, unknown>;
+  if (typeof record.success === "boolean") {
+    return record.success;
+  }
+  // Legacy: video object with guid
+  return Boolean(extractBunnyVideoId(body));
+}
+
+async function findBunnyVideoIdByTitle(options: {
+  config: BunnyStreamConfig;
+  title: string;
+  collectionId?: string;
+}): Promise<string | undefined> {
+  const { config, title, collectionId } = options;
+
+  for (let attempt = 0; attempt < 6; attempt += 1) {
+    if (attempt > 0) {
+      await sleep(700);
+    }
+
+    const listUrl = new URL(
+      `${BUNNY_VIDEO_API}/library/${config.libraryId}/videos`,
+    );
+    listUrl.searchParams.set("page", "1");
+    listUrl.searchParams.set("itemsPerPage", "25");
+    listUrl.searchParams.set("orderBy", "date");
+    listUrl.searchParams.set("search", title);
+    if (collectionId) {
+      listUrl.searchParams.set("collection", collectionId);
+    }
+
+    const response = await fetch(listUrl.toString(), {
+      method: "GET",
+      headers: {
+        AccessKey: config.apiKey,
+        Accept: "application/json",
+      },
+      signal: AbortSignal.timeout(30_000),
+    });
+
+    if (!response.ok) {
+      continue;
+    }
+
+    const body = (await response.json().catch(() => null)) as
+      | {
+          items?: Array<{ guid?: string; title?: string }>;
+          Items?: Array<{ guid?: string; title?: string }>;
+        }
+      | null;
+
+    const items = body?.items ?? body?.Items ?? [];
+    const exact = items.find(
+      (item) => item.title === title && typeof item.guid === "string",
+    );
+    if (exact?.guid) {
+      return exact.guid;
+    }
+
+    const fuzzy = items.find(
+      (item) =>
+        typeof item.title === "string" &&
+        item.title.includes(title) &&
+        typeof item.guid === "string",
+    );
+    if (fuzzy?.guid) {
+      return fuzzy.guid;
+    }
+  }
+
+  return undefined;
 }
 
 export async function fetchVideoToBunnyStream(options: {
@@ -74,47 +186,53 @@ export async function fetchVideoToBunnyStream(options: {
     };
   }
 
+  // Fetch API returns StatusModel (no guid). Use a unique title so we can look it up.
+  const uniqueTitle = `${options.title.trim() || "Thorius Academy Ders"} · ${Date.now().toString(36)}`;
+
   try {
-    const response = await fetch(
+    const fetchUrl = new URL(
       `${BUNNY_VIDEO_API}/library/${config.libraryId}/videos/fetch`,
-      {
-        method: "POST",
-        headers: {
-          AccessKey: config.apiKey,
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          title: options.title.trim() || "Thorius Academy Ders",
-          url: sourceUrl,
-          ...(options.collectionId
-            ? { collectionId: options.collectionId }
-            : {}),
-        }),
-        signal: AbortSignal.timeout(120_000),
-      },
     );
+    if (options.collectionId) {
+      fetchUrl.searchParams.set("collectionId", options.collectionId);
+    }
 
-    const body = (await response.json().catch(() => null)) as
-      | BunnyVideoResponse
-      | { Message?: string; message?: string }
-      | null;
+    const response = await fetch(fetchUrl.toString(), {
+      method: "POST",
+      headers: {
+        AccessKey: config.apiKey,
+        "Content-Type": "application/json",
+        Accept: "application/json",
+      },
+      body: JSON.stringify({
+        title: uniqueTitle,
+        url: sourceUrl,
+      }),
+      signal: AbortSignal.timeout(120_000),
+    });
 
-    if (!response.ok) {
-      const apiMessage =
-        body && typeof body === "object" && "Message" in body
-          ? body.Message
-          : body && typeof body === "object" && "message" in body
-            ? body.message
-            : undefined;
-      const message = apiMessage || `Bunny API ${response.status}`;
+    const body = (await response.json().catch(() => null)) as unknown;
+
+    if (!isBunnyStatusSuccess(body, response.ok)) {
+      const message =
+        readBunnyMessage(body) || `Bunny API ${response.status}`;
       return { error: `Bunny Stream aktarımı başarısız: ${message}` };
     }
 
-    const videoId =
-      body && typeof body === "object" && "guid" in body ? body.guid : undefined;
+    let videoId = extractBunnyVideoId(body);
     if (!videoId) {
-      return { error: "Bunny Stream yanıtında video kimliği yok." };
+      videoId = await findBunnyVideoIdByTitle({
+        config,
+        title: uniqueTitle,
+        collectionId: options.collectionId,
+      });
+    }
+
+    if (!videoId) {
+      return {
+        error:
+          "Bunny Stream videoyu aldı ama kimlik henüz listelenmedi. Birkaç saniye sonra tekrar deneyin veya Dosya yükle kullanın.",
+      };
     }
 
     const playUrl = buildBunnyPlayUrl(config.libraryId, videoId);
