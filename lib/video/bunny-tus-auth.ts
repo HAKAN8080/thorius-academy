@@ -1,13 +1,14 @@
 import { createHash } from "node:crypto";
-import { getBunnyStreamConfig, buildBunnyPlayUrl } from "@/lib/video/bunny-stream";
+import {
+  getBunnyStreamConfig,
+  buildBunnyPlayUrl,
+  extractBunnyVideoId,
+  readBunnyMessage,
+} from "@/lib/video/bunny-stream";
 
 const BUNNY_VIDEO_API = "https://video.bunnycdn.com";
 const TUS_UPLOAD_ENDPOINT = "https://video.bunnycdn.com/tusupload";
 const TUS_AUTH_TTL_SECONDS = 6 * 60 * 60;
-
-interface BunnyCreateVideoResponse {
-  guid?: string;
-}
 
 export function buildBunnyTusSignature(
   libraryId: string,
@@ -62,18 +63,15 @@ export async function createBunnyVideoUploadSession(
       },
     );
 
-    const body = (await createResponse.json().catch(() => null)) as
-      | BunnyCreateVideoResponse
-      | { Message?: string }
-      | null;
-
-    const videoId =
-      body && typeof body === "object" && "guid" in body ? body.guid : undefined;
+    const body = (await createResponse.json().catch(() => null)) as unknown;
+    const videoId = extractBunnyVideoId(body);
 
     if (!createResponse.ok || !videoId) {
       const message =
-        (body && typeof body === "object" && "Message" in body && body.Message) ||
-        `Bunny video oluşturulamadı (${createResponse.status})`;
+        readBunnyMessage(body) ||
+        (createResponse.ok
+          ? "Bunny Stream yanıtında video kimliği yok."
+          : `Bunny video oluşturulamadı (${createResponse.status})`);
       return { error: message };
     }
 

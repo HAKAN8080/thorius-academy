@@ -1,4 +1,8 @@
-import { getBunnyStreamConfig } from "@/lib/video/bunny-stream";
+import {
+  extractBunnyVideoId,
+  getBunnyStreamConfig,
+  readBunnyMessage,
+} from "@/lib/video/bunny-stream";
 
 const BUNNY_VIDEO_API = "https://video.bunnycdn.com";
 
@@ -10,7 +14,18 @@ export interface BunnyCourseContext {
 
 interface BunnyCollectionItem {
   guid?: string;
+  Guid?: string;
   name?: string;
+  Name?: string;
+}
+
+function collectionIdOf(item: BunnyCollectionItem | null | undefined): string | undefined {
+  return extractBunnyVideoId(item);
+}
+
+function collectionNameOf(item: BunnyCollectionItem | null | undefined): string | undefined {
+  const name = item?.name ?? item?.Name;
+  return typeof name === "string" && name.trim() ? name.trim() : undefined;
 }
 
 export function buildBunnyCollectionName(context: BunnyCourseContext): string {
@@ -72,16 +87,19 @@ export async function ensureBunnyCollectionForCourse(
     );
     const list = await bunnyStreamFetch<{
       items?: BunnyCollectionItem[];
+      Items?: BunnyCollectionItem[];
     }>(
       `/library/${config.libraryId}/collections?page=1&itemsPerPage=100&search=${search}`,
       { method: "GET" },
     );
 
-    const existing = list.body?.items?.find(
-      (item) => item.name?.trim() === collectionName,
+    const listItems = list.body?.items ?? list.body?.Items ?? [];
+    const existing = listItems.find(
+      (item) => collectionNameOf(item) === collectionName,
     );
-    if (existing?.guid) {
-      return { collectionId: existing.guid, collectionName };
+    const existingId = collectionIdOf(existing);
+    if (existingId) {
+      return { collectionId: existingId, collectionName };
     }
 
     const created = await bunnyStreamFetch<BunnyCollectionItem>(
@@ -93,13 +111,15 @@ export async function ensureBunnyCollectionForCourse(
       },
     );
 
-    if (!created.ok || !created.body?.guid) {
-      return {
-        error: `Bunny collection oluşturulamadı (${created.status}).`,
-      };
+    const createdId = collectionIdOf(created.body);
+    if (!created.ok || !createdId) {
+      const detail =
+        readBunnyMessage(created.body) ||
+        `Bunny collection oluşturulamadı (${created.status}).`;
+      return { error: detail };
     }
 
-    return { collectionId: created.body.guid, collectionName };
+    return { collectionId: createdId, collectionName };
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
     return { error: `Bunny collection hatası: ${message}` };
