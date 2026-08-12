@@ -2,6 +2,7 @@
 export const KNOWN_INSTRUCTOR_EMAILS = [
   "siriusdanismanlik.tr@gmail.com",
   "mhakan_ugur@yahoo.com",
+  "gorkem.hincer41@gmail.com",
 ] as const;
 
 /**
@@ -11,6 +12,7 @@ export const KNOWN_INSTRUCTOR_EMAILS = [
 export const KNOWN_INSTRUCTOR_WP_USER_IDS: Record<string, number> = {
   "siriusdanismanlik.tr@gmail.com": 277,
   "mhakan_ugur@yahoo.com": 1,
+  "gorkem.hincer41@gmail.com": 46,
 };
 
 export function getKnownInstructorWpUserId(email: string): number | null {
