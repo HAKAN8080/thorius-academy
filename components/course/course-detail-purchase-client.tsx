@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
-import { CourseDetailPurchasePanelSkeleton } from "@/components/course/course-detail-purchase-panel";
+import { CourseDetailPurchasePanelSkeleton } from "@/components/course/course-detail-purchase-skeleton";
 import type { CheckoutCustomer } from "@/lib/course/checkout-url";
 import type { CourseProduct } from "@/types/course-product";
 import type { Course } from "@/types/wordpress";

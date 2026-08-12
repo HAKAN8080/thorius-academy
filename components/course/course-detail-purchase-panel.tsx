@@ -1,6 +1,7 @@
 import { Suspense } from "react";
 import { getCoursePurchaseState } from "@/lib/course/course-purchase-state";
 import { CoursePurchaseCta } from "@/components/course/course-purchase-cta";
+import { CourseDetailPurchasePanelSkeleton } from "@/components/course/course-detail-purchase-skeleton";
 import type { Course } from "@/types/wordpress";
 
 interface CourseDetailPurchasePanelProps {
@@ -38,14 +39,7 @@ export async function CourseDetailPurchasePanel({
   );
 }
 
-export function CourseDetailPurchasePanelSkeleton() {
-  return (
-    <div
-      className="h-12 w-48 animate-pulse rounded-xl bg-primary-800/40"
-      aria-hidden="true"
-    />
-  );
-}
+export { CourseDetailPurchasePanelSkeleton } from "@/components/course/course-detail-purchase-skeleton";
 
 export function CourseDetailPurchaseSection({
   course,
