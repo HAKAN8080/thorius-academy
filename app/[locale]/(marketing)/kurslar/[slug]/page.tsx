@@ -1,12 +1,12 @@
 import type { Metadata } from "next";
 import Image from "next/image";
 import { notFound } from "next/navigation";
-import { getLocale, getTranslations } from "next-intl/server";
+import { getTranslations, setRequestLocale } from "next-intl/server";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Link } from "@/i18n/navigation";
 import { Container } from "@/components/layout/container";
 import { Badge } from "@/components/ui/badge";
-import { CourseDetailPurchaseSection } from "@/components/course/course-detail-purchase-panel";
+import { CourseDetailPurchaseClient } from "@/components/course/course-detail-purchase-client";
 import { CourseCurriculumPreview } from "@/components/course/course-curriculum-preview";
 import { getCourseCurriculumPreview } from "@/lib/lessons/curriculum-preview";
 import { getCourseLanguageMetaBySlug } from "@/lib/course/course-language";
@@ -15,28 +15,62 @@ import { CourseContentLanguageNotice } from "@/components/course/course-content-
 import { CourseViewTracker } from "@/components/analytics/course-view-tracker";
 import { fetchLocalizedCourseBySlug } from "@/lib/course/fetch-localized-course-by-slug";
 import { resolveCourseCoverImageUrl } from "@/lib/course/resolve-course-cover-image";
+import { getPublishedCourseSlugs } from "@/lib/course/published-course-slugs";
 import { getCourseProduct } from "@/lib/actions/course-products";
 import { JsonLd } from "@/lib/seo/json-ld";
 import { buildCourseJsonLd } from "@/lib/seo/course-schema";
+import { getSiteUrl } from "@/lib/seo/site-url";
+import { DEFAULT_OG_BACKGROUND } from "@/lib/seo/og-card";
+import { routing, type AppLocale } from "@/i18n/routing";
 
 interface CourseDetailPageProps {
-  params: { slug: string };
+  params: { locale: string; slug: string };
 }
 
 export const revalidate = 3600;
 export const dynamicParams = true;
 /** Keep RSC payloads under Vercel hobby/serverless time budget. */
-export const maxDuration = 20;
+export const maxDuration = 15;
+
+function toAbsoluteImageUrl(url: string | null | undefined): string {
+  const fallback = `${getSiteUrl()}${DEFAULT_OG_BACKGROUND}`;
+  if (!url?.trim()) return fallback;
+  if (url.startsWith("http://") || url.startsWith("https://")) return url;
+  if (url.startsWith("/")) return `${getSiteUrl()}${url}`;
+  return fallback;
+}
+
+export async function generateStaticParams() {
+  try {
+    const slugs = await getPublishedCourseSlugs();
+    return slugs.map((slug) => ({ slug }));
+  } catch (error) {
+    console.warn("[kurslar] generateStaticParams failed:", error);
+    return [];
+  }
+}
 
 export async function generateMetadata({
   params,
 }: CourseDetailPageProps): Promise<Metadata> {
-  const locale = await getLocale();
+  const locale = (
+    routing.locales.includes(params.locale as AppLocale)
+      ? params.locale
+      : "tr"
+  ) as AppLocale;
+  setRequestLocale(locale);
+
   const t = await getTranslations("courses.detail");
   const course = await fetchLocalizedCourseBySlug(params.slug, locale);
   if (!course) return { title: t("notFound") };
 
   const description = course.excerpt.slice(0, 160);
+  const coverImageUrl = await resolveCourseCoverImageUrl({
+    slug: course.slug,
+    coverImageUrl: course.featuredImage,
+    allowWordPressFallback: false,
+  });
+  const ogImage = toAbsoluteImageUrl(coverImageUrl);
 
   return {
     title: course.title,
@@ -45,11 +79,20 @@ export async function generateMetadata({
       title: course.title,
       description,
       type: "article",
+      images: [
+        {
+          url: ogImage,
+          width: 1200,
+          height: 630,
+          alt: course.imageAlt || course.title,
+        },
+      ],
     },
     twitter: {
       card: "summary_large_image",
       title: course.title,
       description,
+      images: [ogImage],
     },
   };
 }
@@ -57,8 +100,14 @@ export async function generateMetadata({
 export default async function CourseDetailPage({
   params,
 }: CourseDetailPageProps) {
+  const locale = (
+    routing.locales.includes(params.locale as AppLocale)
+      ? params.locale
+      : "tr"
+  ) as AppLocale;
+  setRequestLocale(locale);
+
   const t = await getTranslations("courses.detail");
-  const locale = await getLocale();
   const dateLocale = locale === "en" ? "en-US" : "tr-TR";
 
   const course = await fetchLocalizedCourseBySlug(params.slug, locale);
@@ -163,7 +212,11 @@ export default async function CourseDetailPage({
               </div>
 
               <div className="mt-4 flex flex-col gap-3 sm:flex-row">
-                <CourseDetailPurchaseSection course={courseWithCover} theme="dark" />
+                <CourseDetailPurchaseClient
+                  course={courseWithCover}
+                  initialProduct={product}
+                  theme="dark"
+                />
               </div>
             </div>
 
@@ -213,7 +266,12 @@ export default async function CourseDetailPage({
               {t("interestTitle")}
             </h3>
             <p className="mb-6 text-muted-foreground">{t("interestBody")}</p>
-            <CourseDetailPurchaseSection course={courseWithCover} />
+            <div className="flex justify-center">
+              <CourseDetailPurchaseClient
+                course={courseWithCover}
+                initialProduct={product}
+              />
+            </div>
           </div>
         </Container>
       </section>

@@ -1,21 +1,27 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import { setRequestLocale } from "next-intl/server";
 import { ArrowLeft, Calendar, User } from "lucide-react";
 import { Container } from "@/components/layout/container";
 import { getBlogPostBySlug, getBlogPosts } from "@/lib/wordpress/blog";
+import { routing, type AppLocale } from "@/i18n/routing";
 
 interface BlogPostPageProps {
-  params: Promise<{ slug: string }>;
+  params: { locale: string; slug: string };
 }
 
-function formatDate(iso: string): string {
-  return new Intl.DateTimeFormat("tr-TR", {
+function formatDate(iso: string, locale: AppLocale): string {
+  return new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
     day: "numeric",
     month: "long",
     year: "numeric",
   }).format(new Date(iso));
 }
+
+export const revalidate = 3600;
+export const dynamicParams = true;
+export const maxDuration = 15;
 
 export async function generateStaticParams() {
   try {
@@ -30,8 +36,14 @@ export async function generateStaticParams() {
 export async function generateMetadata({
   params,
 }: BlogPostPageProps): Promise<Metadata> {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const locale = (
+    routing.locales.includes(params.locale as AppLocale)
+      ? params.locale
+      : "tr"
+  ) as AppLocale;
+  setRequestLocale(locale);
+
+  const post = await getBlogPostBySlug(params.slug);
 
   if (!post) {
     return { title: "Yazı Bulunamadı" };
@@ -43,11 +55,15 @@ export async function generateMetadata({
   };
 }
 
-export const revalidate = 3600;
-
 export default async function BlogPostPage({ params }: BlogPostPageProps) {
-  const { slug } = await params;
-  const post = await getBlogPostBySlug(slug);
+  const locale = (
+    routing.locales.includes(params.locale as AppLocale)
+      ? params.locale
+      : "tr"
+  ) as AppLocale;
+  setRequestLocale(locale);
+
+  const post = await getBlogPostBySlug(params.slug);
 
   if (!post) {
     notFound();
@@ -72,7 +88,7 @@ export default async function BlogPostPage({ params }: BlogPostPageProps) {
           <div className="mt-4 flex flex-wrap items-center gap-4 text-sm text-primary-600">
             <span className="inline-flex items-center gap-1.5">
               <Calendar className="h-4 w-4" aria-hidden="true" />
-              {formatDate(post.publishedDate)}
+              {formatDate(post.publishedDate, locale)}
             </span>
             {post.author && (
               <span className="inline-flex items-center gap-1.5">

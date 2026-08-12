@@ -7,7 +7,8 @@ const WP_API_BASE =
   "https://thorius.com.tr/wp-json/wp/v2";
 
 const REVALIDATE_SECONDS = 3600;
-const WP_FETCH_TIMEOUT_MS = 1500;
+/** Hobby plan: fail fast instead of burning Active CPU on hung WP DNS/origin. */
+const WP_FETCH_TIMEOUT_MS = 4000;
 
 async function fetchWpJson<T>(
   url: string,
@@ -93,8 +94,9 @@ export async function getBlogPosts(limit = 20): Promise<BlogPost[]> {
 }
 
 export async function getBlogPostBySlug(slug: string): Promise<BlogPost | null> {
+  // Do not combine `_fields` with `_embed` — WP often omits `_embedded` then.
   const posts = await fetchWpJson<WPPost[]>(
-    `${WP_API_BASE}/posts?slug=${encodeURIComponent(slug)}&_fields=id,slug,date,title,excerpt,content,link&_embed=author`,
+    `${WP_API_BASE}/posts?slug=${encodeURIComponent(slug)}&_embed=author`,
     [BLOG_CACHE_TAG, blogSlugCacheTag(slug)],
   );
 

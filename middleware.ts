@@ -116,6 +116,17 @@ export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
   const sitePath = resolveSiteModePath(pathname);
 
+  // Cheap reject for scrapers that burn Fluid CPU (robots.txt is advisory only).
+  const ua = request.headers.get("user-agent") ?? "";
+  if (
+    /amazonbot|baiduspider|seranking-backlinks|serankingbacklinks/i.test(ua)
+  ) {
+    return new NextResponse(null, {
+      status: 403,
+      headers: { "Cache-Control": "public, max-age=86400" },
+    });
+  }
+
   if (isKitaplikSiteHost(host)) {
     if (isCompanyRedirectToAcademyPath(sitePath)) {
       return redirectToAcademy(request);
@@ -169,6 +180,10 @@ export async function middleware(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/((?!_next/static|_next/image|favicon.ico|images/|videos/|api/|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|mov|m4v)$).*)",
+    /*
+     * Skip static assets, SEO files, and OG/Twitter image routes so CDN can
+     * cache them without middleware cookies/rewrites.
+     */
+    "/((?!_next/static|_next/image|favicon.ico|robots\\.txt|sitemap\\.xml|manifest\\.webmanifest|manifest\\.json|images/|videos/|media/|api/|.*(?:opengraph-image|twitter-image).*|.*\\.(?:svg|png|jpg|jpeg|gif|webp|ico|mp4|webm|mov|m4v|css|js|mjs|map|woff|woff2|ttf|otf|txt|xml)$).*)",
   ],
 };

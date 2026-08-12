@@ -47,7 +47,10 @@ async function loadImageDataUri(source: string): Promise<string | null> {
       return `data:${mime};base64,${buffer.toString("base64")}`;
     }
 
-    const response = await fetch(source, { cache: "force-cache" });
+    const response = await fetch(source, {
+      cache: "force-cache",
+      signal: AbortSignal.timeout(2500),
+    });
     if (!response.ok) {
       return null;
     }
